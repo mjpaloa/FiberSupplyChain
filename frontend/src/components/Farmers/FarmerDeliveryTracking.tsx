@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Truck, Package, CheckCircle, XCircle, User,
-  DollarSign, Download, Search, Eye, Leaf, Award
+  DollarSign, Download, Search, Eye, Leaf, Award,
+  MapPin, Calendar, Phone, Building2
 } from 'lucide-react';
 
 interface Delivery {
@@ -206,29 +207,12 @@ const FarmerDeliveryTracking: React.FC = () => {
         </div>
       </div>
 
-      {/* Enhanced Filters & Search Section */}
+      {/* Enhanced Search & Filters Section */}
       <div className="bg-gradient-to-r from-blue-50 via-emerald-50 to-purple-50 border-2 border-blue-200 rounded-3xl p-6 mb-8 shadow-lg">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          {/* Status Filter Buttons - Left Side */}
-          <div className="flex gap-2 flex-wrap">
-            {['all', 'In Transit', 'Delivered', 'Completed', 'Cancelled'].map(status => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`px-5 py-4 rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 ${
-                  statusFilter === status 
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105' 
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
-                }`}
-              >
-                {status === 'all' ? 'All Deliveries' : status}
-              </button>
-            ))}
-          </div>
-          
-          {/* Search & Export - Right Side */}
-          <div className="flex gap-3 w-full lg:w-auto">
-            <div className="relative flex-1 lg:w-80">
+        <div className="flex flex-col gap-4">
+          {/* Search & Export - Top Row */}
+          <div className="flex gap-3 w-full">
+            <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 w-5 h-5 pointer-events-none" />
               <input
                 type="text"
@@ -237,6 +221,23 @@ const FarmerDeliveryTracking: React.FC = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 bg-white border-2 border-blue-200 rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-medium shadow-md"
               />
+            </div>
+            
+            {/* Status Filter Buttons - Next to Search */}
+            <div className="flex gap-2 flex-wrap">
+              {['all', 'In Transit', 'Delivered', 'Completed', 'Cancelled'].map(status => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`px-5 py-4 rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 whitespace-nowrap ${
+                    statusFilter === status 
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105' 
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
+                  }`}
+                >
+                  {status === 'all' ? 'All Deliveries' : status}
+                </button>
+              ))}
             </div>
             
             <button 
@@ -439,110 +440,194 @@ const FarmerDeliveryTracking: React.FC = () => {
 
       {/* Details Modal */}
       {showDetailsModal && selectedDelivery && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-xl sm:rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6 border-b flex justify-between items-center sticky top-0 bg-white">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Delivery Details</h2>
-              <button onClick={() => setShowDetailsModal(false)} className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg">
-                <XCircle size={20} className="sm:w-6 sm:h-6" />
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            {/* Header with Gradient */}
+            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 sm:p-6 sticky top-0 z-10 rounded-t-2xl">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <Package className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white">Delivery Details</h2>
+                    <p className="text-emerald-50 text-sm">Complete delivery information</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowDetailsModal(false)} 
+                  className="p-2 hover:bg-white/20 rounded-xl transition-all"
+                >
+                  <XCircle size={24} className="text-white" />
+                </button>
+              </div>
             </div>
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              <div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-2">Current Status</p>
-                <div className="flex gap-2 flex-wrap">
-                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${getStatusColor(selectedDelivery.status)}`}>{selectedDelivery.status}</span>
-                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getPaymentStatusColor(selectedDelivery.payment_status)}`}>{selectedDelivery.payment_status}</span>
-                </div>
+
+            <div className="p-4 sm:p-6 space-y-4">
+              {/* Status Badge */}
+              <div className="flex justify-center">
+                <span className={`px-6 py-3 rounded-2xl text-sm font-bold shadow-lg ${getStatusColor(selectedDelivery.status)}`}>
+                  {selectedDelivery.status}
+                </span>
               </div>
-              <div className="border-t pt-3 sm:pt-4">
-                <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
-                  <Package className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5" />
-                  Buyer Information
-                </h3>
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Business Name</p>
-                    <p className="text-sm sm:text-base font-semibold">{selectedDelivery.buyers?.business_name || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Contact</p>
-                    <p className="text-sm sm:text-base font-semibold">{selectedDelivery.buyer_contact}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="border-t pt-3 sm:pt-4">
-                <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
-                  <Leaf className="text-emerald-500 w-4 h-4 sm:w-5 sm:h-5" />
-                  Fiber Details
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                  <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Variety</p>
-                    <p className="text-sm sm:text-base font-semibold">{selectedDelivery.variety}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Quantity (kg)</p>
-                    <p className="text-sm sm:text-base font-semibold">{selectedDelivery.quantity_kg} kg</p>
-                  </div>
-                  <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Grade</p>
-                    <p className="text-sm sm:text-base font-semibold">{selectedDelivery.grade}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Price/kg</p>
-                    <p className="text-sm sm:text-base font-semibold">₱{selectedDelivery.price_per_kg}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="border-t pt-3 sm:pt-4">
-                <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
-                  <Truck className="text-purple-500 w-4 h-4 sm:w-5 sm:h-5" />
-                  Delivery Information
-                </h3>
-                <div className="space-y-2 sm:space-y-3">
-                  <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <p className="text-xs sm:text-sm text-gray-600">Delivery Date</p>
-                      <p className="text-sm sm:text-base font-semibold">{new Date(selectedDelivery.delivery_date).toLocaleDateString()} {selectedDelivery.delivery_time && `at ${selectedDelivery.delivery_time}`}</p>
+
+              {/* Main Grid */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Buyer Information Card */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 shadow-md border border-blue-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 bg-blue-500 rounded-xl">
+                      <Building2 className="w-5 h-5 text-white" />
                     </div>
-                    <div>
-                      <p className="text-xs sm:text-sm text-gray-600">Delivery Method</p>
-                      <p className="text-sm sm:text-base font-semibold">{selectedDelivery.delivery_method}</p>
+                    <h3 className="font-bold text-blue-900 text-lg">Buyer Information</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="bg-white/70 rounded-xl p-3">
+                      <p className="text-xs text-blue-600 font-medium mb-1">Business Name</p>
+                      <p className="text-base font-bold text-blue-900">{selectedDelivery.buyers?.business_name || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white/70 rounded-xl p-3">
+                      <p className="text-xs text-blue-600 font-medium mb-1 flex items-center gap-1">
+                        <Phone className="w-3 h-3" /> Contact
+                      </p>
+                      <p className="text-base font-bold text-blue-900">{selectedDelivery.buyer_contact}</p>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Delivery Location</p>
-                    <p className="text-sm sm:text-base font-semibold">{selectedDelivery.delivery_location}</p>
+                </div>
+
+                {/* Farmer Information Card */}
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-5 shadow-md border border-emerald-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 bg-emerald-500 rounded-xl">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="font-bold text-emerald-900 text-lg">Farmer Information</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="bg-white/70 rounded-xl p-3">
+                      <p className="text-xs text-emerald-600 font-medium mb-1">Farmer Name</p>
+                      <p className="text-base font-bold text-emerald-900">{selectedDelivery.farmers?.full_name || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white/70 rounded-xl p-3">
+                      <p className="text-xs text-emerald-600 font-medium mb-1 flex items-center gap-1">
+                        <Phone className="w-3 h-3" /> Contact Number
+                      </p>
+                      <p className="text-base font-bold text-emerald-900">{selectedDelivery.farmer_contact}</p>
+                    </div>
+                    {selectedDelivery.pickup_location && (
+                      <div className="bg-white/70 rounded-xl p-3">
+                        <p className="text-xs text-emerald-600 font-medium mb-1 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> Pickup Location
+                        </p>
+                        <p className="text-sm font-semibold text-emerald-900">{selectedDelivery.pickup_location}</p>
+                      </div>
+                    )}
+                    {selectedDelivery.farmers?.barangay && (
+                      <div className="bg-white/70 rounded-xl p-3">
+                        <p className="text-xs text-emerald-600 font-medium mb-1 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> Farmer Address
+                        </p>
+                        <p className="text-sm font-semibold text-emerald-900">{selectedDelivery.farmers.barangay}, {selectedDelivery.farmers.municipality}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {/* Fiber Details Card */}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-5 shadow-md border border-amber-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-amber-500 rounded-xl">
+                    <Leaf className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="font-bold text-amber-900 text-lg">Fiber Details</h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="bg-white/70 rounded-xl p-3">
+                    <p className="text-xs text-amber-600 font-medium mb-1">Variety</p>
+                    <p className="text-base font-bold text-amber-900">{selectedDelivery.variety}</p>
+                  </div>
+                  <div className="bg-white/70 rounded-xl p-3">
+                    <p className="text-xs text-amber-600 font-medium mb-1">Quantity (kg)</p>
+                    <p className="text-base font-bold text-amber-900">{selectedDelivery.quantity_kg} kg</p>
+                  </div>
+                  <div className="bg-white/70 rounded-xl p-3">
+                    <p className="text-xs text-amber-600 font-medium mb-1">Grade</p>
+                    <p className="text-base font-bold text-amber-900">{selectedDelivery.grade}</p>
+                  </div>
+                  <div className="bg-white/70 rounded-xl p-3">
+                    <p className="text-xs text-amber-600 font-medium mb-1">Price/kg</p>
+                    <p className="text-base font-bold text-amber-900">₱{selectedDelivery.price_per_kg}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delivery Information Card */}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 shadow-md border border-purple-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-purple-500 rounded-xl">
+                    <Truck className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="font-bold text-purple-900 text-lg">Delivery Information</h3>
+                </div>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="bg-white/70 rounded-xl p-3">
+                    <p className="text-xs text-purple-600 font-medium mb-1 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> Delivery Date
+                    </p>
+                    <p className="text-base font-bold text-purple-900">
+                      {new Date(selectedDelivery.delivery_date).toLocaleDateString()}
+                      {selectedDelivery.delivery_time && ` at ${selectedDelivery.delivery_time}`}
+                    </p>
+                  </div>
+                  <div className="bg-white/70 rounded-xl p-3">
+                    <p className="text-xs text-purple-600 font-medium mb-1">Delivery Method</p>
+                    <p className="text-base font-bold text-purple-900">{selectedDelivery.delivery_method}</p>
+                  </div>
+                  <div className="bg-white/70 rounded-xl p-3 md:col-span-2">
+                    <p className="text-xs text-purple-600 font-medium mb-1 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" /> Delivery Location
+                    </p>
+                    <p className="text-base font-bold text-purple-900">{selectedDelivery.delivery_location}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Information Card */}
               {selectedDelivery.total_amount > 0 && (
-                <div className="border-t pt-3 sm:pt-4">
-                  <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
-                    <DollarSign className="text-indigo-500 w-4 h-4 sm:w-5 sm:h-5" />
-                    Payment Information
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                    <div>
-                      <p className="text-xs sm:text-sm text-gray-600">Total Amount</p>
-                      <p className="text-base sm:text-lg font-semibold text-indigo-600">₱{selectedDelivery.total_amount.toLocaleString()}</p>
+                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-5 shadow-md border border-indigo-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 bg-indigo-500 rounded-xl">
+                      <DollarSign className="w-5 h-5 text-white" />
                     </div>
-                    <div>
-                      <p className="text-xs sm:text-sm text-gray-600">Payment Method</p>
-                      <p className="text-sm sm:text-base font-semibold">{selectedDelivery.payment_method}</p>
+                    <h3 className="font-bold text-indigo-900 text-lg">Payment Information</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div className="bg-white/70 rounded-xl p-3">
+                      <p className="text-xs text-indigo-600 font-medium mb-1">Total Amount</p>
+                      <p className="text-xl font-bold text-indigo-600">₱{selectedDelivery.total_amount.toLocaleString()}</p>
                     </div>
-                    <div>
-                      <p className="text-xs sm:text-sm text-gray-600">Payment Status</p>
-                      <span className={`inline-block px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getPaymentStatusColor(selectedDelivery.payment_status)}`}>{selectedDelivery.payment_status}</span>
+                    <div className="bg-white/70 rounded-xl p-3">
+                      <p className="text-xs text-indigo-600 font-medium mb-1">Payment Method</p>
+                      <p className="text-base font-bold text-indigo-900">{selectedDelivery.payment_method}</p>
+                    </div>
+                    <div className="bg-white/70 rounded-xl p-3">
+                      <p className="text-xs text-indigo-600 font-medium mb-1">Payment Status</p>
+                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${getPaymentStatusColor(selectedDelivery.payment_status)}`}>
+                        {selectedDelivery.payment_status}
+                      </span>
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* Notes Card */}
               {selectedDelivery.notes && (
-                <div className="border-t pt-3 sm:pt-4">
-                  <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2">Notes</h3>
-                  <p className="text-xs sm:text-sm text-gray-700 bg-gray-50 p-2 sm:p-3 rounded-lg">{selectedDelivery.notes}</p>
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 shadow-md border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-3 text-lg">Notes</h3>
+                  <div className="bg-white rounded-xl p-4 border-l-4 border-gray-400">
+                    <p className="text-sm text-gray-700 leading-relaxed">{selectedDelivery.notes}</p>
+                  </div>
                 </div>
               )}
             </div>

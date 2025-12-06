@@ -460,7 +460,6 @@ const DeliveryTrackingMonitor: React.FC = () => {
                 <p className="text-sm text-gray-600 mb-2">Current Status</p>
                 <div className="flex gap-2">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedDelivery.status)}`}>{selectedDelivery.status}</span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(selectedDelivery.payment_status)}`}>{selectedDelivery.payment_status}</span>
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-6">

@@ -383,19 +383,11 @@ const CUSAFAFiberDeliveries: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Status</p>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedDelivery.status)}`}>
-                    {selectedDelivery.status}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Payment Status</p>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(selectedDelivery.payment_status)}`}>
-                    {selectedDelivery.payment_status}
-                  </span>
-                </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Current Status</p>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedDelivery.status)}`}>
+                  {selectedDelivery.status}
+                </span>
               </div>
 
               <div className="border-t pt-4">

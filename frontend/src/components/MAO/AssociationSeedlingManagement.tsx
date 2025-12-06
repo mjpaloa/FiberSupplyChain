@@ -692,15 +692,12 @@ const AssociationSeedlingManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
                         <div className="font-semibold text-blue-900">{distribution.recipient_association_name}</div>
-                        <div className="text-blue-600 text-xs">
-                          {distribution.association_officers?.full_name || 'N/A'}
-                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {distribution.source_supplier ? (
-                        <div className="p-2 bg-amber-50 rounded-xl border border-amber-200">
-                          <span className="text-amber-800 font-medium">{distribution.source_supplier}</span>
+                      {distribution.organization?.full_name || distribution.source_supplier ? (
+                        <div className="p-2 bg-purple-50 rounded-xl border border-purple-200">
+                          <div className="font-semibold text-purple-900">{distribution.organization?.full_name || distribution.source_supplier}</div>
                         </div>
                       ) : (
                         <span className="text-gray-400">N/A</span>

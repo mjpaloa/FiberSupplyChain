@@ -216,52 +216,91 @@ export class AdminReportsController {
         .from('farmers')
         .select('*', { count: 'exact', head: true });
 
-      // 2. Count Association Officers
-      const { count: officersCount, error: officersError } = await supabase
+      // 2. Count Buyers
+      const { count: buyersCount, error: buyersError } = await supabase
+        .from('buyers')
+        .select('*', { count: 'exact', head: true });
+
+      // 3. Count CUSAFA Officers (Association Officers)
+      const { count: cusafaCount, error: cusafaError } = await supabase
         .from('association_officers')
         .select('*', { count: 'exact', head: true });
 
-      // 3. Count MAO/Admin
-      const { count: adminsCount, error: adminsError } = await supabase
+      // 4. Count MAO Officers
+      const { count: maoCount, error: maoError } = await supabase
         .from('organization')
         .select('*', { count: 'exact', head: true });
 
-      // 4. Get recent users (last 10 from all tables)
+      // 5. Get all users with created_at for monthly trends
+      const { data: allFarmers } = await supabase
+        .from('farmers')
+        .select('created_at');
+
+      const { data: allBuyers } = await supabase
+        .from('buyers')
+        .select('created_at');
+
+      const { data: allCusafa } = await supabase
+        .from('association_officers')
+        .select('created_at');
+
+      const { data: allMao } = await supabase
+        .from('organization')
+        .select('created_at');
+
+      // 6. Calculate monthly registration trends
+      const monthlyTrends = calculateMonthlyTrends(
+        allFarmers || [],
+        allBuyers || [],
+        allCusafa || [],
+        allMao || []
+      );
+
+      // 7. Get recent users (last 10 from all tables)
       const { data: recentFarmers } = await supabase
         .from('farmers')
-        .select('full_name, address, contact_number, created_at')
+        .select('full_name, email, created_at')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(4);
 
-      const { data: recentOfficers } = await supabase
-        .from('association_officers')
-        .select('full_name, address, contact_number, created_at')
+      const { data: recentBuyers } = await supabase
+        .from('buyers')
+        .select('owner_name, email, created_at')
         .order('created_at', { ascending: false })
         .limit(3);
 
-      const { data: recentAdmins } = await supabase
-        .from('organization')
-        .select('full_name, address, contact_number, created_at')
+      const { data: recentOfficers } = await supabase
+        .from('association_officers')
+        .select('full_name, email, created_at')
         .order('created_at', { ascending: false })
         .limit(2);
 
+      const { data: recentAdmins } = await supabase
+        .from('organization')
+        .select('full_name, email, created_at')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
       // Combine and format recent users
       const recentUsers = [
-        ...(recentFarmers || []).map(u => ({ ...u, role: 'farmer' })),
-        ...(recentOfficers || []).map(u => ({ ...u, role: 'officer' })),
-        ...(recentAdmins || []).map(u => ({ ...u, role: 'admin' }))
+        ...(recentFarmers || []).map((u: any) => ({ full_name: u.full_name, email: u.email, created_at: u.created_at, role: 'farmer' })),
+        ...(recentBuyers || []).map((u: any) => ({ full_name: u.owner_name, email: u.email, created_at: u.created_at, role: 'buyer' })),
+        ...(recentOfficers || []).map((u: any) => ({ full_name: u.full_name, email: u.email, created_at: u.created_at, role: 'officer' })),
+        ...(recentAdmins || []).map((u: any) => ({ full_name: u.full_name, email: u.email, created_at: u.created_at, role: 'admin' }))
       ]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 10);
 
       // Calculate total users
-      const totalUsers = (farmersCount || 0) + (officersCount || 0) + (adminsCount || 0);
+      const totalUsers = (farmersCount || 0) + (buyersCount || 0) + (cusafaCount || 0) + (maoCount || 0);
 
       res.status(200).json({
         totalUsers,
         totalFarmers: farmersCount || 0,
-        totalOfficers: officersCount || 0,
-        totalAdmins: adminsCount || 0,
+        totalBuyers: buyersCount || 0,
+        totalCusafa: cusafaCount || 0,
+        totalMao: maoCount || 0,
+        monthlyTrends,
         recentUsers
       });
     } catch (error) {
@@ -269,4 +308,60 @@ export class AdminReportsController {
       res.status(500).json({ error: 'Failed to fetch users report' });
     }
   }
+}
+
+/**
+ * Helper function to calculate monthly registration trends for the last 24 months
+ */
+function calculateMonthlyTrends(
+  farmers: any[],
+  buyers: any[],
+  cusafa: any[],
+  mao: any[]
+) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  
+  // Create array for last 24 months (2 years)
+  const monthlyData = [];
+  for (let i = 23; i >= 0; i--) {
+    const targetDate = new Date(currentYear, currentMonth - i, 1);
+    const targetYear = targetDate.getFullYear();
+    const targetMonth = targetDate.getMonth();
+    const monthName = months[targetMonth];
+    
+    // Count registrations for this specific month
+    const farmersCount = farmers.filter(f => {
+      const date = new Date(f.created_at);
+      return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
+    }).length;
+    
+    const buyersCount = buyers.filter(b => {
+      const date = new Date(b.created_at);
+      return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
+    }).length;
+    
+    const cusafaCount = cusafa.filter(c => {
+      const date = new Date(c.created_at);
+      return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
+    }).length;
+    
+    const maoCount = mao.filter(m => {
+      const date = new Date(m.created_at);
+      return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
+    }).length;
+    
+    monthlyData.push({
+      month: monthName,
+      year: targetYear,
+      farmers: farmersCount,
+      buyers: buyersCount,
+      cusafa: cusafaCount,
+      mao: maoCount
+    });
+  }
+  
+  return monthlyData;
 }

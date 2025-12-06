@@ -37,6 +37,7 @@ import UnifiedSalesManagement from './UnifiedSalesManagement';
 import BuyerPriceListingsViewer from '../Shared/BuyerPriceListingsViewer';
 import DeliveryTrackingMonitor from './DeliveryTrackingMonitor';
 import ActivityLogsManagement from './ActivityLogsManagement';
+import UserAnalyticsDashboard from './UserAnalyticsDashboard';
 
 interface MAODashboardProps {
   onLogout: () => void;
@@ -917,7 +918,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    Users (MAO/CUSAFA/Farmers)
+                    Users (MAO/CUSAFA/Farmers/Buyers)
                   </button>
                 </div>
               </div>
@@ -2563,12 +2564,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   </div>
                 )}
 
-                {/* Users Section */}
+                {/* Users Section - Analytics Dashboard */}
                 {dashboardSection === 'users' && (
-                  <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
-                    <p className="text-gray-600">User management content will be displayed here.</p>
-                  </div>
+                  <UserAnalyticsDashboard />
                 )}
               </>
             )}
