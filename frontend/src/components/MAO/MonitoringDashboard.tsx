@@ -53,7 +53,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<MonitoringFilters>({});
   const [showFilters, setShowFilters] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'overdue' | 'completed'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'overdue' | 'completed' | 'done'>('all');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -84,6 +84,11 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
       filtered = filtered.filter(record => (record as any).status === 'Completed');
       filtered = sortByDate(filtered);
       console.log(`✅ MAO: Completed filtered records: ${filtered.length}`);
+    } else if (activeTab === 'done') {
+      console.log('🔍 MAO: Filtering for done monitoring...');
+      filtered = filtered.filter(record => (record as any).status === 'Done Monitor');
+      filtered = sortByDate(filtered);
+      console.log(`✅ MAO: Done monitoring filtered records: ${filtered.length}`);
     } else {
       filtered = sortByDate(filtered);
     }
@@ -326,10 +331,28 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
           <div className={`p-2 rounded-lg transition-colors ${
             activeTab === 'completed' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
           }`}>
-           
+            <AlertCircle className="w-5 h-5" />
           </div>
           <span>Completed ({records.filter(r => (r as any).status === 'Completed').length})</span>
           {activeTab === 'completed' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('done')}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'done'
+              ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'done' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
+          }`}>
+            <Activity className="w-5 h-5" />
+          </div>
+          <span>Done ({records.filter(r => (r as any).status === 'Done Monitor').length})</span>
+          {activeTab === 'done' && (
             <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
           )}
         </button>

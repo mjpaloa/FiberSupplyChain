@@ -31,7 +31,7 @@ const FarmerMonitoringView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState<MonitoringRecord | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'overdue' | 'completed' | 'ongoing' | 'done'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'overdue' | 'completed' | 'done'>('all');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -73,9 +73,18 @@ const FarmerMonitoringView: React.FC = () => {
     const nextVisitDate = sortedOngoing[0]?.nextMonitoringDate || null;
     
     const completed = records.filter(r => (r as any).status === 'Completed').length;
+    const doneMonitor = records.filter(r => (r as any).status === 'Done Monitor').length;
     
-    console.log('📈 Stats calculated:', { upcoming, overdue, completed, nextVisitDate });
-    return { upcoming, nextVisitDate, overdue, completed };
+    // Count healthy vs needs support farms based on latest record condition
+    const healthyFarms = records.filter(r => 
+      r.farmCondition === 'Healthy' || r.farmCondition === 'Good'
+    ).length;
+    const needsSupport = records.filter(r => 
+      r.farmCondition === 'Needs Support' || r.farmCondition === 'Critical' || r.farmCondition === 'Poor'
+    ).length;
+    
+    console.log('📈 Stats calculated:', { upcoming, overdue, completed, doneMonitor, healthyFarms, needsSupport, nextVisitDate });
+    return { upcoming, nextVisitDate, overdue, completed, doneMonitor, healthyFarms, needsSupport };
   }, [records]);
 
   // Filter and search records
@@ -130,13 +139,9 @@ const FarmerMonitoringView: React.FC = () => {
       console.log('🔍 Filtering for completed tab...');
       filtered = filtered.filter(r => (r as any).status === 'Completed');
       console.log(`✅ Completed filtered records: ${filtered.length}`);
-    } else if (activeTab === 'ongoing') {
-      console.log('🔍 Filtering for ongoing tab...');
-      filtered = filtered.filter(r => (r as any).status === 'Ongoing');
-      console.log(`✅ Ongoing filtered records: ${filtered.length}`);
     } else if (activeTab === 'done') {
       console.log('🔍 Filtering for done monitor tab...');
-      filtered = filtered.filter(r => (r as any).status === 'Completed');
+      filtered = filtered.filter(r => (r as any).status === 'Done Monitor');
       console.log(`✅ Done monitor filtered records: ${filtered.length}`);
     }
 
@@ -220,51 +225,69 @@ const FarmerMonitoringView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-xl p-6 group hover:scale-105 transition-transform duration-300">
+      {/* Statistics Cards - Match MAO Dashboard Style */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
+        {/* Total Monitoring Card */}
+        <div className="group relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative z-10">
+          <div className="relative">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Calendar className="w-6 h-6 text-white" />
+                <Activity className="w-6 h-6 text-white" />
               </div>
-              <span className="text-white/80 text-xs font-semibold uppercase tracking-wider">Total</span>
+              <TrendingUp className="w-5 h-5 text-white/60" />
             </div>
-            <p className="text-4xl font-black text-white mb-1">{records.length}</p>
-            <p className="text-emerald-100 text-sm font-medium">MAO Visits</p>
+            <p className="text-white/80 text-sm font-medium mb-1">Total Monitoring</p>
+            <p className="text-4xl font-bold text-white">{records.length}</p>
           </div>
         </div>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-xl p-6 group hover:scale-105 transition-transform duration-300">
+        {/* Healthy Farms Card */}
+        <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-white/80 text-xs font-semibold uppercase tracking-wider">Upcoming</span>
-            </div>
-            <p className="text-lg font-bold text-white mb-1">
-              {stats.nextVisitDate ? formatDate(stats.nextVisitDate) : 'Not scheduled'}
-            </p>
-            <p className="text-blue-100 text-sm font-medium">Next Visit</p>
-          </div>
-        </div>
-
-        <div className="relative overflow-hidden bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-xl p-6 group hover:scale-105 transition-transform duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative z-10">
+          <div className="relative">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
                 <Leaf className="w-6 h-6 text-white" />
               </div>
-              <span className="text-white/80 text-xs font-semibold uppercase tracking-wider">Status</span>
+              <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
+                Active
+              </span>
             </div>
-            <p className="text-2xl font-bold text-white mb-1">
-              {records.length > 0 && records[0] ? records[0].farmCondition : 'No data'}
-            </p>
-            <p className="text-green-100 text-sm font-medium">Farm Condition</p>
+            <p className="text-white/90 text-sm font-medium mb-1">Healthy Farms</p>
+            <p className="text-4xl font-bold text-white">{stats.healthyFarms}</p>
+          </div>
+        </div>
+
+        {/* Needs Support Card */}
+        <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <AlertCircle className="w-6 h-6 text-white" />
+              </div>
+              <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
+                Action Needed
+              </span>
+            </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Needs Support</p>
+            <p className="text-4xl font-bold text-white">{stats.needsSupport}</p>
+          </div>
+        </div>
+
+        {/* Upcoming Visits Card */}
+        <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-white/60" />
+            </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Upcoming Visits</p>
+            <p className="text-4xl font-bold text-white">{stats.upcoming}</p>
           </div>
         </div>
       </div>
@@ -326,24 +349,6 @@ const FarmerMonitoringView: React.FC = () => {
           )}
         </button>
         <button
-          onClick={() => { setActiveTab('ongoing'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'ongoing'
-              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
-        >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'ongoing' ? 'bg-white/20' : 'bg-blue-50 group-hover:bg-blue-100'
-          }`}>
-            <Activity className="w-5 h-5" />
-          </div>
-          <span>Ongoing ({records.filter(r => (r as any).status === 'Ongoing').length})</span>
-          {activeTab === 'ongoing' && (
-            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
-          )}
-        </button>
-        <button
           onClick={() => { setActiveTab('done'); setCurrentPage(1); }}
           className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
             activeTab === 'done'
@@ -356,7 +361,7 @@ const FarmerMonitoringView: React.FC = () => {
           }`}>
             <CheckCircle className="w-5 h-5" />
           </div>
-          <span>Done Monitor ({stats.completed})</span>
+          <span>Done ({stats.doneMonitor})</span>
           {activeTab === 'done' && (
             <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
           )}

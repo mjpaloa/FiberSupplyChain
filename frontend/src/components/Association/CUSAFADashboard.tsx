@@ -39,7 +39,8 @@ interface CUSAFADashboardProps {
 }
 
 const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentPage, setCurrentPage] = useState<DashboardPage>('inventory');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
@@ -58,6 +59,19 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
   useEffect(() => {
     loadDashboardStats();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const loadDashboardStats = async () => {
@@ -153,7 +167,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl">
@@ -314,22 +328,44 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50">
+      {/* Mobile Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <aside
-        className={`${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-slate-900 to-slate-800 text-white transition-all duration-300 flex flex-col shadow-2xl`}
+        className={`
+          ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-72' : sidebarOpen ? 'w-72' : 'w-20'}
+          ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
+          bg-gradient-to-b from-slate-900 to-slate-800 text-white 
+          transition-all duration-300 flex flex-col shadow-2xl
+          md:relative md:translate-x-0
+        `}
       >
-        <div className="p-6 flex items-center justify-between border-b border-white/10">
-          {sidebarOpen && (
+        <div className="p-4 md:p-6 flex items-center justify-between border-b border-white/10">
+          {(isMobile || sidebarOpen) && (
             <div>
-              <h1 className="text-xl font-bold">CUSAFA Center</h1>
+              <h1 className="text-lg md:text-xl font-bold">CUSAFA Center</h1>
               <p className="text-xs text-slate-300">Seedling Distribution</p>
             </div>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
+            className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition md:block hidden"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
+          {isMobile && (
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition md:hidden"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -345,7 +381,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
                 } ${!sidebarOpen && 'justify-center'}`}
               >
                 <Icon className="w-5 h-5" />
-                {sidebarOpen && <span>{item.label}</span>}
+                {(isMobile || sidebarOpen) && <span>{item.label}</span>}
               </button>
             );
           })}
@@ -359,17 +395,24 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
             }`}
           >
             <LogOut className="w-5 h-5" />
-            {sidebarOpen && <span>Logout</span>}
+            {(isMobile || sidebarOpen) && <span>Logout</span>}
           </button>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col">
         <header className="bg-white shadow-sm">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wide">CUSAFA Dashboard</p>
-              <h2 className="text-2xl font-bold text-gray-900">
+          <div className="flex items-center justify-between px-4 md:px-6 py-4">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition mr-2"
+            >
+              <Menu className="w-6 h-6 text-gray-600" />
+            </button>
+            <div className="flex-1">
+              <p className="text-xs text-gray-500 uppercase tracking-wide hidden sm:block">CUSAFA Dashboard</p>
+              <h2 className="text-lg md:text-2xl font-bold text-gray-900">
                 {currentPage === 'overview'
                   ? 'Overview'
                   : currentPage === 'inventory'
@@ -393,7 +436,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
                   onClick={() => setShowProfileDropdown((prev) => !prev)}
                   className="flex items-center gap-2 px-3 py-2 rounded-2xl border border-gray-200 hover:bg-gray-50"
                 >
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-white flex items-center justify-center font-semibold">
+                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-white flex items-center justify-center font-semibold text-xs md:text-sm">
                     {(user?.fullName || 'CU')
                       .split(' ')
                       .map((part: string) => part[0])
@@ -430,7 +473,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {renderContent()}
         </main>
       </div>

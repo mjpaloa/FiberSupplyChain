@@ -314,13 +314,13 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
 
             {/* Desktop Login Buttons - Far Right */}
             <div className="hidden md:flex items-center space-x-3">
-              <button onClick={() => onLoginClick('buyer')} className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition-all font-semibold text-sm">
+              <button onClick={() => onLoginClick('buyer')} className="px-5 py-2.5 bg-white text-teal-700 border-2 border-teal-500 rounded-lg hover:bg-teal-50 transition-all font-semibold text-sm">
                 Buyer Login
               </button>
               <button onClick={() => onLoginClick('farmer')} className="px-5 py-2.5 bg-white text-teal-700 border-2 border-teal-500 rounded-lg hover:bg-teal-50 transition-all font-semibold text-sm">
                 Farmer Login
               </button>
-              <button onClick={() => onLoginClick('cusafa')} className="px-5 py-2.5 bg-white text-blue-700 border-2 border-blue-500 rounded-lg hover:bg-blue-50 transition-all font-semibold text-sm">
+              <button onClick={() => onLoginClick('cusafa')} className="px-5 py-2.5 bg-white text-teal-700 border-2 border-teal-500 rounded-lg hover:bg-teal-50 transition-all font-semibold text-sm">
                 CUSAFA Login
               </button>
             </div>
@@ -341,13 +341,13 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
           {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="md:hidden pb-4 space-y-2 animate-in slide-in-from-top duration-200">
-              <button onClick={() => onLoginClick('buyer')} className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all font-medium">
+              <button onClick={() => onLoginClick('buyer')} className="w-full px-4 py-3 bg-white text-teal-700 border-2 border-teal-500 rounded-xl hover:bg-teal-50 transition-all font-medium">
                 Buyer Login
               </button>
               <button onClick={() => onLoginClick('farmer')} className="w-full px-4 py-3 bg-white text-teal-700 border-2 border-teal-500 rounded-xl hover:bg-teal-50 transition-all font-medium">
                 Farmer Login
               </button>
-              <button onClick={() => onLoginClick('cusafa')} className="w-full px-4 py-3 bg-white text-blue-700 border-2 border-blue-500 rounded-xl hover:bg-blue-50 transition-all font-medium">
+              <button onClick={() => onLoginClick('cusafa')} className="w-full px-4 py-3 bg-white text-teal-700 border-2 border-teal-500 rounded-xl hover:bg-teal-50 transition-all font-medium">
                 CUSAFA Login
               </button>
             </div>
@@ -396,12 +396,12 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                       onClick={() => onLoginClick('farmer')}
                       className="group px-8 py-4 bg-white text-emerald-900 rounded-lg hover:bg-emerald-50 transition-all duration-300 font-bold flex items-center justify-center space-x-2 shadow-2xl hover:shadow-emerald-500/50 hover:scale-105"
                     >
-                      <span>Get Started</span>
+                      <span>Contact MAO</span>
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
                     <button className="group px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/50 text-white rounded-lg hover:bg-white/20 hover:border-white transition-all duration-300 font-bold flex items-center justify-center space-x-2 shadow-xl hover:scale-105">
                       <Award className="w-5 h-5" />
-                      <span>Learn More</span>
+                      <span>See How It Works</span>
                     </button>
                   </div>
                 </div>

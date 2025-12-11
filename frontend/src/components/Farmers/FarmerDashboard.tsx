@@ -47,7 +47,8 @@ interface FarmerDashboardProps {
 }
 
 const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'seedlings' | 'harvest' | 'harvest-submit' | 'monitoring' | 'sales-report' | 'track-deliveries' | 'analytics' | 'profile'>('dashboard');
   const [showSalesForm, setShowSalesForm] = useState(false);
   const [seedlings, setSeedlings] = useState<any[]>([]);
@@ -83,6 +84,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   // Announcements state
   const [announcements, setAnnouncements] = useState<any[]>([]);
 
+  // Notification states
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
   // Analytics state
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -102,10 +108,84 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     }
   }, [currentPage]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Load profile photo on mount
   useEffect(() => {
     fetchFarmerProfile();
+    fetchNotifications();
   }, []);
+
+  // Fetch notifications for farmer
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      
+      // Fetch recent seedling distributions
+      const seedlingsRes = await fetch('http://localhost:3001/api/association-seedlings/farmer/received', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const seedlingsData = await seedlingsRes.json();
+      
+      // Fetch recent monitoring records
+      const monitoringRes = await fetch('http://localhost:3001/api/monitoring/farmer/my-records', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const monitoringData = await monitoringRes.json();
+      
+      // Create notifications array
+      const notifs: any[] = [];
+      
+      // Add seedling notifications (last 5)
+      if (Array.isArray(seedlingsData)) {
+        seedlingsData.slice(0, 5).forEach((seedling: any) => {
+          notifs.push({
+            id: `seedling-${seedling.distribution_id}`,
+            type: 'seedling',
+            title: 'New Seedlings Received',
+            message: `${seedling.quantity_distributed} ${seedling.variety} seedlings distributed to you`,
+            date: seedling.distribution_date,
+            icon: '🌱',
+            color: 'green'
+          });
+        });
+      }
+      
+      // Add monitoring notifications (last 5)
+      if (Array.isArray(monitoringData)) {
+        monitoringData.slice(0, 5).forEach((record: any) => {
+          notifs.push({
+            id: `monitoring-${record.monitoring_id}`,
+            type: 'monitoring',
+            title: 'Farm Monitoring Visit',
+            message: `Your farm was monitored. Condition: ${record.farm_condition}`,
+            date: record.date_of_visit,
+            icon: '📋',
+            color: 'blue'
+          });
+        });
+      }
+      
+      // Sort by date (newest first)
+      notifs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      setNotifications(notifs.slice(0, 10)); // Keep only 10 most recent
+      setUnreadCount(notifs.length > 0 ? Math.min(notifs.length, 5) : 0);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
 
   // Generate analytics data when seedlings or view mode changes
   useEffect(() => {
@@ -582,24 +662,42 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50">
+      {/* Mobile Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 text-white transition-all duration-300 ease-in-out flex flex-col shadow-2xl overflow-hidden`}>
+      <aside className={`
+        ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-64' : sidebarOpen ? 'w-64' : 'w-20'}
+        ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
+        bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 text-white 
+        transition-all duration-300 ease-in-out flex flex-col shadow-2xl
+        md:relative md:translate-x-0 overflow-hidden
+      `}>
         {/* Logo */}
-        <div className="p-6 flex items-center justify-between border-b border-slate-700">
-          <div className={`transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
-            {sidebarOpen && (
-              <div>
-                <h1 className="text-xl font-bold">Farmer Portal</h1>
-                <p className="text-xs text-blue-300">Abaca Management</p>
-              </div>
-            )}
+        <div className="p-4 md:p-6 flex items-center justify-between border-b border-slate-700">
+          <div className={`transition-all duration-300 ease-in-out ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
+            <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">Farmer Portal</h1>
+            <p className="text-xs text-blue-300 whitespace-nowrap">Abaca Management</p>
           </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-700 rounded-lg transition"
+            className="p-2 hover:bg-slate-700 rounded-lg transition md:block hidden"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
+          {isMobile && (
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-2 hover:bg-slate-700 rounded-lg transition md:hidden"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
@@ -611,7 +709,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             }`}
           >
             <LayoutDashboard className="w-5 h-5" />
-            {sidebarOpen && <span>Dashboard</span>}
+            {(isMobile || sidebarOpen) && <span>Dashboard</span>}
           </button>
 
           <button
@@ -621,7 +719,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             }`}
           >
             <Sprout className="w-5 h-5" />
-            {sidebarOpen && <span>My Seedlings</span>}
+            {(isMobile || sidebarOpen) && <span>My Seedlings</span>}
           </button>
 
           <button
@@ -631,7 +729,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             }`}
           >
             <Calendar className="w-5 h-5" />
-            {sidebarOpen && <span>Farm Monitoring</span>}
+            {(isMobile || sidebarOpen) && <span>Farm Monitoring</span>}
           </button>
 
           <button
@@ -641,7 +739,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             }`}
           >
             <Truck className="w-5 h-5" />
-            {sidebarOpen && <span>Track Deliveries</span>}
+            {(isMobile || sidebarOpen) && <span>Track Deliveries</span>}
           </button>
 
           <button
@@ -654,7 +752,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             }`}
           >
             <FileText className="w-5 h-5" />
-            {sidebarOpen && <span>Sales Reports</span>}
+            {(isMobile || sidebarOpen) && <span>Sales Reports</span>}
           </button>
 
         </nav>
@@ -666,7 +764,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-600 rounded-lg transition"
           >
             <LogOut className="w-5 h-5" />
-            {sidebarOpen && <span>Logout</span>}
+            {(isMobile || sidebarOpen) && <span>Logout</span>}
           </button>
         </div>
       </aside>
@@ -674,10 +772,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-8 py-6 shadow-sm">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 md:px-8 py-4 md:py-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition mr-2"
+            >
+              <Menu className="w-6 h-6 text-gray-600" />
+            </button>
+
+            <div className="flex-1">
+              <h2 className="text-lg md:text-2xl font-bold text-gray-800">
                 {currentPage === 'dashboard' ? 'Dashboard' :
                  currentPage === 'seedlings' ? 'My Seedlings' :
                  currentPage === 'harvest' ? 'Harvest Records' :
@@ -686,15 +792,101 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                  currentPage === 'track-deliveries' ? 'Track My Deliveries' :
                  'My Profile'}
               </h2>
-              <p className="text-gray-600">Welcome back, {user?.fullName || 'Farmer'}!</p>
+              <p className="text-xs md:text-sm text-gray-600 hidden sm:block">Welcome back, {user?.fullName || 'Farmer'}!</p>
             </div>
-            <div className="flex items-center gap-4">
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition relative">
-                <Bell className="w-6 h-6 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="text-right">
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* Notification Bell with Dropdown */}
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition relative hidden sm:block"
+                >
+                  <Bell className="w-5 h-5 md:w-6 md:h-6 text-gray-600" />
+                  {unreadCount > 0 && (
+                    <>
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                        {unreadCount}
+                      </span>
+                    </>
+                  )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-96 overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 flex items-center justify-between">
+                      <h3 className="text-white font-bold text-sm">Notifications</h3>
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="text-white hover:bg-white/20 rounded-lg p-1 transition"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Notifications List */}
+                    <div className="overflow-y-auto max-h-80">
+                      {notifications.length === 0 ? (
+                        <div className="text-center py-8 px-4">
+                          <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                          <p className="text-sm text-gray-500">No new notifications</p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-100">
+                          {notifications.map((notif) => (
+                            <div
+                              key={notif.id}
+                              className="px-4 py-3 hover:bg-gray-50 transition cursor-pointer"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${
+                                  notif.color === 'green' ? 'bg-green-100' : 'bg-blue-100'
+                                }`}>
+                                  {notif.icon}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-gray-900 mb-1">
+                                    {notif.title}
+                                  </p>
+                                  <p className="text-xs text-gray-600 mb-1">
+                                    {notif.message}
+                                  </p>
+                                  <p className="text-xs text-gray-400">
+                                    {new Date(notif.date).toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric',
+                                      year: 'numeric'
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    {notifications.length > 0 && (
+                      <div className="border-t border-gray-200 px-4 py-2 bg-gray-50">
+                        <button
+                          onClick={() => {
+                            setUnreadCount(0);
+                            setShowNotifications(false);
+                          }}
+                          className="text-xs text-green-600 hover:text-green-700 font-semibold"
+                        >
+                          Mark all as read
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="text-right hidden lg:block">
                   <p className="text-sm font-medium text-gray-800">{user?.fullName || 'Farmer'}</p>
                   <p className="text-xs text-gray-500">{user?.associationName || 'Independent Farmer'}</p>
                 </div>
@@ -702,10 +894,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   <img 
                     src={profilePhoto} 
                     alt="Profile" 
-                    className="w-10 h-10 rounded-full object-cover border-2 border-green-500 shadow-lg"
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-green-500 shadow-lg"
                   />
                 ) : (
-                  <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base">
                     {user?.fullName?.charAt(0) || 'F'}
                   </div>
                 )}
@@ -715,14 +907,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         </header>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="p-4 md:p-6 lg:p-8">
           {currentPage === 'dashboard' && (
             <>
               {/* NEW DATA-DRIVEN DASHBOARD */}
               <div className="space-y-6">
                 
                 {/* Top KPI Cards - Most Important Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                   {/* Total Revenue - Most Important for Farmers */}
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all">
                     <div className="flex items-center justify-between mb-3">

@@ -22,7 +22,8 @@ import {
   Users,
   Award,
   Eye,
-  Clock
+  Clock,
+  Bell
 } from 'lucide-react';
 import UserManagement from './UserManagement';
 import OfficerManagement from './OfficerManagement';
@@ -44,7 +45,8 @@ interface MAODashboardProps {
 }
 
 const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'users' | 'officers' | 'maintenance' | 'seedlings' | 'seedlings-overview' | 'monitoring' | 'content' | 'harvests' | 'sales-analytics' | 'buyer-prices' | 'delivery-tracking' | 'activity-logs'>('dashboard');
   const [contentTab, setContentTab] = useState<'articles' | 'team'>('articles');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -63,6 +65,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [, setSavingProfile] = useState(false);
   const [, setUploadingPhoto] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+
+  // Notification states
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   // Get user info from localStorage
   const userStr = localStorage.getItem('user');
@@ -552,6 +559,235 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   useEffect(() => {
     fetchOfficerProfile();
     fetchDashboardData();
+    fetchNotifications();
+  }, []);
+
+  // Fetch notifications for MAO officer
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
+      // Create notifications array
+      const notifs: any[] = [];
+      
+      // Fetch recent users (24h)
+      try {
+        const usersRes = await fetch('http://localhost:3001/api/admin/users-report', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const usersData = await usersRes.json();
+        if (usersData.recentUsers && Array.isArray(usersData.recentUsers)) {
+          usersData.recentUsers.forEach((user: any) => {
+            const userDate = new Date(user.createdAt);
+            if (userDate > twentyFourHoursAgo) {
+              notifs.push({
+                id: `user-${user.id}`,
+                type: 'user',
+                title: 'New User Registered',
+                message: `${user.fullName} registered as ${user.userType}`,
+                date: user.createdAt,
+                icon: '👤',
+                color: 'blue'
+              });
+            }
+          });
+        }
+      } catch (e) { console.log('Error fetching users:', e); }
+      
+      // Fetch monitoring records (24h)
+      try {
+        const monitoringRes = await fetch('http://localhost:3001/api/monitoring/records', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const monitoringData = await monitoringRes.json();
+        if (Array.isArray(monitoringData)) {
+          monitoringData.forEach((record: any) => {
+            const recordDate = new Date(record.date_of_visit);
+            if (recordDate > twentyFourHoursAgo) {
+              notifs.push({
+                id: `monitoring-${record.monitoring_id}`,
+                type: 'monitoring',
+                title: 'New Field Monitoring',
+                message: `${record.farmer_name} farm monitored by ${record.monitored_by}`,
+                date: record.date_of_visit,
+                icon: '📋',
+                color: 'green'
+              });
+            }
+          });
+        }
+      } catch (e) { console.log('Error fetching monitoring:', e); }
+      
+      // Fetch seedling distributions (24h)
+      try {
+        const seedlingsRes = await fetch('http://localhost:3001/api/association-seedlings/all', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const seedlingsData = await seedlingsRes.json();
+        if (Array.isArray(seedlingsData)) {
+          seedlingsData.forEach((seedling: any) => {
+            const distDate = new Date(seedling.distribution_date);
+            if (distDate > twentyFourHoursAgo) {
+              notifs.push({
+                id: `seedling-${seedling.distribution_id}`,
+                type: 'seedling',
+                title: 'Seedling Distribution',
+                message: `${seedling.quantity_distributed} ${seedling.variety} seedlings to ${seedling.farmer_name || 'farmer'}`,
+                date: seedling.distribution_date,
+                icon: '🌱',
+                color: 'emerald'
+              });
+            }
+          });
+        }
+      } catch (e) { console.log('Error fetching seedlings:', e); }
+      
+      // Fetch planted seedlings updates (24h)
+      try {
+        const plantedRes = await fetch('http://localhost:3001/api/association-seedlings/farmer/planted-overview', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const plantedData = await plantedRes.json();
+        if (Array.isArray(plantedData)) {
+          plantedData.forEach((planted: any) => {
+            if (planted.planting_date) {
+              const plantDate = new Date(planted.planting_date);
+              if (plantDate > twentyFourHoursAgo) {
+                notifs.push({
+                  id: `planted-${planted.distribution_id}`,
+                  type: 'planted',
+                  title: 'Seedlings Planted',
+                  message: `${planted.farmer_name} planted ${planted.quantity_distributed} ${planted.variety}`,
+                  date: planted.planting_date,
+                  icon: '🌿',
+                  color: 'teal'
+                });
+              }
+            }
+          });
+        }
+      } catch (e) { console.log('Error fetching planted:', e); }
+      
+      // Fetch harvest submissions (24h)
+      try {
+        const harvestRes = await fetch('http://localhost:3001/api/harvests', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const harvestData = await harvestRes.json();
+        if (Array.isArray(harvestData)) {
+          harvestData.forEach((harvest: any) => {
+            const harvestDate = new Date(harvest.harvest_date || harvest.createdAt);
+            if (harvestDate > twentyFourHoursAgo) {
+              notifs.push({
+                id: `harvest-${harvest.harvest_id}`,
+                type: 'harvest',
+                title: 'Harvest Submitted',
+                message: `${harvest.farmer_name} submitted harvest: ${harvest.total_kg}kg`,
+                date: harvest.harvest_date || harvest.createdAt,
+                icon: '🌾',
+                color: 'amber'
+              });
+            }
+          });
+        }
+      } catch (e) { console.log('Error fetching harvests:', e); }
+      
+      // Fetch sales reports (24h)
+      try {
+        const salesRes = await fetch('http://localhost:3001/api/sales/all', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const salesData = await salesRes.json();
+        if (Array.isArray(salesData)) {
+          salesData.forEach((sale: any) => {
+            const saleDate = new Date(sale.sale_date || sale.createdAt);
+            if (saleDate > twentyFourHoursAgo) {
+              notifs.push({
+                id: `sale-${sale.sale_id}`,
+                type: 'sale',
+                title: 'Sales Report Submitted',
+                message: `${sale.farmer_name || 'Farmer'} sold ${sale.quantity_kg}kg for ₱${sale.total_amount}`,
+                date: sale.sale_date || sale.createdAt,
+                icon: '💰',
+                color: 'purple'
+              });
+            }
+          });
+        }
+      } catch (e) { console.log('Error fetching sales:', e); }
+      
+      // Fetch buyer price updates (24h)
+      try {
+        const pricesRes = await fetch('http://localhost:3001/api/buyer-prices/all', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const pricesData = await pricesRes.json();
+        if (Array.isArray(pricesData)) {
+          pricesData.forEach((price: any) => {
+            const priceDate = new Date(price.date_posted || price.createdAt);
+            if (priceDate > twentyFourHoursAgo) {
+              notifs.push({
+                id: `price-${price.price_id}`,
+                type: 'price',
+                title: 'Buyer Price Updated',
+                message: `${price.buyer_name} posted ₱${price.price_per_kg}/kg for ${price.grade}`,
+                date: price.date_posted || price.createdAt,
+                icon: '💸',
+                color: 'indigo'
+              });
+            }
+          });
+        }
+      } catch (e) { console.log('Error fetching prices:', e); }
+      
+      // Fetch delivery tracking updates (24h)
+      try {
+        const deliveriesRes = await fetch('http://localhost:3001/api/deliveries/all', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const deliveriesData = await deliveriesRes.json();
+        if (Array.isArray(deliveriesData)) {
+          deliveriesData.forEach((delivery: any) => {
+            const deliveryDate = new Date(delivery.created_at || delivery.createdAt);
+            if (deliveryDate > twentyFourHoursAgo) {
+              notifs.push({
+                id: `delivery-${delivery.delivery_id}`,
+                type: 'delivery',
+                title: 'Delivery Update',
+                message: `${delivery.farmer_name} to ${delivery.buyer_name}: ${delivery.status}`,
+                date: delivery.created_at || delivery.createdAt,
+                icon: '🚚',
+                color: 'cyan'
+              });
+            }
+          });
+        }
+      } catch (e) { console.log('Error fetching deliveries:', e); }
+      
+      // Sort by date (newest first) and limit to 15
+      notifs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const recentNotifs = notifs.slice(0, 15);
+      
+      setNotifications(recentNotifs);
+      setUnreadCount(recentNotifs.length > 0 ? Math.min(recentNotifs.length, 9) : 0);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -567,22 +803,44 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50">
+      {/* Mobile Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gradient-to-b from-slate-800 to-slate-900 text-white transition-all duration-300 ease-in-out flex flex-col overflow-hidden`}>
+      <aside className={`
+        ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-64' : sidebarOpen ? 'w-64' : 'w-20'}
+        ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
+        bg-gradient-to-b from-slate-800 to-slate-900 text-white 
+        transition-all duration-300 ease-in-out flex flex-col overflow-hidden
+        md:relative md:translate-x-0
+      `}>
         {/* Logo */}
-        <div className="p-6 flex items-center justify-between border-b border-slate-700">
-          <div className={`transition-all duration-300 ease-in-out ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
-            <h1 className="text-xl font-bold whitespace-nowrap">MAO Culiram</h1>
+        <div className="p-4 md:p-6 flex items-center justify-between border-b border-slate-700">
+          <div className={`transition-all duration-300 ease-in-out ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
+            <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">MAO Culiram</h1>
             <p className="text-xs text-slate-400 whitespace-nowrap">
               {isSuperAdmin ? '⭐ Super Admin Panel' : '🛡️ Admin Panel'}
             </p>
           </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 flex-shrink-0"
+            className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 flex-shrink-0 md:block hidden"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
+          {isMobile && (
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 flex-shrink-0 md:hidden"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
@@ -594,7 +852,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             } ${!sidebarOpen && 'justify-center'}`}
           >
             <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Dashboard</span>
+            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Dashboard</span>
           </button>
           
           <button 
@@ -736,10 +994,17 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
         {/* Header - Always visible on all pages */}
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-8 py-6 shadow-sm">
+        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 md:px-8 py-4 md:py-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition mr-2"
+            >
+              <Menu className="w-6 h-6 text-gray-600" />
+            </button>
+            <div className="flex-1">
+              <h2 className="text-lg md:text-2xl font-bold text-gray-800">
                 {currentPage === 'dashboard' ? 'Dashboard' :
                  currentPage === 'users' ? 'User Management' :
                  currentPage === 'seedlings' ? 'Seedling Distribution' :
@@ -755,17 +1020,116 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                  currentPage === 'content' ? 'Content Management' :
                  'Dashboard'}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-xs md:text-sm text-gray-600 hidden sm:block">
                 Welcome back, {isSuperAdmin ? 'Super Admin' : 'Admin'}
               </p>
             </div>
+            
+            {/* Notification Bell with Dropdown */}
+            <div className="relative mr-2 md:mr-4">
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition relative"
+              >
+                <Bell className="w-5 h-5 md:w-6 md:h-6 text-gray-600" />
+                {unreadCount > 0 && (
+                  <>
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      {unreadCount}
+                    </span>
+                  </>
+                )}
+              </button>
+
+              {/* Notification Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-96 overflow-hidden">
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 flex items-center justify-between">
+                    <h3 className="text-white font-bold text-sm">System Updates</h3>
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      className="text-white hover:bg-white/20 rounded-lg p-1 transition"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Notifications List */}
+                  <div className="overflow-y-auto max-h-80">
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-8 px-4">
+                        <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-sm text-gray-500">No new updates</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-100">
+                        {notifications.map((notif) => (
+                          <div
+                            key={notif.id}
+                            className="px-4 py-3 hover:bg-gray-50 transition cursor-pointer"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${
+                                notif.color === 'blue' ? 'bg-blue-100' : 
+                                notif.color === 'green' ? 'bg-green-100' : 
+                                notif.color === 'emerald' ? 'bg-emerald-100' :
+                                notif.color === 'teal' ? 'bg-teal-100' :
+                                notif.color === 'amber' ? 'bg-amber-100' :
+                                notif.color === 'purple' ? 'bg-purple-100' :
+                                notif.color === 'indigo' ? 'bg-indigo-100' :
+                                notif.color === 'cyan' ? 'bg-cyan-100' : 'bg-gray-100'
+                              }`}>
+                                {notif.icon}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 mb-1">
+                                  {notif.title}
+                                </p>
+                                <p className="text-xs text-gray-600 mb-1">
+                                  {notif.message}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {new Date(notif.date).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  {notifications.length > 0 && (
+                    <div className="border-t border-gray-200 px-4 py-2 bg-gray-50">
+                      <button
+                        onClick={() => {
+                          setUnreadCount(0);
+                          setShowNotifications(false);
+                        }}
+                        className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold"
+                      >
+                        Mark all as read
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Profile Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                className="flex items-center gap-3 hover:bg-gray-50 rounded-xl p-2 transition-all duration-200"
+                className="flex items-center gap-2 md:gap-3 hover:bg-gray-50 rounded-xl p-2 transition-all duration-200"
               >
-                <div className="text-right">
+                <div className="text-right hidden lg:block">
                   <p className="text-sm font-semibold text-gray-800">
                     {user?.fullName || 'Officer'}
                   </p>
@@ -781,10 +1145,10 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   <img 
                     src={profilePhoto} 
                     alt="Profile" 
-                    className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500 shadow-lg"
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-emerald-500 shadow-lg"
                   />
                 ) : (
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg text-sm md:text-base">
                     {user?.fullName?.charAt(0) || 'A'}
                   </div>
                 )}
