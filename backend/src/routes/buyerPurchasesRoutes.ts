@@ -22,4 +22,7 @@ router.put('/:purchaseId', authenticate, BuyerPurchasesController.updatePurchase
 // Delete purchase
 router.delete('/:purchaseId', authenticate, BuyerPurchasesController.deletePurchase);
 
+// Record inventory sale
+router.post('/inventory/sell', authenticate, BuyerPurchasesController.recordSale);
+
 export default router;

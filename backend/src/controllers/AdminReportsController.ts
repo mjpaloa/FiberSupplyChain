@@ -89,6 +89,22 @@ export class AdminReportsController {
         .select('*', { count: 'exact', head: true })
         .gte('date_of_visit', thirtyDaysAgo.toISOString().split('T')[0]);
 
+      // 8. Farm Condition Breakdown
+      const { data: allMonitoringRecords } = await supabase
+        .from('monitoring_records')
+        .select('farm_condition');
+
+      let healthyFarms = 0;
+      let needsSupportFarms = 0;
+
+      allMonitoringRecords?.forEach(record => {
+        if (record.farm_condition === 'Healthy') {
+          healthyFarms++;
+        } else if (record.farm_condition === 'Needs Support' || record.farm_condition === 'Damaged') {
+          needsSupportFarms++;
+        }
+      });
+
       res.status(200).json({
         totalSeedlingsReceived,
         totalSeedlingsDistributed,

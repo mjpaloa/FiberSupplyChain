@@ -17,12 +17,13 @@ import BuyerTransactions from './BuyerTransactions';
 import BuyerProfile from './BuyerProfile';
 import BuyerPriceListingFormWithClasses from './BuyerPriceListingFormWithClasses';
 import BuyerPriceListings from './BuyerPriceListings';
+import BuyerInventory from './BuyerInventory';
 
 interface BuyerDashboardProps {
   onLogout: () => void;
 }
 
-type DashboardPage = 'dashboard' | 'purchase' | 'sales' | 'transactions' | 'profile' | 'create-listing' | 'my-listings';
+type DashboardPage = 'dashboard' | 'inventory' | 'purchase' | 'sales' | 'transactions' | 'profile' | 'create-listing' | 'my-listings';
 
 const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -73,9 +74,10 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'inventory', label: 'My Inventory', icon: Package },
     { id: 'create-listing', label: 'Create Price Listing', icon: ShoppingCart },
     { id: 'my-listings', label: 'My Price Listings', icon: FileText },
-    { id: 'purchase', label: 'Purchase Fiber', icon: Package },
+    { id: 'purchase', label: 'Purchase Fiber', icon: ShoppingCart },
     { id: 'transactions', label: 'Transactions', icon: FileText },
     { id: 'profile', label: 'Profile', icon: User }
   ];
@@ -84,6 +86,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
     switch (currentPage) {
       case 'dashboard':
         return <BuyerAnalytics />;
+      case 'inventory':
+        return <BuyerInventory />;
       case 'create-listing':
         return <BuyerPriceListingFormWithClasses />;
       case 'my-listings':

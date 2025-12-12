@@ -54,6 +54,7 @@ export class BuyerPurchasesController {
 
   /**
    * Get all purchases for the authenticated buyer
+   * Also calculates net inventory after deducting sales
    */
   static async getBuyerPurchases(req: Request, res: Response) {
     try {
@@ -86,7 +87,29 @@ export class BuyerPurchasesController {
 
       if (error) throw error;
 
-      res.status(200).json({ purchases: data });
+      // Fetch sales to calculate net inventory
+      const { data: sales, error: salesError } = await supabase
+        .from('buyer_sales')
+        .select('fiber_class, quantity_kg')
+        .eq('seller_id', userId);
+
+      if (salesError) {
+        console.warn('Error fetching sales (may not exist yet):', salesError);
+      }
+
+      // Calculate sold quantities per class
+      const soldByClass: { [key: string]: number } = {};
+      if (sales && Array.isArray(sales)) {
+        sales.forEach((sale: any) => {
+          const fiberClass = sale.fiber_class || 'Class C';
+          soldByClass[fiberClass] = (soldByClass[fiberClass] || 0) + parseFloat(sale.quantity_kg || '0');
+        });
+      }
+
+      res.status(200).json({ 
+        purchases: data,
+        sold_by_class: soldByClass
+      });
     } catch (error) {
       console.error('Error fetching purchases:', error);
       res.status(500).json({ error: 'Failed to fetch purchases' });
@@ -305,6 +328,81 @@ export class BuyerPurchasesController {
     } catch (error) {
       console.error('Error deleting purchase:', error);
       res.status(500).json({ error: 'Failed to delete purchase' });
+    }
+  }
+
+  /**
+   * Record inventory sale - tracks when buyer sells fiber to customers
+   */
+  static async recordSale(req: Request, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const {
+        fiber_class,
+        quantity_kg,
+        price_per_kg,
+        total_amount,
+        buyer_name,
+        notes
+      } = req.body;
+
+      if (!userId) {
+        res.status(401).json({ error: 'User ID not found' });
+        return;
+      }
+
+      // Validate inputs
+      if (!fiber_class || !quantity_kg || !price_per_kg || !buyer_name) {
+        res.status(400).json({ error: 'Missing required fields' });
+        return;
+      }
+
+      // Check if buyer has enough inventory
+      const { data: purchases, error: fetchError } = await supabase
+        .from('buyer_purchases')
+        .select('quantity, fiber_quality')
+        .eq('buyer_id', userId)
+        .eq('fiber_quality', fiber_class);
+
+      if (fetchError) throw fetchError;
+
+      const availableKg = purchases?.reduce((sum, p) => sum + parseFloat(p.quantity || '0'), 0) || 0;
+
+      if (availableKg < quantity_kg) {
+        res.status(400).json({ 
+          error: 'Insufficient inventory',
+          available: availableKg,
+          requested: quantity_kg
+        });
+        return;
+      }
+
+      // Insert sale record
+      const { data: sale, error: insertError } = await supabase
+        .from('buyer_sales')
+        .insert({
+          seller_id: userId,
+          fiber_class,
+          quantity_kg: parseFloat(quantity_kg),
+          price_per_kg: parseFloat(price_per_kg),
+          total_amount: parseFloat(total_amount),
+          buyer_name,
+          notes,
+          sale_date: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      res.status(201).json({
+        message: 'Sale recorded successfully',
+        sale,
+        remaining_inventory: availableKg - quantity_kg
+      });
+    } catch (error) {
+      console.error('Error recording sale:', error);
+      res.status(500).json({ error: 'Failed to record sale' });
     }
   }
 }

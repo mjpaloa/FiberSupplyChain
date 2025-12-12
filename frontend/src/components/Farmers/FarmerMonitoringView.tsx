@@ -77,10 +77,10 @@ const FarmerMonitoringView: React.FC = () => {
     
     // Count healthy vs needs support farms based on latest record condition
     const healthyFarms = records.filter(r => 
-      r.farmCondition === 'Healthy' || r.farmCondition === 'Good'
+      r.farmCondition === 'Healthy'
     ).length;
     const needsSupport = records.filter(r => 
-      r.farmCondition === 'Needs Support' || r.farmCondition === 'Critical' || r.farmCondition === 'Poor'
+      r.farmCondition === 'Needs Support' || r.farmCondition === 'Damaged'
     ).length;
     
     console.log('📈 Stats calculated:', { upcoming, overdue, completed, doneMonitor, healthyFarms, needsSupport, nextVisitDate });
@@ -228,7 +228,7 @@ const FarmerMonitoringView: React.FC = () => {
       {/* Statistics Cards - Match MAO Dashboard Style */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
         {/* Total Monitoring Card */}
-        <div className="group relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-2xl p-6 shadow-lg overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
           <div className="relative">
             <div className="flex items-center justify-between mb-3">

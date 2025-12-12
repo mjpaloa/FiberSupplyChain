@@ -95,7 +95,7 @@ const AssociationSeedlingManagement: React.FC = () => {
   const [formData, setFormData] = useState<DistributionFormData>({
     variety: '',
     source_supplier: '',
-    quantity_distributed: 0,
+    quantity_distributed: '',
     date_distributed: new Date().toISOString().split('T')[0],
     recipient_association_id: '',
     remarks: '',
@@ -246,7 +246,7 @@ const AssociationSeedlingManagement: React.FC = () => {
 
   // Handle quantity change
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newQuantity = parseInt(e.target.value) || 0;
+    const newQuantity = e.target.value;
     setFormData({
       ...formData,
       quantity_distributed: newQuantity
@@ -268,7 +268,7 @@ const AssociationSeedlingManagement: React.FC = () => {
     const data: DistributionSubmissionData = { 
       variety: formData.variety,
       source_supplier: formData.source_supplier,
-      quantity_distributed: formData.quantity_distributed,
+      quantity_distributed: parseInt(formData.quantity_distributed) || 0,
       date_distributed: formData.date_distributed,
       recipient_association_id: formData.recipient_association_id,
       remarks: formData.remarks,
@@ -378,7 +378,7 @@ const AssociationSeedlingManagement: React.FC = () => {
     setFormData({
       variety: '',
       source_supplier: '',
-      quantity_distributed: 0,
+      quantity_distributed: '',
       date_distributed: new Date().toISOString().split('T')[0],
       recipient_association_id: '',
       remarks: '',
@@ -428,7 +428,7 @@ const AssociationSeedlingManagement: React.FC = () => {
     setFormData({
       variety: distribution.variety,
       source_supplier: distribution.source_supplier || '',
-      quantity_distributed: distribution.quantity_distributed,
+      quantity_distributed: distribution.quantity_distributed.toString(),
       date_distributed: distribution.date_distributed,
       recipient_association_id: distribution.recipient_association_id,
       remarks: distribution.remarks || '',
@@ -890,8 +890,8 @@ const AssociationSeedlingManagement: React.FC = () => {
                     min="1"
                     value={formData.quantity_distributed}
                     onChange={handleQuantityChange}
-                    className="w-full px-4 py-3 bg-white border-2 border-purple-200 rounded-2xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-semibold shadow-md"
-                    placeholder="Number of seedlings"
+                    className="w-full px-4 py-3 bg-white border-2 border-purple-200 rounded-2xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-semibold shadow-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-auto [&::-webkit-inner-spin-button]:appearance-auto"
+                    placeholder="0"
                   />
                 </div>
 

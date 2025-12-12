@@ -94,6 +94,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [farmHealthData, setFarmHealthData] = useState<any[]>([]);
   const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [harvestStats, setHarvestStats] = useState({ totalFiberKg: 0, totalRevenue: 0 });
 
   // Get user info from localStorage
   const userStr = localStorage.getItem('user');
@@ -131,50 +132,65 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      
-      // Fetch recent seedling distributions
-      const seedlingsRes = await fetch('http://localhost:3001/api/association-seedlings/farmer/received', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const seedlingsData = await seedlingsRes.json();
-      
-      // Fetch recent monitoring records
-      const monitoringRes = await fetch('http://localhost:3001/api/monitoring/farmer/my-records', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const monitoringData = await monitoringRes.json();
-      
-      // Create notifications array
       const notifs: any[] = [];
       
-      // Add seedling notifications (last 5)
-      if (Array.isArray(seedlingsData)) {
-        seedlingsData.slice(0, 5).forEach((seedling: any) => {
-          notifs.push({
-            id: `seedling-${seedling.distribution_id}`,
-            type: 'seedling',
-            title: 'New Seedlings Received',
-            message: `${seedling.quantity_distributed} ${seedling.variety} seedlings distributed to you`,
-            date: seedling.distribution_date,
-            icon: '🌱',
-            color: 'green'
-          });
+      // Fetch recent seedling distributions
+      try {
+        const seedlingsRes = await fetch('http://localhost:3001/api/association-seedlings/farmer/received', {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (seedlingsRes.ok) {
+          const seedlingsData = await seedlingsRes.json();
+          
+          // Add seedling notifications (last 5)
+          if (Array.isArray(seedlingsData)) {
+            seedlingsData.slice(0, 5).forEach((seedling: any) => {
+              notifs.push({
+                id: `seedling-${seedling.distribution_id}`,
+                type: 'seedling',
+                title: 'New Seedlings Received',
+                message: `${seedling.quantity_distributed} ${seedling.variety} seedlings distributed to you`,
+                date: seedling.distribution_date,
+                icon: '🌱',
+                color: 'green'
+              });
+            });
+          }
+        }
+      } catch (error) {
+        console.log('Could not fetch seedling notifications');
       }
       
-      // Add monitoring notifications (last 5)
-      if (Array.isArray(monitoringData)) {
-        monitoringData.slice(0, 5).forEach((record: any) => {
-          notifs.push({
-            id: `monitoring-${record.monitoring_id}`,
-            type: 'monitoring',
-            title: 'Farm Monitoring Visit',
-            message: `Your farm was monitored. Condition: ${record.farm_condition}`,
-            date: record.date_of_visit,
-            icon: '📋',
-            color: 'blue'
-          });
+      // Fetch recent monitoring records (using correct endpoint)
+      try {
+        const monitoringRes = await fetch('http://localhost:3001/api/farmers/monitoring', {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
+        
+        if (monitoringRes.ok) {
+          const monitoringData = await monitoringRes.json();
+          
+          // Add monitoring notifications (last 5)
+          if (Array.isArray(monitoringData)) {
+            monitoringData.slice(0, 5).forEach((record: any) => {
+              notifs.push({
+                id: `monitoring-${record.monitoring_id}`,
+                type: 'monitoring',
+                title: 'Farm Monitoring Visit',
+                message: `Your farm was monitored. Condition: ${record.farmCondition}`,
+                date: record.dateOfVisit,
+                icon: '📋',
+                color: 'blue'
+              });
+            });
+          }
+        }
+      } catch (error) {
+        console.log('Could not fetch monitoring notifications');
       }
       
       // Sort by date (newest first)
@@ -187,12 +203,17 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     }
   };
 
-  // Generate analytics data when seedlings or view mode changes
+  // Generate analytics data on mount and when view mode changes
+  useEffect(() => {
+    generateAnalyticsData();
+  }, [viewMode, selectedYear]);
+
+  // Also regenerate when seedlings change
   useEffect(() => {
     if (seedlings.length > 0) {
       generateAnalyticsData();
     }
-  }, [seedlings, viewMode, selectedYear]);
+  }, [seedlings]);
 
   // Filter seedlings based on search and status
   useEffect(() => {
@@ -267,11 +288,95 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   };
 
   const generateAnalyticsData = async () => {
+    console.log('🔄 Generating analytics data...');
     const healthData = generateFarmHealthData();
     setFarmHealthData(healthData);
 
+    // Fetch direct stats
+    await fetchHarvestStats();
+
     const revenue = await generateRevenueData();
+    console.log('📊 Revenue data loaded:', revenue);
+    
+    // Calculate totals before setting state
+    const totalRev = revenue.reduce((sum, item) => sum + (item.revenue || 0), 0);
+    const totalFiber = revenue.reduce((sum, item) => sum + (item.fiberKg || 0), 0);
+    console.log('💰 Totals calculated - Revenue:', totalRev, 'Fiber:', totalFiber, 'kg');
+    
     setRevenueData(revenue);
+    console.log('✅ Revenue data set in state');
+  };
+
+  const fetchHarvestStats = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      
+      // Fetch all farmer's harvests using correct endpoint
+      const harvestResponse = await fetch('http://localhost:3001/api/harvests/farmer/harvests', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!harvestResponse.ok) {
+        console.log('❌ Could not fetch harvests, status:', harvestResponse.status);
+        return;
+      }
+      
+      const data = await harvestResponse.json();
+      const harvests = data.harvests || data; // Handle both response formats
+      console.log('🌾 All harvests fetched:', harvests);
+      
+      if (!Array.isArray(harvests)) {
+        console.log('⚠️ Harvests is not an array');
+        return;
+      }
+      
+      // Calculate totals from ALL verified harvests (no date filtering)
+      const verifiedHarvests = harvests.filter((h: any) => 
+        h.status === 'Verified' || h.status === 'In Inventory'
+      );
+      
+      console.log('✅ Verified harvests:', verifiedHarvests.length, 'out of', harvests.length);
+      
+      const totalFiberKg = verifiedHarvests.reduce((sum: number, h: any) => {
+        const kg = parseFloat(h.dry_fiber_output_kg) || 0;
+        return sum + kg;
+      }, 0);
+      
+      // Fetch sales for revenue using correct endpoint
+      const userStr = localStorage.getItem('user');
+      const currentUser = userStr ? JSON.parse(userStr) : null;
+      const farmerId = currentUser?.userId;
+      
+      let totalRevenue = 0;
+      if (farmerId) {
+        const salesResponse = await fetch(`http://localhost:3001/api/sales/farmer-reports/${farmerId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (salesResponse.ok) {
+          const result = await salesResponse.json();
+          console.log('💰 Sales API response:', result);
+          
+          if (result.success && Array.isArray(result.reports)) {
+            const sales = result.reports;
+            totalRevenue = sales.reduce((sum: number, s: any) => sum + (parseFloat(s.total_amount) || 0), 0);
+            console.log('💵 Total revenue calculated:', totalRevenue, 'from', sales.length, 'reports');
+          } else {
+            console.log('⚠️ Sales response format unexpected:', result);
+          }
+        } else {
+          console.log('⚠️ Sales API returned:', salesResponse.status);
+        }
+      } else {
+        console.log('⚠️ No farmer ID available for sales fetch');
+      }
+      
+      console.log('💎 FINAL STATS - Fiber:', totalFiberKg, 'kg, Revenue: ₱', totalRevenue);
+      
+      setHarvestStats({ totalFiberKg, totalRevenue });
+    } catch (error) {
+      console.error('❌ Error fetching harvest stats:', error);
+    }
   };
 
   const generateDistributionData = () => {
@@ -333,15 +438,34 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const generateRevenueData = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const farmerId = user?.userId;
+      const userStr = localStorage.getItem('user');
+      const currentUser = userStr ? JSON.parse(userStr) : null;
+      const farmerId = currentUser?.userId;
       
-      // Fetch sales data for this farmer
-      const salesResponse = await fetch(`http://localhost:3001/api/sales/farmer/${farmerId}`, {
+      if (!farmerId) {
+        console.log('No farmer ID available');
+        return viewMode === 'monthly' 
+          ? Array.from({ length: 12 }, (_, i) => ({
+              month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
+              revenue: 0,
+              profit: 0,
+              fiberKg: 0
+            }))
+          : Array.from({ length: 5 }, (_, i) => ({
+              year: new Date().getFullYear() - 4 + i,
+              revenue: 0,
+              profit: 0,
+              fiberKg: 0
+            }));
+      }
+
+      // Fetch harvest data for fiber production (only verified harvests)
+      const harvestResponse = await fetch(`http://localhost:3001/api/harvests/farmer/harvests`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      if (!salesResponse.ok) {
-        console.log('No sales data available');
+      if (!harvestResponse.ok) {
+        console.log('No harvest data available');
         return viewMode === 'monthly' 
           ? Array.from({ length: 12 }, (_, i) => ({
               month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
@@ -357,7 +481,24 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             }));
       }
       
-      const salesData = await salesResponse.json();
+      const harvestData = await harvestResponse.json();
+      const harvests = harvestData.harvests || harvestData;
+      console.log('🌾 Harvest data fetched for charts:', harvests);
+      
+      // Filter only verified harvests
+      const verifiedHarvests = Array.isArray(harvests) 
+        ? harvests.filter((h: any) => h.status === 'Verified' || h.status === 'In Inventory')
+        : [];
+      console.log('✅ Verified harvests for charts:', verifiedHarvests.length, 'items');
+
+      // Fetch sales data for revenue
+      const salesResponse = await fetch(`http://localhost:3001/api/sales/farmer-reports/${farmerId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      const salesResult = await salesResponse.json();
+      const salesData = salesResult.success && Array.isArray(salesResult.reports) ? salesResult.reports : [];
+      console.log('💰 Sales data for charts:', salesData.length, 'reports');
       
       if (viewMode === 'monthly') {
         const monthlyData = Array.from({ length: 12 }, (_, i) => ({
@@ -367,13 +508,26 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           fiberKg: 0
         }));
         
+        // Add harvest data for fiber production (verified only)
+        let totalFiber = 0;
+        verifiedHarvests.forEach((harvest: any) => {
+          const harvestDate = new Date(harvest.harvest_date);
+          if (harvestDate.getFullYear() === selectedYear) {
+            const monthIndex = harvestDate.getMonth();
+            const fiberKg = parseFloat(harvest.dry_fiber_output_kg) || 0;
+            monthlyData[monthIndex].fiberKg += fiberKg;
+            totalFiber += fiberKg;
+          }
+        });
+        console.log(`📈 Monthly fiber data for ${selectedYear}:`, totalFiber, 'kg total');
+        
+        // Add sales data for revenue
         salesData.forEach((sale: any) => {
-          const saleDate = new Date(sale.sale_date);
+          const saleDate = new Date(sale.report_date || sale.sale_date);
           if (saleDate.getFullYear() === selectedYear) {
             const monthIndex = saleDate.getMonth();
-            monthlyData[monthIndex].revenue += sale.total_amount || 0;
-            monthlyData[monthIndex].profit += (sale.total_amount || 0) * 0.7; // Estimate 70% profit
-            monthlyData[monthIndex].fiberKg += sale.quantity_sold || 0;
+            monthlyData[monthIndex].revenue += parseFloat(sale.total_amount) || 0;
+            monthlyData[monthIndex].profit += (parseFloat(sale.total_amount) || 0) * 0.7;
           }
         });
         
@@ -388,14 +542,28 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           yearlyData[year] = { year, revenue: 0, profit: 0, fiberKg: 0 };
         }
         
-        salesData.forEach((sale: any) => {
-          const year = new Date(sale.sale_date).getFullYear();
+        // Add harvest data for fiber production (verified only)
+        let totalFiber = 0;
+        verifiedHarvests.forEach((harvest: any) => {
+          const year = new Date(harvest.harvest_date).getFullYear();
           if (yearlyData[year]) {
-            yearlyData[year].revenue += sale.total_amount || 0;
-            yearlyData[year].profit += (sale.total_amount || 0) * 0.7;
-            yearlyData[year].fiberKg += sale.quantity_sold || 0;
+            const fiberKg = parseFloat(harvest.dry_fiber_output_kg) || 0;
+            yearlyData[year].fiberKg += fiberKg;
+            totalFiber += fiberKg;
           }
         });
+        console.log('📈 Yearly fiber data:', totalFiber, 'kg total');
+        
+        // Add sales data for revenue
+        if (Array.isArray(salesData)) {
+          salesData.forEach((sale: any) => {
+            const year = new Date(sale.sale_date).getFullYear();
+            if (yearlyData[year]) {
+              yearlyData[year].revenue += sale.total_amount || 0;
+              yearlyData[year].profit += (sale.total_amount || 0) * 0.7;
+            }
+          });
+        }
         
         return Object.values(yearlyData);
       }
@@ -675,18 +843,21 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-64' : sidebarOpen ? 'w-64' : 'w-20'}
         ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
         bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 text-white 
-        transition-all duration-300 ease-in-out flex flex-col shadow-2xl
-        md:relative md:translate-x-0 overflow-hidden
+        transition-[width,transform] duration-300 ease-in-out flex flex-col shadow-2xl
+        md:relative md:translate-x-0
       `}>
         {/* Logo */}
-        <div className="p-4 md:p-6 flex items-center justify-between border-b border-slate-700">
-          <div className={`transition-all duration-300 ease-in-out ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
-            <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">Farmer Portal</h1>
-            <p className="text-xs text-blue-300 whitespace-nowrap">Abaca Management</p>
+        <div className="p-4 md:p-6 flex items-center justify-between border-b border-slate-700 overflow-hidden">
+          <div className={`
+            transition-all duration-300 ease-in-out whitespace-nowrap
+            ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0'}
+          `}>
+            <h1 className="text-lg md:text-xl font-bold">Farmer Portal</h1>
+            <p className="text-xs text-blue-300">Abaca Management</p>
           </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-700 rounded-lg transition md:block hidden"
+            className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 md:block hidden flex-shrink-0"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -701,45 +872,70 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-hidden">
           <button
             onClick={() => setCurrentPage('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               currentPage === 'dashboard' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            }`}
+            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
-            <LayoutDashboard className="w-5 h-5" />
-            {(isMobile || sidebarOpen) && <span>Dashboard</span>}
+            <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
+            <span className={`
+              whitespace-nowrap transition-all duration-300 ease-in-out
+              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
+            `}>Dashboard</span>
           </button>
 
           <button
             onClick={() => setCurrentPage('seedlings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               currentPage === 'seedlings' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            }`}
+            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
-            <Sprout className="w-5 h-5" />
-            {(isMobile || sidebarOpen) && <span>My Seedlings</span>}
+            <Sprout className="w-5 h-5 flex-shrink-0" />
+            <span className={`
+              whitespace-nowrap transition-all duration-300 ease-in-out
+              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
+            `}>My Seedlings</span>
           </button>
 
           <button
             onClick={() => setCurrentPage('monitoring')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               currentPage === 'monitoring' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            }`}
+            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
-            <Calendar className="w-5 h-5" />
-            {(isMobile || sidebarOpen) && <span>Farm Monitoring</span>}
+            <Calendar className="w-5 h-5 flex-shrink-0" />
+            <span className={`
+              whitespace-nowrap transition-all duration-300 ease-in-out
+              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
+            `}>Farm Monitoring</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentPage('harvest')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              currentPage === 'harvest' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
+            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
+          >
+            <Package className="w-5 h-5 flex-shrink-0" />
+            <span className={`
+              whitespace-nowrap transition-all duration-300 ease-in-out
+              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
+            `}>Harvest Records</span>
           </button>
 
           <button
             onClick={() => setCurrentPage('track-deliveries')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               currentPage === 'track-deliveries' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            }`}
+            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
-            <Truck className="w-5 h-5" />
-            {(isMobile || sidebarOpen) && <span>Track Deliveries</span>}
+            <Truck className="w-5 h-5 flex-shrink-0" />
+            <span className={`
+              whitespace-nowrap transition-all duration-300 ease-in-out
+              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
+            `}>Track Deliveries</span>
           </button>
 
           <button
@@ -747,24 +943,32 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
               setCurrentPage('sales-report');
               setShowSalesForm(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               currentPage === 'sales-report' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            }`}
+            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
-            <FileText className="w-5 h-5" />
-            {(isMobile || sidebarOpen) && <span>Sales Reports</span>}
+            <FileText className="w-5 h-5 flex-shrink-0" />
+            <span className={`
+              whitespace-nowrap transition-all duration-300 ease-in-out
+              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
+            `}>Sales Reports</span>
           </button>
 
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-slate-700">
+        <div className="p-4 border-t border-slate-700 overflow-hidden">
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-600 rounded-lg transition"
+            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-red-600 rounded-lg transition-all duration-200 ${
+              !sidebarOpen && !isMobile ? 'justify-center' : ''
+            }`}
           >
-            <LogOut className="w-5 h-5" />
-            {(isMobile || sidebarOpen) && <span>Logout</span>}
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            <span className={`
+              whitespace-nowrap transition-all duration-300 ease-in-out
+              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
+            `}>Logout</span>
           </button>
         </div>
       </aside>
@@ -912,496 +1116,375 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             <>
               {/* NEW DATA-DRIVEN DASHBOARD */}
               <div className="space-y-6">
-                
-                {/* Top KPI Cards - Most Important Metrics */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                  {/* Total Revenue - Most Important for Farmers */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <DollarSign className="w-5 h-5 text-green-600" />
-                      </div>
-                      <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                        +12.5%
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 font-medium mb-1">Total Earnings</p>
-                    <h3 className="text-3xl font-bold text-gray-900">
-                      ₱{(revenueData.reduce((sum, item) => sum + item.revenue, 0) / 1000).toFixed(1)}K
-                    </h3>
-                    <p className="text-xs text-gray-400 mt-2">This year</p>
-                  </div>
 
-                  {/* Seedlings Received */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Package className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                        Active
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 font-medium mb-1">Seedlings Received</p>
-                    <h3 className="text-3xl font-bold text-gray-900">{stats.totalSeedlings.toLocaleString()}</h3>
-                    <p className="text-xs text-gray-400 mt-2">Total distributed</p>
-                  </div>
-
-                  {/* Planted Seedlings */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Sprout className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
-                        Growing
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 font-medium mb-1">Planted</p>
-                    <h3 className="text-3xl font-bold text-gray-900">{stats.activePlantings.toLocaleString()}</h3>
-                    <p className="text-xs text-gray-400 mt-2">Active plantings</p>
-                  </div>
-
-                  {/* Fiber Harvested */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="p-2 bg-orange-100 rounded-lg">
-                        <Activity className="w-5 h-5 text-orange-600" />
-                      </div>
-                      <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
-                        Sold
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 font-medium mb-1">Fiber Harvested</p>
-                    <h3 className="text-3xl font-bold text-gray-900">
-                      {revenueData.reduce((sum, item) => sum + item.fiberKg, 0).toLocaleString()} kg
-                    </h3>
-                    <p className="text-xs text-gray-400 mt-2">Total production</p>
-                  </div>
-                </div>
-
-                {/* Main Content Grid - 2 Columns */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  
-                  {/* LEFT: Recent Seedlings - 2 columns */}
-                  <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-base font-semibold text-gray-900">Recent Seedling Distributions</h3>
-                      <button
-                        onClick={() => setCurrentPage('seedlings')}
-                        className="text-xs font-medium text-blue-600 hover:text-blue-700"
-                      >
-                        View All →
-                      </button>
-                    </div>
-                    {!Array.isArray(seedlings) || seedlings.length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Package className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <p className="text-sm text-gray-500">No seedlings received yet</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {seedlings.slice(0, 5).map((seedling) => (
-                          <div key={seedling.distribution_id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                <Sprout className="w-6 h-6 text-green-600" />
-                              </div>
-                              <div>
-                                <p className="font-semibold text-gray-900">{seedling.variety}</p>
-                                <p className="text-xs text-gray-500">{new Date(seedling.date_distributed).toLocaleDateString('en-PH')}</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-gray-900">{seedling.quantity_distributed}</p>
-                              <p className="text-xs text-gray-500">seedlings</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* RIGHT: Farm Information Card */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h3 className="text-base font-semibold text-gray-900 mb-6">Farm Information</h3>
-                    <div className="space-y-5">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <UsersIcon className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 mb-1">Association</p>
-                          <p className="font-semibold text-gray-900 text-sm truncate">{user?.associationName || 'N/A'}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <MapPin className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 mb-1">Location</p>
-                          <p className="font-semibold text-gray-900 text-sm">{user?.municipality || 'N/A'}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{user?.farmLocation || 'Not specified'}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Activity className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 mb-1">Farm Area</p>
-                          <p className="font-semibold text-gray-900 text-sm">{user?.farmAreaHectares || 0} hectares</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Calendar className="w-5 h-5 text-orange-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 mb-1">Member Since</p>
-                          <p className="font-semibold text-gray-900 text-sm">{new Date().getFullYear()}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Actions & Announcements */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Quick Actions */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h3 className="text-base font-semibold text-gray-900 mb-6">Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() => setCurrentPage('seedlings')}
-                        className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl hover:shadow-md transition-all border border-green-100"
-                      >
-                        <Sprout className="w-8 h-8 text-green-600 mb-2" />
-                        <p className="text-sm font-semibold text-gray-900">My Seedlings</p>
-                      </button>
-                      <button
-                        onClick={() => setCurrentPage('monitoring')}
-                        className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl hover:shadow-md transition-all border border-blue-100"
-                      >
-                        <Calendar className="w-8 h-8 text-blue-600 mb-2" />
-                        <p className="text-sm font-semibold text-gray-900">Monitoring</p>
-                      </button>
-                      <button
-                        onClick={() => setCurrentPage('sales-report')}
-                        className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl hover:shadow-md transition-all border border-purple-100"
-                      >
-                        <FileText className="w-8 h-8 text-purple-600 mb-2" />
-                        <p className="text-sm font-semibold text-gray-900">Sales Report</p>
-                      </button>
-                      <button
-                        onClick={() => setCurrentPage('track-deliveries')}
-                        className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl hover:shadow-md transition-all border border-orange-100"
-                      >
-                        <Truck className="w-8 h-8 text-orange-600 mb-2" />
-                        <p className="text-sm font-semibold text-gray-900">Track Delivery</p>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Announcements */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h3 className="text-base font-semibold text-gray-900 mb-6">Recent Updates</h3>
-                    {announcements.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-sm text-gray-500">No announcements</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {announcements.slice(0, 4).map((announcement) => (
-                          <div 
-                            key={announcement.id}
-                            className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-                          >
-                            <p className="font-semibold text-gray-900 text-sm">{announcement.title}</p>
-                            <p className="text-xs text-gray-600 mt-1">{announcement.message}</p>
-                            <p className="text-xs text-gray-400 mt-2">{announcement.date}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
 
               </div>
 
-              {/* Analytics Section - Premium Modern Design */}
+              {/* Modern Agriculture Analytics Dashboard */}
               {(() => {
                 const distributionData = generateDistributionData();
                 const totalDistributed = distributionData.reduce((sum: number, item: any) => sum + (item.seedlings || 0), 0);
                 const totalPlanted = distributionData.reduce((sum: number, item: any) => sum + (item.planted || 0), 0);
-                const totalRevenue = revenueData.reduce((sum, item) => sum + item.revenue, 0);
-                const totalFiberKg = revenueData.reduce((sum, item) => sum + item.fiberKg, 0);
+                // Use direct stats instead of calculating from revenueData
+                const totalRevenue = harvestStats.totalRevenue;
+                const totalFiberKg = harvestStats.totalFiberKg;
+
+                console.log('📊 Dashboard KPI Display:', {
+                  totalRevenue,
+                  totalFiberKg,
+                  harvestStats
+                });
 
                 return (
-                  <div className="space-y-5">
-                    {/* Header Section */}
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
-                      <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Farm Analytics</h2>
-                        <p className="text-sm text-gray-500 mt-1">Track your seedlings, planting and production</p>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        {/* View Mode Toggle */}
-                        <div className="flex bg-gray-100 rounded-lg p-1">
-                          <button
-                            onClick={() => setViewMode('monthly')}
-                            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${
-                              viewMode === 'monthly'
-                                ? 'bg-white text-emerald-600 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                            }`}
-                          >
-                            MONTHLY
-                          </button>
-                          <button
-                            onClick={() => setViewMode('yearly')}
-                            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${
-                              viewMode === 'yearly'
-                                ? 'bg-white text-emerald-600 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                            }`}
-                          >
-                            YEARLY
-                          </button>
-                        </div>
+                  <div className="space-y-8">
+                    {/* Analytics Dashboard Header */}
+                    <div className="mb-8">
+                      <h1 className="text-3xl font-bold text-gray-900 mb-2">Abaca Farm Analytics Dashboard</h1>
+                      <p className="text-gray-600">Comprehensive insights into your farm performance and productivity</p>
+                    </div>
 
-                        {/* Year Selector */}
-                        {viewMode === 'monthly' && (
-                          <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                          >
-                            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                              <option key={year} value={year}>{year}</option>
-                            ))}
-                          </select>
-                        )}
+                    {/* 1. KPI Cards Section */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
+                      {/* Seedlings Received */}
+                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-5">
+                          <div className="p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <Package className="w-7 h-7 text-emerald-600" />
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Seedlings Received</p>
+                        <h3 className="text-4xl font-bold text-gray-900 mb-2">{totalDistributed.toLocaleString()}</h3>
+                        <p className="text-sm text-gray-600">Total distributed to you</p>
+                      </div>
+
+                      {/* Seedlings Planted */}
+                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-5">
+                          <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <Leaf className="w-7 h-7 text-blue-600" />
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Seedlings Planted</p>
+                        <h3 className="text-4xl font-bold text-gray-900 mb-2">{totalPlanted.toLocaleString()}</h3>
+                        <p className="text-sm text-gray-600">Total seedlings planted</p>
+                      </div>
+
+                      {/* Fiber Harvested */}
+                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-5">
+                          <div className="p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <Activity className="w-7 h-7 text-orange-600" />
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Fiber Harvested</p>
+                        <h3 className="text-4xl font-bold text-gray-900 mb-2">{totalFiberKg.toLocaleString()} <span className="text-2xl">kg</span></h3>
+                        <p className="text-sm text-gray-600">Total fiber production</p>
+                      </div>
+
+                      {/* Total Revenue */}
+                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-5">
+                          <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <span className="text-3xl font-bold text-purple-600">₱</span>
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Total Revenue</p>
+                        <h3 className="text-4xl font-bold text-gray-900 mb-2">₱{totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'K' : totalRevenue.toFixed(2)}</h3>
+                        <p className="text-sm text-gray-600">Total earnings from sales</p>
+                      </div>
+
+                      {/* Farm Status */}
+                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-5">
+                          <div className="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <CheckCircle className="w-7 h-7 text-green-600" />
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Farm Status</p>
+                        <h3 className="text-4xl font-bold text-green-600 mb-2">Healthy</h3>
+                        <p className="text-sm text-gray-600">Latest monitoring result</p>
+                      </div>
+
+                      {/* Delivery Status */}
+                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-5">
+                          <div className="p-3 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <Truck className="w-7 h-7 text-cyan-600" />
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Delivery Status</p>
+                        <h3 className="text-4xl font-bold text-cyan-600 mb-2">Active</h3>
+                        <p className="text-sm text-gray-600">Ongoing deliveries</p>
                       </div>
                     </div>
 
-                    {/* Key Metrics Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {/* Seedlings Received Card */}
-                      <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8"></div>
-                        <div className="relative">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-white/20 rounded-xl">
-                              <Package className="w-6 h-6 text-white" />
-                            </div>
-                            <p className="text-sm text-white/90 font-medium">Seedlings Received</p>
-                          </div>
-                          <h3 className="text-4xl font-bold mb-2">{totalDistributed.toLocaleString()}</h3>
-                          <p className="text-xs text-white/70">Total seedlings distributed to you</p>
+                    {/* 2. Seedling Distribution Trends */}
+                    <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                        <div>
+                          <h2 className="text-2xl font-bold text-gray-900 mb-2">Seedling Distribution Trends</h2>
+                          <p className="text-sm text-gray-600">Monthly comparison of distributed vs planted seedlings</p>
                         </div>
-                      </div>
-
-                      {/* Seedlings Planted Card */}
-                      <div className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8"></div>
-                        <div className="relative">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-white/20 rounded-xl">
-                              <Leaf className="w-6 h-6 text-white" />
-                            </div>
-                            <p className="text-sm text-white/90 font-medium">Seedlings Planted</p>
+                        <div className="flex items-center gap-4">
+                          {/* Toggle */}
+                          <div className="inline-flex bg-gray-100 rounded-xl p-1">
+                            <button
+                              onClick={() => setViewMode('monthly')}
+                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                                viewMode === 'monthly'
+                                  ? 'bg-white text-emerald-600 shadow-md'
+                                  : 'text-gray-600 hover:text-gray-900'
+                              }`}
+                            >
+                              Monthly
+                            </button>
+                            <button
+                              onClick={() => setViewMode('yearly')}
+                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                                viewMode === 'yearly'
+                                  ? 'bg-white text-emerald-600 shadow-md'
+                                  : 'text-gray-600 hover:text-gray-900'
+                              }`}
+                            >
+                              Yearly
+                            </button>
                           </div>
-                          <h3 className="text-4xl font-bold mb-2">{totalPlanted.toLocaleString()}</h3>
-                          <p className="text-xs text-white/70">Total seedlings planted</p>
-                        </div>
-                      </div>
-
-                      {/* Fiber Production Card */}
-                      <div className="bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8"></div>
-                        <div className="relative">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-white/20 rounded-xl">
-                              <Package className="w-6 h-6 text-white" />
-                            </div>
-                            <p className="text-sm text-white/90 font-medium">Fiber Harvested</p>
-                          </div>
-                          <h3 className="text-4xl font-bold mb-2">{totalFiberKg.toLocaleString()} <span className="text-xl">kg</span></h3>
-                          <p className="text-xs text-white/70">Total fiber production</p>
-                        </div>
-                      </div>
-
-                      {/* Total Revenue Card */}
-                      <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8"></div>
-                        <div className="relative">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-white/20 rounded-xl">
-                              <DollarSign className="w-6 h-6 text-white" />
-                            </div>
-                            <p className="text-sm text-white/90 font-medium">Total Revenue</p>
-                          </div>
-                          <h3 className="text-4xl font-bold mb-2">₱{(totalRevenue / 1000).toFixed(1)}K</h3>
-                          <p className="text-xs text-white/70">Total earnings from sales</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Charts Grid - 2 Column Layout */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                      {/* Seedling Distribution Chart - Takes 2 columns */}
-                      <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-base font-semibold text-gray-900">Seedling Distribution Trends</h3>
-                          <div className="flex items-center gap-4 text-xs">
+                          {viewMode === 'monthly' && (
+                            <select
+                              value={selectedYear}
+                              onChange={(e) => setSelectedYear(Number(e.target.value))}
+                              className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md focus:ring-2 focus:ring-emerald-500 transition-all"
+                            >
+                              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                <option key={year} value={year}>{year}</option>
+                              ))}
+                            </select>
+                          )}
+                          <div className="flex items-center gap-4 text-sm">
                             <div className="flex items-center gap-2">
-                              <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                              <span className="text-gray-600">Distributed</span>
+                              <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                              <span className="text-gray-700 font-medium">Distributed</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-                              <span className="text-gray-600">Planted</span>
-                            </div>
-                          </div>
-                        </div>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <AreaChart data={distributionData}>
-                            <defs>
-                              <linearGradient id="colorSeedlings" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                              </linearGradient>
-                              <linearGradient id="colorPlanted" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                            <XAxis 
-                              dataKey={viewMode === 'monthly' ? 'month' : 'year'} 
-                              stroke="#9ca3af"
-                              style={{ fontSize: '12px' }}
-                            />
-                            <YAxis stroke="#9ca3af" style={{ fontSize: '12px' }} />
-                            <Tooltip 
-                              contentStyle={{ 
-                                backgroundColor: '#fff', 
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                              }}
-                            />
-                            <Area 
-                              type="monotone" 
-                              dataKey="seedlings" 
-                              stroke="#10b981" 
-                              strokeWidth={2}
-                              fillOpacity={1} 
-                              fill="url(#colorSeedlings)" 
-                              name="Distributed"
-                            />
-                            <Area 
-                              type="monotone" 
-                              dataKey="planted" 
-                              stroke="#3b82f6" 
-                              strokeWidth={2}
-                              fillOpacity={1} 
-                              fill="url(#colorPlanted)" 
-                              name="Planted"
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* Recent Activities Card */}
-                      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                        <h3 className="text-base font-semibold text-gray-900 mb-4">Recent Activities</h3>
-                        <div className="space-y-4">
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
-                              <Package className="w-5 h-5 text-pink-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">Seedlings Received</p>
-                              <p className="text-xs text-gray-500 mt-0.5">Latest distribution batch</p>
-                              <p className="text-xs text-gray-400 mt-1">42 Mins Ago</p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                              <Leaf className="w-5 h-5 text-purple-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">Planting Completed</p>
-                              <p className="text-xs text-gray-500 mt-0.5">New batch planted successfully</p>
-                              <p className="text-xs text-gray-400 mt-1">1 Day Ago</p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                              <Activity className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">Farm Monitoring</p>
-                              <p className="text-xs text-gray-500 mt-0.5">Health check completed</p>
-                              <p className="text-xs text-gray-400 mt-1">2 Days Ago</p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
-                              <DollarSign className="w-5 h-5 text-amber-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">Harvest Sale</p>
-                              <p className="text-xs text-gray-500 mt-0.5">Fiber sold to dealer</p>
-                              <p className="text-xs text-gray-400 mt-1">5 Days Ago</p>
+                              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                              <span className="text-gray-700 font-medium">Planted</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Fiber Production Chart */}
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                      <h3 className="text-base font-semibold text-gray-900 mb-6">Abaca Fiber Production Over Time</h3>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart data={revenueData}>
+                      <ResponsiveContainer width="100%" height={400}>
+                        <AreaChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                           <defs>
-                            <linearGradient id="colorFiber" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                            <linearGradient id="colorSeedlings" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.5}/>
+                              <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                            </linearGradient>
+                            <linearGradient id="colorPlanted" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
                             </linearGradient>
                           </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                           <XAxis 
                             dataKey={viewMode === 'monthly' ? 'month' : 'year'} 
-                            stroke="#9ca3af"
-                            style={{ fontSize: '12px' }}
+                            stroke="#6b7280"
+                            style={{ fontSize: '13px', fontWeight: 600 }}
+                            tickLine={false}
                           />
-                          <YAxis stroke="#9ca3af" style={{ fontSize: '12px' }} />
+                          <YAxis 
+                            stroke="#6b7280" 
+                            style={{ fontSize: '13px', fontWeight: 600 }}
+                            tickFormatter={(value) => value.toLocaleString()}
+                            tickLine={false}
+                          />
                           <Tooltip 
                             contentStyle={{ 
                               backgroundColor: '#fff', 
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '8px',
-                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                              border: 'none',
+                              borderRadius: '16px',
+                              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+                              padding: '16px 20px'
                             }}
-                            formatter={(value: number) => `${value.toLocaleString()} kg`}
+                            labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
+                            itemStyle={{ padding: '6px 0', fontSize: '13px', fontWeight: 600 }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="seedlings" 
+                            stroke="#10b981" 
+                            strokeWidth={4}
+                            fillOpacity={1} 
+                            fill="url(#colorSeedlings)" 
+                            name="Distributed"
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="planted" 
+                            stroke="#3b82f6" 
+                            strokeWidth={4}
+                            fillOpacity={1} 
+                            fill="url(#colorPlanted)" 
+                            name="Planted"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* 3. Abaca Fiber Production Over Time */}
+                    <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                        <div>
+                          <h2 className="text-2xl font-bold text-gray-900 mb-2">Abaca Fiber Production Over Time</h2>
+                          <p className="text-sm text-gray-600">Track your fiber harvest trends</p>
+                        </div>
+                        <div className="inline-flex bg-gray-100 rounded-xl p-1">
+                          <button
+                            onClick={() => setViewMode('monthly')}
+                            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                              viewMode === 'monthly'
+                                ? 'bg-white text-orange-600 shadow-md'
+                                : 'text-gray-600 hover:text-gray-900'
+                            }`}
+                          >
+                            Monthly
+                          </button>
+                          <button
+                            onClick={() => setViewMode('yearly')}
+                            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                              viewMode === 'yearly'
+                                ? 'bg-white text-orange-600 shadow-md'
+                                : 'text-gray-600 hover:text-gray-900'
+                            }`}
+                          >
+                            Yearly
+                          </button>
+                        </div>
+                      </div>
+                      <ResponsiveContainer width="100%" height={400}>
+                        <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                          <defs>
+                            <linearGradient id="colorFiber" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#f97316" stopOpacity={0.6}/>
+                              <stop offset="95%" stopColor="#f97316" stopOpacity={0.1}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                          <XAxis 
+                            dataKey={viewMode === 'monthly' ? 'month' : 'year'} 
+                            stroke="#6b7280"
+                            style={{ fontSize: '13px', fontWeight: 600 }}
+                            tickLine={false}
+                          />
+                          <YAxis 
+                            stroke="#6b7280" 
+                            style={{ fontSize: '13px', fontWeight: 600 }}
+                            label={{ value: 'Fiber (kg)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontWeight: 700 } }}
+                            tickFormatter={(value) => value.toLocaleString()}
+                            tickLine={false}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#fff', 
+                              border: 'none',
+                              borderRadius: '16px',
+                              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+                              padding: '16px 20px'
+                            }}
+                            labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
+                            formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Fiber Production']}
+                            itemStyle={{ fontSize: '13px', fontWeight: 600 }}
                           />
                           <Area 
                             type="monotone" 
                             dataKey="fiberKg" 
                             stroke="#f97316" 
-                            strokeWidth={2}
+                            strokeWidth={4}
                             fillOpacity={1} 
                             fill="url(#colorFiber)" 
-                            name="Fiber Production (kg)"
+                            name="Fiber Production"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* 4. Sales & Revenue Analytics */}
+                    <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                        <div>
+                          <h2 className="text-2xl font-bold text-gray-900 mb-2">Sales & Revenue Analytics</h2>
+                          <p className="text-sm text-gray-600">Track revenue performance and sales trends</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="inline-flex bg-gray-100 rounded-xl p-1">
+                            <button
+                              onClick={() => setViewMode('monthly')}
+                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                                viewMode === 'monthly'
+                                  ? 'bg-white text-purple-600 shadow-md'
+                                  : 'text-gray-600 hover:text-gray-900'
+                              }`}
+                            >
+                              Monthly
+                            </button>
+                            <button
+                              onClick={() => setViewMode('yearly')}
+                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                                viewMode === 'yearly'
+                                  ? 'bg-white text-purple-600 shadow-md'
+                                  : 'text-gray-600 hover:text-gray-900'
+                              }`}
+                            >
+                              Yearly
+                            </button>
+                          </div>
+                          <div className="px-4 py-2 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                            <p className="text-xs text-purple-700 font-semibold uppercase tracking-wide">Total Revenue</p>
+                            <p className="text-2xl font-bold text-purple-900">₱{(totalRevenue / 1000).toFixed(1)}K</p>
+                          </div>
+                        </div>
+                      </div>
+                      <ResponsiveContainer width="100%" height={400}>
+                        <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                          <defs>
+                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#a855f7" stopOpacity={0.6}/>
+                              <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                          <XAxis 
+                            dataKey={viewMode === 'monthly' ? 'month' : 'year'} 
+                            stroke="#6b7280"
+                            style={{ fontSize: '13px', fontWeight: 600 }}
+                            tickLine={false}
+                          />
+                          <YAxis 
+                            stroke="#6b7280" 
+                            style={{ fontSize: '13px', fontWeight: 600 }}
+                            label={{ value: 'Revenue (₱)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontWeight: 700 } }}
+                            tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}K`}
+                            tickLine={false}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#fff', 
+                              border: 'none',
+                              borderRadius: '16px',
+                              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+                              padding: '16px 20px'
+                            }}
+                            labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
+                            formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Revenue']}
+                            itemStyle={{ fontSize: '13px', fontWeight: 600 }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="revenue" 
+                            stroke="#a855f7" 
+                            strokeWidth={4}
+                            fillOpacity={1} 
+                            fill="url(#colorRevenue)" 
+                            name="Revenue"
                           />
                         </AreaChart>
                       </ResponsiveContainer>
