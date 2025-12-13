@@ -356,8 +356,7 @@ const AssociationInventory: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Seedling Inventory</h2>
-          <p className="text-gray-500 mt-1">View seedlings received from MAO with accurate remaining quantities</p>
+          
         </div>
       </div>
 

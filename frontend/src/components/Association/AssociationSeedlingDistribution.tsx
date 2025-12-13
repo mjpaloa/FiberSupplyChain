@@ -213,7 +213,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
   const showPagination = filteredDistributions.length > itemsPerPage;
 
   const formatDate = (value?: string) => {
-    if (!value) return '—';
+    if (!value) return 'ï¿½';
     return new Date(value).toLocaleDateString();
   };
 

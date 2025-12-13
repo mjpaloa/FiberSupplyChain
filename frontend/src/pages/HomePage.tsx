@@ -388,7 +388,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                   </h1>
                   
                   <p className="text-lg md:text-xl lg:text-2xl text-emerald-50 leading-relaxed drop-shadow-lg max-w-xl">
-                    A next-generation digital platform connecting farmers, verified buyers, and the Municipal Agriculture Office
+                    A next-generation digital platform connecting farmers, verified buyers, association, and the Municipal Agriculture Office
                   </p>
                   
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
