@@ -15,6 +15,7 @@ router.post('/farmer/:deliveryId/cancel', authenticate, authorizeFarmer, FiberDe
 
 // CUSAFA/Admin routes - Allow all authenticated users to view deliveries
 router.get('/all', authenticate, FiberDeliveryController.getAllDeliveries);
-router.put('/cusafa/:deliveryId/status', authenticate, authorizeCUSAFA, FiberDeliveryController.updateDeliveryStatus);
+// Allow both MAO officers and association officers to update delivery status
+router.put('/cusafa/:deliveryId/status', authenticate, authorizeRoles('officer', 'association_officer'), FiberDeliveryController.updateDeliveryStatus);
 
 export default router;

@@ -341,20 +341,39 @@ const CUSAFAInventory: React.FC = () => {
                       setShowDeliveryModal(true);
                       fetchBuyers();
                       
+                      // Try to auto-fill farmer contact from multiple sources
                       try {
                         const token = localStorage.getItem('accessToken');
-                        const response = await fetch(`http://localhost:3001/api/users/farmer/${item.farmer_id}`, {
+                        
+                        // First, try to get from farmers table via harvest
+                        const farmerResponse = await fetch(`http://localhost:3001/api/farmers/${item.farmer_id}`, {
                           headers: { Authorization: `Bearer ${token}` }
                         });
-                        if (response.ok) {
-                          const data = await response.json();
-                          setFormData(prev => ({
-                            ...prev,
-                            farmer_contact: data.contact_number || data.phone_number || ''
-                          }));
+                        
+                        if (farmerResponse.ok) {
+                          const farmerData = await farmerResponse.json();
+                          console.log('✅ Farmer data:', farmerData);
+                          const contact = farmerData.contact_number || farmerData.phone_number || '';
+                          
+                          if (contact) {
+                            setFormData(prev => ({
+                              ...prev,
+                              farmer_contact: contact
+                            }));
+                            console.log('✅ Auto-filled farmer contact:', contact);
+                          } else {
+                            console.warn('⚠️ No contact number found in farmer data');
+                          }
+                        } else {
+                          console.error('❌ Failed to fetch farmer data:', farmerResponse.status);
                         }
                       } catch (error) {
-                        console.error('Error fetching farmer contact:', error);
+                        console.error('❌ Error fetching farmer contact:', error);
+                        // Clear the field if auto-fill fails
+                        setFormData(prev => ({
+                          ...prev,
+                          farmer_contact: ''
+                        }));
                       }
                     }}
                     className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
@@ -539,11 +558,16 @@ const CUSAFAInventory: React.FC = () => {
                       name="farmer_contact"
                       value={formData.farmer_contact}
                       onChange={handleInputChange}
-                      placeholder="Auto-filled from farmer profile"
+                      placeholder="Enter farmer contact number"
                       required
-                      readOnly
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed font-medium"
+                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium"
                     />
+                    {formData.farmer_contact && (
+                      <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                        <CheckCircle size={12} />
+                        Auto-filled from farmer profile
+                      </p>
+                    )}
                   </div>
 
                   <div className="bg-white rounded-xl p-4 shadow-sm md:col-span-2">

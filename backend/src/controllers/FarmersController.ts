@@ -145,4 +145,34 @@ export class FarmersController {
       res.status(500).json({ error: 'Failed to fetch monitoring records' });
     }
   }
+
+  // Get farmer by ID (for auto-filling contact info in delivery forms)
+  static async getFarmerById(req: Request, res: Response) {
+    try {
+      const { farmerId } = req.params;
+      
+      if (!farmerId) {
+        res.status(400).json({ error: 'Farmer ID is required' });
+        return;
+      }
+
+      const { data: farmer, error } = await supabase
+        .from('farmers')
+        .select('farmer_id, full_name, contact_number, email, municipality, barangay, address')
+        .eq('farmer_id', farmerId)
+        .single();
+
+      if (error || !farmer) {
+        console.error('Error fetching farmer by ID:', error);
+        res.status(404).json({ error: 'Farmer not found' });
+        return;
+      }
+
+      console.log('✅ Farmer fetched by ID:', farmer.full_name, '- Contact:', farmer.contact_number);
+      res.status(200).json(farmer);
+    } catch (error) {
+      console.error('Error in getFarmerById:', error);
+      res.status(500).json({ error: 'Failed to fetch farmer details' });
+    }
+  }
 }
