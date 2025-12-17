@@ -706,66 +706,7 @@ const CUSAFAInventory: React.FC = () => {
         </div>
       )}
     </div>
-
-    {/* Pagination Footer */}
-    {filteredInventory.length > 0 && (
-      <div className="p-6 border-t border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-gray-700">Show entries:</span>
-            <div className="flex gap-2">
-              {[10, 20, 50].map((size) => (
-                <button
-                  key={size}
-                  onClick={() => {
-                    setItemsPerPage(size);
-                    setCurrentPage(1);
-                  }}
-                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                    itemsPerPage === size
-                      ? 'bg-indigo-500 text-white shadow-lg'
-                      : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                  currentPage === 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                }`}
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                  currentPage === totalPages || totalPages === 0
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-);
+  );
+};
 
 export default CUSAFAInventory;
