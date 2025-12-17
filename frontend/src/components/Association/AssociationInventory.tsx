@@ -77,6 +77,8 @@ const AssociationInventory: React.FC = () => {
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [loadingFarmers, setLoadingFarmers] = useState(false);
   const [distributeSubmitting, setDistributeSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [distributeForm, setDistributeForm] = useState<NewFarmerDistributionForm>({
     farmer_id: '',
     quantity_distributed: 0,
@@ -332,6 +334,18 @@ const AssociationInventory: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Pagination
+  const totalEntries = filteredDistributions.length;
+  const totalPages = Math.ceil(totalEntries / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedDistributions = filteredDistributions.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchTerm]);
+
   // Calculate total stats
   const totalReceived = distributions.reduce((sum, d) => sum + d.quantity_distributed, 0);
   const totalDistributed = distributions.reduce((sum, d) => sum + (d.distributed_to_farmers || 0), 0);
@@ -465,7 +479,7 @@ const AssociationInventory: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredDistributions.map((dist) => {
+                {paginatedDistributions.map((dist) => {
                   const distributedQty = dist.distributed_to_farmers || 0;
                   // Use ?? instead of || to handle 0 correctly (0 is a valid remaining quantity)
                   const remainingQty = dist.remaining_quantity ?? (dist.quantity_distributed - distributedQty);
@@ -577,6 +591,65 @@ const AssociationInventory: React.FC = () => {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        
+        {/* Pagination Footer */}
+        {filteredDistributions.length > 0 && (
+          <div className="p-6 border-t border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700">Show entries:</span>
+                <div className="flex gap-2">
+                  {[10, 20, 30].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => {
+                        setItemsPerPage(size);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        itemsPerPage === size
+                          ? 'bg-indigo-500 text-white shadow-lg'
+                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      currentPage === totalPages || totalPages === 0
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

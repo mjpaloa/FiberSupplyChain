@@ -44,7 +44,7 @@ import CUSAFAInventory from '../MAO/CUSAFAInventory';
 import BuyerPriceListingsViewer from '../Shared/BuyerPriceListingsViewer';
 import CUSAFAFiberDeliveries from './CUSAFAFiberDeliveries';
 
-type DashboardPage = 'overview' | 'inventory' | 'distribution' | 'reports' | 'fiber-inventory' | 'buyer-prices' | 'fiber-deliveries' | 'analytics';
+type DashboardPage = 'overview' | 'inventory' | 'distribution' | 'fiber-inventory' | 'buyer-prices' | 'fiber-deliveries' | 'analytics';
 
 interface DashboardStats {
   totalReceivedCount: number;
@@ -343,11 +343,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   const navItems: { id: DashboardPage; label: string; icon: React.FC<any> }[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'inventory', label: 'Seedling Inventory', icon: Sprout },
+    { id: 'distribution', label: 'Distribution', icon: Share2 },
     { id: 'fiber-inventory', label: 'Fiber Inventory', icon: Package },
     { id: 'fiber-deliveries', label: 'Fiber Deliveries', icon: Truck },
-    { id: 'distribution', label: 'Distribution', icon: Share2 },
     { id: 'buyer-prices', label: 'Buyer Prices', icon: TrendingUp },
-    { id: 'reports', label: 'Reports', icon: BarChart3 },
   ];
 
   const renderAnalytics = () => (

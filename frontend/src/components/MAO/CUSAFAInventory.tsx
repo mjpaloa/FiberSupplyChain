@@ -60,6 +60,8 @@ const CUSAFAInventory: React.FC = () => {
   const [selectedHarvest, setSelectedHarvest] = useState<InventoryItem | null>(null);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [loadingBuyers, setLoadingBuyers] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formData, setFormData] = useState({
     buyer_id: '',
     delivery_date: '',
@@ -169,6 +171,18 @@ const CUSAFAInventory: React.FC = () => {
     return matchesSearch && matchesVariety;
   });
 
+  // Pagination
+  const totalEntries = filteredInventory.length;
+  const totalPages = Math.ceil(totalEntries / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedInventory = filteredInventory.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, varietyFilter, searchTerm]);
+
   const stats = {
     total: inventory.reduce((sum, item) => sum + (parseFloat(item.dry_fiber_output_kg?.toString() || '0')), 0),
     inStock: inventory.reduce((sum, item) => sum + (parseFloat(item.dry_fiber_output_kg?.toString() || '0')), 0),
@@ -274,7 +288,7 @@ const CUSAFAInventory: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredInventory.map((item) => (
+              {paginatedInventory.map((item) => (
                 <tr key={item.harvest_id} className="hover:bg-blue-50/50 transition-colors duration-150">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
@@ -387,6 +401,7 @@ const CUSAFAInventory: React.FC = () => {
             </tbody>
           </table>
         </div>
+        
         {filteredInventory.length === 0 && (
           <div className="text-center py-16">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -394,6 +409,65 @@ const CUSAFAInventory: React.FC = () => {
             </div>
             <p className="text-gray-600 font-medium">No inventory items found</p>
             <p className="text-sm text-gray-500 mt-1">Try adjusting your filters</p>
+          </div>
+        )}
+        
+        {/* Pagination Footer */}
+        {filteredInventory.length > 0 && (
+          <div className="p-6 border-t border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700">Show entries:</span>
+                <div className="flex gap-2">
+                  {[10, 20, 50].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => {
+                        setItemsPerPage(size);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        itemsPerPage === size
+                          ? 'bg-indigo-500 text-white shadow-lg'
+                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      currentPage === totalPages || totalPages === 0
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -632,7 +706,66 @@ const CUSAFAInventory: React.FC = () => {
         </div>
       )}
     </div>
-  );
-};
+
+    {/* Pagination Footer */}
+    {filteredInventory.length > 0 && (
+      <div className="p-6 border-t border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700">Show entries:</span>
+            <div className="flex gap-2">
+              {[10, 20, 50].map((size) => (
+                <button
+                  key={size}
+                  onClick={() => {
+                    setItemsPerPage(size);
+                    setCurrentPage(1);
+                  }}
+                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                    itemsPerPage === size
+                      ? 'bg-indigo-500 text-white shadow-lg'
+                      : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">
+              Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                  currentPage === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                  currentPage === totalPages || totalPages === 0
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
 
 export default CUSAFAInventory;

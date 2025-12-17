@@ -8,7 +8,10 @@ import {
   Package,
   Users,
   X,
-  RefreshCw
+  RefreshCw,
+  CheckCircle,
+  Sprout,
+  TrendingUp
 } from 'lucide-react';
 
 interface FarmerInfo {
@@ -45,12 +48,12 @@ interface FarmerDistribution {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  distributed_to_farmer: '?? Distributed',
-  planted: '?? Planted',
-  damaged: '?? Damaged',
-  replanted: '?? Replanted',
-  lost: '? Lost',
-  other: '?? Other'
+  distributed_to_farmer: '🌱 Distributed',
+  planted: '✅ Planted',
+  damaged: '❌ Damaged',
+  replanted: '🔄 Replanted',
+  lost: '⚠️ Lost',
+  other: '📋 Other'
 };
 
 const STATUS_CLASSES: Record<string, string> = {
@@ -64,11 +67,11 @@ const STATUS_CLASSES: Record<string, string> = {
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Status' },
-  { value: 'distributed_to_farmer', label: '?? Distributed' },
-  { value: 'planted', label: '?? Planted' },
-  { value: 'damaged', label: '?? Damaged' },
-  { value: 'replanted', label: '?? Replanted' },
-  { value: 'lost', label: '? Lost' }
+  { value: 'distributed_to_farmer', label: '🌱 Distributed' },
+  { value: 'planted', label: '✅ Planted' },
+  { value: 'damaged', label: '❌ Damaged' },
+  { value: 'replanted', label: '🔄 Replanted' },
+  { value: 'lost', label: '⚠️ Lost' }
 ];
 
 const AssociationSeedlingDistribution: React.FC = () => {
@@ -223,41 +226,70 @@ const AssociationSeedlingDistribution: React.FC = () => {
     </span>
   );
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Farmer Distributions</h1>
-          <p className="text-gray-600">Track seedlings distributed by your association to farmers.</p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={handleRefresh}
-            className="bg-white text-gray-700 px-4 py-3 rounded-xl flex items-center space-x-2 hover:bg-gray-100 transition-all shadow-md border border-gray-200"
-          >
-            <RefreshCw className="w-5 h-5" />
-            <span>Refresh</span>
-          </button>
-        </div>
-      </div>
+  const stats = {
+    total: farmerDistributions.length,
+    planted: farmerDistributions.filter(d => d.status === 'planted').length,
+    distributed: farmerDistributions.filter(d => d.status === 'distributed_to_farmer').length,
+    totalQuantity: farmerDistributions.reduce((sum, d) => sum + d.quantity_distributed, 0),
+    damaged: farmerDistributions.filter(d => d.status === 'damaged').length
+  };
 
+  return (
+    <div className="space-y-6">
       {error && (
         <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-700 font-medium">
           {error}
         </div>
       )}
 
-      <div className="bg-white rounded-3xl shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff]">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-gray-800">
-            <Users className="w-5 h-5 text-emerald-600" />
-            <span className="font-semibold">Distributed to Farmers</span>
-            <span className="bg-emerald-100 text-emerald-800 text-sm font-medium px-2 py-0.5 rounded-full">
-              {filteredDistributions.length}
-            </span>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+              <Package className="w-6 h-6 text-white" />
+            </div>
           </div>
+          <p className="text-sm font-semibold text-blue-700 mb-1">Total Distributions</p>
+          <p className="text-3xl font-bold text-blue-900">{stats.total}</p>
+          <p className="text-xs text-blue-600 mt-2">To farmers</p>
         </div>
+        
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <p className="text-sm font-semibold text-emerald-700 mb-1">Planted</p>
+          <p className="text-3xl font-bold text-emerald-900">{stats.planted}</p>
+          <p className="text-xs text-emerald-600 mt-2">Successfully planted</p>
+        </div>
+        
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-2xl p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <p className="text-sm font-semibold text-purple-700 mb-1">Distributed</p>
+          <p className="text-3xl font-bold text-purple-900">{stats.distributed}</p>
+          <p className="text-xs text-purple-600 mt-2">Pending planting</p>
+        </div>
+        
+        <div className="bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-200 rounded-2xl p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-teal-500 rounded-xl flex items-center justify-center">
+              <Sprout className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <p className="text-sm font-semibold text-teal-700 mb-1">Total Seedlings</p>
+          <p className="text-3xl font-bold text-teal-900">{stats.totalQuantity.toLocaleString()}</p>
+          <p className="text-xs text-teal-600 mt-2">Total quantity distributed</p>
+        </div>
+      </div>
 
+      <div className="bg-white rounded-3xl shadow-lg">
         <div className="p-6">
           <div className="bg-gradient-to-r from-emerald-50 via-blue-50 to-purple-50 border-2 border-emerald-200 rounded-3xl p-6 mb-8 shadow-lg">
             <div className="flex flex-col lg:flex-row gap-4">
@@ -422,39 +454,62 @@ const AssociationSeedlingDistribution: React.FC = () => {
                 </table>
               </div>
 
-              {showPagination && (
-                <div className="p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-                  <div className="flex justify-center items-center gap-2">
+              <div className="p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="text-sm text-gray-600">
+                    Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredDistributions.length)} of {filteredDistributions.length} entries
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className="px-4 py-2 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50"
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                      }`}
                     >
                       Previous
                     </button>
-                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                          currentPage === page
-                            ? 'bg-indigo-500 text-white shadow-lg'
-                            : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                    {showPagination && Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
+                      let page;
+                      if (totalPages <= 5) {
+                        page = index + 1;
+                      } else if (currentPage <= 3) {
+                        page = index + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        page = totalPages - 4 + index;
+                      } else {
+                        page = currentPage - 2 + index;
+                      }
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                            currentPage === page
+                              ? 'bg-indigo-500 text-white shadow-lg'
+                              : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="px-4 py-2 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50"
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        currentPage === totalPages || totalPages === 0
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                      }`}
                     >
                       Next
                     </button>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
@@ -474,87 +529,124 @@ const AssociationSeedlingDistribution: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Variety</p>
-                  <p className="font-medium text-gray-900">{selectedDistribution.variety}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Quantity</p>
-                  <p className="font-medium text-gray-900">{selectedDistribution.quantity_distributed.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Date Distributed</p>
-                  <p className="font-medium text-gray-900">{formatDate(selectedDistribution.date_distributed)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Status</p>
-                  {renderStatusBadge(selectedDistribution.status)}
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Farmer</p>
-                  <p className="font-medium text-gray-900">{selectedDistribution.farmers?.full_name || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Contact</p>
-                  <p className="font-medium text-gray-900">{selectedDistribution.farmers?.contact_number || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Municipality</p>
-                  <p className="font-medium text-gray-900">{selectedDistribution.farmers?.municipality || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Barangay</p>
-                  <p className="font-medium text-gray-900">{selectedDistribution.farmers?.barangay || 'N/A'}</p>
+              {/* Distribution Summary */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Package className="w-5 h-5 text-blue-600" />
+                  Distribution Summary
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Variety</p>
+                    <p className="font-semibold text-gray-900">{selectedDistribution.variety}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Quantity</p>
+                    <p className="font-semibold text-gray-900">{selectedDistribution.quantity_distributed.toLocaleString()} seedlings</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Date Distributed</p>
+                    <p className="font-semibold text-gray-900">{formatDate(selectedDistribution.date_distributed)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Status</p>
+                    {renderStatusBadge(selectedDistribution.status)}
+                  </div>
                 </div>
               </div>
 
-              {selectedDistribution.remarks && (
-                <div>
-                  <p className="text-sm text-gray-600">Remarks</p>
-                  <p className="font-medium text-gray-900">{selectedDistribution.remarks}</p>
+              {/* Farmer Information */}
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-6 border-2 border-emerald-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-emerald-600" />
+                  Farmer Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Name</p>
+                    <p className="font-semibold text-gray-900">{selectedDistribution.farmers?.full_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Contact Number</p>
+                    <p className="font-semibold text-gray-900">{selectedDistribution.farmers?.contact_number || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Email</p>
+                    <p className="font-semibold text-gray-900">{selectedDistribution.farmers?.email || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Barangay</p>
+                    <p className="font-semibold text-gray-900">{selectedDistribution.farmers?.barangay || 'N/A'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm text-gray-600 mb-1">Municipality</p>
+                    <p className="font-semibold text-gray-900">{selectedDistribution.farmers?.municipality || 'N/A'}</p>
+                  </div>
                 </div>
-              )}
+              </div>
 
-              {selectedDistribution.planting_date && (
-                <div className="border-t border-gray-200 pt-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">?? Planting Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Planting Date</p>
-                      <p className="font-medium text-gray-900">{formatDate(selectedDistribution.planting_date)}</p>
-                    </div>
-                    {selectedDistribution.planting_location && (
+              {/* Planting Information - Always show */}
+              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl p-6 border-2 border-teal-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Sprout className="w-5 h-5 text-teal-600" />
+                  🌱 Planting Information
+                </h3>
+                {selectedDistribution.planting_date ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-gray-600">Location</p>
-                        <p className="font-medium text-gray-900">{selectedDistribution.planting_location}</p>
+                        <p className="text-sm text-gray-600 mb-1">Planting Date</p>
+                        <p className="font-semibold text-gray-900">{formatDate(selectedDistribution.planting_date)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Planting Location</p>
+                        <p className="font-semibold text-gray-900">{selectedDistribution.planting_location || 'Not specified'}</p>
+                      </div>
+                    </div>
+                    {selectedDistribution.planting_notes && (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Planting Notes</p>
+                        <p className="font-semibold text-gray-900 bg-white rounded-lg p-3 border border-teal-200">{selectedDistribution.planting_notes}</p>
                       </div>
                     )}
                   </div>
-                  {selectedDistribution.planting_notes && (
-                    <div className="mt-3">
-                      <p className="text-sm text-gray-600">Notes</p>
-                      <p className="font-medium text-gray-900">{selectedDistribution.planting_notes}</p>
-                    </div>
-                  )}
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500 text-sm">Not yet planted</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Remarks */}
+              {selectedDistribution.remarks && (
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-purple-600" />
+                    Remarks
+                  </h3>
+                  <p className="font-medium text-gray-900 bg-white rounded-lg p-3 border border-purple-200">{selectedDistribution.remarks}</p>
                 </div>
               )}
 
+              {/* Source Distribution */}
               {selectedDistribution.association_seedling_distributions && (
-                <div className="border-t border-gray-200 pt-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">?? Source Distribution</h3>
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border-2 border-amber-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Package className="w-5 h-5 text-amber-600" />
+                    📦 Source Distribution
+                  </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">Variety</p>
-                      <p className="font-medium text-gray-900">{selectedDistribution.association_seedling_distributions.variety}</p>
+                      <p className="text-sm text-gray-600 mb-1">Variety</p>
+                      <p className="font-semibold text-gray-900">{selectedDistribution.association_seedling_distributions.variety}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Supplier</p>
-                      <p className="font-medium text-gray-900">{selectedDistribution.association_seedling_distributions.source_supplier || 'N/A'}</p>
+                      <p className="text-sm text-gray-600 mb-1">Supplier</p>
+                      <p className="font-semibold text-gray-900">{selectedDistribution.association_seedling_distributions.source_supplier || 'N/A'}</p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Date</p>
-                      <p className="font-medium text-gray-900">{formatDate(selectedDistribution.association_seedling_distributions.date_distributed)}</p>
+                    <div className="col-span-2">
+                      <p className="text-sm text-gray-600 mb-1">Distribution Date</p>
+                      <p className="font-semibold text-gray-900">{formatDate(selectedDistribution.association_seedling_distributions.date_distributed)}</p>
                     </div>
                   </div>
                 </div>

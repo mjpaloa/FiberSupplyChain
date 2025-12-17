@@ -227,7 +227,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
     in_transit: deliveries.filter(d => d.status === 'In Transit').length,
     delivered: deliveries.filter(d => d.status === 'Delivered').length,
     completed: deliveries.filter(d => d.status === 'Completed').length,
-    total_fiber_kg: deliveries.reduce((sum, d) => sum + parseFloat(d.quantity_kg.toString()), 0)
+    total_fiber_kg: deliveries.filter(d => d.status === 'Completed').reduce((sum, d) => sum + parseFloat(d.quantity_kg.toString()), 0)
   };
 
   if (loading) {
@@ -240,21 +240,8 @@ const CUSAFAFiberDeliveries: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl p-8 text-white shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="p-4 bg-white/20 rounded-2xl">
-            <Truck size={32} />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Fiber Deliveries</h1>
-            <p className="text-emerald-50 mt-1">Monitor and manage all fiber deliveries from farmers to buyers</p>
-          </div>
-        </div>
-      </div>
-
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
@@ -285,6 +272,16 @@ const CUSAFAFiberDeliveries: React.FC = () => {
           <p className="text-3xl font-bold text-green-900">{stats.delivered}</p>
           <p className="text-xs text-green-600 mt-2">Successfully received</p>
         </div>
+        <div className="bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-200 rounded-2xl p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-teal-500 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <p className="text-sm font-semibold text-teal-700 mb-1">Completed</p>
+          <p className="text-3xl font-bold text-teal-900">{stats.completed}</p>
+          <p className="text-xs text-teal-600 mt-2">Fully processed</p>
+        </div>
         <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
@@ -293,7 +290,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
           </div>
           <p className="text-sm font-semibold text-emerald-700 mb-1">Total Fiber (kg)</p>
           <p className="text-3xl font-bold text-emerald-900">{stats.total_fiber_kg.toFixed(2)}</p>
-          <p className="text-xs text-emerald-600 mt-2">Kilograms delivered</p>
+          <p className="text-xs text-emerald-600 mt-2">Kilograms delivered total completed</p>
         </div>
       </div>
 
