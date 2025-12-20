@@ -8,6 +8,11 @@ const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
 const USER_TYPE_KEY = 'userType';
+const LAST_ACTIVITY_KEY = 'lastActivity';
+
+// Token will expire after 40 minutes of inactivity
+const INACTIVITY_TIMEOUT = 40 * 60 * 1000; // 40 minutes in milliseconds
+const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // Refresh if 5 minutes before expiry
 
 /**
  * Save authentication tokens to localStorage
@@ -107,6 +112,7 @@ export const clearAuthData = () => {
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(USER_TYPE_KEY);
+    localStorage.removeItem(LAST_ACTIVITY_KEY);
     console.log('✅ Auth data cleared successfully');
   } catch (error) {
     console.error('❌ Error clearing auth data:', error);
@@ -159,6 +165,7 @@ export const completeLogin = (
 ) => {
   saveAuthTokens(accessToken, refreshToken);
   saveUserData(user, userType);
+  updateActivity(); // Initialize activity timestamp on login
   console.log('✅ Login completed successfully');
 };
 
@@ -212,6 +219,152 @@ export const validateAuthData = (): { isValid: boolean; userType: string | null 
   }
 };
 
+/**
+ * Update last activity timestamp
+ */
+export const updateActivity = () => {
+  try {
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+  } catch (error) {
+    console.error('❌ Error updating activity:', error);
+  }
+};
+
+/**
+ * Get last activity timestamp
+ */
+export const getLastActivity = (): number => {
+  try {
+    const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY);
+    return lastActivity ? parseInt(lastActivity) : 0;
+  } catch (error) {
+    console.error('❌ Error getting last activity:', error);
+    return 0;
+  }
+};
+
+/**
+ * Check if session is inactive (no activity for 40 minutes)
+ */
+export const isSessionInactive = (): boolean => {
+  const lastActivity = getLastActivity();
+  if (!lastActivity) return false;
+  
+  const timeSinceLastActivity = Date.now() - lastActivity;
+  return timeSinceLastActivity > INACTIVITY_TIMEOUT;
+};
+
+/**
+ * Refresh access token using refresh token
+ */
+export const refreshAccessToken = async (): Promise<boolean> => {
+  try {
+    const refreshToken = getRefreshToken();
+    const userType = getUserType();
+    
+    if (!refreshToken || !userType) {
+      console.warn('⚠️ No refresh token or user type found');
+      return false;
+    }
+
+    const response = await fetch('http://localhost:3001/api/auth/refresh', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken, userType }),
+    });
+
+    if (!response.ok) {
+      console.error('❌ Token refresh failed');
+      return false;
+    }
+
+    const data = await response.json();
+    
+    if (data.data?.tokens) {
+      saveAuthTokens(data.data.tokens.accessToken, data.data.tokens.refreshToken);
+      updateActivity();
+      console.log('✅ Token refreshed successfully');
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('❌ Error refreshing token:', error);
+    return false;
+  }
+};
+
+/**
+ * Check and refresh token if needed
+ * Should be called on every user activity
+ */
+export const checkAndRefreshToken = async (): Promise<boolean> => {
+  try {
+    // Check if session is inactive
+    if (isSessionInactive()) {
+      console.warn('⚠️ Session inactive for 40+ minutes, logging out...');
+      clearAuthData();
+      window.location.href = '/';
+      return false;
+    }
+
+    // Update activity timestamp
+    updateActivity();
+
+    // Check if token needs refresh
+    const token = getAuthToken();
+    if (!token) return false;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expirationTime = payload.exp * 1000;
+      const currentTime = Date.now();
+      const timeUntilExpiry = expirationTime - currentTime;
+
+      // Refresh if token expires in less than 5 minutes
+      if (timeUntilExpiry < TOKEN_REFRESH_THRESHOLD && timeUntilExpiry > 0) {
+        console.log('⏰ Token expiring soon, refreshing...');
+        return await refreshAccessToken();
+      }
+    } catch (error) {
+      console.error('❌ Error checking token expiry:', error);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Error in checkAndRefreshToken:', error);
+    return false;
+  }
+};
+
+/**
+ * Initialize activity tracking
+ * Call this once when app loads
+ */
+export const initActivityTracking = () => {
+  // Update activity on any user interaction
+  const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+  
+  events.forEach(event => {
+    document.addEventListener(event, () => {
+      if (isAuthenticated()) {
+        checkAndRefreshToken();
+      }
+    }, { passive: true });
+  });
+
+  // Check session every minute
+  setInterval(() => {
+    if (isAuthenticated() && isSessionInactive()) {
+      console.warn('⚠️ Session expired due to inactivity');
+      clearAuthData();
+      window.location.href = '/';
+    }
+  }, 60000); // Check every minute
+};
+
 export default {
   saveAuthTokens,
   getAuthToken,
@@ -224,5 +377,10 @@ export default {
   getAuthHeader,
   isTokenExpired,
   completeLogin,
-  completeLogout
+  completeLogout,
+  updateActivity,
+  checkAndRefreshToken,
+  refreshAccessToken,
+  initActivityTracking,
+  isSessionInactive
 };

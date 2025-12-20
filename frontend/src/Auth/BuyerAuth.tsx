@@ -200,7 +200,27 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
     }
   };
 
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 3));
+  const isStep1Valid = () => {
+    return formData.businessName?.trim() && formData.ownerName?.trim();
+  };
+
+  const isStep2Valid = () => {
+    return true;
+  };
+
+  const nextStep = () => {
+    if (currentStep === 1 && !isStep1Valid()) {
+      setError('Please fill in all required fields (Business Name and Owner\'s Name are required)');
+      return;
+    }
+    if (currentStep === 2 && !isStep2Valid()) {
+      setError('Please complete all required fields in this step');
+      return;
+    }
+    setError('');
+    setCurrentStep(prev => Math.min(prev + 1, 3));
+  };
+  
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   return (
@@ -696,7 +716,8 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="ml-auto px-5 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition-all duration-200 font-medium flex items-center gap-2 shadow-lg hover:shadow-xl"
+                    disabled={(currentStep === 1 && !isStep1Valid()) || (currentStep === 2 && !isStep2Valid())}
+                    className="ml-auto px-5 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition-all duration-200 font-medium flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                     <ChevronRight className="w-4 h-4" />

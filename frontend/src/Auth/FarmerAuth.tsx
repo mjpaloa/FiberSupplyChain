@@ -195,7 +195,27 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
     }
   };
 
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 3));
+  const isStep1Valid = () => {
+    return formData.fullName?.trim();
+  };
+
+  const isStep2Valid = () => {
+    return true;
+  };
+
+  const nextStep = () => {
+    if (currentStep === 1 && !isStep1Valid()) {
+      setError('Please fill in all required fields (Full Name is required)');
+      return;
+    }
+    if (currentStep === 2 && !isStep2Valid()) {
+      setError('Please complete all required fields in this step');
+      return;
+    }
+    setError('');
+    setCurrentStep(prev => Math.min(prev + 1, 3));
+  };
+  
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   return (
@@ -356,7 +376,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Sex</label>
                       <select
@@ -380,16 +400,44 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         placeholder="45"
                       />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Birthday</label>
                       <input
-                        type="tel"
-                        value={formData.contactNumber || ''}
-                        onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                        type="date"
+                        value={formData.birthday || ''}
+                        onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="09171234567"
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Civil Status</label>
+                      <select
+                        value={formData.civilStatus || ''}
+                        onChange={(e) => setFormData({ ...formData, civilStatus: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      >
+                        <option value="">Select</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Divorced">Divorced</option>
+                        <option value="Separated">Separated</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                    <input
+                      type="tel"
+                      value={formData.contactNumber || ''}
+                      onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="09171234567"
+                    />
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
@@ -426,7 +474,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Association</label>
                     <input
                       type="text"
                       value={formData.associationName || ''}
@@ -725,7 +773,8 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="ml-auto px-5 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition font-medium flex items-center gap-2 shadow-lg hover:shadow-xl"
+                    disabled={(currentStep === 1 && !isStep1Valid()) || (currentStep === 2 && !isStep2Valid())}
+                    className="ml-auto px-5 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition font-medium flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                     <ChevronRight className="w-4 h-4" />

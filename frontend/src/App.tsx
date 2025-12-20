@@ -10,12 +10,12 @@ import MAOComponent from './components/MAO/MAOComponent';
 import AssociationComponent from './components/Association/AssociationComponent';
 import FarmersComponent from './components/Farmers/FarmersComponent';
 import BuyersComponent from './components/Buyers/BuyersComponent';
-import { validateAuthData } from './utils/authToken';
+import { validateAuthData, initActivityTracking } from './utils/authToken';
 import MaintenanceChecker from './components/MaintenanceChecker';
-
 
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 
+// ... rest of the code remains the same ...
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredUserType?: string }> = ({ 
   children, 
@@ -213,6 +213,12 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // Initialize activity tracking on app load
+  React.useEffect(() => {
+    initActivityTracking();
+    console.log('✅ Activity tracking initialized - 40 min inactivity timeout');
+  }, []);
+
   return (
     <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
       <MaintenanceChecker>
