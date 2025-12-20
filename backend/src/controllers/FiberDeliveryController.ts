@@ -144,6 +144,12 @@ export class FiberDeliveryController {
             business_name,
             contact_number,
             business_address
+          ),
+          farmers (
+            full_name,
+            contact_number,
+            municipality,
+            barangay
           )
         `)
         .eq('farmer_id', farmerId)
@@ -186,8 +192,7 @@ export class FiberDeliveryController {
             email
           ),
           farmers (
-            first_name,
-            last_name,
+            full_name,
             contact_number,
             municipality,
             barangay
@@ -325,7 +330,7 @@ export class FiberDeliveryController {
       // Check if delivery exists and belongs to farmer
       const { data: existingDelivery, error: checkError } = await supabase
         .from('fiber_deliveries')
-        .select('status')
+        .select('status, harvest_id')
         .eq('delivery_id', deliveryId)
         .eq('farmer_id', farmerId)
         .single();
@@ -359,8 +364,26 @@ export class FiberDeliveryController {
         return;
       }
 
+      // Return fiber to inventory by updating harvest status back to 'In Inventory'
+      if (cancelledDelivery.harvest_id) {
+        const { error: inventoryUpdateError } = await supabase
+          .from('harvests')
+          .update({ 
+            status: 'In Inventory',
+            updated_at: new Date().toISOString()
+          })
+          .eq('harvest_id', cancelledDelivery.harvest_id);
+
+        if (inventoryUpdateError) {
+          console.error('Warning: Failed to return fiber to inventory:', inventoryUpdateError);
+          // Don't fail the cancellation, just log the error
+        } else {
+          console.log('✅ Fiber returned to inventory:', cancelledDelivery.harvest_id);
+        }
+      }
+
       res.status(200).json({
-        message: 'Delivery cancelled successfully',
+        message: 'Delivery cancelled successfully. Fiber returned to inventory.',
         delivery: cancelledDelivery
       });
     } catch (error) {
@@ -469,8 +492,28 @@ export class FiberDeliveryController {
         return;
       }
 
+      // Return fiber to inventory if status is changed to Cancelled
+      if (status === 'Cancelled' && updatedDelivery.harvest_id) {
+        const { error: inventoryUpdateError } = await supabase
+          .from('harvests')
+          .update({ 
+            status: 'In Inventory',
+            updated_at: new Date().toISOString()
+          })
+          .eq('harvest_id', updatedDelivery.harvest_id);
+
+        if (inventoryUpdateError) {
+          console.error('Warning: Failed to return fiber to inventory:', inventoryUpdateError);
+          // Don't fail the status update, just log the error
+        } else {
+          console.log('✅ Fiber returned to inventory:', updatedDelivery.harvest_id);
+        }
+      }
+
       res.status(200).json({
-        message: 'Delivery status updated successfully',
+        message: status === 'Cancelled' 
+          ? 'Delivery cancelled successfully. Fiber returned to inventory.'
+          : 'Delivery status updated successfully',
         delivery: updatedDelivery
       });
     } catch (error) {

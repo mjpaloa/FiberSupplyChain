@@ -110,6 +110,7 @@ CREATE TABLE public.farmers (
   full_name character varying NOT NULL,
   sex character varying CHECK (sex::text = ANY (ARRAY['Male'::character varying, 'Female'::character varying, 'Other'::character varying]::text[])),
   age integer CHECK (age >= 18 AND age <= 100),
+  birthday date,
   contact_number character varying,
   address text,
   barangay character varying,

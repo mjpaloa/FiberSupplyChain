@@ -141,6 +141,8 @@ export class AuthService {
           full_name: data.fullName,
           sex: data.sex || null,
           age: data.age || null,
+          birthday: data.birthday || null,
+          civil_status: data.civilStatus || null,
           contact_number: data.contactNumber || null,
           address: data.address || null,
           barangay: data.barangay || null,

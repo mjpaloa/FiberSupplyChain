@@ -58,6 +58,8 @@ export interface FarmerRegistration {
   fullName: string;
   sex?: 'Male' | 'Female' | 'Other';
   age?: number;
+  birthday?: string;
+  civilStatus?: 'Single' | 'Married' | 'Widowed' | 'Divorced' | 'Separated';
   contactNumber?: string;
   
   // Address Information

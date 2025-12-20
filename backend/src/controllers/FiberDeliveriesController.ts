@@ -38,7 +38,8 @@ export class FiberDeliveriesController {
           buyer_contact: deliveryData.buyer_contact,
           notes: deliveryData.notes || null,
           payment_method: deliveryData.payment_method || null,
-          status: 'In Transit'
+          status: 'In Transit',
+          payment_status: 'Unpaid'
         })
         .select()
         .single();
@@ -365,8 +366,8 @@ export class FiberDeliveriesController {
         total_revenue: data
           .filter(d => d.payment_status === 'Paid')
           .reduce((sum, d) => sum + parseFloat(d.total_amount || 0), 0),
-        pending_payment: data
-          .filter(d => d.payment_status === 'Pending')
+        unpaid_amount: data
+          .filter(d => d.payment_status === 'Unpaid')
           .reduce((sum, d) => sum + parseFloat(d.total_amount || 0), 0)
       };
 
