@@ -185,7 +185,7 @@ export default function MAOHarvestVerificationPage() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/harvests/mao/harvests/statistics', {
+      const response = await fetch(`/api/harvests/mao/harvests/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

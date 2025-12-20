@@ -147,10 +147,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       }
 
       const [associationRes, farmerRes] = await Promise.all([
-        fetch('http://localhost:3001/api/association-seedlings/association/received', {
+        fetch(`/api/association-seedlings/association/received', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/api/association-seedlings/association/farmer-distributions', {
+        fetch(`/api/association-seedlings/association/farmer-distributions', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -214,7 +214,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
       const notifs: Notification[] = [];
 
-      const seedlingRes = await fetch('http://localhost:3001/api/association-seedlings/association/farmer-distributions', {
+      const seedlingRes = await fetch(`/api/association-seedlings/association/farmer-distributions', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -247,10 +247,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       if (!token) return;
 
       const [seedlingRes, receivedRes] = await Promise.all([
-        fetch('http://localhost:3001/api/association-seedlings/association/farmer-distributions', {
+        fetch(`/api/association-seedlings/association/farmer-distributions', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/api/association-seedlings/association/received', {
+        fetch(`/api/association-seedlings/association/received', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

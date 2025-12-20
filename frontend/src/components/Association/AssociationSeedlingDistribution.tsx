@@ -104,7 +104,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
       }
 
       const response = await fetch(
-        'http://localhost:3001/api/association-seedlings/association/farmer-distributions',
+        `/api/association-seedlings/association/farmer-distributions',
         {
           headers: { Authorization: `Bearer ${token}` }
         }

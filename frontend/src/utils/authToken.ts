@@ -3,6 +3,14 @@
  * Single source of truth for all authentication tokens
  */
 
+import { jwtDecode } from 'jwt-decode';
+import { API_BASE_URL } from '../config/api';
+
+interface TokenPayload {
+  exp: number;
+  userType: string;
+}
+
 const TOKEN_KEY = 'token';
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
@@ -267,7 +275,7 @@ export const refreshAccessToken = async (): Promise<boolean> => {
       return false;
     }
 
-    const response = await fetch('http://localhost:3001/api/auth/refresh', {
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

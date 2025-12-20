@@ -32,7 +32,7 @@ const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ onClose, onSucc
     try {
       const token = localStorage.getItem('accessToken');
       
-      const response = await fetch('http://localhost:3001/api/mao/create-officer', {
+      const response = await fetch(`/api/mao/create-officer', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

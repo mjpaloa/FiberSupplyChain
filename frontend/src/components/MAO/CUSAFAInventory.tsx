@@ -74,7 +74,7 @@ const CUSAFAInventory: React.FC = () => {
   const fetchInventory = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/cusafa-inventory', {
+      const response = await fetch(`/api/cusafa-inventory', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -96,7 +96,7 @@ const CUSAFAInventory: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       console.log('🔍 Fetching buyers from API...');
       
-      const response = await fetch('http://localhost:3001/api/buyers/all', {
+      const response = await fetch(`/api/buyers/all', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -127,7 +127,7 @@ const CUSAFAInventory: React.FC = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/fiber-deliveries/create', {
+      const response = await fetch(`/api/fiber-deliveries/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

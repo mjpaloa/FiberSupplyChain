@@ -76,7 +76,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
 
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch(`/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -154,7 +154,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
       const recaptchaToken = await executeRecaptcha('register');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch('http://localhost:3001/api/auth/register/farmer', {
+      const response = await fetch(`/api/auth/register/farmer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...submitData, recaptchaToken }),

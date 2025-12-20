@@ -163,7 +163,7 @@ const FarmerMonitoringView: React.FC = () => {
       setLoading(true);
       
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/farmers/monitoring', {
+      const response = await fetch(`/api/farmers/monitoring', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

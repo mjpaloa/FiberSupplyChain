@@ -68,7 +68,7 @@ const OfficerManagement: React.FC = () => {
 
       console.log('🔑 Fetching officers with token:', token.substring(0, 20) + '...');
 
-      const response = await fetch('http://localhost:3001/api/mao/officers', {
+      const response = await fetch(`/api/mao/officers', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ const OfficerManagement: React.FC = () => {
       const currentUser = userStr ? JSON.parse(userStr) : null;
 
       // Verify password by attempting login
-      const verifyResponse = await fetch('http://localhost:3001/api/auth/login', {
+      const verifyResponse = await fetch(`/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

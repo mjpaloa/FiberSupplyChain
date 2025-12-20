@@ -43,7 +43,7 @@ const ArticleManagement: React.FC = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/articles');
+      const response = await fetch(`/api/articles');
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (error) {
@@ -116,7 +116,7 @@ const ArticleManagement: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const url = editingArticle
         ? `http://localhost:3001/api/articles/${editingArticle.article_id}`
-        : 'http://localhost:3001/api/articles';
+        : `/api/articles';
       
       const method = editingArticle ? 'PUT' : 'POST';
 

@@ -5,7 +5,7 @@
 
 import { checkAndRefreshToken, getAuthToken, clearAuthData } from './authToken';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || `';
 
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean;

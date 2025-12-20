@@ -111,7 +111,7 @@ const SeedlingManagement: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/seedlings/all', {
+      const response = await fetch(`/api/seedlings/all', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -142,7 +142,7 @@ const SeedlingManagement: React.FC = () => {
   const fetchFarmers = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/mao/farmers', {
+      const response = await fetch(`/api/mao/farmers', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -201,7 +201,7 @@ const SeedlingManagement: React.FC = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/seedlings', {
+      const response = await fetch(`/api/seedlings', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

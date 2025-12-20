@@ -48,7 +48,7 @@ const MonitoringPage: React.FC = () => {
   const loadFarmers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/mao/farmers', {
+      const response = await fetch(`/api/mao/farmers', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -112,7 +112,7 @@ const MonitoringPage: React.FC = () => {
   const fetchFreshData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/mao/monitoring', {
+      const response = await fetch(`/api/mao/monitoring', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -212,7 +212,7 @@ const MonitoringPage: React.FC = () => {
       console.log('  - status:', newRecordData.status);
       console.log('  - nextMonitoringDate:', newRecordData.nextMonitoringDate);
 
-      const response = await fetch('http://localhost:3001/api/mao/monitoring', {
+      const response = await fetch(`/api/mao/monitoring', {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,

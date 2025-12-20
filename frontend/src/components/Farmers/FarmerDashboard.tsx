@@ -137,7 +137,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       
       // Fetch recent seedling distributions
       try {
-        const seedlingsRes = await apiGet('http://localhost:3001/api/association-seedlings/farmer/received');
+        const seedlingsRes = await apiGet(`/api/association-seedlings/farmer/received');
         
         if (seedlingsRes.ok) {
           const seedlingsData = await seedlingsRes.json();
@@ -163,7 +163,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       
       // Fetch recent monitoring records (using correct endpoint)
       try {
-        const monitoringRes = await apiGet('http://localhost:3001/api/farmers/monitoring');
+        const monitoringRes = await apiGet(`/api/farmers/monitoring');
         
         if (monitoringRes.ok) {
           const monitoringData = await monitoringRes.json();

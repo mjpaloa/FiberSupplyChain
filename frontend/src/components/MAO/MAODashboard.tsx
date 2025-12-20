@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   UserCheck,
@@ -108,7 +108,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const isSuperAdmin = user?.isSuperAdmin === true;
   
   // Debug: Log user info
-  console.log('ðŸ” MAO Dashboard - User Info:', {
+  console.log('🔍 MAO Dashboard - User Info:', {
     email: user?.email,
     isSuperAdmin: user?.isSuperAdmin,
     fullName: user?.fullName,
@@ -130,12 +130,12 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('âœ… Profile data loaded:', data);
-        console.log('ðŸ“§ Email:', data.email);
-        console.log('ðŸ“ž Contact:', data.contact_number);
-        console.log('ðŸ“ Address:', data.address);
-        console.log('ðŸ’¼ Position:', data.position);
-        console.log('ðŸ¢ Association:', data.association_name);
+        console.log('✅ Profile data loaded:', data);
+        console.log('📧 Email:', data.email);
+        console.log('📞 Contact:', data.contact_number);
+        console.log('📍 Address:', data.address);
+        console.log('💼 Position:', data.position);
+        console.log('🏢 Association:', data.association_name);
         
         // Ensure all fields are properly set
         const officerInfo = {
@@ -148,7 +148,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           full_name: data.full_name || user?.fullName || ''
         };
         
-        console.log('ðŸ” Officer data being set:', officerInfo);
+        console.log('🔍 Officer data being set:', officerInfo);
         setOfficerData(officerInfo);
         
         // Set form data with proper fallbacks
@@ -160,13 +160,13 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           association_name: data.association_name || '',
           full_name: data.full_name || user?.fullName || ''
         };
-        console.log('ðŸ“ Setting form data:', formData);
+        console.log('📝 Setting form data:', formData);
         setEditFormData(formData);
         setProfilePhoto(data.profile_picture || null);
       } else {
-        console.error('âŒ Failed to fetch profile, status:', response.status);
+        console.error('❌ Failed to fetch profile, status:', response.status);
         const errorData = await response.json();
-        console.error('âŒ Error details:', errorData);
+        console.error('❌ Error details:', errorData);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -181,7 +181,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     try {
       const token = localStorage.getItem('accessToken');
       
-      console.log('ðŸ’¾ Saving profile data:', {
+      console.log('💾 Saving profile data:', {
         position: editFormData.position,
         associationName: editFormData.association_name,
         contactNumber: editFormData.contact_number,
@@ -209,20 +209,20 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       if (response.ok) {
         const result = await response.json();
-        console.log('âœ… Profile saved:', result);
+        console.log('✅ Profile saved:', result);
         setOfficerData(result.officer);
         setIsEditMode(false);
-        alert('âœ… Profile updated successfully!');
+        alert('✅ Profile updated successfully!');
         // Refresh profile data to update everywhere including header
         await fetchOfficerProfile();
       } else {
         const errorData = await response.json();
-        console.error('âŒ Save failed:', errorData);
-        alert('âŒ Failed to update profile: ' + (errorData.error || 'Unknown error'));
+        console.error('❌ Save failed:', errorData);
+        alert('❌ Failed to update profile: ' + (errorData.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert('âŒ Error saving profile');
+      alert('❌ Error saving profile');
     } finally {
       setSavingProfile(false);
     }
@@ -262,13 +262,13 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         });
 
         if (response.ok) {
-          alert('âœ… Profile picture updated!');
+          alert('✅ Profile picture updated!');
         }
       };
       reader.readAsDataURL(file);
     } catch (error) {
       console.error('Error uploading photo:', error);
-      alert('âŒ Error uploading photo');
+      alert('❌ Error uploading photo');
     } finally {
       setUploadingPhoto(false);
     }
@@ -343,25 +343,25 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
       
       // Fetch production data
-      const productionRes = await fetch('http://localhost:3001/api/admin/production-report', {
+      const productionRes = await fetch(`/api/admin/production-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const productionData = await productionRes.json();
 
       // Fetch sales data
-      const salesRes = await fetch('http://localhost:3001/api/admin/sales-report', {
+      const salesRes = await fetch(`/api/admin/sales-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const salesData = await salesRes.json();
 
       // Fetch users data
-      const usersRes = await fetch('http://localhost:3001/api/admin/users-report', {
+      const usersRes = await fetch(`/api/admin/users-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const usersData = await usersRes.json();
 
       // Fetch delivery data
-      const deliveriesRes = await fetch('http://localhost:3001/api/fiber-deliveries/all', {
+      const deliveriesRes = await fetch(`/api/fiber-deliveries/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const deliveriesData = await deliveriesRes.json();
@@ -385,7 +385,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       try {
         // Fetch seedling distributions for monthly data
-        const associationDistRes = await fetch('http://localhost:3001/api/association-seedlings/mao/associations', {
+        const associationDistRes = await fetch(`/api/association-seedlings/mao/associations', {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -394,7 +394,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           
           // Process association distributions (Received)
           const distributions = associationDist.distributions || associationDist || [];
-          console.log('📥 Processing association distributions (Received):', distributions.length, 'records');
+          console.log('?? Processing association distributions (Received):', distributions.length, 'records');
           
           distributions.forEach((dist: any) => {
             const date = new Date(dist.date_distributed);
@@ -407,23 +407,23 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           });
           
           const totalReceived = monthlyReceived.reduce((a, b) => a + b, 0);
-          console.log('✅ Total Received from database:', totalReceived);
-          console.log('📊 Monthly Received:', monthlyReceived);
+          console.log('? Total Received from database:', totalReceived);
+          console.log('?? Monthly Received:', monthlyReceived);
         }
         
         // For distributed data, fetch from CUSAFA endpoint which has all farmer distributions
         try {
-          const farmerDistRes = await fetch('http://localhost:3001/api/association-seedlings/cusafa/all-distributions', {
+          const farmerDistRes = await fetch(`/api/association-seedlings/cusafa/all-distributions', {
             headers: { Authorization: `Bearer ${token}` }
           });
           
           if (farmerDistRes.ok) {
             const farmerDistData = await farmerDistRes.json();
-            console.log('📦 CUSAFA distributions data:', farmerDistData);
+            console.log('?? CUSAFA distributions data:', farmerDistData);
             
             // Process farmer distributions (Distributed to farmers)
             const farmerDists = farmerDistData.farmer_distributions || [];
-            console.log('📤 Processing farmer distributions (Distributed):', farmerDists.length, 'records');
+            console.log('?? Processing farmer distributions (Distributed):', farmerDists.length, 'records');
             
             farmerDists.forEach((dist: any) => {
               const date = new Date(dist.date_distributed);
@@ -436,8 +436,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             });
             
             const totalDistributed = monthlyDistributed.reduce((a, b) => a + b, 0);
-            console.log('✅ Total Distributed from database:', totalDistributed);
-            console.log('📊 Monthly Distributed:', monthlyDistributed);
+            console.log('? Total Distributed from database:', totalDistributed);
+            console.log('?? Monthly Distributed:', monthlyDistributed);
           }
         } catch (err) {
           console.log('Could not fetch distributed data:', err);
@@ -455,7 +455,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       let totalMonitoring = 0;
       
       try {
-        const monitoringRes = await fetch('http://localhost:3001/api/mao/monitoring', {
+        const monitoringRes = await fetch(`/api/mao/monitoring', {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -555,8 +555,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       // For distributed data - if no data from database, leave it as zeros
       // Don't calculate or estimate - only show real data from database
       if (totalDistributedFromMonthly === 0) {
-        console.log('⚠️ No distributed data found in database');
-        console.log('📤 Distributed will show as 0 (no data recorded yet)');
+        console.log('?? No distributed data found in database');
+        console.log('?? Distributed will show as 0 (no data recorded yet)');
         // monthlyDistributed stays as [0,0,0,0,0,0,0,0,0,0,0,0]
       }
       
@@ -605,7 +605,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       // Fetch recent users (24h)
       try {
-        const usersRes = await fetch('http://localhost:3001/api/admin/users-report', {
+        const usersRes = await fetch(`/api/admin/users-report', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const usersData = await usersRes.json();
@@ -619,7 +619,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 title: 'New User Registered',
                 message: `${user.fullName} registered as ${user.userType}`,
                 date: user.createdAt,
-                icon: '👤',
+                icon: '??',
                 color: 'blue'
               });
             }
@@ -629,7 +629,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       // Fetch monitoring records (24h)
       try {
-        const monitoringRes = await fetch('http://localhost:3001/api/monitoring/records', {
+        const monitoringRes = await fetch(`/api/monitoring/records', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const monitoringData = await monitoringRes.json();
@@ -643,7 +643,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 title: 'New Field Monitoring',
                 message: `${record.farmer_name} farm monitored by ${record.monitored_by}`,
                 date: record.date_of_visit,
-                icon: '📋',
+                icon: '??',
                 color: 'green'
               });
             }
@@ -653,7 +653,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       // Fetch seedling distributions (24h)
       try {
-        const seedlingsRes = await fetch('http://localhost:3001/api/association-seedlings/all', {
+        const seedlingsRes = await fetch(`/api/association-seedlings/all', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const seedlingsData = await seedlingsRes.json();
@@ -667,7 +667,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 title: 'Seedling Distribution',
                 message: `${seedling.quantity_distributed} ${seedling.variety} seedlings to ${seedling.farmer_name || 'farmer'}`,
                 date: seedling.distribution_date,
-                icon: '🌱',
+                icon: '??',
                 color: 'emerald'
               });
             }
@@ -677,7 +677,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       // Fetch planted seedlings updates (24h)
       try {
-        const plantedRes = await fetch('http://localhost:3001/api/association-seedlings/farmer/planted-overview', {
+        const plantedRes = await fetch(`/api/association-seedlings/farmer/planted-overview', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const plantedData = await plantedRes.json();
@@ -692,7 +692,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   title: 'Seedlings Planted',
                   message: `${planted.farmer_name} planted ${planted.quantity_distributed} ${planted.variety}`,
                   date: planted.planting_date,
-                  icon: '🌿',
+                  icon: '??',
                   color: 'teal'
                 });
               }
@@ -703,7 +703,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       // Fetch harvest submissions (24h)
       try {
-        const harvestRes = await fetch('http://localhost:3001/api/harvests', {
+        const harvestRes = await fetch(`/api/harvests', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const harvestData = await harvestRes.json();
@@ -717,7 +717,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 title: 'Harvest Submitted',
                 message: `${harvest.farmer_name} submitted harvest: ${harvest.total_kg}kg`,
                 date: harvest.harvest_date || harvest.createdAt,
-                icon: '🌾',
+                icon: '??',
                 color: 'amber'
               });
             }
@@ -727,7 +727,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       // Fetch sales reports (24h)
       try {
-        const salesRes = await fetch('http://localhost:3001/api/sales/all', {
+        const salesRes = await fetch(`/api/sales/all', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const salesData = await salesRes.json();
@@ -739,9 +739,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 id: `sale-${sale.sale_id}`,
                 type: 'sale',
                 title: 'Sales Report Submitted',
-                message: `${sale.farmer_name || 'Farmer'} sold ${sale.quantity_kg}kg for ₱${sale.total_amount}`,
+                message: `${sale.farmer_name || 'Farmer'} sold ${sale.quantity_kg}kg for ?${sale.total_amount}`,
                 date: sale.sale_date || sale.createdAt,
-                icon: '💰',
+                icon: '??',
                 color: 'purple'
               });
             }
@@ -751,7 +751,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       // Fetch buyer price updates (24h)
       try {
-        const pricesRes = await fetch('http://localhost:3001/api/buyer-prices/all', {
+        const pricesRes = await fetch(`/api/buyer-prices/all', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const pricesData = await pricesRes.json();
@@ -763,9 +763,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 id: `price-${price.price_id}`,
                 type: 'price',
                 title: 'Buyer Price Updated',
-                message: `${price.buyer_name} posted ₱${price.price_per_kg}/kg for ${price.grade}`,
+                message: `${price.buyer_name} posted ?${price.price_per_kg}/kg for ${price.grade}`,
                 date: price.date_posted || price.createdAt,
-                icon: '💸',
+                icon: '??',
                 color: 'indigo'
               });
             }
@@ -775,7 +775,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       // Fetch delivery tracking updates (24h)
       try {
-        const deliveriesRes = await fetch('http://localhost:3001/api/deliveries/all', {
+        const deliveriesRes = await fetch(`/api/deliveries/all', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const deliveriesData = await deliveriesRes.json();
@@ -789,7 +789,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 title: 'Delivery Update',
                 message: `${delivery.farmer_name} to ${delivery.buyer_name}: ${delivery.status}`,
                 date: delivery.created_at || delivery.createdAt,
-                icon: '🚚',
+                icon: '??',
                 color: 'cyan'
               });
             }
@@ -855,7 +855,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           <div className={`transition-all duration-300 ease-in-out ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
             <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">MAO Culiram</h1>
             <p className="text-xs text-slate-400 whitespace-nowrap">
-              {isSuperAdmin ? '⭐ Super Admin Panel' : '🛡️ Admin Panel'}
+              {isSuperAdmin ? '? Super Admin Panel' : '??? Admin Panel'}
             </p>
           </div>
           <button
@@ -942,7 +942,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               currentPage === 'sales-analytics' ? 'bg-emerald-600' : 'hover:bg-slate-700'
             } ${!sidebarOpen && 'justify-center'}`}
           >
-            <span className="text-lg font-bold flex-shrink-0">₱</span>
+            <span className="text-lg font-bold flex-shrink-0">?</span>
             <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Sales Management</span>
           </button>
 
@@ -1166,9 +1166,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   </p>
                   <p className="text-xs text-gray-500">
                     {isSuperAdmin ? (
-                      <span className="text-amber-600 font-semibold">⭐ Super Admin</span>
+                      <span className="text-amber-600 font-semibold">? Super Admin</span>
                     ) : (
-                      <span className="text-blue-600 font-semibold">🛡️ Admin</span>
+                      <span className="text-blue-600 font-semibold">??? Admin</span>
                     )}
                   </p>
                 </div>
@@ -1328,7 +1328,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 {/* Abaca Production Section */}
                 {dashboardSection === 'production' && (
                   <>
-                {/* 🌱 SEEDLING ANALYTICS - Next-Gen Modern Design */}
+                {/* ?? SEEDLING ANALYTICS - Next-Gen Modern Design */}
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Seedling Analytics</h2>
@@ -1444,8 +1444,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             value={chartView}
                             onChange={(e) => setChartView(e.target.value as 'monthly' | 'yearly')}
                           >
-                            <option value="monthly">📅 Monthly View</option>
-                            <option value="yearly">📊 Yearly View</option>
+                            <option value="monthly">?? Monthly View</option>
+                            <option value="yearly">?? Yearly View</option>
                           </select>
                         </div>
                       </div>
@@ -1483,7 +1483,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               yearlyDistTotal
                             ];
                             
-                            console.log('📊 YEARLY VIEW DATA (2021-2025):');
+                            console.log('?? YEARLY VIEW DATA (2021-2025):');
                             console.log('Years:', labels);
                             console.log('Received:', dataReceived);
                             console.log('Distributed:', dataDistributed);
@@ -1493,7 +1493,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             dataDistributed = dashboardData.production.monthlyDistributed || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
                             labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                             
-                            console.log('📊 MONTHLY VIEW DATA (2025):');
+                            console.log('?? MONTHLY VIEW DATA (2025):');
                             console.log('Received:', dataReceived, 'Total:', dataReceived.reduce((a, b) => a + b, 0));
                             console.log('Distributed:', dataDistributed, 'Total:', dataDistributed.reduce((a, b) => a + b, 0));
                           }
@@ -1847,7 +1847,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   </div>
                 </div>
 
-                {/* 🛰 FIELD MONITORING - Enhanced */}
+                {/* ?? FIELD MONITORING - Enhanced */}
                 <div className="mb-8">
                   <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-6">Field Monitoring</h2>
                   
@@ -1911,8 +1911,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           value={monitoringView}
                           onChange={(e) => setMonitoringView(e.target.value as 'monthly' | 'yearly')}
                         >
-                          <option value="monthly">📅 Monthly View</option>
-                          <option value="yearly">📊 Yearly View</option>
+                          <option value="monthly">?? Monthly View</option>
+                          <option value="yearly">?? Yearly View</option>
                         </select>
                       </div>
                     </div>
@@ -2222,8 +2222,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               onChange={(e) => setDeliveryStatusView(e.target.value as 'monthly' | 'yearly')}
                               className="text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                             >
-                              <option value="monthly">📅 Monthly</option>
-                              <option value="yearly">📊 Yearly</option>
+                              <option value="monthly">?? Monthly</option>
+                              <option value="yearly">?? Yearly</option>
                             </select>
                           </div>
 
@@ -2407,8 +2407,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               onChange={(e) => setDeliveryView(e.target.value as 'monthly' | 'yearly')}
                               className="text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                             >
-                              <option value="monthly">📅 Monthly</option>
-                              <option value="yearly">📊 Yearly</option>
+                              <option value="monthly">?? Monthly</option>
+                              <option value="yearly">?? Yearly</option>
                             </select>
                           </div>
 
@@ -2565,7 +2565,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             <span className="text-sm text-gray-600">Verified Revenue</span>
                           </div>
                         </div>
-                        <p className="text-3xl font-bold text-gray-900 mb-1">₱{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</p>
+                        <p className="text-3xl font-bold text-gray-900 mb-1">?{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</p>
                         <p className="text-xs text-green-600">+13.6%</p>
                       </div>
 
@@ -2666,7 +2666,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center">
                               <div className="text-center">
-                                <p className="text-2xl font-bold text-gray-900">₱{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k</p>
+                                <p className="text-2xl font-bold text-gray-900">?{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k</p>
                                 <p className="text-xs text-gray-500 mt-1">Total</p>
                               </div>
                             </div>
@@ -2677,11 +2677,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Approved</span>
-                            <span className="font-semibold text-emerald-600">₱{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</span>
+                            <span className="font-semibold text-emerald-600">?{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Pending</span>
-                            <span className="font-semibold text-yellow-600">₱{(dashboardData.sales?.pendingAmount || 0).toLocaleString()}</span>
+                            <span className="font-semibold text-yellow-600">?{(dashboardData.sales?.pendingAmount || 0).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -2948,7 +2948,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             {/* Stats */}
                             <div className="flex justify-between text-sm">
                               <span className="text-blue-600 font-semibold">
-                                ₱{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k
+                                ?{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k
                               </span>
                               <span className="text-gray-600">
                                 {(dashboardData.sales?.totalKgSold || 0).toLocaleString()} kg
@@ -3038,7 +3038,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             {/* Stats */}
                             <div className="flex justify-between text-sm">
                               <span className="text-blue-600 font-semibold">
-                                ₱{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k
+                                ?{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k
                               </span>
                               <span className="text-gray-600">
                                 {(dashboardData.sales?.totalKgSold || 0).toLocaleString()} kg
@@ -3069,7 +3069,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                 <td className="py-3 px-4 text-sm font-medium text-gray-900">{sale.farmer_name || 'N/A'}</td>
                                 <td className="py-3 px-4 text-sm text-gray-700">{sale.buyer_company_name || sale.buyer_name || 'N/A'}</td>
-                                <td className="py-3 px-4 text-sm font-semibold text-gray-900">₱{sale.total_amount?.toLocaleString() || '0'}</td>
+                                <td className="py-3 px-4 text-sm font-semibold text-gray-900">?{sale.total_amount?.toLocaleString() || '0'}</td>
                                 <td className="py-3 px-4 text-sm text-gray-700">{sale.quantity_sold || 0} kg</td>
                                 <td className="py-3 px-4">
                                   <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">

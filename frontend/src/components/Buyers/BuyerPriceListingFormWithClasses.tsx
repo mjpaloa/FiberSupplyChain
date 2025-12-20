@@ -155,7 +155,7 @@ const BuyerPriceListingFormWithClasses: React.FC = () => {
         availability: formData.availability
       };
 
-      const response = await fetch('http://localhost:3001/api/buyer-listings/create', {
+      const response = await fetch(`/api/buyer-listings/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

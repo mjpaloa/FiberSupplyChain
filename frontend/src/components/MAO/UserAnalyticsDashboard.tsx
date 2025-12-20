@@ -81,7 +81,7 @@ const UserAnalyticsDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/admin/users-report', {
+      const response = await fetch(`/api/admin/users-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
       

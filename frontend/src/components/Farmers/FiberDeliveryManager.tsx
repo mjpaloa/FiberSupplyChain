@@ -184,7 +184,7 @@ const FiberDeliveryManager: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const url = isEditMode && selectedDelivery
         ? `http://localhost:3001/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
-        : 'http://localhost:3001/api/fiber-deliveries/create';
+        : `/api/fiber-deliveries/create';
       
       const method = isEditMode ? 'PUT' : 'POST';
 

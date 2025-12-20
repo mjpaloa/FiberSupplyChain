@@ -74,7 +74,7 @@ export default function SuperAdminInventoryDashboard() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/inventory/inventory/statistics', {
+      const response = await fetch(`/api/inventory/inventory/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

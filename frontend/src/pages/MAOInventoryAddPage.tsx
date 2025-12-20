@@ -93,7 +93,7 @@ export default function MAOInventoryAddPage() {
         remarks: formData.remarks
       };
 
-      const response = await fetch('http://localhost:3001/api/inventory/inventory', {
+      const response = await fetch(`/api/inventory/inventory', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
