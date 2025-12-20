@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { apiGet, apiPost, apiPut } from '../../utils/apiClient';
 import {
   LayoutDashboard,
   Sprout,
@@ -136,9 +137,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       
       // Fetch recent seedling distributions
       try {
-        const seedlingsRes = await fetch('http://localhost:3001/api/association-seedlings/farmer/received', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const seedlingsRes = await apiGet('http://localhost:3001/api/association-seedlings/farmer/received');
         
         if (seedlingsRes.ok) {
           const seedlingsData = await seedlingsRes.json();
@@ -164,12 +163,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       
       // Fetch recent monitoring records (using correct endpoint)
       try {
-        const monitoringRes = await fetch('http://localhost:3001/api/farmers/monitoring', {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const monitoringRes = await apiGet('http://localhost:3001/api/farmers/monitoring');
         
         if (monitoringRes.ok) {
           const monitoringData = await monitoringRes.json();
@@ -240,11 +234,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const fetchMySeedlings = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      // Use the new association seedlings endpoint
-      const response = await fetch('http://localhost:3001/api/association-seedlings/farmer/received', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await apiGet('/api/association-seedlings/farmer/received');
       const data = await response.json();
       console.log('📦 Fetched seedlings:', data);
       // Debug: Check photo fields
@@ -309,19 +299,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
   const fetchHarvestStats = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const response = await apiGet('/api/harvests/farmer/harvests');
       
-      // Fetch all farmer's harvests using correct endpoint
-      const harvestResponse = await fetch('http://localhost:3001/api/harvests/farmer/harvests', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (!harvestResponse.ok) {
-        console.log('❌ Could not fetch harvests, status:', harvestResponse.status);
+      if (!response.ok) {
+        console.log('❌ Could not fetch harvests, status:', response.status);
         return;
       }
       
-      const data = await harvestResponse.json();
+      const data = await response.json();
       const harvests = data.harvests || data; // Handle both response formats
       console.log('🌾 All harvests fetched:', harvests);
       
@@ -349,9 +334,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       
       let totalRevenue = 0;
       if (farmerId) {
-        const salesResponse = await fetch(`http://localhost:3001/api/sales/farmer-reports/${farmerId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const salesResponse = await apiGet(`http://localhost:3001/api/sales/farmer-reports/${farmerId}`);
         
         if (salesResponse.ok) {
           const result = await salesResponse.json();
@@ -460,9 +443,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       }
 
       // Fetch harvest data for fiber production (only verified harvests)
-      const harvestResponse = await fetch(`http://localhost:3001/api/harvests/farmer/harvests`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const harvestResponse = await apiGet(`http://localhost:3001/api/harvests/farmer/harvests`);
       
       if (!harvestResponse.ok) {
         console.log('No harvest data available');
@@ -492,9 +473,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       console.log('✅ Verified harvests for charts:', verifiedHarvests.length, 'items');
 
       // Fetch sales data for revenue
-      const salesResponse = await fetch(`http://localhost:3001/api/sales/farmer-reports/${farmerId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const salesResponse = await apiGet(`http://localhost:3001/api/sales/farmer-reports/${farmerId}`);
       
       const salesResult = await salesResponse.json();
       const salesData = salesResult.success && Array.isArray(salesResult.reports) ? salesResult.reports : [];
@@ -590,9 +569,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
       
       // Fetch delivery data for this farmer
-      const deliveryResponse = await fetch(`http://localhost:3001/api/fiber-deliveries/farmer/my-deliveries`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const deliveryResponse = await apiGet(`http://localhost:3001/api/fiber-deliveries/farmer/my-deliveries`);
       
       if (!deliveryResponse.ok) {
         console.log('No delivery data available');
@@ -675,10 +652,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const fetchFarmerProfile = async () => {
     setLoadingProfile(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/auth/me`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await apiGet('/api/auth/me');
       
       if (response.ok) {
         const data = await response.json();
@@ -706,19 +680,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const handleSaveFarmerProfile = async () => {
     setSavingProfile(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const profileData = {
+        ...editFormData,
+        profilePhoto: profilePhoto
+      };
       
-      const response = await fetch(`http://localhost:3001/api/farmers/profile`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...editFormData,
-          profilePhoto: profilePhoto
-        })
-      });
+      const response = await apiPut('/api/farmers/profile', profileData);
       
       if (response.ok) {
         alert('✅ Profile updated successfully!');
@@ -789,16 +756,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     if (!selectedSeedling) return;
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/association-seedlings/farmer/${selectedSeedling.distribution_id}/mark-planted`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(plantingData)
+      const response = await apiPut(`/api/association-seedlings/farmer/${selectedSeedling.distribution_id}/mark-planted`, {
+        planted_date: plantingData.planting_date,
+        planted_quantity: plantingData.planting_quantity
       });
-
+      
       if (response.ok) {
         alert('Seedling marked as planted successfully! MAO has been notified.');
         setShowPlantingModal(false);
@@ -2363,7 +2325,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     )}
                     {selectedSeedling.packaging_photo && (
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Packaging Photo</p>
+                        <p className="text-sm text-gray-600 mb-2">Distribution Photo</p>
                         <img 
                           src={selectedSeedling.packaging_photo} 
                           alt="Packaging" 

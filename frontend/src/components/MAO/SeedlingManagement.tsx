@@ -1251,7 +1251,7 @@ const SeedlingManagement: React.FC = () => {
                     )}
                     {selectedSeedling.packaging_photo && (
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Packaging Photo</p>
+                        <p className="text-sm text-gray-600 mb-2">Distribution Photo</p>
                         <img 
                           src={selectedSeedling.packaging_photo} 
                           alt="Packaging" 

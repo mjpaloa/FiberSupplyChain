@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiGet } from '../../utils/apiClient';
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -57,9 +58,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
   const fetchBuyerProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/buyers/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiGet('/api/buyers/profile');
       const data = await response.json();
       setBuyerInfo({
         name: data.buyer?.full_name || 'Buyer',

@@ -748,7 +748,7 @@ const AssociationInventory: React.FC = () => {
                     )}
                     {selectedDistribution.packaging_photo && (
                       <div>
-                        <p className="text-xs text-gray-600 mb-2">Packaging Photo</p>
+                        <p className="text-xs text-gray-600 mb-2">Distribution Photo</p>
                         <img 
                           src={selectedDistribution.packaging_photo} 
                           alt="Packaging" 
@@ -917,9 +917,9 @@ const AssociationInventory: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Packaging Photo */}
+                    {/* Distribution Photo */}
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-2">Packaging Photo</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Distribution Photo</label>
                       <div className="relative">
                         {distributeForm.packaging_photo ? (
                           <div className="relative group">

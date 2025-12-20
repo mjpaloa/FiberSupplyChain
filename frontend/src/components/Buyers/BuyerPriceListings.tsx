@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiGet, apiDelete } from '../../utils/apiClient';
 import { 
   DollarSign, 
   Package, 
@@ -11,8 +12,7 @@ import {
   Trash2,
   Building,
   FileText,
-  Search,
-  Filter
+  Search
 } from 'lucide-react';
 
 interface PriceListing {
@@ -48,10 +48,7 @@ const BuyerPriceListings: React.FC = () => {
 
   const fetchListings = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/buyer-listings', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiGet('/api/buyer-listings');
       const data = await response.json();
       setListings(data.listings || []);
     } catch (error) {
@@ -65,11 +62,7 @@ const BuyerPriceListings: React.FC = () => {
     if (!confirm('Are you sure you want to delete this listing?')) return;
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/buyer-listings/${listingId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiDelete(`/api/buyer-listings/${listingId}`);
 
       if (response.ok) {
         fetchListings();

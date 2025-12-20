@@ -55,7 +55,7 @@ interface AssociationDistribution {
 interface DistributionFormData {
   variety: string;
   source_supplier: string;
-  quantity_distributed: number;
+  quantity_distributed: string | number;
   date_distributed: string;
   recipient_association_id: string;
   remarks: string;
@@ -66,7 +66,14 @@ interface DistributionFormData {
 }
 
 // Interface for submission data (after base64 conversion)
-interface DistributionSubmissionData extends Omit<DistributionFormData, 'seedling_photo' | 'packaging_photo' | 'quality_photo'> {
+interface DistributionSubmissionData {
+  variety: string;
+  source_supplier: string;
+  quantity_distributed: number;
+  date_distributed: string;
+  recipient_association_id: string;
+  remarks: string;
+  status: string;
   seedling_photo?: string | null;
   packaging_photo?: string | null;
   quality_photo?: string | null;
@@ -268,7 +275,7 @@ const AssociationSeedlingManagement: React.FC = () => {
     const data: DistributionSubmissionData = { 
       variety: formData.variety,
       source_supplier: formData.source_supplier,
-      quantity_distributed: parseInt(formData.quantity_distributed) || 0,
+      quantity_distributed: typeof formData.quantity_distributed === 'string' ? parseInt(formData.quantity_distributed) || 0 : formData.quantity_distributed,
       date_distributed: formData.date_distributed,
       recipient_association_id: formData.recipient_association_id,
       remarks: formData.remarks,
@@ -292,7 +299,7 @@ const AssociationSeedlingManagement: React.FC = () => {
       try {
         data.packaging_photo = await fileToBase64(formData.packaging_photo);
       } catch (error) {
-        console.error('Error converting packaging photo:', error);
+        console.error('Error converting distribution photo:', error);
       }
     } else if (typeof formData.packaging_photo === 'string') {
       data.packaging_photo = formData.packaging_photo;
@@ -970,7 +977,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-bold text-purple-800 mb-2">Packaging Photo</label>
+                      <label className="block text-sm font-bold text-purple-800 mb-2">Distribution Photo</label>
                       <input
                         type="file"
                         accept="image/*"
@@ -1153,7 +1160,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                     )}
                     {selectedDistribution.packaging_photo && (
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Packaging Photo</p>
+                        <p className="text-sm text-gray-600 mb-2">Distribution Photo</p>
                         <img
                           src={selectedDistribution.packaging_photo.startsWith('data:') ? selectedDistribution.packaging_photo : `http://localhost:3001${selectedDistribution.packaging_photo}`}
                           alt="Packaging"

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiGet } from '../../utils/apiClient';
 import {
   Package,
   TrendingUp,
@@ -62,9 +63,17 @@ interface Delivery {
   delivery_proof_image: string;
   receipt_image: string;
   created_at: string;
+  harvest_id: string;
   buyers?: {
     business_name: string;
     contact_number: string;
+    business_address: string;
+  };
+  farmers?: {
+    full_name: string;
+    contact_number: string;
+    municipality: string;
+    barangay: string;
   };
 }
 
@@ -114,11 +123,8 @@ const FiberDeliveryManager: React.FC = () => {
 
   const fetchDeliveries = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
       const statusParam = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
-      const response = await fetch(`http://localhost:3001/api/fiber-deliveries/farmer/my-deliveries${statusParam}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiGet(`/api/fiber-deliveries/farmer/my-deliveries${statusParam}`);
       const data = await response.json();
       setDeliveries(data.deliveries || []);
     } catch (error) {
@@ -130,10 +136,7 @@ const FiberDeliveryManager: React.FC = () => {
 
   const fetchFiberInventory = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/cusafa-inventory', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiGet('/api/cusafa-inventory');
       const data = await response.json();
       setFiberInventory(data.inventory || []);
     } catch (error) {
@@ -144,16 +147,9 @@ const FiberDeliveryManager: React.FC = () => {
   const fetchBuyers = async () => {
     setLoadingBuyers(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      
       console.log('🔍 Fetching buyers from API...');
       
-      const response = await fetch('http://localhost:3001/api/buyers/all', {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await apiGet('/api/buyers/all');
       
       if (!response.ok) {
         console.error('❌ Failed to fetch buyers:', response.status);
@@ -251,7 +247,7 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`,
+        `http://localhost:3001/api/fiber-delivery/farmer/${selectedDelivery.delivery_id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
@@ -263,6 +259,7 @@ const FiberDeliveryManager: React.FC = () => {
         setShowDeleteModal(false);
         setSelectedDelivery(null);
         fetchDeliveries();
+        fetchFiberInventory();
       } else {
         const error = await response.json();
         alert(`Failed to delete: ${error.error}`);
@@ -780,6 +777,45 @@ const FiberDeliveryManager: React.FC = () => {
                 </span>
               </div>
 
+              {/* Farmer Information */}
+              <div className="border-t pt-4">
+                <h3 className="font-bold text-gray-900 mb-3">Farmer Information</h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm text-gray-600">Name:</p>
+                    <p className="font-semibold">{selectedDelivery.farmers?.full_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Contact:</p>
+                    <p className="font-semibold">{selectedDelivery.farmer_contact || selectedDelivery.farmers?.contact_number || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Location:</p>
+                    <p className="font-semibold">{selectedDelivery.pickup_location || `${selectedDelivery.farmers?.barangay || ''}, ${selectedDelivery.farmers?.municipality || ''}`}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buyer Information */}
+              <div className="border-t pt-4">
+                <h3 className="font-bold text-gray-900 mb-3">Buyer Information</h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm text-gray-600">Business:</p>
+                    <p className="font-semibold">{selectedDelivery.buyers?.business_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Contact:</p>
+                    <p className="font-semibold">{selectedDelivery.buyer_contact || selectedDelivery.buyers?.contact_number || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Address:</p>
+                    <p className="font-semibold">{selectedDelivery.buyers?.business_address || selectedDelivery.delivery_location || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fiber Details */}
               <div className="border-t pt-4">
                 <h3 className="font-bold text-gray-900 mb-3">Fiber Details</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -788,27 +824,24 @@ const FiberDeliveryManager: React.FC = () => {
                     <p className="font-semibold">{selectedDelivery.variety}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Grade</p>
-                    <p className="font-semibold">{selectedDelivery.grade}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Quantity</p>
+                    <p className="text-sm text-gray-600">Fiber (kg)</p>
                     <p className="font-semibold">{selectedDelivery.quantity_kg} kg</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Price per KG</p>
-                    <p className="font-semibold">₱{selectedDelivery.price_per_kg}</p>
+                    <p className="text-sm text-gray-600">Grade</p>
+                    <p className="font-semibold">{selectedDelivery.grade}</p>
                   </div>
                 </div>
               </div>
 
+              {/* Delivery Information */}
               <div className="border-t pt-4">
                 <h3 className="font-bold text-gray-900 mb-3">Delivery Information</h3>
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-600">Delivery Date & Time</p>
                     <p className="font-semibold">
-                      {new Date(selectedDelivery.delivery_date).toLocaleDateString()} 
+                      {new Date(selectedDelivery.delivery_date).toLocaleDateString()}
                       {selectedDelivery.delivery_time && ` at ${selectedDelivery.delivery_time}`}
                     </p>
                   </div>
@@ -827,20 +860,7 @@ const FiberDeliveryManager: React.FC = () => {
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <h3 className="font-bold text-gray-900 mb-3">Payment Details</h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-600">Payment Method</p>
-                    <p className="font-semibold">{selectedDelivery.payment_method || 'Not specified'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Total Amount</p>
-                    <p className="text-2xl font-bold text-emerald-600">₱{selectedDelivery.total_amount.toFixed(2)}</p>
-                  </div>
-                </div>
-              </div>
-
+              {/* Notes */}
               {selectedDelivery.notes && (
                 <div className="border-t pt-4">
                   <h3 className="font-bold text-gray-900 mb-2">Notes</h3>

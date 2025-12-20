@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiGet, apiPut } from '../../utils/apiClient';
 import { 
   User, 
   Phone, 
@@ -60,9 +61,7 @@ const BuyerProfile: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       
-      const response = await fetch(`http://localhost:3001/api/buyers/profile/${user.user_id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiGet(`/api/buyers/profile/${user.user_id}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -84,17 +83,11 @@ const BuyerProfile: React.FC = () => {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/buyers/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          buyerInfo,
-          prices
-        })
-      });
+      const formData = new FormData();
+      formData.append('buyerInfo', JSON.stringify(buyerInfo));
+      formData.append('prices', JSON.stringify(prices));
+
+      const response = await apiPut('/api/buyers/update-profile', formData);
 
       if (response.ok) {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
