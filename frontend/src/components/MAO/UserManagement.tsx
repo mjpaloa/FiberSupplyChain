@@ -19,6 +19,9 @@ import {
   AlertCircle,
   TrendingUp
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { apiGet, apiPost, apiPut } from '../../utils/apiClient';
 
 interface User {
   id: string;
@@ -51,6 +54,7 @@ const UserManagement: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   // Fetch users
   useEffect(() => {
@@ -83,22 +87,17 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
       
       let endpoint = '';
       if (activeTab === 'farmers') {
-        endpoint = 'http://localhost:3001/api/mao/farmers';
+        endpoint = '/api/mao/farmers';
       } else if (activeTab === 'buyers') {
-        endpoint = 'http://localhost:3001/api/mao/buyers-list';
+        endpoint = '/api/mao/buyers-list';
       } else if (activeTab === 'associations') {
-        endpoint = 'http://localhost:3001/api/mao/association-officers';
+        endpoint = '/api/mao/association-officers';
       }
 
-      const response = await fetch(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await apiGet(endpoint);
 
       if (response.ok) {
         const data = await response.json();
@@ -114,24 +113,18 @@ const UserManagement: React.FC = () => {
   };
 
   const fetchUserDetails = async (userId: string) => {
-    setLoadingDetails(true);
     try {
-      const token = localStorage.getItem('accessToken');
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `http://localhost:3001/api/mao/farmers/${userId}`;
+        endpoint = `/api/mao/farmers/${userId}`;
       } else if (activeTab === 'buyers') {
-        endpoint = `http://localhost:3001/api/mao/buyers/${userId}`;
+        endpoint = `/api/mao/buyers/${userId}`;
       } else if (activeTab === 'associations') {
-        endpoint = `http://localhost:3001/api/mao/association-officers/${userId}`;
+        endpoint = `/api/mao/association-officers/${userId}`;
       }
 
-      const response = await fetch(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await apiGet(endpoint);
 
       const data = await response.json();
       setSelectedUserDetails(data);
@@ -146,23 +139,17 @@ const UserManagement: React.FC = () => {
 
   const handleVerify = async (userId: string) => {
     try {
-      const token = localStorage.getItem('accessToken');
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `http://localhost:3001/api/mao/farmers/${userId}/verify`;
+        endpoint = `/api/mao/farmers/${userId}/verify`;
       } else if (activeTab === 'buyers') {
-        endpoint = `http://localhost:3001/api/mao/buyers/${userId}/verify`;
+        endpoint = `/api/mao/buyers/${userId}/verify`;
       } else if (activeTab === 'associations') {
-        endpoint = `http://localhost:3001/api/mao/association-officers/${userId}/verify`;
+        endpoint = `/api/mao/association-officers/${userId}/verify`;
       }
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await apiPost(endpoint);
 
       if (response.ok) {
         alert('User verified successfully!');
@@ -178,31 +165,20 @@ const UserManagement: React.FC = () => {
   };
 
   const handleReject = async () => {
-    if (!selectedUser || !rejectionReason.trim()) {
-      alert('Please provide a rejection reason');
-      return;
-    }
+    if (!selectedUser || !rejectionReason.trim()) return;
 
     try {
-      const token = localStorage.getItem('accessToken');
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `http://localhost:3001/api/mao/farmers/${selectedUser.id}/reject`;
+        endpoint = `/api/mao/farmers/${selectedUser.id}/reject`;
       } else if (activeTab === 'buyers') {
-        endpoint = `http://localhost:3001/api/mao/buyers/${selectedUser.id}/reject`;
+        endpoint = `/api/mao/buyers/${selectedUser.id}/reject`;
       } else if (activeTab === 'associations') {
-        endpoint = `http://localhost:3001/api/mao/association-officers/${selectedUser.id}/reject`;
+        endpoint = `/api/mao/association-officers/${selectedUser.id}/reject`;
       }
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ reason: rejectionReason }),
-      });
+      const response = await apiPost(endpoint, { reason: rejectionReason });
 
       if (response.ok) {
         alert('User rejected successfully!');
@@ -223,23 +199,17 @@ const UserManagement: React.FC = () => {
     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
 
     try {
-      const token = localStorage.getItem('accessToken');
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `http://localhost:3001/api/mao/farmers/${userId}`;
+        endpoint = `/api/mao/farmers/${userId}`;
       } else if (activeTab === 'buyers') {
-        endpoint = `http://localhost:3001/api/mao/buyers/${userId}`;
+        endpoint = `/api/mao/buyers/${userId}`;
       } else if (activeTab === 'associations') {
-        endpoint = `http://localhost:3001/api/mao/association-officers/${userId}`;
+        endpoint = `/api/mao/association-officers/${userId}`;
       }
 
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await apiPost(endpoint);
 
       if (response.ok) {
         alert('User deleted successfully!');
@@ -255,25 +225,17 @@ const UserManagement: React.FC = () => {
     if (!selectedUser) return;
 
     try {
-      const token = localStorage.getItem('accessToken');
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `http://localhost:3001/api/mao/farmers/${selectedUser.id}`;
+        endpoint = `/api/mao/farmers/${selectedUser.id}`;
       } else if (activeTab === 'buyers') {
-        endpoint = `http://localhost:3001/api/mao/buyers/${selectedUser.id}`;
+        endpoint = `/api/mao/buyers/${selectedUser.id}`;
       } else if (activeTab === 'associations') {
-        endpoint = `http://localhost:3001/api/mao/association-officers/${selectedUser.id}`;
+        endpoint = `/api/mao/association-officers/${selectedUser.id}`;
       }
 
-      const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editFormData),
-      });
+      const response = await apiPut(endpoint, editFormData);
 
       if (response.ok) {
         alert('User updated successfully!');
@@ -295,73 +257,300 @@ const UserManagement: React.FC = () => {
     rejected: users.filter(u => u.status === 'rejected').length,
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     if (filteredUsers.length === 0) {
       alert('No data to export');
       return;
     }
 
-    // Prepare CSV headers
-    let headers: string[] = [];
-    if (activeTab === 'farmers') {
-      headers = ['Name', 'Email', 'Contact Number', 'Organization', 'Municipality', 'Status', 'Date Registered'];
-    } else if (activeTab === 'buyers') {
-      headers = ['Name', 'Email', 'Contact Number', 'Business Name', 'Business Address', 'Status', 'Date Registered'];
-    } else if (activeTab === 'associations') {
-      headers = ['Name', 'Email', 'Contact Number', 'Organization', 'Position', 'Status', 'Date Registered'];
-    }
+    try {
+      // Fetch detailed data for all users using API client
+      const detailedUsers = await Promise.all(
+        filteredUsers.map(async (user) => {
+          let endpoint = '';
+          if (activeTab === 'farmers') {
+            endpoint = `/api/mao/farmers/${user.id}`;
+          } else if (activeTab === 'buyers') {
+            endpoint = `/api/mao/buyers/${user.id}`;
+          } else if (activeTab === 'associations') {
+            endpoint = `/api/mao/associations/${user.id}`;
+          }
 
-    // Prepare CSV rows
-    const rows = filteredUsers.map(user => {
+          const response = await apiGet(endpoint);
+          return response.json();
+        })
+      );
+
+      // Prepare CSV headers
+      let headers: string[] = [];
       if (activeTab === 'farmers') {
-        return [
-          user.name,
-          user.email,
-          user.contactNumber || 'N/A',
-          user.association || 'N/A',
-          user.municipality || 'N/A',
-          user.status,
-          new Date(user.createdAt).toLocaleDateString()
+        headers = [
+          'Farmer ID',
+          'Full Name',
+          'Sex',
+          'Age',
+          'Birthday',
+          'Civil Status',
+          'Contact Number',
+          'Email',
+          'Address',
+          'Barangay',
+          'Municipality',
+          'Association/Organization',
+          'Farm Location',
+          'Farm Coordinates',
+          'Farm Area (ha)',
+          'Years in Farming',
+          'Type of Abaca Planted',
+          'Average Harvest Volume (kg)',
+          'Harvest Frequency (weeks)',
+          'Selling Price Min (₱/kg)',
+          'Selling Price Max (₱/kg)',
+          'Regular Buyer',
+          'Income per Cycle (₱)',
+          'Verification Status',
+          'Date Registered'
         ];
       } else if (activeTab === 'buyers') {
-        return [
-          user.name,
-          user.email,
-          user.contactNumber || 'N/A',
-          user.businessName || 'N/A',
-          'N/A', // business address not in list view
-          user.status,
-          new Date(user.createdAt).toLocaleDateString()
-        ];
-      } else {
-        return [
-          user.name,
-          user.email,
-          user.contactNumber || 'N/A',
-          user.association || 'N/A',
-          user.position || 'N/A',
-          user.status,
-          new Date(user.createdAt).toLocaleDateString()
-        ];
+        headers = ['Business Name', 'Owner Name', 'Email', 'Contact Number', 'Business Address', 'Status', 'Date Registered'];
+      } else if (activeTab === 'associations') {
+        headers = ['Name', 'Email', 'Contact Number', 'Organization', 'Position', 'Status', 'Date Registered'];
       }
-    });
 
-    // Create CSV content
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+      // Prepare CSV rows
+      const rows = detailedUsers.map(user => {
+        if (activeTab === 'farmers') {
+          return [
+            user.farmer_id || 'N/A',
+            user.full_name || 'N/A',
+            user.sex || 'N/A',
+            user.age || 'N/A',
+            user.birthday ? new Date(user.birthday).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
+            user.civil_status || 'N/A',
+            user.contact_number || 'N/A',
+            user.email || 'N/A',
+            user.address || 'N/A',
+            user.barangay || 'N/A',
+            user.municipality || 'N/A',
+            user.association_name || 'N/A',
+            user.farm_location || 'N/A',
+            user.farm_coordinates || 'N/A',
+            user.farm_area_hectares || 'N/A',
+            user.years_in_farming || 'N/A',
+            user.type_of_abaca_planted || 'N/A',
+            user.average_harvest_volume_kg || 'N/A',
+            user.harvest_frequency_weeks || 'N/A',
+            user.selling_price_range_min || 'N/A',
+            user.selling_price_range_max || 'N/A',
+            user.regular_buyer || 'N/A',
+            user.income_per_cycle || 'N/A',
+            user.verification_status?.toUpperCase() || 'PENDING',
+            new Date(user.created_at).toLocaleDateString()
+          ];
+        } else if (activeTab === 'buyers') {
+          return [
+            user.business_name || 'N/A',
+            user.owner_name || 'N/A',
+            user.email || 'N/A',
+            user.contact_number || 'N/A',
+            user.business_address || 'N/A',
+            user.verification_status?.toUpperCase() || 'PENDING',
+            new Date(user.created_at).toLocaleDateString()
+          ];
+        } else {
+          return [
+            user.full_name || 'N/A',
+            user.email || 'N/A',
+            user.contact_number || 'N/A',
+            user.association_name || 'N/A',
+            user.position || 'N/A',
+            user.verification_status?.toUpperCase() || 'PENDING',
+            new Date(user.created_at).toLocaleDateString()
+          ];
+        }
+      });
 
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${activeTab}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      // Create CSV content with title
+      const title = activeTab === 'farmers' ? 'COMMODITY PROFILE - ABACA FARMERS' : 
+                    activeTab === 'buyers' ? 'BUYERS LIST' : 'ASSOCIATION OFFICERS LIST';
+      const csvContent = [
+        title,
+        `Export Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+        '',
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${activeTab}_commodity_profile_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      alert('Failed to export CSV');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (filteredUsers.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
+    try {
+      // Fetch detailed data for all users using API client
+      const detailedUsers = await Promise.all(
+        filteredUsers.map(async (user) => {
+          let endpoint = '';
+          if (activeTab === 'farmers') {
+            endpoint = `/api/mao/farmers/${user.id}`;
+          } else if (activeTab === 'buyers') {
+            endpoint = `/api/mao/buyers/${user.id}`;
+          } else if (activeTab === 'associations') {
+            endpoint = `/api/mao/associations/${user.id}`;
+          }
+
+          const response = await apiGet(endpoint);
+          return response.json();
+        })
+      );
+
+      // Create PDF using jsPDF
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+      const title = activeTab === 'farmers' ? 'COMMODITY PROFILE' : 
+                    activeTab === 'buyers' ? 'BUYERS LIST' : 'ASSOCIATION OFFICERS LIST';
+      const subtitle = activeTab === 'farmers' ? 'ABACA' : '';
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(title, doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+      
+      if (subtitle) {
+        doc.setFontSize(14);
+        doc.text(subtitle, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
+      }
+      
+      // Add metadata
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Export Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, 14, subtitle ? 30 : 25);
+      doc.text(`Total Records: ${detailedUsers.length}`, 14, subtitle ? 35 : 30);
+      
+      // Prepare table data
+      if (activeTab === 'farmers') {
+        const tableData = detailedUsers.map((user, index) => [
+          index + 1,
+          user.farmer_id?.substring(0, 8) || 'N/A',
+          user.full_name || 'N/A',
+          user.sex || 'N/A',
+          user.age || 'N/A',
+          user.birthday ? new Date(user.birthday).toLocaleDateString() : 'N/A',
+          user.civil_status || 'N/A',
+          user.email || 'N/A',
+          user.contact_number || 'N/A',
+          user.barangay || 'N/A',
+          user.municipality || 'N/A',
+          user.association_name || 'N/A',
+          user.farm_area_hectares || 'N/A',
+          user.type_of_abaca_planted || 'N/A',
+          user.selling_price_range_max || 'N/A',
+          user.regular_buyer || 'N/A',
+          user.income_per_cycle || 'N/A',
+          user.verification_status?.toUpperCase() || 'PENDING'
+        ]);
+
+        autoTable(doc, {
+          startY: subtitle ? 40 : 35,
+          head: [[
+            'No.', 'Farmer ID', 'Name', 'Sex', 'Age', 'Birthday', 'Civil Status', 
+            'Email', 'Contact', 'Barangay', 'Municipality', 'Association', 
+            'Farm Area', 'Abaca Type', 'Price Max', 'Buyer', 'Income', 'Status'
+          ]],
+          body: tableData,
+          theme: 'grid',
+          styles: { fontSize: 7, cellPadding: 2 },
+          headStyles: { fillColor: [52, 168, 83], fontStyle: 'bold' },
+          columnStyles: {
+            0: { cellWidth: 8 },
+            1: { cellWidth: 18 },
+            2: { cellWidth: 25 }
+          }
+        });
+      } else if (activeTab === 'buyers') {
+        const tableData = detailedUsers.map((user, index) => [
+          index + 1,
+          user.buyer_id?.substring(0, 8) || 'N/A',
+          user.business_name || 'N/A',
+          user.owner_name || 'N/A',
+          user.email || 'N/A',
+          user.contact_number || 'N/A',
+          user.business_address || 'N/A',
+          user.business_type || 'N/A',
+          user.verification_status?.toUpperCase() || 'PENDING',
+          user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'
+        ]);
+
+        autoTable(doc, {
+          startY: 35,
+          head: [[
+            'No.', 'Buyer ID', 'Business Name', 'Owner Name', 'Email', 
+            'Contact', 'Business Address', 'Business Type', 'Status', 'Date Registered'
+          ]],
+          body: tableData,
+          theme: 'grid',
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [59, 130, 246], fontStyle: 'bold' },
+          columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 20 }
+          }
+        });
+      } else if (activeTab === 'associations') {
+        const tableData = detailedUsers.map((user, index) => [
+          index + 1,
+          user.officer_id?.substring(0, 8) || 'N/A',
+          user.full_name || 'N/A',
+          user.email || 'N/A',
+          user.contact_number || 'N/A',
+          user.association_name || 'N/A',
+          user.position || 'N/A',
+          user.verification_status?.toUpperCase() || 'PENDING',
+          user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'
+        ]);
+
+        autoTable(doc, {
+          startY: 35,
+          head: [[
+            'No.', 'Officer ID', 'Name', 'Email', 'Contact', 
+            'Organization', 'Position', 'Status', 'Date Registered'
+          ]],
+          body: tableData,
+          theme: 'grid',
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [168, 85, 247], fontStyle: 'bold' },
+          columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 20 },
+            2: { cellWidth: 30 }
+          }
+        });
+      }
+      
+      // Save PDF
+      const fileName = `${activeTab}_commodity_profile_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Failed to export PDF');
+    }
   };
 
   return (
@@ -524,15 +713,25 @@ const UserManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* Export Button */}
-          <button
-            onClick={handleExportCSV}
-            className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold whitespace-nowrap group"
-            title="Export to CSV"
-          >
-            <Download className="w-5 h-5 group-hover:animate-bounce" />
-            <span className="hidden md:inline">Export CSV</span>
-          </button>
+          {/* Export Buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleExportCSV}
+              className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold whitespace-nowrap group"
+              title="Export to CSV"
+            >
+              <Download className="w-5 h-5 group-hover:animate-bounce" />
+              <span className="hidden md:inline">Export CSV</span>
+            </button>
+            <button
+              onClick={handleExportPDF}
+              className="px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold whitespace-nowrap group"
+              title="Export to PDF"
+            >
+              <FileText className="w-5 h-5 group-hover:animate-bounce" />
+              <span className="hidden md:inline">Export PDF</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -847,7 +1046,7 @@ const UserManagement: React.FC = () => {
                           src={selectedUserDetails.profile_photo}
                           alt="Profile"
                           className="w-full h-48 object-cover rounded-lg border-2 border-gray-200 hover:scale-105 transition-transform cursor-pointer"
-                          onClick={() => window.open(selectedUserDetails.profile_photo, '_blank')}
+                          onClick={() => setFullscreenImage(selectedUserDetails.profile_photo)}
                         />
                       ) : (
                         <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -864,7 +1063,7 @@ const UserManagement: React.FC = () => {
                           src={selectedUserDetails.valid_id_photo}
                           alt="Valid ID"
                           className="w-full h-48 object-contain rounded-lg border-2 border-gray-200 bg-gray-50 hover:scale-105 transition-transform cursor-pointer"
-                          onClick={() => window.open(selectedUserDetails.valid_id_photo, '_blank')}
+                          onClick={() => setFullscreenImage(selectedUserDetails.valid_id_photo)}
                         />
                       ) : (
                         <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -882,7 +1081,7 @@ const UserManagement: React.FC = () => {
                             src={selectedUserDetails.business_permit_photo}
                             alt="Business Permit"
                             className="w-full h-48 object-contain rounded-lg border-2 border-gray-200 bg-gray-50 hover:scale-105 transition-transform cursor-pointer"
-                            onClick={() => window.open(selectedUserDetails.business_permit_photo, '_blank')}
+                            onClick={() => setFullscreenImage(selectedUserDetails.business_permit_photo)}
                           />
                         ) : (
                           <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -904,7 +1103,7 @@ const UserManagement: React.FC = () => {
                     <div className="bg-white p-4 rounded-lg shadow-sm">
                       <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Full Name</p>
                       <p className="font-semibold text-gray-900 text-lg">
-                        {activeTab === 'farmers' ? selectedUserDetails.full_name : selectedUserDetails.owner_name}
+                        {activeTab === 'buyers' ? selectedUserDetails.owner_name : selectedUserDetails.full_name}
                       </p>
                     </div>
                     <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -928,6 +1127,24 @@ const UserManagement: React.FC = () => {
                         <div className="bg-white p-4 rounded-lg shadow-sm">
                           <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Age</p>
                           <p className="font-medium text-gray-900">{selectedUserDetails.age || 'Not provided'}</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" /> Birthday
+                          </p>
+                          <p className="font-medium text-gray-900">
+                            {selectedUserDetails.birthday 
+                              ? new Date(selectedUserDetails.birthday).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })
+                              : 'Not provided'}
+                          </p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Civil Status</p>
+                          <p className="font-medium text-gray-900">{selectedUserDetails.civil_status || 'Not provided'}</p>
                         </div>
                         <div className="bg-white p-4 rounded-lg shadow-sm">
                           <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
@@ -1169,14 +1386,14 @@ const UserManagement: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          {activeTab === 'farmers' ? 'Full Name' : 'Owner Name'} *
+                          {activeTab === 'buyers' ? 'Owner Name' : 'Full Name'} *
                         </label>
                         <input
                           type="text"
-                          value={editFormData.full_name || editFormData.owner_name || ''}
+                          value={activeTab === 'buyers' ? (editFormData.owner_name || '') : (editFormData.full_name || '')}
                           onChange={(e) => setEditFormData({
                             ...editFormData,
-                            [activeTab === 'farmers' ? 'full_name' : 'owner_name']: e.target.value
+                            [activeTab === 'buyers' ? 'owner_name' : 'full_name']: e.target.value
                           })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           required
@@ -1227,6 +1444,32 @@ const UserManagement: React.FC = () => {
                               onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Birthday</label>
+                            <input
+                              type="date"
+                              value={editFormData.birthday || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, birthday: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Civil Status</label>
+                            <select
+                              value={editFormData.civil_status || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, civil_status: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="">Select</option>
+                              <option value="Single">Single</option>
+                              <option value="Married">Married</option>
+                              <option value="Widowed">Widowed</option>
+                              <option value="Divorced">Divorced</option>
+                              <option value="Separated">Separated</option>
+                            </select>
                           </div>
 
                           <div>
@@ -1292,7 +1535,7 @@ const UserManagement: React.FC = () => {
                             />
                           </div>
                         </>
-                      ) : (
+                      ) : activeTab === 'buyers' ? (
                         <>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
@@ -1331,6 +1574,28 @@ const UserManagement: React.FC = () => {
                               type="text"
                               value={editFormData.buying_schedule || ''}
                               onChange={(e) => setEditFormData({ ...editFormData, buying_schedule: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
+                            <input
+                              type="text"
+                              value={editFormData.association_name || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, association_name: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                            <input
+                              type="text"
+                              value={editFormData.position || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, position: e.target.value })}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
@@ -1430,6 +1695,32 @@ const UserManagement: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Fullscreen Image Modal */}
+      {fullscreenImage && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button
+            onClick={() => setFullscreenImage(null)}
+            className="absolute top-4 right-4 text-white bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full p-3 transition-all"
+          >
+            <XCircle className="w-8 h-8" />
+          </button>
+          <div className="max-w-7xl max-h-full flex items-center justify-center">
+            <img
+              src={fullscreenImage}
+              alt="Fullscreen view"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <p className="absolute bottom-4 text-white text-sm bg-black bg-opacity-50 px-4 py-2 rounded-full">
+            Click anywhere to close
+          </p>
         </div>
       )}
     </div>
