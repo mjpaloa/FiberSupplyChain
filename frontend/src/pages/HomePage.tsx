@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Leaf, Users, CheckCircle, Phone, Mail, Facebook, MapPin, ShieldCheck, TrendingUp, Award, Menu, X, Quote, ArrowRight, Zap } from 'lucide-react';
+import { Leaf, Users, CheckCircle, Phone, Mail, Facebook, MapPin, ShieldCheck, TrendingUp, Award, Menu, X, Quote, ArrowRight, Zap, XCircle, Calendar, DollarSign, CreditCard } from 'lucide-react';
 import { getCookiePreferences, saveCookiePreferences, hasConsent, trackPageView } from '../utils/cookieManager';
+import { QualityModal, BuyerDetailsModal } from './HomePageModals';
 
 // Types
 interface Buyer {
@@ -35,30 +36,54 @@ interface HomePageProps {
 const buyers: Buyer[] = [
   {
     name: "Nonoy Abaca Trading",
-    location: "Barangay Culiram, Talacogon",
-    phone: "+63 912 345 6789",
-    description: "Accepts Grade T1–T3 fiber, with scheduled pick-up and payment options."
+    location: "Prk 4 San Pedro, Prosperidad, Agusan Del Sur",
+    phone: "09855744095",
+    description: "Accepts Class A, B, and C fiber. Buying schedule: Monday - Sunday. Cash on delivery only."
   }
 ];
 
 const abacaQualities = [
   {
     id: 1,
-    name: "Grade T1",
-    description: "Premium quality abaca fiber with excellent strength and luster",
-    image: "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=400&h=300&fit=crop"
+    name: "Class A",
+    grade: "Premium Quality",
+    fullConcept: "Class A represents the pinnacle of abaca fiber excellence. Also known as Manila hemp, this premium grade fiber is extracted from the leaf sheaths of Musa textilis, a species of banana native to the Philippines. Class A fibers are meticulously processed to preserve their natural strength, flexibility, and lustrous appearance, making them highly sought after in international markets for specialized applications.",
+    description: "Highest quality abaca fiber with superior strength, fine texture, and excellent luster. Ideal for premium products and high-value applications.",
+    fiberProperties: "Tensile strength: 980-1,100 MPa | Fiber length: 2.5-3.5 meters | Diameter: 17-21 microns | Moisture content: 10-14% | Natural color: White to light cream | pH level: 6.5-7.5 | Cellulose content: 60-65%",
+    characteristics: "Clean, uniform color, long fiber length, minimal impurities, strong and flexible",
+    qualityIndicators: "Visual inspection shows consistent ivory-white coloration with natural sheen. Fibers are straight, smooth, and free from knots or weak points. Hand feel is silky with excellent drape. Breaking strength exceeds 400 kg/cm². Resistant to saltwater degradation. Low lignin content ensures superior dyeability.",
+    harvestingProcess: "Harvested from mature plants (18-24 months old) during dry season. Outer sheaths carefully stripped using traditional 'tuxying' method. Immediate processing within 24 hours to prevent discoloration. Hand-scraped using ceramic or wood tools to preserve fiber integrity. Sun-dried for 2-3 days, achieving 12% moisture content. Sorted and bundled by experienced graders.",
+    applications: "High-end textiles, specialty papers, marine cordage, premium handicrafts",
+    marketValue: "Class A commands premium prices in global markets, typically 150-200% higher than standard grades. High demand from Japanese paper mills, European textile manufacturers, and specialty marine rope producers. Export quality with international certifications. Preferred for banknote paper, tea bags, and high-performance marine applications.",
+    image: "/assets/types/ClassA.jpg"
   },
   {
     id: 2,
-    name: "Grade T2",
-    description: "High-quality abaca fiber suitable for various applications",
-    image: "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=400&h=300&fit=crop"
+    name: "Class B",
+    grade: "Standard Quality",
+    fullConcept: "Class B abaca fiber represents the backbone of commercial abaca production, offering an excellent balance between quality and cost-effectiveness. This grade maintains the inherent strength and durability of abaca while being more accessible for general industrial applications. Class B fibers are versatile and reliable, serving as the workhorse of the textile, paper, and cordage industries worldwide.",
+    description: "Good quality abaca fiber suitable for various commercial applications. Balanced strength and appearance for general use.",
+    fiberProperties: "Tensile strength: 750-900 MPa | Fiber length: 2.0-2.8 meters | Diameter: 20-28 microns | Moisture content: 12-16% | Natural color: Light cream to beige | pH level: 6.0-7.0 | Cellulose content: 55-62%",
+    characteristics: "Good color consistency, moderate fiber length, few impurities, durable and reliable",
+    qualityIndicators: "Shows consistent light cream coloration with minimal color variation. Fibers are relatively straight with occasional minor imperfections. Good tensile strength of 250-350 kg/cm². Adequate resistance to environmental factors. Moderate flexibility suitable for most weaving and braiding applications.",
+    harvestingProcess: "Harvested from plants aged 15-20 months. Can be processed during both dry and wet seasons with proper handling. Outer to middle sheaths utilized. Machine-assisted stripping acceptable with quality control. Processed within 48 hours of harvest. Mechanical or semi-mechanical scraping methods employed. Air-dried or low-heat dried to 14% moisture content.",
+    applications: "General textiles, paper products, ropes, bags, and accessories",
+    marketValue: "Class B offers excellent value proposition for commercial buyers. Prices typically 30-50% lower than Class A while maintaining good performance characteristics. Strong demand from furniture industry, packaging sector, and general cordage manufacturers. Suitable for both domestic and export markets. Popular for automotive interior components and construction materials.",
+    image: "/assets/types/ClassB.jpg"
   },
   {
     id: 3,
-    name: "Grade T3",
-    description: "Standard quality abaca fiber for general use",
-    image: "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=400&h=300&fit=crop"
+    name: "Class C",
+    grade: "Basic Quality",
+    fullConcept: "Class C abaca fiber serves essential roles in everyday applications where functional strength is more important than aesthetic perfection. This economical grade makes abaca's natural durability and sustainability accessible to wider markets and applications. Class C represents efficient utilization of the entire abaca plant, supporting sustainable farming practices and maximizing farmer income through comprehensive harvest utilization.",
+    description: "Standard quality abaca fiber for basic applications. Cost-effective option for everyday products and general manufacturing.",
+    fiberProperties: "Tensile strength: 500-700 MPa | Fiber length: 1.5-2.2 meters | Diameter: 25-35 microns | Moisture content: 14-18% | Natural color: Beige to light brown | pH level: 5.5-6.5 | Cellulose content: 50-58%",
+    characteristics: "Acceptable color variation, shorter fiber length, some impurities present, adequate strength",
+    qualityIndicators: "Color ranges from beige to light brown with natural variations acceptable. Fibers may show some weathering or minor damage but maintain structural integrity. Breaking strength of 150-250 kg/cm² suitable for general purposes. Good abrasion resistance. Adequate for most utility applications.",
+    harvestingProcess: "Harvested from plants 12-18 months old or from inner sheaths of mature plants. Year-round harvesting possible. Includes lower quality outer sheaths and processing waste recovery. Mechanical stripping and processing standard. Processed within 72 hours acceptable. Machine-dried to 16% moisture content. Bulk sorting by weight rather than individual fiber inspection.",
+    applications: "Basic ropes, mats, paper products, agricultural twines, and utility items",
+    marketValue: "Class C provides cost-effective solutions for volume buyers and basic applications. Priced 50-70% lower than Class A, making it accessible for agricultural and industrial bulk users. Strong local market demand. Used in soil erosion control, agricultural binding, and basic packaging. Growing market in eco-friendly alternatives to synthetic materials. Suitable for pulp production and composite material reinforcement.",
+    image: "/assets/types/ClassC.jpg"
   }
 ];
 
@@ -68,21 +93,21 @@ const farmers: Farmer[] = [
     name: "Maria L.",
     role: "Abaca Farmer - Culiram",
     quote: "Through MAO's training, I learned how to improve fiber quality. Now I sell directly to verified buyers with fair prices.",
-    image: "https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=400&h=400&fit=crop"
+    image: "/assets/farmers/Maria.jpg"
   },
   {
     id: 2,
     name: "Juan P.",
     role: "Abaca Farmer - Culiram",
     quote: "The digital system helped me track my harvest and connect with buyers easily. My income has increased significantly.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop"
+    image: "/assets/farmers/Juan.jpg"
   },
   {
     id: 3,
     name: "Ana R.",
     role: "Abaca Farmer - Culiram",
     quote: "I've been farming abaca for 20 years, but the MAO training transformed my approach. Quality matters more than quantity now.",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop"
+    image: "/assets/farmers/Ana.jpg"
   }
 ];
 
@@ -91,19 +116,19 @@ const maoStaff: MAOStaff[] = [
     id: 1,
     name: "Carlos Mendoza",
     position: "Agriculture Officer",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop"
+    image: "/assets/staff/Carlos.jpg"
   },
   {
     id: 2,
     name: "Elena Suarez",
     position: "Program Coordinator",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop"
+    image: "/assets/staff/Elena.jpg"
   },
   {
     id: 3,
     name: "Roberto Garcia",
     position: "Field Technician",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop"
+    image: "/assets/staff/Roberto.jpg"
   }
 ];
 
@@ -121,7 +146,7 @@ const articles: Article[] = [
     id: 1,
     title: "Abaca Fiber: The Sustainable Choice for Modern Industries",
     excerpt: "Discover how abaca fiber is revolutionizing eco-friendly manufacturing and why it's becoming the material of choice for sustainable products.",
-    image: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=600&h=400&fit=crop",
+    image: "/assets/articles/AbacaFiber.jpg",
     date: "October 28, 2024",
     category: "Sustainability"
   },
@@ -129,7 +154,7 @@ const articles: Article[] = [
     id: 2,
     title: "MAO Culiram's Training Program Boosts Farmer Income by 40%",
     excerpt: "Local farmers share their success stories after completing the comprehensive abaca cultivation and quality improvement training program.",
-    image: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=400&fit=crop",
+    image: "/assets/articles/TrainingProgram.jpg",
     date: "October 25, 2024",
     category: "Success Stories"
   },
@@ -137,7 +162,7 @@ const articles: Article[] = [
     id: 3,
     title: "Understanding Abaca Fiber Grades: A Complete Guide",
     excerpt: "Learn about the different grades of abaca fiber, from T1 to T3, and how quality standards impact market value and buyer preferences.",
-    image: "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=600&h=400&fit=crop",
+    image: "/assets/articles/AbacaGrades.jpg",
     date: "October 20, 2024",
     category: "Education"
   }
@@ -151,6 +176,8 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showCookieModal, setShowCookieModal] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [selectedQuality, setSelectedQuality] = useState<typeof abacaQualities[0] | null>(null);
+  const [showBuyerDetails, setShowBuyerDetails] = useState(false);
   
   // Cookie preferences state
   const [cookiePreferences, setCookiePreferences] = useState({
@@ -450,10 +477,14 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 <div className="p-8">
-                  <h4 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-emerald-600 transition-colors">{quality.name}</h4>
-                  <p className="text-gray-600 leading-relaxed">{quality.description}</p>
+                  <h4 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">{quality.name}</h4>
+                  <p className="text-sm font-semibold text-emerald-600 mb-3">{quality.grade}</p>
+                  <p className="text-gray-600 leading-relaxed line-clamp-3">{quality.description}</p>
                   <div className="mt-6 pt-6 border-t border-gray-100">
-                    <button className="text-emerald-600 font-semibold flex items-center group-hover:gap-2 transition-all">
+                    <button 
+                      onClick={() => setSelectedQuality(quality)}
+                      className="text-emerald-600 font-semibold flex items-center group-hover:gap-2 transition-all"
+                    >
                       <span>Learn More</span>
                       <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
                     </button>
@@ -550,7 +581,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                 {/* Large Buyer Photo */}
                 <div className="h-48 overflow-hidden">
                   <img 
-                    src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=600&h=400&fit=crop" 
+                    src="/assets/buyers/Nonoy.jpg" 
                     alt={buyer.name} 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
@@ -583,7 +614,10 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                       <CheckCircle className="w-3 h-3" />
                       <span>Verified</span>
                     </span>
-                    <button className="text-emerald-600 hover:text-emerald-800 font-medium text-sm flex items-center">
+                    <button 
+                      onClick={() => setShowBuyerDetails(true)}
+                      className="text-emerald-600 hover:text-emerald-800 font-medium text-sm flex items-center"
+                    >
                       View Details
                       <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -1320,6 +1354,18 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
           </div>
         </div>
       </footer>
+
+      {/* Quality Details Modal */}
+      <QualityModal 
+        quality={selectedQuality} 
+        onClose={() => setSelectedQuality(null)} 
+      />
+
+      {/* Buyer Details Modal */}
+      <BuyerDetailsModal 
+        show={showBuyerDetails} 
+        onClose={() => setShowBuyerDetails(false)} 
+      />
       </div>
     </>
   );
