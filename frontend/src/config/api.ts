@@ -3,7 +3,7 @@
  * Centralized API URL configuration for all API calls
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || `';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 /**
  * Get the full API URL for an endpoint

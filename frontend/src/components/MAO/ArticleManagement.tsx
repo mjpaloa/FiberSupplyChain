@@ -115,8 +115,8 @@ const ArticleManagement: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const url = editingArticle
-        ? `http://localhost:3001/api/articles/${editingArticle.article_id}`
-        : `/api/articles';
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/articles/${editingArticle.article_id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/articles`;
       
       const method = editingArticle ? 'PUT' : 'POST';
 

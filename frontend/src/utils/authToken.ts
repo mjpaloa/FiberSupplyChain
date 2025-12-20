@@ -3,13 +3,7 @@
  * Single source of truth for all authentication tokens
  */
 
-import { jwtDecode } from 'jwt-decode';
 import { API_BASE_URL } from '../config/api';
-
-interface TokenPayload {
-  exp: number;
-  userType: string;
-}
 
 const TOKEN_KEY = 'token';
 const ACCESS_TOKEN_KEY = 'accessToken';
