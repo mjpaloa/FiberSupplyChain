@@ -9,10 +9,7 @@ import {
   AlertCircle,
   Building,
   Mail,
-  Plus,
-  Upload,
-  X,
-  Image as ImageIcon
+  Plus
 } from 'lucide-react';
 
 interface AbacaClass {
@@ -149,9 +146,9 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
           location: '',
           municipality: '',
           barangay: '',
-          t1: { enabled: false, price: '' },
-          t2: { enabled: false, price: '' },
-          t3: { enabled: false, price: '' },
+          t1: { enabled: false, price: '', image: '' },
+          t2: { enabled: false, price: '', image: '' },
+          t3: { enabled: false, price: '', image: '' },
           payment_terms: '',
           requirements: '',
           availability: 'Available',

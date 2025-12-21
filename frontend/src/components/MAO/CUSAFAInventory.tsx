@@ -297,7 +297,8 @@ const CUSAFAInventory: React.FC = () => {
                         className="w-12 h-12 rounded-full object-cover border-2 border-blue-200 shadow-sm"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling!.style.display = 'flex';
+                          const nextEl = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (nextEl) nextEl.style.display = 'flex';
                         }}
                       />
                     ) : null}

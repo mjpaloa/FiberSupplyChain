@@ -10,14 +10,9 @@ import {
   Sprout,
   Layers,
   TrendingUp,
-  TrendingDown,
-  Calendar,
-  ShieldCheck,
   Truck,
   Bell,
-  LineChart,
   Activity,
-  Users,
   CheckCircle
 } from 'lucide-react';
 import {
@@ -108,6 +103,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
   const [totalSeedlingsDistributed, setTotalSeedlingsDistributed] = useState(0);
   const [totalDeliveries, setTotalDeliveries] = useState(0);
+  const [totalFiberKg, setTotalFiberKg] = useState(0);
 
   const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
   const user = userStr ? JSON.parse(userStr) : null;
@@ -244,20 +240,25 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      const [seedlingRes, receivedRes] = await Promise.all([
+      const [seedlingRes, receivedRes, fiberRes] = await Promise.all([
         fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/farmer-distributions', {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/received', {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        fetch('https://easyabaca-api.vercel.app/api/fiber-deliveries', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const seedlingData = seedlingRes.ok ? await seedlingRes.json() : [];
       const receivedData = receivedRes.ok ? await receivedRes.json() : [];
+      const fiberData = fiberRes.ok ? await fiberRes.json() : [];
 
       const distributions = Array.isArray(seedlingData) ? seedlingData : [];
       const receivedSeedlings = Array.isArray(receivedData) ? receivedData : [];
+      const fiberDeliveries = Array.isArray(fiberData) ? fiberData : [];
 
       if (viewMode === 'monthly') {
         const monthlyData = Array.from({ length: 12 }, (_, i) => ({
@@ -282,6 +283,15 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
           if (date.getFullYear() === selectedYear) {
             const monthIndex = date.getMonth();
             monthlyData[monthIndex].received += received.quantity_distributed || 0;
+          }
+        });
+
+        fiberDeliveries.forEach((fiber: any) => {
+          const date = new Date(fiber.delivery_date || fiber.date);
+          if (date.getFullYear() === selectedYear) {
+            const monthIndex = date.getMonth();
+            monthlyData[monthIndex].fiberKg += fiber.weight_kg || 0;
+            monthlyData[monthIndex].deliveries += 1;
           }
         });
 
@@ -310,10 +320,22 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
           }
         });
 
+        fiberDeliveries.forEach((fiber: any) => {
+          const year = new Date(fiber.delivery_date || fiber.date).getFullYear();
+          if (yearlyData[year]) {
+            yearlyData[year].fiberKg += fiber.weight_kg || 0;
+            yearlyData[year].deliveries += 1;
+          }
+        });
+
         setAnalyticsData(Object.values(yearlyData));
       }
 
       setTotalDeliveries(distributions.length);
+
+      // Calculate total fiber weight in kg
+      const totalFiber = fiberDeliveries.reduce((sum: number, fiber: any) => sum + (fiber.weight_kg || 0), 0);
+      setTotalFiberKg(totalFiber);
 
       // Calculate Distribution Status for Pie Chart (Seedlings)
       const totalReceived = stats.totalReceivedQuantity;
@@ -362,8 +384,8 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
             <button
               onClick={() => setViewMode('monthly')}
               className={`px-6 py-3 rounded-xl font-semibold transition ${viewMode === 'monthly'
-                  ? 'bg-white text-emerald-600'
-                  : 'bg-white/20 text-white hover:bg-white/30'
+                ? 'bg-white text-emerald-600'
+                : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
             >
               Monthly
@@ -371,8 +393,8 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
             <button
               onClick={() => setViewMode('yearly')}
               className={`px-6 py-3 rounded-xl font-semibold transition ${viewMode === 'yearly'
-                  ? 'bg-white text-emerald-600'
-                  : 'bg-white/20 text-white hover:bg-white/30'
+                ? 'bg-white text-emerald-600'
+                : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
             >
               Yearly
@@ -692,7 +714,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
             <h3 className="text-lg font-bold text-gray-900">Distribution Status</h3>
             <p className="text-sm text-gray-500 mt-1">Seedling distribution breakdown</p>
           </div>
-          
+
           {/* Pie Chart with Center Label */}
           <div className="relative">
             <ResponsiveContainer width="100%" height={240}>
@@ -724,7 +746,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
                 />
               </RechartsPieChart>
             </ResponsiveContainer>
-            
+
             {/* Center Label */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none" style={{ marginTop: '-20px' }}>
               <div className="text-4xl font-bold text-purple-600">
@@ -737,14 +759,14 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
           {/* Custom Legend */}
           <div className="mt-6 space-y-3">
             {deliveryStatusData.map((item, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-gray-50"
                 style={{ backgroundColor: `${item.fill}10` }}
               >
                 <div className="flex items-center gap-3">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+                  <div
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: item.fill }}
                   ></div>
                   <span className="text-sm font-medium text-gray-700">{item.name}</span>
@@ -807,8 +829,8 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
                     </td>
                     <td className="py-4 px-4 text-center">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${!dist.status || dist.status.includes('distributed')
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-gray-100 text-gray-600'
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-gray-100 text-gray-600'
                         }`}>
                         {dist.status ? dist.status.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Distributed'}
                       </span>
@@ -1005,7 +1027,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
                           <div key={notif.id} className="p-4 hover:bg-gray-50 transition-colors">
                             <div className="flex items-start gap-3">
                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${notif.type === 'seedling' ? 'bg-emerald-100' :
-                                  notif.type === 'fiber' ? 'bg-blue-100' : 'bg-purple-100'
+                                notif.type === 'fiber' ? 'bg-blue-100' : 'bg-purple-100'
                                 }`}>
                                 {notif.type === 'seedling' ? (
                                   <Sprout className={`w-5 h-5 ${notif.type === 'seedling' ? 'text-emerald-600' : ''

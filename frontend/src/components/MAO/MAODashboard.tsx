@@ -175,8 +175,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleSaveProfile = async () => {
+  const _handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
       const token = localStorage.getItem('accessToken');
@@ -228,8 +227,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const _handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
