@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Sprout,
   Package,
+  Calendar,
   MapPin,
   User,
   LogOut,
