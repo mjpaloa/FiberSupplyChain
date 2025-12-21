@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  DollarSign, 
-  Phone, 
-  MapPin, 
-  FileText, 
+import {
+  DollarSign,
+  Phone,
+  MapPin,
+  FileText,
   Calendar,
   CheckCircle,
   AlertCircle,
@@ -29,6 +29,9 @@ interface PriceListing {
   class_a: AbacaClass;
   class_b: AbacaClass;
   class_c: AbacaClass;
+  t1: AbacaClass;
+  t2: AbacaClass;
+  t3: AbacaClass;
   payment_terms: string;
   requirements: string;
   availability: string;
@@ -47,6 +50,9 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
     class_a: { enabled: false, price: '', image: '' },
     class_b: { enabled: false, price: '', image: '' },
     class_c: { enabled: false, price: '', image: '' },
+    t1: { enabled: false, price: '', image: '' },
+    t2: { enabled: false, price: '', image: '' },
+    t3: { enabled: false, price: '', image: '' },
     payment_terms: '',
     requirements: '',
     availability: 'Available',
@@ -92,7 +98,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate at least one type is enabled
     if (!formData.t1.enabled && !formData.t2.enabled && !formData.t3.enabled) {
       setMessage({ type: 'error', text: 'Please enable at least one abaca type (T1, T2, or T3)' });
@@ -104,7 +110,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      
+
       // Transform data for API
       const apiData = {
         company_name: formData.company_name,
@@ -146,6 +152,9 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
           location: '',
           municipality: '',
           barangay: '',
+          class_a: { enabled: false, price: '', image: '' },
+          class_b: { enabled: false, price: '', image: '' },
+          class_c: { enabled: false, price: '', image: '' },
           t1: { enabled: false, price: '', image: '' },
           t2: { enabled: false, price: '', image: '' },
           t3: { enabled: false, price: '', image: '' },
@@ -166,23 +175,21 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
 
   const renderTypeCard = (type: 't1' | 't2' | 't3', label: string, description: string, color: string) => {
     const typeData = formData[type];
-    
+
     return (
-      <div className={`border-2 rounded-2xl p-5 transition-all ${
-        typeData.enabled 
-          ? `border-${color}-500 bg-${color}-50` 
-          : 'border-gray-200 bg-gray-50'
-      }`}>
+      <div className={`border-2 rounded-2xl p-5 transition-all ${typeData.enabled
+        ? `border-${color}-500 bg-${color}-50`
+        : 'border-gray-200 bg-gray-50'
+        }`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => handleTypeToggle(type)}
-              className={`p-2 rounded-xl transition-all ${
-                typeData.enabled 
-                  ? `bg-${color}-500 text-white` 
-                  : 'bg-gray-300 text-gray-600'
-              }`}
+              className={`p-2 rounded-xl transition-all ${typeData.enabled
+                ? `bg-${color}-500 text-white`
+                : 'bg-gray-300 text-gray-600'
+                }`}
             >
               {typeData.enabled ? <CheckCircle size={20} /> : <Plus size={20} />}
             </button>
@@ -227,9 +234,8 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
 
       {/* Success/Error Message */}
       {message && (
-        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
-          message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-        }`}>
+        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+          }`}>
           {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
           <span className="font-medium">{message.text}</span>
         </div>
@@ -242,7 +248,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
           <div>
             <p className="text-blue-900 font-semibold mb-1">Public Listing</p>
             <p className="text-blue-800 text-sm">
-              Your price listing will be publicly visible to all farmers, associations, MAO officers, and CUSAFA. 
+              Your price listing will be publicly visible to all farmers, associations, MAO officers, and CUSAFA.
               Make sure to provide accurate information and keep your contact details updated.
             </p>
           </div>
