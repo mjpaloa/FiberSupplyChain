@@ -86,7 +86,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
       // Fetch full farmer details from database
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:3001/api/mao/farmers/${farmer.id}`, {
+        const response = await fetch(`https://easyabaca-api.vercel.app/api/mao/farmers/${farmer.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

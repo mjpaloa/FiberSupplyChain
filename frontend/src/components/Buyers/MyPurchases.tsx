@@ -42,7 +42,7 @@ const MyPurchases: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/buyer-purchases?quality=${qualityFilter}`,
+        `https://easyabaca-api.vercel.app/api/buyer-purchases?quality=${qualityFilter}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();
@@ -85,7 +85,7 @@ const MyPurchases: React.FC = () => {
       const totalPrice = parseFloat(editFormData.price) * parseFloat(editFormData.quantity);
       
       const response = await fetch(
-        `http://localhost:3001/api/buyer-purchases/${selectedPurchase.purchase_id}`,
+        `https://easyabaca-api.vercel.app/api/buyer-purchases/${selectedPurchase.purchase_id}`,
         {
           method: 'PUT',
           headers: {
@@ -121,7 +121,7 @@ const MyPurchases: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/buyer-purchases/${selectedPurchase.purchase_id}`,
+        `https://easyabaca-api.vercel.app/api/buyer-purchases/${selectedPurchase.purchase_id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }

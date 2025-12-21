@@ -23,7 +23,7 @@ const ArticlesSection: React.FC = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/articles');
+      const response = await fetch('https://easyabaca-api.vercel.app/api/articles');
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (error) {

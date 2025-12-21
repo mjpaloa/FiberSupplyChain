@@ -38,7 +38,7 @@ const BuyerInventory: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/buyer-purchases', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/buyer-purchases', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -115,7 +115,7 @@ const BuyerInventory: React.FC = () => {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/buyer-purchases/inventory/sell', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/buyer-purchases/inventory/sell', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

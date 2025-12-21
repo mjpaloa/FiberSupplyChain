@@ -68,7 +68,7 @@ const OfficerManagement: React.FC = () => {
 
       console.log('🔑 Fetching officers with token:', token.substring(0, 20) + '...');
 
-      const response = await fetch('http://localhost:3001/api/mao/officers', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/mao/officers', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ const OfficerManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/mao/officers/${selectedOfficer.officer_id}`, {
+      const response = await fetch(`https://easyabaca-api.vercel.app/api/mao/officers/${selectedOfficer.officer_id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -178,7 +178,7 @@ const OfficerManagement: React.FC = () => {
       const currentUser = userStr ? JSON.parse(userStr) : null;
 
       // Verify password by attempting login
-      const verifyResponse = await fetch('http://localhost:3001/api/auth/login', {
+      const verifyResponse = await fetch('https://easyabaca-api.vercel.app/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -197,7 +197,7 @@ const OfficerManagement: React.FC = () => {
       }
 
       // Password verified, proceed with deletion
-      const response = await fetch(`http://localhost:3001/api/mao/officers/${selectedOfficer.officer_id}`, {
+      const response = await fetch(`https://easyabaca-api.vercel.app/api/mao/officers/${selectedOfficer.officer_id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

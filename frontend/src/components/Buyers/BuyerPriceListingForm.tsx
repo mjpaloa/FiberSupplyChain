@@ -79,7 +79,7 @@ const BuyerPriceListingForm: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/buyer-listings/create', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/buyer-listings/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

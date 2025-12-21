@@ -5,7 +5,7 @@
 
 import { checkAndRefreshToken, getAuthToken, clearAuthData } from './authToken';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
 
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
@@ -34,10 +34,18 @@ export const apiFetch = async (endpoint: string, options: FetchOptions = {}): Pr
   const token = getAuthToken();
   
   // Build headers
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...fetchOptions.headers,
   };
+
+  // Add existing headers from options
+  if (fetchOptions.headers) {
+    Object.entries(fetchOptions.headers).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        headers[key] = value;
+      }
+    });
+  }
 
   // Add authorization header if not skipped
   if (!skipAuth && token) {
@@ -64,7 +72,7 @@ export const apiFetch = async (endpoint: string, options: FetchOptions = {}): Pr
         // Retry the request with new token
         const newToken = getAuthToken();
         const retryHeaders: Record<string, string> = {
-          ...headers,
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${newToken}`
         };
         

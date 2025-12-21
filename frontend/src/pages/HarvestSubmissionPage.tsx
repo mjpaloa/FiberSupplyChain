@@ -106,7 +106,7 @@ export default function HarvestSubmissionPage() {
       const token = getAuthToken();
       if (!token) return;
 
-      const response = await fetch('http://localhost:3001/api/seedling-distribution/farmer/planted', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/seedling-distribution/farmer/planted', {
         headers: getAuthHeader()
       });
 
@@ -139,7 +139,7 @@ export default function HarvestSubmissionPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:3001/api/farmers/profile', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/farmers/profile', {
         headers: getAuthHeader()
       });
 
@@ -206,7 +206,7 @@ export default function HarvestSubmissionPage() {
 
       console.log('Submitting payload:', payload);
       
-      const response = await fetch('http://localhost:3001/api/harvests/farmer/harvests', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/harvests/farmer/harvests', {
         method: 'POST',
         headers: {
           ...getAuthHeader(),

@@ -124,7 +124,7 @@ const AssociationSeedlingManagement: React.FC = () => {
   const fetchAssociations = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/mao/associations', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/mao/associations', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -151,7 +151,7 @@ const AssociationSeedlingManagement: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/association-seedlings/mao/associations', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/mao/associations', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -216,7 +216,7 @@ const AssociationSeedlingManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/association-seedlings/mao/associations/${id}`, {
+      const response = await fetch(`https://easyabaca-api.vercel.app/api/association-seedlings/mao/associations/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -325,7 +325,7 @@ const AssociationSeedlingManagement: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const data = await prepareFormDataForSubmission();
       
-      const response = await fetch('http://localhost:3001/api/association-seedlings/mao/distribute-to-association', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/mao/distribute-to-association', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -358,7 +358,7 @@ const AssociationSeedlingManagement: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const data = await prepareFormDataForSubmission();
       
-      const response = await fetch(`http://localhost:3001/api/association-seedlings/mao/associations/${selectedDistribution.distribution_id}`, {
+      const response = await fetch(`https://easyabaca-api.vercel.app/api/association-seedlings/mao/associations/${selectedDistribution.distribution_id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -644,7 +644,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                       <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-md">
                         {distribution.seedling_photo ? (
                           <img
-                            src={distribution.seedling_photo.startsWith('data:') ? distribution.seedling_photo : `http://localhost:3001${distribution.seedling_photo}`}
+                            src={distribution.seedling_photo.startsWith('data:') ? distribution.seedling_photo : `https://easyabaca-api.vercel.app${distribution.seedling_photo}`}
                             alt="Seedling"
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -655,7 +655,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                           />
                         ) : distribution.packaging_photo ? (
                           <img
-                            src={distribution.packaging_photo.startsWith('data:') ? distribution.packaging_photo : `http://localhost:3001${distribution.packaging_photo}`}
+                            src={distribution.packaging_photo.startsWith('data:') ? distribution.packaging_photo : `https://easyabaca-api.vercel.app${distribution.packaging_photo}`}
                             alt="Packaging"
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -666,7 +666,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                           />
                         ) : distribution.quality_photo ? (
                           <img
-                            src={distribution.quality_photo.startsWith('data:') ? distribution.quality_photo : `http://localhost:3001${distribution.quality_photo}`}
+                            src={distribution.quality_photo.startsWith('data:') ? distribution.quality_photo : `https://easyabaca-api.vercel.app${distribution.quality_photo}`}
                             alt="Quality"
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -1148,7 +1148,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Seedling Photo</p>
                         <img
-                          src={selectedDistribution.seedling_photo.startsWith('data:') ? selectedDistribution.seedling_photo : `http://localhost:3001${selectedDistribution.seedling_photo}`}
+                          src={selectedDistribution.seedling_photo.startsWith('data:') ? selectedDistribution.seedling_photo : `https://easyabaca-api.vercel.app${selectedDistribution.seedling_photo}`}
                           alt="Seedling"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                           onError={(e) => {
@@ -1162,7 +1162,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Distribution Photo</p>
                         <img
-                          src={selectedDistribution.packaging_photo.startsWith('data:') ? selectedDistribution.packaging_photo : `http://localhost:3001${selectedDistribution.packaging_photo}`}
+                          src={selectedDistribution.packaging_photo.startsWith('data:') ? selectedDistribution.packaging_photo : `https://easyabaca-api.vercel.app${selectedDistribution.packaging_photo}`}
                           alt="Packaging"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                           onError={(e) => {
@@ -1176,7 +1176,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Quality Check Photo</p>
                         <img
-                          src={selectedDistribution.quality_photo.startsWith('data:') ? selectedDistribution.quality_photo : `http://localhost:3001${selectedDistribution.quality_photo}`}
+                          src={selectedDistribution.quality_photo.startsWith('data:') ? selectedDistribution.quality_photo : `https://easyabaca-api.vercel.app${selectedDistribution.quality_photo}`}
                           alt="Quality"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                           onError={(e) => {

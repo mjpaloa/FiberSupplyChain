@@ -32,7 +32,7 @@ export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onBack, onLoginSuccess
       // Get reCAPTCHA v3 token (invisible)
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

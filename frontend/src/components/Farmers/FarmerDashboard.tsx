@@ -137,7 +137,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       
       // Fetch recent seedling distributions
       try {
-        const seedlingsRes = await apiGet('http://localhost:3001/api/association-seedlings/farmer/received');
+        const seedlingsRes = await apiGet('https://easyabaca-api.vercel.app/api/association-seedlings/farmer/received');
         
         if (seedlingsRes.ok) {
           const seedlingsData = await seedlingsRes.json();
@@ -163,7 +163,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       
       // Fetch recent monitoring records (using correct endpoint)
       try {
-        const monitoringRes = await apiGet('http://localhost:3001/api/farmers/monitoring');
+        const monitoringRes = await apiGet('https://easyabaca-api.vercel.app/api/farmers/monitoring');
         
         if (monitoringRes.ok) {
           const monitoringData = await monitoringRes.json();
@@ -334,7 +334,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       
       let totalRevenue = 0;
       if (farmerId) {
-        const salesResponse = await apiGet(`http://localhost:3001/api/sales/farmer-reports/${farmerId}`);
+        const salesResponse = await apiGet(`https://easyabaca-api.vercel.app/api/sales/farmer-reports/${farmerId}`);
         
         if (salesResponse.ok) {
           const result = await salesResponse.json();
@@ -443,7 +443,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       }
 
       // Fetch harvest data for fiber production (only verified harvests)
-      const harvestResponse = await apiGet(`http://localhost:3001/api/harvests/farmer/harvests`);
+      const harvestResponse = await apiGet(`https://easyabaca-api.vercel.app/api/harvests/farmer/harvests`);
       
       if (!harvestResponse.ok) {
         console.log('No harvest data available');
@@ -473,7 +473,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       console.log('✅ Verified harvests for charts:', verifiedHarvests.length, 'items');
 
       // Fetch sales data for revenue
-      const salesResponse = await apiGet(`http://localhost:3001/api/sales/farmer-reports/${farmerId}`);
+      const salesResponse = await apiGet(`https://easyabaca-api.vercel.app/api/sales/farmer-reports/${farmerId}`);
       
       const salesResult = await salesResponse.json();
       const salesData = salesResult.success && Array.isArray(salesResult.reports) ? salesResult.reports : [];
@@ -569,7 +569,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
       
       // Fetch delivery data for this farmer
-      const deliveryResponse = await apiGet(`http://localhost:3001/api/fiber-deliveries/farmer/my-deliveries`);
+      const deliveryResponse = await apiGet(`https://easyabaca-api.vercel.app/api/fiber-deliveries/farmer/my-deliveries`);
       
       if (!deliveryResponse.ok) {
         console.log('No delivery data available');

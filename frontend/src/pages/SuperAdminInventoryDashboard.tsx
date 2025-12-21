@@ -54,7 +54,7 @@ export default function SuperAdminInventoryDashboard() {
       if (filters.fiber_grade) params.append('fiber_grade', filters.fiber_grade);
       
       const queryString = params.toString();
-      const url = `http://localhost:3001/api/inventory/admin/inventory/all${queryString ? '?' + queryString : ''}`;
+      const url = `https://easyabaca-api.vercel.app/api/inventory/admin/inventory/all${queryString ? '?' + queryString : ''}`;
       
       const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -74,7 +74,7 @@ export default function SuperAdminInventoryDashboard() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/inventory/inventory/statistics', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/inventory/inventory/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

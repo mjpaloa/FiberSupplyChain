@@ -18,7 +18,7 @@ const ActivityLogsManagement: React.FC = () => {
   const [blockType, setBlockType] = useState<'ip' | 'mac'>('ip');
   const [blockForm, setBlockForm] = useState({ address: '', reason: '', isPermanent: false, expiresAt: '', notes: '' });
 
-  const API_URL = 'http://localhost:3001/api';
+  const API_URL = 'https://easyabaca-api.vercel.app/api';
 
   useEffect(() => {
     if (activeTab === 'logs') fetchActivityLogs();

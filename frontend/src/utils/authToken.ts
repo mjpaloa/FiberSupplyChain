@@ -267,7 +267,8 @@ export const refreshAccessToken = async (): Promise<boolean> => {
       return false;
     }
 
-    const response = await fetch('http://localhost:3001/api/auth/refresh', {
+    const API_URL = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
+    const response = await fetch(`${API_URL}/api/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

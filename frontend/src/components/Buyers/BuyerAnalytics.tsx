@@ -42,7 +42,7 @@ const BuyerAnalytics: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/buyer-purchases/analytics?year=${selectedYear}&month=${selectedMonth}`,
+        `https://easyabaca-api.vercel.app/api/buyer-purchases/analytics?year=${selectedYear}&month=${selectedMonth}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       

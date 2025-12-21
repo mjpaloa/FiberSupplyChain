@@ -183,8 +183,8 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const url = isEditMode && selectedDelivery
-        ? `http://localhost:3001/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
-        : 'http://localhost:3001/api/fiber-deliveries/create';
+        ? `https://easyabaca-api.vercel.app/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
+        : 'https://easyabaca-api.vercel.app/api/fiber-deliveries/create';
       
       const method = isEditMode ? 'PUT' : 'POST';
 
@@ -247,7 +247,7 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/fiber-delivery/farmer/${selectedDelivery.delivery_id}`,
+        `https://easyabaca-api.vercel.app/api/fiber-delivery/farmer/${selectedDelivery.delivery_id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
@@ -279,7 +279,7 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}/cancel`,
+        `https://easyabaca-api.vercel.app/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}/cancel`,
         {
           method: 'POST',
           headers: {

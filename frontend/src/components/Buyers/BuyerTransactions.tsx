@@ -34,7 +34,7 @@ const BuyerTransactions: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/buyer-purchases/transactions?status=${statusFilter}`,
+        `https://easyabaca-api.vercel.app/api/buyer-purchases/transactions?status=${statusFilter}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();

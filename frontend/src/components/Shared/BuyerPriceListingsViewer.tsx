@@ -73,7 +73,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
       if (filterMunicipality !== 'all') params.append('municipality', filterMunicipality);
       if (filterAvailability !== 'all') params.append('availability', filterAvailability);
 
-      const response = await fetch(`http://localhost:3001/api/buyer-listings/all?${params}`, {
+      const response = await fetch(`https://easyabaca-api.vercel.app/api/buyer-listings/all?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

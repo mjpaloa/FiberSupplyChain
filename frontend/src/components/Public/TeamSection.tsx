@@ -21,7 +21,7 @@ const TeamSection: React.FC = () => {
 
   const fetchTeam = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/team');
+      const response = await fetch('https://easyabaca-api.vercel.app/api/team');
       const data = await response.json();
       setTeam(data.team || []);
     } catch (error) {

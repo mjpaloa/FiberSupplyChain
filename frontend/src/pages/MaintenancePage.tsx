@@ -42,7 +42,7 @@ const MaintenancePage: React.FC = () => {
     try {
       console.log('Attempting login with:', { email, userType: 'officer' });
 
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch('https://easyabaca-api.vercel.app/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
