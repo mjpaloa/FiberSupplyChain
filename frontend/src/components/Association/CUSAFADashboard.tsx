@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Package,
   Share2,
-  BarChart3,
   Menu,
   X,
   ChevronDown,

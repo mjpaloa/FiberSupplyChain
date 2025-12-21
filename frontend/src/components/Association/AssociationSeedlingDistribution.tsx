@@ -186,10 +186,6 @@ const AssociationSeedlingDistribution: React.FC = () => {
     }
   };
 
-  const handleRefresh = () => {
-    fetchFarmerDistributions();
-  };
-
   const handlePageChange = (page: number) => {
     if (page < 1) return;
     setCurrentPage(page);

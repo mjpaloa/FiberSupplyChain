@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, ArrowLeft } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
@@ -8,7 +8,7 @@ interface OfficerAuthProps {
   onLoginSuccess: () => void;
 }
 
-export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onBack, onLoginSuccess }) => {
+export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onLoginSuccess }) => {
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [formData, setFormData] = useState<any>({
     email: '',
