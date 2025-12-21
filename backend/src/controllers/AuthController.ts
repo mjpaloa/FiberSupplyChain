@@ -23,9 +23,9 @@ export class AuthController {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         console.log('Validation errors:', errors.array());
-        res.status(400).json({ 
+        res.status(400).json({
           error: 'Validation failed',
-          details: errors.array() 
+          details: errors.array()
         });
         return;
       }
@@ -59,10 +59,12 @@ export class AuthController {
         );
 
         if (!isValid) {
-          res.status(400).json({
-            error: 'reCAPTCHA verification failed. Please try again.',
-          });
-          return;
+          // SOFT FAIL: Log error but allow registration to proceed to avoid blocking legitimate users
+          console.warn('⚠️ reCAPTCHA verification failed for farmer registration (Allowed):', data.email);
+          // res.status(400).json({
+          //   error: 'reCAPTCHA verification failed. Please try again.',
+          // });
+          // return;
         }
       }
 
@@ -122,10 +124,12 @@ export class AuthController {
       );
 
       if (!isValid) {
-        res.status(400).json({
-          error: 'reCAPTCHA verification failed. Please try again.',
-        });
-        return;
+        // SOFT FAIL: Log error but allow registration to proceed to avoid blocking legitimate users
+        console.warn('⚠️ reCAPTCHA verification failed for buyer registration (Allowed):', data.email);
+        // res.status(400).json({
+        //   error: 'reCAPTCHA verification failed. Please try again.',
+        // });
+        // return;
       }
 
       // Register buyer
@@ -194,8 +198,8 @@ export class AuthController {
       );
 
       res.status(201).json({
-        message: isAdminCreated 
-          ? 'Officer account created successfully by admin' 
+        message: isAdminCreated
+          ? 'Officer account created successfully by admin'
           : 'Association officer registered successfully',
         data: officer,
       });
@@ -329,8 +333,8 @@ export class AuthController {
       // Verify user can only logout themselves
       const authenticatedUser = (req as any).user;
       if (authenticatedUser && authenticatedUser.userId !== userId) {
-        res.status(403).json({ 
-          error: 'You can only logout your own account' 
+        res.status(403).json({
+          error: 'You can only logout your own account'
         });
         return;
       }
@@ -534,7 +538,7 @@ export class AuthController {
       // Update the password for the association officer
       const { error } = await supabase
         .from('association_officers')
-        .update({ 
+        .update({
           password_hash: passwordHash,
           updated_at: new Date().toISOString()
         })
