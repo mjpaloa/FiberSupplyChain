@@ -106,7 +106,6 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   const [recentDistributions, setRecentDistributions] = useState<any[]>([]);
   const [deliveryStatusData, setDeliveryStatusData] = useState<DeliveryStatusData[]>([]);
 
-  const [totalFiberKg, setTotalFiberKg] = useState(0);
   const [totalSeedlingsDistributed, setTotalSeedlingsDistributed] = useState(0);
   const [totalDeliveries, setTotalDeliveries] = useState(0);
 

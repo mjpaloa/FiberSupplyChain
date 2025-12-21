@@ -63,7 +63,7 @@ interface HarvestFormData {
 export default function HarvestSubmissionPage() {
   const [loading, setLoading] = useState(false);
   const [farmerProfile, setFarmerProfile] = useState<FarmerProfile | null>(null);
-  const [plantedSeedlings, setPlantedSeedlings] = useState<PlantedSeedling[]>([]);
+  const [, setPlantedSeedlings] = useState<PlantedSeedling[]>([]);
   const [formData, setFormData] = useState<HarvestFormData>({
     farm_coordinates: '',
     landmark: '',

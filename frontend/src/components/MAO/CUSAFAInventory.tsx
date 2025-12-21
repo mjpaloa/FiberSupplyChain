@@ -8,13 +8,11 @@ import {
   X, 
   Building,
   Calendar,
-  DollarSign,
   Phone,
   MapPin,
   FileText,
   CheckCircle,
-  XCircle,
-  AlertTriangle
+  XCircle
 } from 'lucide-react';
 
 interface Buyer {

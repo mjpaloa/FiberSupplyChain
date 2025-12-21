@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   Truck,
   Package,
-  Calendar,
   Eye,
   X,
-  MapPin,
   CheckCircle,
   Leaf,
   Award,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Award, CheckCircle, Mail, Phone, MapPin, Calendar, CreditCard, Building2, Clock, Sparkles } from 'lucide-react';
+import { X, Award, CheckCircle, Mail, Phone, MapPin, CreditCard, Building2, Clock, Sparkles } from 'lucide-react';
 
 interface QualityModalProps {
   quality: {

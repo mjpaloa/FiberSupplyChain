@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Leaf, Users, CheckCircle, Phone, Mail, Facebook, MapPin, ShieldCheck, TrendingUp, Award, Menu, X, Quote, ArrowRight, Zap, XCircle, Calendar, DollarSign, CreditCard } from 'lucide-react';
+import { Leaf, Users, CheckCircle, Phone, Mail, Facebook, MapPin, ShieldCheck, TrendingUp, Award, Menu, X, Quote, ArrowRight, Zap } from 'lucide-react';
 import { getCookiePreferences, saveCookiePreferences, hasConsent, trackPageView } from '../utils/cookieManager';
 import { QualityModal, BuyerDetailsModal } from './HomePageModals';
 

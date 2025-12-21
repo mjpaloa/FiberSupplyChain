@@ -360,33 +360,6 @@ export default function MAOHarvestVerificationPage() {
     setCurrentPage(1);
   };
 
-  // Calculate real trend data
-  const calculateTrend = (current: number, previous: number) => {
-    if (previous === 0) {
-      if (current === 0) return '0';
-      return `+${current.toLocaleString()}`;
-    }
-    const change = ((current - previous) / previous) * 100;
-    if (Math.abs(change) < 0.1) return '0';
-    return change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
-  };
-
-  // Mock previous month data for trend calculation (in real app, this would come from API)
-  const previousMonthStats = statistics ? {
-    totalHarvests: Math.ceil(statistics.total_harvests * 0.82), // 18% increase
-    totalFarmers: Math.ceil(statistics.total_farmers * 0.91), // 9% increase
-    totalFiber: statistics.total_fiber_kg ? statistics.total_fiber_kg * 0.78 : 0, // 22% increase
-    pendingVerification: Math.ceil(statistics.pending_verification * 1.08), // 8% decrease
-    harvestsLast30Days: Math.ceil(statistics.harvests_last_30_days * 0.86) // 14% increase
-  } : null;
-
-  const currentStats = statistics ? {
-    totalHarvests: statistics.total_harvests,
-    totalFarmers: statistics.total_farmers,
-    totalFiber: statistics.total_fiber_kg || 0,
-    pendingVerification: statistics.pending_verification,
-    harvestsLast30Days: statistics.harvests_last_30_days
-  } : null;
 
   const exportToCSV = () => {
     const headers = ['Harvest Date', 'Farmer', 'Municipality', 'Barangay', 'Variety', 'Area (ha)', 'Fiber (kg)', 'Grade', 'Status'];

@@ -3,7 +3,11 @@ import { Lock, AlertTriangle, RefreshCw } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
 import { Wrench, WifiOff, Shield, X, Mail } from 'lucide-react';
 
-const MaintenancePage: React.FC = () => {
+interface MaintenancePageProps {
+  onAdminLogin?: () => void;
+}
+
+const MaintenancePage: React.FC<MaintenancePageProps> = () => {
   const [dots, setDots] = useState('');
   const [showAdminButton, setShowAdminButton] = useState(false);
   const [clickCount, setClickCount] = useState(0);
