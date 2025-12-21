@@ -8,10 +8,8 @@ import {
   Package,
   Users,
   X,
-  RefreshCw,
   CheckCircle,
-  Sprout,
-  TrendingUp
+  Sprout
 } from 'lucide-react';
 
 interface FarmerInfo {
@@ -250,7 +248,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
           <p className="text-3xl font-bold text-blue-900">{stats.total}</p>
           <p className="text-xs text-blue-600 mt-2">To farmers</p>
         </div>
-        
+
         <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
@@ -261,7 +259,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
           <p className="text-3xl font-bold text-emerald-900">{stats.planted}</p>
           <p className="text-xs text-emerald-600 mt-2">Successfully planted</p>
         </div>
-        
+
         <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-2xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
@@ -272,7 +270,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
           <p className="text-3xl font-bold text-purple-900">{stats.distributed}</p>
           <p className="text-xs text-purple-600 mt-2">Pending planting</p>
         </div>
-        
+
         <div className="bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-200 rounded-2xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-teal-500 rounded-xl flex items-center justify-center">
@@ -348,11 +346,10 @@ const AssociationSeedlingDistribution: React.FC = () => {
                         <button
                           key={size}
                           onClick={() => handleItemsPerPageChange(size)}
-                          className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                            itemsPerPage === size
+                          className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
                               ? 'bg-indigo-500 text-white shadow-lg'
                               : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                          }`}
+                            }`}
                         >
                           {size}
                         </button>
@@ -459,11 +456,10 @@ const AssociationSeedlingDistribution: React.FC = () => {
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        currentPage === 1
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                      }`}
+                        }`}
                     >
                       Previous
                     </button>
@@ -482,11 +478,10 @@ const AssociationSeedlingDistribution: React.FC = () => {
                         <button
                           key={page}
                           onClick={() => handlePageChange(page)}
-                          className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                            currentPage === page
+                          className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === page
                               ? 'bg-indigo-500 text-white shadow-lg'
                               : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                          }`}
+                            }`}
                         >
                           {page}
                         </button>
@@ -495,11 +490,10 @@ const AssociationSeedlingDistribution: React.FC = () => {
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages || totalPages === 0}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        currentPage === totalPages || totalPages === 0
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages || totalPages === 0
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                      }`}
+                        }`}
                     >
                       Next
                     </button>

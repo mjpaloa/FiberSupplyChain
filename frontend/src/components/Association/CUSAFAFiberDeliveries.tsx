@@ -154,15 +154,6 @@ const CUSAFAFiberDeliveries: React.FC = () => {
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  const getPaymentStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      'Partial': 'bg-yellow-100 text-yellow-800',
-      'Paid': 'bg-green-100 text-green-800',
-      'Unpaid': 'bg-orange-100 text-orange-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
   // Filter deliveries by search term
   const filteredDeliveries = deliveries.filter(delivery => {
     const searchLower = searchTerm.toLowerCase();
@@ -171,12 +162,12 @@ const CUSAFAFiberDeliveries: React.FC = () => {
     const variety = delivery.variety?.toLowerCase() || '';
     const deliveryId = delivery.delivery_id?.toLowerCase() || '';
     const location = delivery.delivery_location?.toLowerCase() || '';
-    
+
     return buyerName.includes(searchLower) ||
-           farmerName.includes(searchLower) ||
-           variety.includes(searchLower) ||
-           deliveryId.includes(searchLower) ||
-           location.includes(searchLower);
+      farmerName.includes(searchLower) ||
+      variety.includes(searchLower) ||
+      deliveryId.includes(searchLower) ||
+      location.includes(searchLower);
   });
 
   // Pagination
@@ -301,17 +292,16 @@ const CUSAFAFiberDeliveries: React.FC = () => {
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-5 py-4 rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 ${
-                  statusFilter === status 
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105' 
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
-                }`}
+                className={`px-5 py-4 rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 ${statusFilter === status
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
+                  }`}
               >
                 {status === 'all' ? 'All Deliveries' : status}
               </button>
             ))}
           </div>
-          
+
           {/* Search & Export - Right Side */}
           <div className="flex gap-3 w-full lg:w-auto">
             <div className="relative flex-1 lg:w-80">
@@ -324,9 +314,9 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                 className="w-full pl-12 pr-4 py-4 bg-white border-2 border-blue-200 rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-medium shadow-md"
               />
             </div>
-            
-            <button 
-              onClick={downloadCSV} 
+
+            <button
+              onClick={downloadCSV}
               className="flex items-center px-6 py-4 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-2xl hover:from-blue-500 hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold border-2 border-blue-300 whitespace-nowrap"
             >
               <Download className="w-5 h-5 mr-2" />
@@ -363,11 +353,10 @@ const CUSAFAFiberDeliveries: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-indigo-100">
               {paginatedDeliveries.map((delivery, index) => (
-                <tr 
-                  key={delivery.delivery_id} 
-                  className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${
-                    index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
-                  }`}
+                <tr
+                  key={delivery.delivery_id}
+                  className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
+                    }`}
                 >
                   <td className="px-6 py-5 whitespace-nowrap">
                     <div className="flex items-center gap-3">
@@ -411,14 +400,13 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                   <td className="px-6 py-5 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 bg-gray-200 rounded-full h-2 w-20 overflow-hidden">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            getStatusProgress(delivery.status) === 100 
-                              ? 'bg-gradient-to-r from-emerald-500 to-green-600' 
-                              : getStatusProgress(delivery.status) >= 50
+                        <div
+                          className={`h-2 rounded-full transition-all duration-500 ${getStatusProgress(delivery.status) === 100
+                            ? 'bg-gradient-to-r from-emerald-500 to-green-600'
+                            : getStatusProgress(delivery.status) >= 50
                               ? 'bg-gradient-to-r from-blue-500 to-emerald-500'
                               : 'bg-gradient-to-r from-purple-500 to-blue-500'
-                          }`}
+                            }`}
                           style={{ width: `${getStatusProgress(delivery.status)}%` }}
                         ></div>
                       </div>
@@ -427,7 +415,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <button 
+                      <button
                         onClick={() => { setSelectedDelivery(delivery); setShowDetailsModal(true); }}
                         className="p-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
                         title="View Details"
@@ -435,7 +423,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                         <Eye size={16} />
                       </button>
                       {delivery.status !== 'Completed' && delivery.status !== 'Cancelled' && (
-                        <button 
+                        <button
                           onClick={() => {
                             setSelectedDelivery(delivery);
                             setNewStatus(delivery.status);
@@ -447,7 +435,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                           <Edit size={16} />
                         </button>
                       )}
-                      <button 
+                      <button
                         onClick={() => {
                           setSelectedDelivery(delivery);
                           setShowDeleteModal(true);
@@ -479,11 +467,10 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                       setEntriesPerPage(size);
                       setCurrentPage(1);
                     }}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      entriesPerPage === size
-                        ? 'bg-indigo-500 text-white shadow-lg'
-                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
-                    }`}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${entriesPerPage === size
+                      ? 'bg-indigo-500 text-white shadow-lg'
+                      : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
+                      }`}
                   >
                     {size}
                   </button>
@@ -500,22 +487,20 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                    currentPage === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                  }`}
+                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages || totalPages === 0}
-                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                    currentPage === totalPages || totalPages === 0
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                  }`}
+                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages || totalPages === 0
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
                 >
                   Next
                 </button>
@@ -594,7 +579,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                   <div>
                     <p className="text-sm text-gray-600">Delivery Date & Time</p>
                     <p className="font-semibold">
-                      {new Date(selectedDelivery.delivery_date).toLocaleDateString()} 
+                      {new Date(selectedDelivery.delivery_date).toLocaleDateString()}
                       {selectedDelivery.delivery_time && ` at ${selectedDelivery.delivery_time}`}
                     </p>
                   </div>
