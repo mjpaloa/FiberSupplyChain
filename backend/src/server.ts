@@ -33,8 +33,20 @@ dotenv.config();
 const app: Application = express();
 const PORT = config.port;
 
+// CORS configuration for production
+const corsOptions = {
+  origin: [
+    'https://easyabaca.site',
+    'https://www.easyabaca.site',
+    'http://localhost:5173', // For local development
+    'http://localhost:3000'
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); // Increase limit for base64 images
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
