@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Eye, DollarSign, TrendingUp, Calendar, Edit, Trash2, X } from 'lucide-react';
+import { Package, Search, Eye, DollarSign, TrendingUp, Calendar } from 'lucide-react';
 
 interface Purchase {
   purchase_id: string;
@@ -12,6 +12,14 @@ interface Purchase {
   total_price: number;
   image_url: string;
   created_at: string;
+  location: string;
+  status: string;
+  gross_profit?: number;
+  net_profit?: number;
+  profit?: number;
+  delivery_date?: string;
+  description?: string;
+  requirements?: string;
 }
 
 const BuyerSalesPage: React.FC = () => {
@@ -20,11 +28,8 @@ const BuyerSalesPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [qualityFilter, setQualityFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
-  const [editFormData, setEditFormData] = useState<Partial<Purchase>>({});
 
   useEffect(() => {
     fetchPurchases();
@@ -47,13 +52,13 @@ const BuyerSalesPage: React.FC = () => {
   };
 
   const filteredPurchases = purchases.filter(purchase =>
-    purchase.fiberQuality.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    purchase.fiber_quality.toLowerCase().includes(searchTerm.toLowerCase()) ||
     purchase.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalStats = {
-    grossProfit: purchases.reduce((sum, p) => sum + (p.grossProfit || 0), 0),
-    netProfit: purchases.reduce((sum, p) => sum + (p.netProfit || 0), 0),
+    grossProfit: purchases.reduce((sum, p) => sum + (p.gross_profit || 0), 0),
+    netProfit: purchases.reduce((sum, p) => sum + (p.net_profit || 0), 0),
     totalPurchases: purchases.length,
     totalQuantity: purchases.reduce((sum, p) => sum + p.quantity, 0)
   };
@@ -161,11 +166,11 @@ const BuyerSalesPage: React.FC = () => {
       {/* Purchases Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredPurchases.map((purchase) => (
-          <div key={purchase.id} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden">
+          <div key={purchase.purchase_id} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden">
             {/* Image */}
-            {purchase.imageUrl && (
+            {purchase.image_url && (
               <img
-                src={purchase.imageUrl}
+                src={purchase.image_url}
                 alt="Fiber"
                 className="w-full h-48 object-cover"
               />
@@ -175,13 +180,12 @@ const BuyerSalesPage: React.FC = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
-                  {purchase.fiberQuality}
+                  {purchase.fiber_quality}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  purchase.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                  purchase.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-gray-100 text-gray-700'
-                }`}>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${purchase.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                    purchase.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-gray-100 text-gray-700'
+                  }`}>
                   {purchase.status}
                 </span>
               </div>
@@ -205,7 +209,7 @@ const BuyerSalesPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <Calendar size={16} />
-                  <span>{new Date(purchase.deliveryDate).toLocaleDateString()}</span>
+                  <span>{new Date(purchase.delivery_date || purchase.created_at).toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <Package size={16} />
@@ -255,15 +259,15 @@ const BuyerSalesPage: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Transaction ID:</span>
-                    <span className="font-mono text-gray-900">#{selectedPurchase.id.slice(0, 12)}</span>
+                    <span className="font-mono text-gray-900">#{selectedPurchase.purchase_id.slice(0, 12)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Date:</span>
-                    <span className="text-gray-900">{new Date(selectedPurchase.createdAt).toLocaleString()}</span>
+                    <span className="text-gray-900">{new Date(selectedPurchase.created_at).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Fiber Quality:</span>
-                    <span className="font-semibold text-gray-900">{selectedPurchase.fiberQuality}</span>
+                    <span className="font-semibold text-gray-900">{selectedPurchase.fiber_quality}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Quantity:</span>
@@ -279,7 +283,7 @@ const BuyerSalesPage: React.FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Contact:</span>
-                    <span className="text-gray-900">{selectedPurchase.contactNumber}</span>
+                    <span className="text-gray-900">{selectedPurchase.contact_number}</span>
                   </div>
                 </div>
               </div>
@@ -297,13 +301,13 @@ const BuyerSalesPage: React.FC = () => {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Gross Profit:</span>
                     <span className="font-semibold text-emerald-600">
-                      ₱{(selectedPurchase.grossProfit || 0).toLocaleString()}
+                      ₱{(selectedPurchase.gross_profit || 0).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Net Profit:</span>
                     <span className="font-semibold text-emerald-600">
-                      ₱{(selectedPurchase.netProfit || 0).toLocaleString()}
+                      ₱{(selectedPurchase.net_profit || 0).toLocaleString()}
                     </span>
                   </div>
                   <div className="pt-3 border-t border-blue-200">

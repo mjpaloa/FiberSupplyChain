@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  DollarSign, 
-  Phone, 
-  MapPin, 
-  FileText, 
-  Calendar,
+import {
+  DollarSign,
+  Phone,
+  MapPin,
+  FileText,
   CheckCircle,
   AlertCircle,
   Building,
@@ -119,7 +118,7 @@ const BuyerPriceListingFormWithClasses: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate at least one class is enabled
     if (!formData.class_a.enabled && !formData.class_b.enabled && !formData.class_c.enabled) {
       setMessage({ type: 'error', text: 'Please enable at least one abaca class (Class A, B, or C)' });
@@ -131,7 +130,7 @@ const BuyerPriceListingFormWithClasses: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      
+
       // Transform data for API
       const apiData = {
         company_name: formData.company_name,
@@ -194,23 +193,21 @@ const BuyerPriceListingFormWithClasses: React.FC = () => {
 
   const renderClassCard = (classType: 'class_a' | 'class_b' | 'class_c', label: string, description: string, color: string) => {
     const classData = formData[classType];
-    
+
     return (
-      <div className={`border-2 rounded-2xl p-5 transition-all ${
-        classData.enabled 
-          ? `border-${color}-500 bg-${color}-50` 
+      <div className={`border-2 rounded-2xl p-5 transition-all ${classData.enabled
+          ? `border-${color}-500 bg-${color}-50`
           : 'border-gray-200 bg-gray-50'
-      }`}>
+        }`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => handleClassToggle(classType)}
-              className={`p-2 rounded-xl transition-all ${
-                classData.enabled 
-                  ? `bg-${color}-500 text-white` 
+              className={`p-2 rounded-xl transition-all ${classData.enabled
+                  ? `bg-${color}-500 text-white`
                   : 'bg-gray-300 text-gray-600'
-              }`}
+                }`}
             >
               {classData.enabled ? <CheckCircle size={20} /> : <Plus size={20} />}
             </button>
@@ -298,9 +295,8 @@ const BuyerPriceListingFormWithClasses: React.FC = () => {
 
       {/* Success/Error Message */}
       {message && (
-        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
-          message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-        }`}>
+        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+          }`}>
           {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
           <span className="font-medium">{message.text}</span>
         </div>
@@ -313,7 +309,7 @@ const BuyerPriceListingFormWithClasses: React.FC = () => {
           <div>
             <p className="text-blue-900 font-semibold mb-1">Public Listing</p>
             <p className="text-blue-800 text-sm">
-              Your price listing will be publicly visible to all farmers, associations, MAO officers, and CUSAFA. 
+              Your price listing will be publicly visible to all farmers, associations, MAO officers, and CUSAFA.
               Upload reference images to help farmers identify the quality standards you're looking for.
             </p>
           </div>

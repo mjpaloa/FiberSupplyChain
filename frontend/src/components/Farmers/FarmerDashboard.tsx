@@ -5,22 +5,14 @@ import {
   Sprout,
   Package,
   Calendar,
-  MapPin,
-  User,
   LogOut,
   Menu,
   X,
   Bell,
-  Settings,
   FileText,
   Leaf,
   Eye,
   CheckCircle,
-  Camera,
-  Mail,
-  Users as UsersIcon,
-  Search,
-  Filter,
   Truck,
   DollarSign,
   Activity
@@ -59,6 +51,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [selectedSeedling, setSelectedSeedling] = useState<any>(null);
   const [plantingData, setPlantingData] = useState({
     planting_date: new Date().toISOString().split('T')[0],
+    planting_quantity: 0,
     planting_location: '',
     planting_notes: '',
     planting_photo_1: '',
@@ -134,14 +127,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     try {
       const token = localStorage.getItem('accessToken');
       const notifs: any[] = [];
-      
+
       // Fetch recent seedling distributions
       try {
         const seedlingsRes = await apiGet('https://easyabaca-api.vercel.app/api/association-seedlings/farmer/received');
-        
+
         if (seedlingsRes.ok) {
           const seedlingsData = await seedlingsRes.json();
-          
+
           // Add seedling notifications (last 5)
           if (Array.isArray(seedlingsData)) {
             seedlingsData.slice(0, 5).forEach((seedling: any) => {
@@ -160,14 +153,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       } catch (error) {
         console.log('Could not fetch seedling notifications');
       }
-      
+
       // Fetch recent monitoring records (using correct endpoint)
       try {
         const monitoringRes = await apiGet('https://easyabaca-api.vercel.app/api/farmers/monitoring');
-        
+
         if (monitoringRes.ok) {
           const monitoringData = await monitoringRes.json();
-          
+
           // Add monitoring notifications (last 5)
           if (Array.isArray(monitoringData)) {
             monitoringData.slice(0, 5).forEach((record: any) => {
@@ -186,10 +179,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       } catch (error) {
         console.log('Could not fetch monitoring notifications');
       }
-      
+
       // Sort by date (newest first)
       notifs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      
+
       setNotifications(notifs.slice(0, 10)); // Keep only 10 most recent
       setUnreadCount(notifs.length > 0 ? Math.min(notifs.length, 5) : 0);
     } catch (error) {
@@ -263,7 +256,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     const newAnnouncements = recentDistributions.map(seedling => {
       const daysAgo = Math.floor((new Date().getTime() - new Date(seedling.date_distributed).getTime()) / (1000 * 60 * 60 * 24));
       const timeText = daysAgo === 0 ? 'Today' : daysAgo === 1 ? '1 day ago' : `${daysAgo} days ago`;
-      
+
       return {
         id: seedling.distribution_id,
         title: '🌱 New Seedling Distribution',
@@ -287,12 +280,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
     const revenue = await generateRevenueData();
     console.log('📊 Revenue data loaded:', revenue);
-    
+
     // Calculate totals before setting state
     const totalRev = revenue.reduce((sum, item) => sum + (item.revenue || 0), 0);
     const totalFiber = revenue.reduce((sum, item) => sum + (item.fiberKg || 0), 0);
     console.log('💰 Totals calculated - Revenue:', totalRev, 'Fiber:', totalFiber, 'kg');
-    
+
     setRevenueData(revenue);
     console.log('✅ Revenue data set in state');
   };
@@ -300,46 +293,46 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const fetchHarvestStats = async () => {
     try {
       const response = await apiGet('/api/harvests/farmer/harvests');
-      
+
       if (!response.ok) {
         console.log('❌ Could not fetch harvests, status:', response.status);
         return;
       }
-      
+
       const data = await response.json();
       const harvests = data.harvests || data; // Handle both response formats
       console.log('🌾 All harvests fetched:', harvests);
-      
+
       if (!Array.isArray(harvests)) {
         console.log('⚠️ Harvests is not an array');
         return;
       }
-      
+
       // Calculate totals from ALL verified harvests (no date filtering)
-      const verifiedHarvests = harvests.filter((h: any) => 
+      const verifiedHarvests = harvests.filter((h: any) =>
         h.status === 'Verified' || h.status === 'In Inventory'
       );
-      
+
       console.log('✅ Verified harvests:', verifiedHarvests.length, 'out of', harvests.length);
-      
+
       const totalFiberKg = verifiedHarvests.reduce((sum: number, h: any) => {
         const kg = parseFloat(h.dry_fiber_output_kg) || 0;
         return sum + kg;
       }, 0);
-      
+
       // Fetch sales for revenue using correct endpoint
       const userStr = localStorage.getItem('user');
       const currentUser = userStr ? JSON.parse(userStr) : null;
       const farmerId = currentUser?.userId;
-      
+
       let totalRevenue = 0;
       if (farmerId) {
         const salesResponse = await apiGet(`https://easyabaca-api.vercel.app/api/sales/farmer-reports/${farmerId}`);
-        
+
         if (salesResponse.ok) {
           const result = await salesResponse.json();
           console.log('💰 Sales API response:', result);
-          
+
           if (result.success && Array.isArray(result.reports)) {
             const sales = result.reports;
             totalRevenue = sales.reduce((sum: number, s: any) => sum + (parseFloat(s.total_amount) || 0), 0);
@@ -353,9 +346,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       } else {
         console.log('⚠️ No farmer ID available for sales fetch');
       }
-      
+
       console.log('💎 FINAL STATS - Fiber:', totalFiberKg, 'kg, Revenue: ₱', totalRevenue);
-      
+
       setHarvestStats({ totalFiberKg, totalRevenue });
     } catch (error) {
       console.error('❌ Error fetching harvest stats:', error);
@@ -424,61 +417,61 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       const userStr = localStorage.getItem('user');
       const currentUser = userStr ? JSON.parse(userStr) : null;
       const farmerId = currentUser?.userId;
-      
+
       if (!farmerId) {
         console.log('No farmer ID available');
-        return viewMode === 'monthly' 
+        return viewMode === 'monthly'
           ? Array.from({ length: 12 }, (_, i) => ({
-              month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
-              revenue: 0,
-              profit: 0,
-              fiberKg: 0
-            }))
+            month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
+            revenue: 0,
+            profit: 0,
+            fiberKg: 0
+          }))
           : Array.from({ length: 5 }, (_, i) => ({
-              year: new Date().getFullYear() - 4 + i,
-              revenue: 0,
-              profit: 0,
-              fiberKg: 0
-            }));
+            year: new Date().getFullYear() - 4 + i,
+            revenue: 0,
+            profit: 0,
+            fiberKg: 0
+          }));
       }
 
       // Fetch harvest data for fiber production (only verified harvests)
       const harvestResponse = await apiGet(`https://easyabaca-api.vercel.app/api/harvests/farmer/harvests`);
-      
+
       if (!harvestResponse.ok) {
         console.log('No harvest data available');
-        return viewMode === 'monthly' 
+        return viewMode === 'monthly'
           ? Array.from({ length: 12 }, (_, i) => ({
-              month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
-              revenue: 0,
-              profit: 0,
-              fiberKg: 0
-            }))
+            month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
+            revenue: 0,
+            profit: 0,
+            fiberKg: 0
+          }))
           : Array.from({ length: 5 }, (_, i) => ({
-              year: new Date().getFullYear() - 4 + i,
-              revenue: 0,
-              profit: 0,
-              fiberKg: 0
-            }));
+            year: new Date().getFullYear() - 4 + i,
+            revenue: 0,
+            profit: 0,
+            fiberKg: 0
+          }));
       }
-      
+
       const harvestData = await harvestResponse.json();
       const harvests = harvestData.harvests || harvestData;
       console.log('🌾 Harvest data fetched for charts:', harvests);
-      
+
       // Filter only verified harvests
-      const verifiedHarvests = Array.isArray(harvests) 
+      const verifiedHarvests = Array.isArray(harvests)
         ? harvests.filter((h: any) => h.status === 'Verified' || h.status === 'In Inventory')
         : [];
       console.log('✅ Verified harvests for charts:', verifiedHarvests.length, 'items');
 
       // Fetch sales data for revenue
       const salesResponse = await apiGet(`https://easyabaca-api.vercel.app/api/sales/farmer-reports/${farmerId}`);
-      
+
       const salesResult = await salesResponse.json();
       const salesData = salesResult.success && Array.isArray(salesResult.reports) ? salesResult.reports : [];
       console.log('💰 Sales data for charts:', salesData.length, 'reports');
-      
+
       if (viewMode === 'monthly') {
         const monthlyData = Array.from({ length: 12 }, (_, i) => ({
           month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
@@ -486,7 +479,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           profit: 0,
           fiberKg: 0
         }));
-        
+
         // Add harvest data for fiber production (verified only)
         let totalFiber = 0;
         verifiedHarvests.forEach((harvest: any) => {
@@ -499,7 +492,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           }
         });
         console.log(`📈 Monthly fiber data for ${selectedYear}:`, totalFiber, 'kg total');
-        
+
         // Add sales data for revenue
         salesData.forEach((sale: any) => {
           const saleDate = new Date(sale.report_date || sale.sale_date);
@@ -509,18 +502,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             monthlyData[monthIndex].profit += (parseFloat(sale.total_amount) || 0) * 0.7;
           }
         });
-        
+
         return monthlyData;
       } else {
         const yearlyData: any = {};
         const currentYear = new Date().getFullYear();
-        
+
         // Initialize years
         for (let i = 0; i < 5; i++) {
           const year = currentYear - 4 + i;
           yearlyData[year] = { year, revenue: 0, profit: 0, fiberKg: 0 };
         }
-        
+
         // Add harvest data for fiber production (verified only)
         let totalFiber = 0;
         verifiedHarvests.forEach((harvest: any) => {
@@ -532,7 +525,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           }
         });
         console.log('📈 Yearly fiber data:', totalFiber, 'kg total');
-        
+
         // Add sales data for revenue
         if (Array.isArray(salesData)) {
           salesData.forEach((sale: any) => {
@@ -543,54 +536,54 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             }
           });
         }
-        
+
         return Object.values(yearlyData);
       }
     } catch (error) {
       console.error('Error fetching revenue data:', error);
-      return viewMode === 'monthly' 
+      return viewMode === 'monthly'
         ? Array.from({ length: 12 }, (_, i) => ({
-            month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
-            revenue: 0,
-            profit: 0,
-            fiberKg: 0
-          }))
+          month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
+          revenue: 0,
+          profit: 0,
+          fiberKg: 0
+        }))
         : Array.from({ length: 5 }, (_, i) => ({
-            year: new Date().getFullYear() - 4 + i,
-            revenue: 0,
-            profit: 0,
-            fiberKg: 0
-          }));
+          year: new Date().getFullYear() - 4 + i,
+          revenue: 0,
+          profit: 0,
+          fiberKg: 0
+        }));
     }
   };
 
   const generateDealerStatusData = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      
+
       // Fetch delivery data for this farmer
       const deliveryResponse = await apiGet(`https://easyabaca-api.vercel.app/api/fiber-deliveries/farmer/my-deliveries`);
-      
+
       if (!deliveryResponse.ok) {
         console.log('No delivery data available');
         return viewMode === 'monthly'
           ? Array.from({ length: 12 }, (_, i) => ({
-              month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
-              delivered: 0,
-              pending: 0,
-              completed: 0
-            }))
+            month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
+            delivered: 0,
+            pending: 0,
+            completed: 0
+          }))
           : Array.from({ length: 5 }, (_, i) => ({
-              year: new Date().getFullYear() - 4 + i,
-              delivered: 0,
-              pending: 0,
-              completed: 0
-            }));
+            year: new Date().getFullYear() - 4 + i,
+            delivered: 0,
+            pending: 0,
+            completed: 0
+          }));
       }
-      
+
       const deliveryData = await deliveryResponse.json();
       const deliveries = deliveryData.deliveries || [];
-      
+
       if (viewMode === 'monthly') {
         const monthlyData = Array.from({ length: 12 }, (_, i) => ({
           month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
@@ -598,7 +591,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           pending: 0,
           completed: 0
         }));
-        
+
         deliveries.forEach((delivery: any) => {
           const deliveryDate = new Date(delivery.delivery_date);
           if (deliveryDate.getFullYear() === selectedYear) {
@@ -608,18 +601,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             else if (delivery.status === 'Completed') monthlyData[monthIndex].completed++;
           }
         });
-        
+
         return monthlyData;
       } else {
         const yearlyData: any = {};
         const currentYear = new Date().getFullYear();
-        
+
         // Initialize years
         for (let i = 0; i < 5; i++) {
           const year = currentYear - 4 + i;
           yearlyData[year] = { year, delivered: 0, pending: 0, completed: 0 };
         }
-        
+
         deliveries.forEach((delivery: any) => {
           const year = new Date(delivery.delivery_date).getFullYear();
           if (yearlyData[year]) {
@@ -628,24 +621,24 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             else if (delivery.status === 'Completed') yearlyData[year].completed++;
           }
         });
-        
+
         return Object.values(yearlyData);
       }
     } catch (error) {
       console.error('Error fetching delivery data:', error);
       return viewMode === 'monthly'
         ? Array.from({ length: 12 }, (_, i) => ({
-            month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
-            delivered: 0,
-            pending: 0,
-            completed: 0
-          }))
+          month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
+          delivered: 0,
+          pending: 0,
+          completed: 0
+        }))
         : Array.from({ length: 5 }, (_, i) => ({
-            year: new Date().getFullYear() - 4 + i,
-            delivered: 0,
-            pending: 0,
-            completed: 0
-          }));
+          year: new Date().getFullYear() - 4 + i,
+          delivered: 0,
+          pending: 0,
+          completed: 0
+        }));
     }
   };
 
@@ -653,7 +646,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     setLoadingProfile(true);
     try {
       const response = await apiGet('/api/auth/me');
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Farmer profile loaded:', data);
@@ -684,9 +677,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         ...editFormData,
         profilePhoto: profilePhoto
       };
-      
+
       const response = await apiPut('/api/farmers/profile', profileData);
-      
+
       if (response.ok) {
         alert('✅ Profile updated successfully!');
         setIsEditMode(false);
@@ -760,12 +753,13 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         planted_date: plantingData.planting_date,
         planted_quantity: plantingData.planting_quantity
       });
-      
+
       if (response.ok) {
         alert('Seedling marked as planted successfully! MAO has been notified.');
         setShowPlantingModal(false);
         setPlantingData({
           planting_date: new Date().toISOString().split('T')[0],
+          planting_quantity: 0,
           planting_location: '',
           planting_notes: '',
           planting_photo_1: '',
@@ -794,7 +788,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     <div className="flex h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50">
       {/* Mobile Backdrop */}
       {isMobile && sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -837,9 +831,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         <nav className="flex-1 p-4 space-y-2 overflow-hidden">
           <button
             onClick={() => setCurrentPage('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              currentPage === 'dashboard' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'dashboard' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
+              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
             <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
             <span className={`
@@ -850,9 +843,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
           <button
             onClick={() => setCurrentPage('seedlings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              currentPage === 'seedlings' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'seedlings' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
+              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
             <Sprout className="w-5 h-5 flex-shrink-0" />
             <span className={`
@@ -863,9 +855,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
           <button
             onClick={() => setCurrentPage('monitoring')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              currentPage === 'monitoring' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'monitoring' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
+              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
             <Calendar className="w-5 h-5 flex-shrink-0" />
             <span className={`
@@ -876,9 +867,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
           <button
             onClick={() => setCurrentPage('harvest')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              currentPage === 'harvest' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'harvest' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
+              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
             <Package className="w-5 h-5 flex-shrink-0" />
             <span className={`
@@ -889,9 +879,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
           <button
             onClick={() => setCurrentPage('track-deliveries')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              currentPage === 'track-deliveries' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'track-deliveries' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
+              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
             <Truck className="w-5 h-5 flex-shrink-0" />
             <span className={`
@@ -905,9 +894,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
               setCurrentPage('sales-report');
               setShowSalesForm(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              currentPage === 'sales-report' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'sales-report' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
+              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
           >
             <FileText className="w-5 h-5 flex-shrink-0" />
             <span className={`
@@ -922,9 +910,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         <div className="p-4 border-t border-slate-700 overflow-hidden">
           <button
             onClick={onLogout}
-            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-red-600 rounded-lg transition-all duration-200 ${
-              !sidebarOpen && !isMobile ? 'justify-center' : ''
-            }`}
+            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-red-600 rounded-lg transition-all duration-200 ${!sidebarOpen && !isMobile ? 'justify-center' : ''
+              }`}
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
             <span className={`
@@ -951,19 +938,19 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             <div className="flex-1">
               <h2 className="text-lg md:text-2xl font-bold text-gray-800">
                 {currentPage === 'dashboard' ? 'Dashboard' :
-                 currentPage === 'seedlings' ? 'My Seedlings' :
-                 currentPage === 'harvest' ? 'Harvest Records' :
-                 currentPage === 'monitoring' ? 'Farm Monitoring' :
-                 currentPage === 'sales-report' ? (showSalesForm ? 'Submit Sales Report' : 'Sales Reports') :
-                 currentPage === 'track-deliveries' ? 'Track My Deliveries' :
-                 'My Profile'}
+                  currentPage === 'seedlings' ? 'My Seedlings' :
+                    currentPage === 'harvest' ? 'Harvest Records' :
+                      currentPage === 'monitoring' ? 'Farm Monitoring' :
+                        currentPage === 'sales-report' ? (showSalesForm ? 'Submit Sales Report' : 'Sales Reports') :
+                          currentPage === 'track-deliveries' ? 'Track My Deliveries' :
+                            'My Profile'}
               </h2>
               <p className="text-xs md:text-sm text-gray-600 hidden sm:block">Welcome back, {user?.fullName || 'Farmer'}!</p>
             </div>
             <div className="flex items-center gap-2 md:gap-4">
               {/* Notification Bell with Dropdown */}
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setShowNotifications(!showNotifications)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition relative hidden sm:block"
                 >
@@ -1007,9 +994,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               className="px-4 py-3 hover:bg-gray-50 transition cursor-pointer"
                             >
                               <div className="flex items-start gap-3">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${
-                                  notif.color === 'green' ? 'bg-green-100' : 'bg-blue-100'
-                                }`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${notif.color === 'green' ? 'bg-green-100' : 'bg-blue-100'
+                                  }`}>
                                   {notif.icon}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -1020,8 +1006,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                     {notif.message}
                                   </p>
                                   <p className="text-xs text-gray-400">
-                                    {new Date(notif.date).toLocaleDateString('en-US', { 
-                                      month: 'short', 
+                                    {new Date(notif.date).toLocaleDateString('en-US', {
+                                      month: 'short',
                                       day: 'numeric',
                                       year: 'numeric'
                                     })}
@@ -1057,9 +1043,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   <p className="text-xs text-gray-500">{user?.associationName || 'Independent Farmer'}</p>
                 </div>
                 {profilePhoto ? (
-                  <img 
-                    src={profilePhoto} 
-                    alt="Profile" 
+                  <img
+                    src={profilePhoto}
+                    alt="Profile"
                     className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-green-500 shadow-lg"
                   />
                 ) : (
@@ -1192,21 +1178,19 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <div className="inline-flex bg-gray-100 rounded-xl p-1">
                             <button
                               onClick={() => setViewMode('monthly')}
-                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                                viewMode === 'monthly'
+                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'monthly'
                                   ? 'bg-white text-emerald-600 shadow-md'
                                   : 'text-gray-600 hover:text-gray-900'
-                              }`}
+                                }`}
                             >
                               Monthly
                             </button>
                             <button
                               onClick={() => setViewMode('yearly')}
-                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                                viewMode === 'yearly'
+                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'yearly'
                                   ? 'bg-white text-emerald-600 shadow-md'
                                   : 'text-gray-600 hover:text-gray-900'
-                              }`}
+                                }`}
                             >
                               Yearly
                             </button>
@@ -1238,30 +1222,30 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         <AreaChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                           <defs>
                             <linearGradient id="colorSeedlings" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.5}/>
-                              <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.5} />
+                              <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
                             </linearGradient>
                             <linearGradient id="colorPlanted" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                          <XAxis 
-                            dataKey={viewMode === 'monthly' ? 'month' : 'year'} 
+                          <XAxis
+                            dataKey={viewMode === 'monthly' ? 'month' : 'year'}
                             stroke="#6b7280"
                             style={{ fontSize: '13px', fontWeight: 600 }}
                             tickLine={false}
                           />
-                          <YAxis 
-                            stroke="#6b7280" 
+                          <YAxis
+                            stroke="#6b7280"
                             style={{ fontSize: '13px', fontWeight: 600 }}
                             tickFormatter={(value) => value.toLocaleString()}
                             tickLine={false}
                           />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#fff', 
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: '#fff',
                               border: 'none',
                               borderRadius: '16px',
                               boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
@@ -1270,22 +1254,22 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
                             itemStyle={{ padding: '6px 0', fontSize: '13px', fontWeight: 600 }}
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="seedlings" 
-                            stroke="#10b981" 
+                          <Area
+                            type="monotone"
+                            dataKey="seedlings"
+                            stroke="#10b981"
                             strokeWidth={4}
-                            fillOpacity={1} 
-                            fill="url(#colorSeedlings)" 
+                            fillOpacity={1}
+                            fill="url(#colorSeedlings)"
                             name="Distributed"
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="planted" 
-                            stroke="#3b82f6" 
+                          <Area
+                            type="monotone"
+                            dataKey="planted"
+                            stroke="#3b82f6"
                             strokeWidth={4}
-                            fillOpacity={1} 
-                            fill="url(#colorPlanted)" 
+                            fillOpacity={1}
+                            fill="url(#colorPlanted)"
                             name="Planted"
                           />
                         </AreaChart>
@@ -1302,21 +1286,19 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         <div className="inline-flex bg-gray-100 rounded-xl p-1">
                           <button
                             onClick={() => setViewMode('monthly')}
-                            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                              viewMode === 'monthly'
+                            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'monthly'
                                 ? 'bg-white text-orange-600 shadow-md'
                                 : 'text-gray-600 hover:text-gray-900'
-                            }`}
+                              }`}
                           >
                             Monthly
                           </button>
                           <button
                             onClick={() => setViewMode('yearly')}
-                            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                              viewMode === 'yearly'
+                            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'yearly'
                                 ? 'bg-white text-orange-600 shadow-md'
                                 : 'text-gray-600 hover:text-gray-900'
-                            }`}
+                              }`}
                           >
                             Yearly
                           </button>
@@ -1326,27 +1308,27 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                           <defs>
                             <linearGradient id="colorFiber" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#f97316" stopOpacity={0.6}/>
-                              <stop offset="95%" stopColor="#f97316" stopOpacity={0.1}/>
+                              <stop offset="5%" stopColor="#f97316" stopOpacity={0.6} />
+                              <stop offset="95%" stopColor="#f97316" stopOpacity={0.1} />
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                          <XAxis 
-                            dataKey={viewMode === 'monthly' ? 'month' : 'year'} 
+                          <XAxis
+                            dataKey={viewMode === 'monthly' ? 'month' : 'year'}
                             stroke="#6b7280"
                             style={{ fontSize: '13px', fontWeight: 600 }}
                             tickLine={false}
                           />
-                          <YAxis 
-                            stroke="#6b7280" 
+                          <YAxis
+                            stroke="#6b7280"
                             style={{ fontSize: '13px', fontWeight: 600 }}
                             label={{ value: 'Fiber (kg)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontWeight: 700 } }}
                             tickFormatter={(value) => value.toLocaleString()}
                             tickLine={false}
                           />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#fff', 
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: '#fff',
                               border: 'none',
                               borderRadius: '16px',
                               boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
@@ -1356,13 +1338,13 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Fiber Production']}
                             itemStyle={{ fontSize: '13px', fontWeight: 600 }}
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="fiberKg" 
-                            stroke="#f97316" 
+                          <Area
+                            type="monotone"
+                            dataKey="fiberKg"
+                            stroke="#f97316"
                             strokeWidth={4}
-                            fillOpacity={1} 
-                            fill="url(#colorFiber)" 
+                            fillOpacity={1}
+                            fill="url(#colorFiber)"
                             name="Fiber Production"
                           />
                         </AreaChart>
@@ -1380,21 +1362,19 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <div className="inline-flex bg-gray-100 rounded-xl p-1">
                             <button
                               onClick={() => setViewMode('monthly')}
-                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                                viewMode === 'monthly'
+                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'monthly'
                                   ? 'bg-white text-purple-600 shadow-md'
                                   : 'text-gray-600 hover:text-gray-900'
-                              }`}
+                                }`}
                             >
                               Monthly
                             </button>
                             <button
                               onClick={() => setViewMode('yearly')}
-                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                                viewMode === 'yearly'
+                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'yearly'
                                   ? 'bg-white text-purple-600 shadow-md'
                                   : 'text-gray-600 hover:text-gray-900'
-                              }`}
+                                }`}
                             >
                               Yearly
                             </button>
@@ -1409,27 +1389,27 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                           <defs>
                             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#a855f7" stopOpacity={0.6}/>
-                              <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1}/>
+                              <stop offset="5%" stopColor="#a855f7" stopOpacity={0.6} />
+                              <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1} />
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                          <XAxis 
-                            dataKey={viewMode === 'monthly' ? 'month' : 'year'} 
+                          <XAxis
+                            dataKey={viewMode === 'monthly' ? 'month' : 'year'}
                             stroke="#6b7280"
                             style={{ fontSize: '13px', fontWeight: 600 }}
                             tickLine={false}
                           />
-                          <YAxis 
-                            stroke="#6b7280" 
+                          <YAxis
+                            stroke="#6b7280"
                             style={{ fontSize: '13px', fontWeight: 600 }}
                             label={{ value: 'Revenue (₱)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontWeight: 700 } }}
                             tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}K`}
                             tickLine={false}
                           />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#fff', 
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: '#fff',
                               border: 'none',
                               borderRadius: '16px',
                               boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
@@ -1439,13 +1419,13 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Revenue']}
                             itemStyle={{ fontSize: '13px', fontWeight: 600 }}
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="revenue" 
-                            stroke="#a855f7" 
+                          <Area
+                            type="monotone"
+                            dataKey="revenue"
+                            stroke="#a855f7"
                             strokeWidth={4}
-                            fillOpacity={1} 
-                            fill="url(#colorRevenue)" 
+                            fillOpacity={1}
+                            fill="url(#colorRevenue)"
                             name="Revenue"
                           />
                         </AreaChart>
@@ -1494,7 +1474,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   </div>
                 </div>
               </div>
-              
+
               {loading ? (
                 <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
                   <div className="relative w-16 h-16 mx-auto mb-4">
@@ -1510,8 +1490,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800 mb-2">No Records Found</h3>
                   <p className="text-gray-600 mb-4">
-                    {seedlings.length === 0 
-                      ? "You haven't received any seedlings from MAO Culiram yet" 
+                    {seedlings.length === 0
+                      ? "You haven't received any seedlings from MAO Culiram yet"
                       : "No seedlings match your search criteria"}
                   </p>
                   {seedlings.length === 0 && (
@@ -1575,142 +1555,141 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         {filteredSeedlings
                           .slice((currentPageNum - 1) * itemsPerPage, currentPageNum * itemsPerPage)
                           .map((seedling) => (
-                          <tr key={seedling.distribution_id} className="hover:bg-gradient-to-r hover:from-emerald-50/50 hover:to-teal-50/50 transition-all duration-200 group">
-                            {/* Photo */}
-                            <td className="px-6 py-4">
-                              <div className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-100 to-teal-200 flex-shrink-0 shadow-md">
-                                {(() => {
-                                  // Check all possible photo fields - photos are in the parent association distribution
-                                  const photoUrl = seedling.association_seedling_distributions?.seedling_photo || 
-                                                   seedling.association_seedling_distributions?.packaging_photo || 
-                                                   seedling.association_seedling_distributions?.quality_photo ||
-                                                   seedling.seedling_photo || 
-                                                   seedling.packaging_photo || 
-                                                   seedling.quality_photo;
-                                  
-                                  // Debug log for first render
-                                  if (seedling.distribution_id && !(window as any).photoDebugLogged) {
-                                    console.log('🖼️ Photo check for seedling:', {
-                                      id: seedling.distribution_id,
-                                      seedling_photo: seedling.seedling_photo ? 'exists' : 'null',
-                                      packaging_photo: seedling.packaging_photo ? 'exists' : 'null',
-                                      quality_photo: seedling.quality_photo ? 'exists' : 'null',
-                                      photoUrl: photoUrl ? photoUrl.substring(0, 50) + '...' : 'none'
-                                    });
-                                    (window as any).photoDebugLogged = true;
-                                  }
-                                  
-                                  if (photoUrl && photoUrl.trim() !== '') {
+                            <tr key={seedling.distribution_id} className="hover:bg-gradient-to-r hover:from-emerald-50/50 hover:to-teal-50/50 transition-all duration-200 group">
+                              {/* Photo */}
+                              <td className="px-6 py-4">
+                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-100 to-teal-200 flex-shrink-0 shadow-md">
+                                  {(() => {
+                                    // Check all possible photo fields - photos are in the parent association distribution
+                                    const photoUrl = seedling.association_seedling_distributions?.seedling_photo ||
+                                      seedling.association_seedling_distributions?.packaging_photo ||
+                                      seedling.association_seedling_distributions?.quality_photo ||
+                                      seedling.seedling_photo ||
+                                      seedling.packaging_photo ||
+                                      seedling.quality_photo;
+
+                                    // Debug log for first render
+                                    if (seedling.distribution_id && !(window as any).photoDebugLogged) {
+                                      console.log('🖼️ Photo check for seedling:', {
+                                        id: seedling.distribution_id,
+                                        seedling_photo: seedling.seedling_photo ? 'exists' : 'null',
+                                        packaging_photo: seedling.packaging_photo ? 'exists' : 'null',
+                                        quality_photo: seedling.quality_photo ? 'exists' : 'null',
+                                        photoUrl: photoUrl ? photoUrl.substring(0, 50) + '...' : 'none'
+                                      });
+                                      (window as any).photoDebugLogged = true;
+                                    }
+
+                                    if (photoUrl && photoUrl.trim() !== '') {
+                                      return (
+                                        <img
+                                          src={photoUrl}
+                                          alt="Seedling"
+                                          className="w-full h-full object-cover"
+                                          onLoad={() => console.log('✅ Image loaded successfully')}
+                                          onError={(e) => {
+                                            console.error('❌ Image failed to load:', {
+                                              url: photoUrl.substring(0, 100),
+                                              error: e
+                                            });
+                                            e.currentTarget.style.display = 'none';
+                                            const parent = e.currentTarget.parentElement;
+                                            if (parent) {
+                                              parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg></div>';
+                                            }
+                                          }}
+                                        />
+                                      );
+                                    }
+
+                                    console.log('⚠️ No photo URL found, showing icon');
                                     return (
-                                      <img 
-                                        src={photoUrl} 
-                                        alt="Seedling" 
-                                        className="w-full h-full object-cover"
-                                        onLoad={() => console.log('✅ Image loaded successfully')}
-                                        onError={(e) => {
-                                          console.error('❌ Image failed to load:', {
-                                            url: photoUrl.substring(0, 100),
-                                            error: e
-                                          });
-                                          e.currentTarget.style.display = 'none';
-                                          const parent = e.currentTarget.parentElement;
-                                          if (parent) {
-                                            parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg></div>';
-                                          }
-                                        }}
-                                      />
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <Sprout className="w-6 h-6 text-emerald-600" />
+                                      </div>
                                     );
-                                  }
-                                  
-                                  console.log('⚠️ No photo URL found, showing icon');
-                                  return (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                      <Sprout className="w-6 h-6 text-emerald-600" />
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            </td>
+                                  })()}
+                                </div>
+                              </td>
 
-                            {/* Variety & Date */}
-                            <td className="px-6 py-4">
-                              <div className="font-semibold text-gray-900">{seedling.variety}</div>
-                              <div className="text-xs text-gray-500">{new Date(seedling.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                            </td>
+                              {/* Variety & Date */}
+                              <td className="px-6 py-4">
+                                <div className="font-semibold text-gray-900">{seedling.variety}</div>
+                                <div className="text-xs text-gray-500">{new Date(seedling.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                              </td>
 
-                            {/* Quantity */}
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              <div className="font-medium text-gray-900">{seedling.quantity_distributed} seedlings</div>
-                            </td>
+                              {/* Quantity */}
+                              <td className="px-6 py-4 text-sm text-gray-600">
+                                <div className="font-medium text-gray-900">{seedling.quantity_distributed} seedlings</div>
+                              </td>
 
-                            {/* Source */}
-                            <td className="px-6 py-4 text-sm">
-                              <div className="font-medium text-gray-900">
-                                {seedling.association_seedling_distributions?.source_supplier || 
-                                 seedling.source_supplier || 
-                                 seedling.association_officers?.association_name || 
-                                 'MAO Culiram'}
-                              </div>
-                            </td>
+                              {/* Source */}
+                              <td className="px-6 py-4 text-sm">
+                                <div className="font-medium text-gray-900">
+                                  {seedling.association_seedling_distributions?.source_supplier ||
+                                    seedling.source_supplier ||
+                                    seedling.association_officers?.association_name ||
+                                    'MAO Culiram'}
+                                </div>
+                              </td>
 
-                            {/* Batch ID */}
-                            <td className="px-6 py-4 text-sm">
-                              <div className="font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded inline-block">
-                                #{seedling.distribution_id?.slice(0, 8).toUpperCase() || 'N/A'}
-                              </div>
-                            </td>
+                              {/* Batch ID */}
+                              <td className="px-6 py-4 text-sm">
+                                <div className="font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded inline-block">
+                                  #{seedling.distribution_id?.slice(0, 8).toUpperCase() || 'N/A'}
+                                </div>
+                              </td>
 
-                            {/* Remarks */}
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {seedling.remarks || '-'}
-                            </td>
+                              {/* Remarks */}
+                              <td className="px-6 py-4 text-sm text-gray-600">
+                                {seedling.remarks || '-'}
+                              </td>
 
-                            {/* Status */}
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                seedling.status === 'planted' ? 'bg-emerald-100 text-emerald-700' :
-                                seedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
-                                seedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
-                                'bg-amber-100 text-amber-700'
-                              }`}>
-                                {seedling.status === 'planted' ? 'Complete' : seedling.status.charAt(0).toUpperCase() + seedling.status.slice(1)}
-                              </span>
-                            </td>
+                              {/* Status */}
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${seedling.status === 'planted' ? 'bg-emerald-100 text-emerald-700' :
+                                    seedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
+                                      seedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
+                                        'bg-amber-100 text-amber-700'
+                                  }`}>
+                                  {seedling.status === 'planted' ? 'Complete' : seedling.status.charAt(0).toUpperCase() + seedling.status.slice(1)}
+                                </span>
+                              </td>
 
-                            {/* Actions */}
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center gap-1.5">
-                                <button
-                                  onClick={() => {
-                                    setSelectedSeedling(seedling);
-                                    setShowViewModal(true);
-                                  }}
-                                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md group-hover:bg-blue-50"
-                                  title="View Details"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </button>
-                                
-                                {seedling.status === 'planted' ? (
-                                  <div className="p-2 text-emerald-600" title="Already Planted">
-                                    <CheckCircle className="w-4 h-4" />
-                                  </div>
-                                ) : (
+                              {/* Actions */}
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-1.5">
                                   <button
                                     onClick={() => {
                                       setSelectedSeedling(seedling);
-                                      setShowPlantingModal(true);
+                                      setShowViewModal(true);
                                     }}
-                                    className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-                                    title="Mark as Planted"
+                                    className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md group-hover:bg-blue-50"
+                                    title="View Details"
                                   >
-                                    <Sprout className="w-4 h-4" />
+                                    <Eye className="w-4 h-4" />
                                   </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+
+                                  {seedling.status === 'planted' ? (
+                                    <div className="p-2 text-emerald-600" title="Already Planted">
+                                      <CheckCircle className="w-4 h-4" />
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        setSelectedSeedling(seedling);
+                                        setShowPlantingModal(true);
+                                      }}
+                                      className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                      title="Mark as Planted"
+                                    >
+                                      <Sprout className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
                       </tbody>
                     </table>
                   </div>
@@ -1729,11 +1708,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                 setItemsPerPage(size);
                                 setCurrentPageNum(1);
                               }}
-                              className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                                itemsPerPage === size
+                              className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
                                   ? 'bg-emerald-500 text-white shadow-lg'
                                   : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
-                              }`}
+                                }`}
                             >
                               {size}
                             </button>
@@ -1750,22 +1728,20 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <button
                             onClick={() => setCurrentPageNum(prev => Math.max(1, prev - 1))}
                             disabled={currentPageNum === 1}
-                            className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                              currentPageNum === 1
+                            className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPageNum === 1
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                            }`}
+                              }`}
                           >
                             Previous
                           </button>
                           <button
                             onClick={() => setCurrentPageNum(prev => Math.min(Math.ceil(filteredSeedlings.length / itemsPerPage), prev + 1))}
                             disabled={currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)}
-                            className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                              currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)
+                            className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                            }`}
+                              }`}
                           >
                             Next
                           </button>
@@ -1799,7 +1775,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   onCancel={() => setShowSalesForm(false)} // Go back to list view
                 />
               ) : (
-                <SalesReportsList 
+                <SalesReportsList
                   onAddNewReport={() => setShowSalesForm(true)}
                 />
               )}
@@ -1852,9 +1828,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     <div className="flex items-center gap-6">
                       <div className="relative group">
                         {profilePhoto ? (
-                          <img 
-                            src={profilePhoto} 
-                            alt="Profile" 
+                          <img
+                            src={profilePhoto}
+                            alt="Profile"
                             className="w-28 h-28 rounded-full object-cover border-4 border-green-500 shadow-xl"
                           />
                         ) : (
@@ -1864,9 +1840,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         )}
                         {isEditMode && (
                           <label className="absolute bottom-0 right-0 p-2.5 bg-green-600 rounded-full shadow-lg hover:bg-green-700 transition cursor-pointer group-hover:scale-110">
-                            <input 
-                              type="file" 
-                              accept="image/*" 
+                            <input
+                              type="file"
+                              accept="image/*"
                               onChange={handleProfilePhotoUpload}
                               className="hidden"
                               disabled={uploadingPhoto}
@@ -1904,7 +1880,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <input
                               type="text"
                               value={editFormData?.full_name || ''}
-                              onChange={(e) => setEditFormData({...editFormData, full_name: e.target.value})}
+                              onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
                               className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
                             />
                           ) : (
@@ -1916,7 +1892,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           {isEditMode ? (
                             <select
                               value={editFormData?.sex || ''}
-                              onChange={(e) => setEditFormData({...editFormData, sex: e.target.value})}
+                              onChange={(e) => setEditFormData({ ...editFormData, sex: e.target.value })}
                               className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
                             >
                               <option value="">Select</option>
@@ -1933,7 +1909,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <input
                               type="number"
                               value={editFormData?.age || ''}
-                              onChange={(e) => setEditFormData({...editFormData, age: e.target.value})}
+                              onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })}
                               className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
                             />
                           ) : (
@@ -1962,7 +1938,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <input
                               type="tel"
                               value={editFormData?.contact_number || ''}
-                              onChange={(e) => setEditFormData({...editFormData, contact_number: e.target.value})}
+                              onChange={(e) => setEditFormData({ ...editFormData, contact_number: e.target.value })}
                               className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
                               placeholder="09171234567"
                             />
@@ -1975,7 +1951,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           {isEditMode ? (
                             <textarea
                               value={editFormData?.address || ''}
-                              onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
+                              onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
                               className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800 resize-none"
                               rows={2}
                               placeholder="Complete address"
@@ -2002,7 +1978,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <input
                               type="text"
                               value={editFormData?.barangay || ''}
-                              onChange={(e) => setEditFormData({...editFormData, barangay: e.target.value})}
+                              onChange={(e) => setEditFormData({ ...editFormData, barangay: e.target.value })}
                               className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
                             />
                           ) : (
@@ -2015,7 +1991,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <input
                               type="text"
                               value={editFormData?.municipality || ''}
-                              onChange={(e) => setEditFormData({...editFormData, municipality: e.target.value})}
+                              onChange={(e) => setEditFormData({ ...editFormData, municipality: e.target.value })}
                               className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
                             />
                           ) : (
@@ -2040,7 +2016,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <input
                               type="text"
                               value={editFormData?.association_name || ''}
-                              onChange={(e) => setEditFormData({...editFormData, association_name: e.target.value})}
+                              onChange={(e) => setEditFormData({ ...editFormData, association_name: e.target.value })}
                               className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
                             />
                           ) : (
@@ -2177,10 +2153,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-green-500 transition">
                             {plantingData[`planting_photo_${num}` as keyof typeof plantingData] ? (
                               <div className="relative">
-                                <img 
-                                  src={plantingData[`planting_photo_${num}` as keyof typeof plantingData] as string} 
-                                  alt={`Planting ${num}`} 
-                                  className="w-full h-24 object-cover rounded" 
+                                <img
+                                  src={plantingData[`planting_photo_${num}` as keyof typeof plantingData] as string}
+                                  alt={`Planting ${num}`}
+                                  className="w-full h-24 object-cover rounded"
                                 />
                                 <button
                                   type="button"
@@ -2284,12 +2260,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   )}
                   <div>
                     <p className="text-sm text-gray-600">Status</p>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                      selectedSeedling.status === 'planted' ? 'bg-green-100 text-green-700' :
-                      selectedSeedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
-                      selectedSeedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${selectedSeedling.status === 'planted' ? 'bg-green-100 text-green-700' :
+                        selectedSeedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
+                          selectedSeedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                      }`}>
                       {selectedSeedling.status}
                     </span>
                   </div>
@@ -2316,9 +2291,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     {selectedSeedling.seedling_photo && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Seedling Photo</p>
-                        <img 
-                          src={selectedSeedling.seedling_photo} 
-                          alt="Seedling" 
+                        <img
+                          src={selectedSeedling.seedling_photo}
+                          alt="Seedling"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                         />
                       </div>
@@ -2326,9 +2301,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     {selectedSeedling.packaging_photo && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Distribution Photo</p>
-                        <img 
-                          src={selectedSeedling.packaging_photo} 
-                          alt="Packaging" 
+                        <img
+                          src={selectedSeedling.packaging_photo}
+                          alt="Packaging"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                         />
                       </div>
@@ -2336,9 +2311,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     {selectedSeedling.quality_photo && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Quality Photo</p>
-                        <img 
-                          src={selectedSeedling.quality_photo} 
-                          alt="Quality" 
+                        <img
+                          src={selectedSeedling.quality_photo}
+                          alt="Quality"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                         />
                       </div>
@@ -2385,9 +2360,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     {selectedSeedling.planting_photo_1 && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Photo 1</p>
-                        <img 
-                          src={selectedSeedling.planting_photo_1} 
-                          alt="Planting 1" 
+                        <img
+                          src={selectedSeedling.planting_photo_1}
+                          alt="Planting 1"
                           className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
                         />
                       </div>
@@ -2395,9 +2370,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     {selectedSeedling.planting_photo_2 && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Photo 2</p>
-                        <img 
-                          src={selectedSeedling.planting_photo_2} 
-                          alt="Planting 2" 
+                        <img
+                          src={selectedSeedling.planting_photo_2}
+                          alt="Planting 2"
                           className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
                         />
                       </div>
@@ -2405,9 +2380,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     {selectedSeedling.planting_photo_3 && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Photo 3</p>
-                        <img 
-                          src={selectedSeedling.planting_photo_3} 
-                          alt="Planting 3" 
+                        <img
+                          src={selectedSeedling.planting_photo_3}
+                          alt="Planting 3"
                           className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
                         />
                       </div>

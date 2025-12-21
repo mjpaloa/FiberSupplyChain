@@ -11,6 +11,8 @@ interface Transaction {
   quantity: number;
   variety: string;
   contact_number: string;
+  status: string;
+  location: string;
 }
 
 const BuyerTransactions: React.FC = () => {
@@ -66,7 +68,7 @@ const BuyerTransactions: React.FC = () => {
       const aValue = a[sortField];
       const bValue = b[sortField];
       const modifier = sortDirection === 'asc' ? 1 : -1;
-      
+
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return aValue.localeCompare(bValue) * modifier;
       }
@@ -314,11 +316,10 @@ const BuyerTransactions: React.FC = () => {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 border rounded-lg ${
-                    currentPage === page
+                  className={`px-4 py-2 border rounded-lg ${currentPage === page
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'border-gray-300 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   {page}
                 </button>
@@ -355,31 +356,30 @@ const BuyerTransactions: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Transaction ID</p>
-                  <p className="font-mono font-semibold text-gray-900">#{selectedTransaction.id}</p>
+                  <p className="font-mono font-semibold text-gray-900">#{selectedTransaction.purchase_id}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Date</p>
                   <p className="font-semibold text-gray-900">
-                    {new Date(selectedTransaction.date).toLocaleString()}
+                    {new Date(selectedTransaction.created_at).toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Buyer Name</p>
-                  <p className="font-semibold text-gray-900">{selectedTransaction.buyerName}</p>
+                  <p className="text-sm text-gray-600">Farmer Name</p>
+                  <p className="font-semibold text-gray-900">{selectedTransaction.farmer_name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Status</p>
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                    selectedTransaction.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                    selectedTransaction.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-red-100 text-red-700'
-                  }`}>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedTransaction.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                      selectedTransaction.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                    }`}>
                     {selectedTransaction.status}
                   </span>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Fiber Quality</p>
-                  <p className="font-semibold text-gray-900">{selectedTransaction.fiberQuality}</p>
+                  <p className="font-semibold text-gray-900">{selectedTransaction.fiber_quality}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Quantity</p>
@@ -392,7 +392,7 @@ const BuyerTransactions: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-600">Total Amount</p>
                   <p className="font-bold text-blue-600 text-xl">
-                    ₱{selectedTransaction.amount.toLocaleString()}
+                    ₱{selectedTransaction.total_price.toLocaleString()}
                   </p>
                 </div>
               </div>
