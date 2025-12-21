@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Shield, Ban, Search, Eye, Globe, Monitor, CheckCircle, XCircle, Clock, RefreshCw, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Activity, Shield, Ban, Search, Globe, Monitor, CheckCircle, XCircle, Clock, RefreshCw, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import axios from 'axios';
 
 const ActivityLogsManagement: React.FC = () => {
