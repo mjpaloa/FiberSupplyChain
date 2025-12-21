@@ -4,15 +4,22 @@ import {
   LayoutDashboard,
   Sprout,
   Package,
-  Calendar,
+  MapPin,
+  User,
   LogOut,
   Menu,
   X,
   Bell,
+  Settings,
   FileText,
   Leaf,
   Eye,
   CheckCircle,
+  Camera,
+  Mail,
+  Users as UsersIcon,
+  Search,
+  Filter,
   Truck,
   DollarSign,
   Activity
@@ -282,8 +289,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     console.log('📊 Revenue data loaded:', revenue);
 
     // Calculate totals before setting state
-    const totalRev = revenue.reduce((sum, item) => sum + (item.revenue || 0), 0);
-    const totalFiber = revenue.reduce((sum, item) => sum + (item.fiberKg || 0), 0);
+    const totalRev = revenue.reduce((sum: number, item: any) => sum + (item.revenue || 0), 0);
+    const totalFiber = revenue.reduce((sum: number, item: any) => sum + (item.fiberKg || 0), 0);
     console.log('💰 Totals calculated - Revenue:', totalRev, 'Fiber:', totalFiber, 'kg');
 
     setRevenueData(revenue);
@@ -1179,8 +1186,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <button
                               onClick={() => setViewMode('monthly')}
                               className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'monthly'
-                                  ? 'bg-white text-emerald-600 shadow-md'
-                                  : 'text-gray-600 hover:text-gray-900'
+                                ? 'bg-white text-emerald-600 shadow-md'
+                                : 'text-gray-600 hover:text-gray-900'
                                 }`}
                             >
                               Monthly
@@ -1188,8 +1195,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <button
                               onClick={() => setViewMode('yearly')}
                               className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'yearly'
-                                  ? 'bg-white text-emerald-600 shadow-md'
-                                  : 'text-gray-600 hover:text-gray-900'
+                                ? 'bg-white text-emerald-600 shadow-md'
+                                : 'text-gray-600 hover:text-gray-900'
                                 }`}
                             >
                               Yearly
@@ -1287,8 +1294,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <button
                             onClick={() => setViewMode('monthly')}
                             className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'monthly'
-                                ? 'bg-white text-orange-600 shadow-md'
-                                : 'text-gray-600 hover:text-gray-900'
+                              ? 'bg-white text-orange-600 shadow-md'
+                              : 'text-gray-600 hover:text-gray-900'
                               }`}
                           >
                             Monthly
@@ -1296,8 +1303,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <button
                             onClick={() => setViewMode('yearly')}
                             className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'yearly'
-                                ? 'bg-white text-orange-600 shadow-md'
-                                : 'text-gray-600 hover:text-gray-900'
+                              ? 'bg-white text-orange-600 shadow-md'
+                              : 'text-gray-600 hover:text-gray-900'
                               }`}
                           >
                             Yearly
@@ -1363,8 +1370,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <button
                               onClick={() => setViewMode('monthly')}
                               className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'monthly'
-                                  ? 'bg-white text-purple-600 shadow-md'
-                                  : 'text-gray-600 hover:text-gray-900'
+                                ? 'bg-white text-purple-600 shadow-md'
+                                : 'text-gray-600 hover:text-gray-900'
                                 }`}
                             >
                               Monthly
@@ -1372,8 +1379,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <button
                               onClick={() => setViewMode('yearly')}
                               className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'yearly'
-                                  ? 'bg-white text-purple-600 shadow-md'
-                                  : 'text-gray-600 hover:text-gray-900'
+                                ? 'bg-white text-purple-600 shadow-md'
+                                : 'text-gray-600 hover:text-gray-900'
                                 }`}
                             >
                               Yearly
@@ -1648,9 +1655,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               {/* Status */}
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${seedling.status === 'planted' ? 'bg-emerald-100 text-emerald-700' :
-                                    seedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
-                                      seedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
-                                        'bg-amber-100 text-amber-700'
+                                  seedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
+                                    seedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
+                                      'bg-amber-100 text-amber-700'
                                   }`}>
                                   {seedling.status === 'planted' ? 'Complete' : seedling.status.charAt(0).toUpperCase() + seedling.status.slice(1)}
                                 </span>
@@ -1709,8 +1716,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                 setCurrentPageNum(1);
                               }}
                               className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
-                                  ? 'bg-emerald-500 text-white shadow-lg'
-                                  : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
+                                ? 'bg-emerald-500 text-white shadow-lg'
+                                : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
                                 }`}
                             >
                               {size}
@@ -1729,8 +1736,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             onClick={() => setCurrentPageNum(prev => Math.max(1, prev - 1))}
                             disabled={currentPageNum === 1}
                             className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPageNum === 1
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                               }`}
                           >
                             Previous
@@ -1739,8 +1746,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             onClick={() => setCurrentPageNum(prev => Math.min(Math.ceil(filteredSeedlings.length / itemsPerPage), prev + 1))}
                             disabled={currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)}
                             className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                               }`}
                           >
                             Next
@@ -2078,6 +2085,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   setShowPlantingModal(false);
                   setPlantingData({
                     planting_date: new Date().toISOString().split('T')[0],
+                    planting_quantity: 0,
                     planting_location: '',
                     planting_notes: '',
                     planting_photo_1: '',
@@ -2194,6 +2202,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       setShowPlantingModal(false);
                       setPlantingData({
                         planting_date: new Date().toISOString().split('T')[0],
+                        planting_quantity: 0,
                         planting_location: '',
                         planting_notes: '',
                         planting_photo_1: '',
@@ -2261,9 +2270,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   <div>
                     <p className="text-sm text-gray-600">Status</p>
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${selectedSeedling.status === 'planted' ? 'bg-green-100 text-green-700' :
-                        selectedSeedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
-                          selectedSeedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
-                            'bg-yellow-100 text-yellow-700'
+                      selectedSeedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
+                        selectedSeedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
                       }`}>
                       {selectedSeedling.status}
                     </span>
