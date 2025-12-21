@@ -68,58 +68,38 @@ const TeamSection: React.FC = () => {
             {team.map((member) => (
               <div
                 key={member.member_id}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-gray-100 group"
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 group"
               >
                 {/* Photo */}
-                <div className="relative h-64 bg-gradient-to-br from-emerald-100 to-teal-100 overflow-hidden">
+                <div className="relative h-[538px] bg-gradient-to-br from-gray-50 to-white overflow-hidden flex items-start justify-center pt-4">
                   {member.photo_url ? (
                     <img
                       src={member.photo_url}
                       alt={member.full_name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      className="w-full h-full object-contain object-top scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <User className="w-24 h-24 text-emerald-400" />
+                    <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                      <User className="w-24 h-24 text-gray-300" />
                     </div>
                   )}
-                  {/* Overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
 
                 {/* Info */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                <div className="p-6 text-center">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
                     {member.full_name}
                   </h3>
-                  <p className="text-emerald-600 font-semibold mb-4">
-                    {member.position}
-                  </p>
 
                   {member.bio && (
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                    <p className="text-gray-600 text-sm mb-4 leading-relaxed">
                       {member.bio}
                     </p>
                   )}
 
-                  {/* Contact Info */}
-                  <div className="space-y-2 pt-4 border-t border-gray-200">
-                    {member.email && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Mail className="w-4 h-4 mr-2 text-emerald-500" />
-                        <a href={`mailto:${member.email}`} className="hover:text-emerald-600 transition-colors">
-                          {member.email}
-                        </a>
-                      </div>
-                    )}
-                    {member.phone && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Phone className="w-4 h-4 mr-2 text-emerald-500" />
-                        <a href={`tel:${member.phone}`} className="hover:text-emerald-600 transition-colors">
-                          {member.phone}
-                        </a>
-                      </div>
-                    )}
+                  <div className="flex items-center justify-center text-emerald-600 text-sm font-medium">
+                    <User className="w-4 h-4 mr-2" />
+                    {member.position}
                   </div>
                 </div>
               </div>
