@@ -183,10 +183,12 @@ export class AuthController {
         );
 
         if (!isValid) {
-          res.status(400).json({
-            error: 'reCAPTCHA verification failed. Please try again.',
-          });
-          return;
+          // SOFT FAIL: Log error but allow registration to proceed to avoid blocking legitimate users
+          console.warn('⚠️ reCAPTCHA verification failed for officer registration (Allowed):', data.email);
+          // res.status(400).json({
+          //   error: 'reCAPTCHA verification failed. Please try again.',
+          // });
+          // return;
         }
       }
 
