@@ -16,6 +16,9 @@ router.get('/analytics', authenticate, BuyerPurchasesController.getAnalytics);
 // Get transactions
 router.get('/transactions', authenticate, BuyerPurchasesController.getTransactions);
 
+// Get sales
+router.get('/sales', authenticate, BuyerPurchasesController.getSales);
+
 // Update purchase
 router.put('/:purchaseId', authenticate, BuyerPurchasesController.updatePurchase);
 

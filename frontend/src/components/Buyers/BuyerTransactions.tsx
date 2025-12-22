@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Download, Eye, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { Search, Filter, Download, Eye, ChevronLeft, ChevronRight, ArrowUpDown, Package } from 'lucide-react';
 
 interface Transaction {
-  purchase_id: string;
-  farmer_name: string;
+  id: string;
+  type: 'purchase' | 'sale';
+  name: string;
   price: number;
   total_price: number;
   created_at: string;
   fiber_quality: string;
   quantity: number;
-  variety: string;
-  contact_number: string;
-  status: string;
-  location: string;
+  variety?: string;
+  contact_number?: string;
+  status?: string;
+  location?: string;
+  notes?: string;
 }
 
 const BuyerTransactions: React.FC = () => {
@@ -35,12 +37,66 @@ const BuyerTransactions: React.FC = () => {
   const fetchTransactions = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(
+      
+      // Fetch purchases
+      const purchasesResponse = await fetch(
         `https://easyabaca-api.vercel.app/api/buyer-purchases/transactions?status=${statusFilter}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const data = await response.json();
-      setTransactions(data.transactions || []);
+      const purchasesData = await purchasesResponse.json();
+      
+      // Transform purchases
+      const purchases = (purchasesData.transactions || []).map((p: any) => ({
+        id: p.purchase_id,
+        type: 'purchase' as const,
+        name: p.farmer_name,
+        price: p.price,
+        total_price: p.total_price,
+        created_at: p.created_at,
+        fiber_quality: p.fiber_quality,
+        quantity: p.quantity,
+        variety: p.variety,
+        contact_number: p.contact_number,
+        status: p.status,
+        location: p.location
+      }));
+      
+      // Fetch sales with error handling
+      let sales: any[] = [];
+      try {
+        const salesResponse = await fetch(
+          `https://easyabaca-api.vercel.app/api/buyer-purchases/sales`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        if (salesResponse.ok) {
+          const salesData = await salesResponse.json();
+          
+          // Transform sales
+          sales = (salesData.sales || []).map((s: any) => ({
+            id: s.sale_id,
+            type: 'sale' as const,
+            name: s.buyer_name,
+            price: s.price_per_kg,
+            total_price: s.total_amount,
+            created_at: s.sale_date,
+            fiber_quality: s.fiber_class,
+            quantity: s.quantity_kg,
+            notes: s.notes
+          }));
+        } else {
+          console.warn('Sales endpoint returned:', salesResponse.status);
+        }
+      } catch (salesError) {
+        console.warn('Sales endpoint not available, showing purchases only:', salesError);
+      }
+      
+      // Combine and sort by date
+      const allTransactions = [...purchases, ...sales].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      
+      setTransactions(allTransactions);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     } finally {
@@ -59,10 +115,11 @@ const BuyerTransactions: React.FC = () => {
 
   const filteredTransactions = transactions
     .filter(transaction =>
-      (transaction.farmer_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (transaction.purchase_id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (transaction.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (transaction.id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (transaction.fiber_quality?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (transaction.variety?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+      (transaction.variety?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (transaction.type?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       const aValue = a[sortField];
@@ -82,16 +139,16 @@ const BuyerTransactions: React.FC = () => {
   );
 
   const exportToCSV = () => {
-    const headers = ['Purchase ID', 'Farmer Name', 'Total Price', 'Date', 'Fiber Quality', 'Quantity', 'Variety', 'Contact'];
+    const headers = ['Type', 'ID', 'Name', 'Total Price', 'Date', 'Fiber Quality', 'Quantity', 'Variety'];
     const csvData = filteredTransactions.map(t => [
-      t.purchase_id,
-      t.farmer_name,
+      t.type,
+      t.id,
+      t.name,
       t.total_price,
       new Date(t.created_at).toLocaleDateString(),
       t.fiber_quality,
       t.quantity,
-      t.variety,
-      t.contact_number
+      t.variety || '-'
     ]);
 
     const csvContent = [
@@ -175,20 +232,29 @@ const BuyerTransactions: React.FC = () => {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th
-                  onClick={() => handleSort('purchase_id')}
+                  onClick={() => handleSort('type')}
                   className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer hover:bg-gray-100"
                 >
                   <div className="flex items-center gap-2">
-                    Purchase ID
+                    Type
                     <ArrowUpDown size={14} />
                   </div>
                 </th>
                 <th
-                  onClick={() => handleSort('farmer_name')}
+                  onClick={() => handleSort('id')}
                   className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer hover:bg-gray-100"
                 >
                   <div className="flex items-center gap-2">
-                    Farmer Name
+                    ID
+                    <ArrowUpDown size={14} />
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('name')}
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer hover:bg-gray-100"
+                >
+                  <div className="flex items-center gap-2">
+                    Name
                     <ArrowUpDown size={14} />
                   </div>
                 </th>
@@ -245,15 +311,24 @@ const BuyerTransactions: React.FC = () => {
             <tbody className="divide-y divide-gray-200">
               {paginatedTransactions.map((transaction) => (
                 <tr
-                  key={transaction.purchase_id}
+                  key={transaction.id}
                   className="hover:bg-gray-50 cursor-pointer"
                   onClick={() => viewDetails(transaction)}
                 >
-                  <td className="px-6 py-4 text-sm font-mono text-gray-900">
-                    #{transaction.purchase_id.slice(0, 8)}
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      transaction.type === 'purchase' 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {transaction.type === 'purchase' ? 'Purchase' : 'Sale'}
+                    </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {transaction.farmer_name}
+                  <td className="px-6 py-4 text-sm font-mono text-gray-900">
+                    #{transaction.id.slice(0, 8)}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    {transaction.name}
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">
@@ -270,9 +345,13 @@ const BuyerTransactions: React.FC = () => {
                     {new Date(transaction.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                      {transaction.variety}
-                    </span>
+                    {transaction.variety ? (
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                        {transaction.variety}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-sm">-</span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <button
@@ -355,8 +434,18 @@ const BuyerTransactions: React.FC = () => {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
+                  <p className="text-sm text-gray-600">Transaction Type</p>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                    selectedTransaction.type === 'purchase' 
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'bg-emerald-100 text-emerald-700'
+                  }`}>
+                    {selectedTransaction.type === 'purchase' ? 'Purchase' : 'Sale'}
+                  </span>
+                </div>
+                <div>
                   <p className="text-sm text-gray-600">Transaction ID</p>
-                  <p className="font-mono font-semibold text-gray-900">#{selectedTransaction.purchase_id}</p>
+                  <p className="font-mono font-semibold text-gray-900">#{selectedTransaction.id}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Date</p>
@@ -365,18 +454,20 @@ const BuyerTransactions: React.FC = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Farmer Name</p>
-                  <p className="font-semibold text-gray-900">{selectedTransaction.farmer_name}</p>
+                  <p className="text-sm text-gray-600">{selectedTransaction.type === 'purchase' ? 'Farmer Name' : 'Buyer Name'}</p>
+                  <p className="font-semibold text-gray-900">{selectedTransaction.name}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Status</p>
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedTransaction.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                      selectedTransaction.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                    }`}>
-                    {selectedTransaction.status}
-                  </span>
-                </div>
+                {selectedTransaction.status && (
+                  <div>
+                    <p className="text-sm text-gray-600">Status</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedTransaction.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                        selectedTransaction.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                      }`}>
+                      {selectedTransaction.status}
+                    </span>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-gray-600">Fiber Quality</p>
                   <p className="font-semibold text-gray-900">{selectedTransaction.fiber_quality}</p>
@@ -385,10 +476,24 @@ const BuyerTransactions: React.FC = () => {
                   <p className="text-sm text-gray-600">Quantity</p>
                   <p className="font-semibold text-gray-900">{selectedTransaction.quantity} kg</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Location</p>
-                  <p className="font-semibold text-gray-900">{selectedTransaction.location}</p>
-                </div>
+                {selectedTransaction.location && (
+                  <div>
+                    <p className="text-sm text-gray-600">Location</p>
+                    <p className="font-semibold text-gray-900">{selectedTransaction.location}</p>
+                  </div>
+                )}
+                {selectedTransaction.variety && (
+                  <div>
+                    <p className="text-sm text-gray-600">Variety</p>
+                    <p className="font-semibold text-gray-900">{selectedTransaction.variety}</p>
+                  </div>
+                )}
+                {selectedTransaction.notes && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-gray-600">Notes</p>
+                    <p className="font-semibold text-gray-900">{selectedTransaction.notes}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-gray-600">Total Amount</p>
                   <p className="font-bold text-blue-600 text-xl">

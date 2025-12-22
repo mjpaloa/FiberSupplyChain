@@ -332,6 +332,33 @@ export class BuyerPurchasesController {
   }
 
   /**
+   * Get all sales for the authenticated buyer
+   */
+  static async getSales(req: Request, res: Response) {
+    try {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        res.status(401).json({ error: 'User ID not found' });
+        return;
+      }
+
+      const { data: sales, error } = await supabase
+        .from('buyer_sales')
+        .select('*')
+        .eq('seller_id', userId)
+        .order('sale_date', { ascending: false });
+
+      if (error) throw error;
+
+      res.status(200).json({ sales: sales || [] });
+    } catch (error) {
+      console.error('Error fetching sales:', error);
+      res.status(500).json({ error: 'Failed to fetch sales' });
+    }
+  }
+
+  /**
    * Record inventory sale - tracks when buyer sells fiber to customers
    */
   static async recordSale(req: Request, res: Response) {

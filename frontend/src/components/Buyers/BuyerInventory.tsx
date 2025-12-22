@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, DollarSign, TrendingUp, ShoppingCart, X } from 'lucide-react';
+import { Package, DollarSign, TrendingUp, ShoppingCart, X, ShoppingBag, Receipt, Trash2 } from 'lucide-react';
 
 interface InventoryItem {
   fiber_class: string;
@@ -16,8 +16,31 @@ interface SaleFormData {
   notes: string;
 }
 
+interface Purchase {
+  id: string;
+  farmer_name: string;
+  fiber_quality: string;
+  quantity: string;
+  price: string;
+  created_at: string;
+  variety?: string;
+}
+
+interface Sale {
+  id: string;
+  buyer_name: string;
+  fiber_class: string;
+  quantity_kg: number;
+  price_per_kg: number;
+  total_amount: number;
+  sale_date: string;
+  notes?: string;
+}
+
 const BuyerInventory: React.FC = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [selectedClass, setSelectedClass] = useState<InventoryItem | null>(null);
@@ -29,6 +52,7 @@ const BuyerInventory: React.FC = () => {
     notes: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [totalSales, setTotalSales] = useState(0);
 
   useEffect(() => {
     fetchInventory();
@@ -44,6 +68,35 @@ const BuyerInventory: React.FC = () => {
       const data = await response.json();
       
       console.log('📦 Purchases data:', data);
+      
+      // Store purchases
+      setPurchases(data.purchases || []);
+      
+      // Fetch sales data with error handling
+      try {
+        const salesResponse = await fetch('https://easyabaca-api.vercel.app/api/buyer-purchases/sales', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (salesResponse.ok) {
+          const salesData = await salesResponse.json();
+          console.log('💰 Sales data:', salesData);
+          
+          setSales(salesData.sales || []);
+          
+          // Calculate total sales amount
+          const salesTotal = (salesData.sales || []).reduce((sum: number, sale: Sale) => sum + sale.total_amount, 0);
+          setTotalSales(salesTotal);
+        } else {
+          console.warn('Sales endpoint not available yet');
+          setSales([]);
+          setTotalSales(0);
+        }
+      } catch (salesError) {
+        console.warn('Error fetching sales (endpoint may not exist yet):', salesError);
+        setSales([]);
+        setTotalSales(0);
+      }
       
       // Group purchases by fiber class
       const inventoryMap: { [key: string]: InventoryItem } = {
@@ -175,103 +228,123 @@ const BuyerInventory: React.FC = () => {
 
   const totalKg = inventory.reduce((sum, item) => sum + item.total_kg, 0);
   const totalValue = inventory.reduce((sum, item) => sum + (item.total_kg * item.avg_purchase_price), 0);
+  const totalPurchaseCount = purchases.length;
+  const totalSalesCount = sales.length;
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <Package className="w-8 h-8 text-blue-600" />
-            My Fiber Inventory
-          </h1>
-          <p className="text-gray-600 mt-2">Track and manage your abaca fiber stock by class</p>
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="w-12 h-12 bg-blue-400 bg-opacity-30 rounded-xl flex items-center justify-center mb-4">
+            <Package className="w-6 h-6 text-white" />
+          </div>
+          <p className="text-blue-100 text-sm font-medium mb-2">Total Stock</p>
+          <p className="text-4xl font-bold">{totalKg.toFixed(2)} kg</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="w-12 h-12 bg-emerald-400 bg-opacity-30 rounded-xl flex items-center justify-center mb-4">
+            <span className="text-2xl font-bold text-white">₱</span>
+          </div>
+          <p className="text-emerald-100 text-sm font-medium mb-2">Total Value</p>
+          <p className="text-4xl font-bold">₱{totalValue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="w-12 h-12 bg-orange-400 bg-opacity-30 rounded-xl flex items-center justify-center mb-4">
+            <span className="text-2xl font-bold text-white">₱</span>
+          </div>
+          <p className="text-orange-100 text-sm font-medium mb-2">Total Sales</p>
+          <p className="text-4xl font-bold">₱{totalSales.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="w-12 h-12 bg-purple-400 bg-opacity-30 rounded-xl flex items-center justify-center mb-4">
+            <TrendingUp className="w-6 h-6 text-white" />
+          </div>
+          <p className="text-purple-100 text-sm font-medium mb-2">Fiber Classes</p>
+          <p className="text-4xl font-bold">{inventory.filter(i => i.total_kg > 0).length}</p>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm font-medium">Total Stock</p>
-              <p className="text-3xl font-bold mt-2">{totalKg.toFixed(2)} kg</p>
+      {/* Transaction Counts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <ShoppingBag className="w-6 h-6 text-blue-600" />
             </div>
-            <Package className="w-12 h-12 text-blue-200" />
+            <div>
+              <p className="text-gray-600 text-sm font-medium">Total Purchases</p>
+              <p className="text-3xl font-bold text-gray-900">{totalPurchaseCount}</p>
+            </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-emerald-100 text-sm font-medium">Total Value</p>
-              <p className="text-3xl font-bold mt-2">₱{totalValue.toFixed(2)}</p>
+        <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <Receipt className="w-6 h-6 text-emerald-600" />
             </div>
-            <DollarSign className="w-12 h-12 text-emerald-200" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
-          <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-sm font-medium">Fiber Classes</p>
-              <p className="text-3xl font-bold mt-2">{inventory.filter(i => i.total_kg > 0).length}</p>
+              <p className="text-gray-600 text-sm font-medium">Total Sales Count</p>
+              <p className="text-3xl font-bold text-gray-900">{totalSalesCount}</p>
             </div>
-            <TrendingUp className="w-12 h-12 text-purple-200" />
           </div>
         </div>
       </div>
 
       {/* Inventory Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {inventory.map((item) => (
-          <div key={item.fiber_class} className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
-            <div className={`bg-gradient-to-r ${getClassColor(item.fiber_class)} p-6 text-white`}>
+          <div key={item.fiber_class} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300">
+            <div className={`bg-gradient-to-r ${getClassColor(item.fiber_class)} p-5 md:p-6 text-white`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold">{item.fiber_class}</h3>
-                  <p className="text-sm opacity-90 mt-1">Abaca Fiber</p>
+                  <h3 className="text-xl md:text-2xl font-bold">{item.fiber_class}</h3>
+                  <p className="text-xs md:text-sm opacity-90 mt-1">Abaca Fiber</p>
                 </div>
-                <Package className="w-10 h-10 opacity-80" />
+                <Package className="w-9 h-9 md:w-10 md:h-10 opacity-80" />
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-5 md:p-6 space-y-3 md:space-y-4">
               {/* Quantity */}
-              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-                <span className="text-gray-600 font-medium">Available Stock</span>
-                <span className="text-2xl font-bold text-gray-900">{item.total_kg.toFixed(2)} kg</span>
+              <div className="flex justify-between items-center pb-3 md:pb-4 border-b border-gray-200">
+                <span className="text-sm md:text-base text-gray-600 font-medium">Available Stock</span>
+                <span className="text-xl md:text-2xl font-bold text-gray-900">{item.total_kg.toFixed(2)} kg</span>
               </div>
 
               {/* Purchase Count */}
-              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-                <span className="text-gray-600 font-medium">Purchases</span>
-                <span className="text-lg font-semibold text-gray-700">{item.purchase_count}</span>
+              <div className="flex justify-between items-center pb-3 md:pb-4 border-b border-gray-200">
+                <span className="text-sm md:text-base text-gray-600 font-medium">Purchases</span>
+                <span className="text-base md:text-lg font-semibold text-gray-700">{item.purchase_count}</span>
               </div>
 
               {/* Avg Price */}
-              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-                <span className="text-gray-600 font-medium">Avg. Purchase Price</span>
-                <span className="text-lg font-semibold text-gray-700">₱{item.avg_purchase_price.toFixed(2)}/kg</span>
+              <div className="flex justify-between items-center pb-3 md:pb-4 border-b border-gray-200">
+                <span className="text-sm md:text-base text-gray-600 font-medium">Avg. Purchase Price</span>
+                <span className="text-base md:text-lg font-semibold text-gray-700">₱{item.avg_purchase_price.toFixed(2)}/kg</span>
               </div>
 
               {/* Total Value */}
-              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-                <span className="text-gray-600 font-medium">Total Value</span>
-                <span className="text-lg font-bold text-emerald-600">₱{(item.total_kg * item.avg_purchase_price).toFixed(2)}</span>
+              <div className="flex justify-between items-center pb-3 md:pb-4 border-b border-gray-200">
+                <span className="text-sm md:text-base text-gray-600 font-medium">Total Value</span>
+                <span className="text-base md:text-lg font-bold text-emerald-600">₱{(item.total_kg * item.avg_purchase_price).toFixed(2)}</span>
               </div>
 
               {/* Sell Button */}
               <button
                 onClick={() => openSaleModal(item)}
                 disabled={item.total_kg === 0}
-                className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 ${
+                className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 text-sm md:text-base ${
                   item.total_kg > 0
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg'
-                    : 'bg-gray-300 cursor-not-allowed'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transform hover:scale-[1.02]'
+                    : 'bg-gray-300 cursor-not-allowed opacity-60'
                 }`}
               >
-                <ShoppingCart className="w-5 h-5" />
+                <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
                 Sell Fiber
               </button>
             </div>
