@@ -90,24 +90,38 @@ const abacaQualities = [
 const farmers: Farmer[] = [
   {
     id: 1,
-    name: "Maria L.",
+    name: "Joel C.",
     role: "Abaca Farmer - Culiram",
-    quote: "Through MAO's training, I learned how to improve fiber quality. Now I sell directly to verified buyers with fair prices.",
-    image: "/assets/farmers/Maria.jpg"
+    quote: "Tungod sa training sa MAO, nakakat-on ko unsaon pagpanindot sa kalidad sa abaca. Karon, diretso na ko makabaligya sa mga verified buyers sa sakto nga presyo.",
+    image: "/assets/farmers/farmer1.jpg"
   },
   {
     id: 2,
-    name: "Juan P.",
+    name: "Ricky A.",
     role: "Abaca Farmer - Culiram",
-    quote: "The digital system helped me track my harvest and connect with buyers easily. My income has increased significantly.",
-    image: "/assets/farmers/Juan.jpg"
+    quote: "Ang digital nga sistema nakatabang kaayo nako pag-monitor sa akong ani ug pagpangita og buyer. Dako na kaayo ang akong kita kumpara sa una.",
+    image: "/assets/farmers/farmer2.jpg"
   },
   {
     id: 3,
-    name: "Ana R.",
+    name: "Poldie O.",
     role: "Abaca Farmer - Culiram",
-    quote: "I've been farming abaca for 20 years, but the MAO training transformed my approach. Quality matters more than quantity now.",
-    image: "/assets/farmers/Ana.jpg"
+    quote: "Bayte anyos nako nga nag-abaca, pero ang training sa MAO nakapausab sa akong pamaagi. Mas importante na karon ang kalidad kaysa sa kadaghanon.",
+    image: "/assets/farmers/farmer3.jpg"
+  },
+  {
+    id: 4,
+    name: "John Paul O.",
+    role: "Abaca Farmer - Culiram",
+    quote: "Sayon na kaayo ang pag-monitor sa delivery sa akong abaca. Sigurado ko nga sakto ang gibayad nako ug walay tikas.",
+    image: "/assets/farmers/farmer4.jpg"
+  },
+  {
+    id: 5,
+    name: "Jenny L.",
+    role: "Abaca Farmer - Culiram",
+    quote: "Garbo nako nga usa ko ka abaca farmer. Tungod sa bag-ong pamaagi, mas malungtaron ang among panginabuhian dinhi sa Culiram.",
+    image: "/assets/farmers/farmer5.jpg"
   }
 ];
 
@@ -242,7 +256,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentFarmerIndex((prevIndex) => (prevIndex + 1) % farmers.length);
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
@@ -718,17 +732,17 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
 
             <div className="max-w-6xl mx-auto">
               <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-emerald-200">
-                <div className="flex flex-col lg:flex-row">
+                <div className="flex flex-col lg:flex-row lg:h-[450px]">
                   {/* Large Farmer Photo - Left Side */}
-                  <div className="lg:w-2/5 relative overflow-hidden">
-                    <div className="aspect-square lg:aspect-auto lg:h-full">
+                  <div className="lg:w-2/5 relative overflow-hidden h-80 lg:h-full">
+                    <div className="w-full h-full">
                       <img
                         src={farmers[currentFarmerIndex].image}
                         alt={farmers[currentFarmerIndex].name}
-                        className="w-full h-full object-cover transition-opacity duration-500"
+                        className="w-full h-full object-cover object-top transition-opacity duration-500"
                       />
                     </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
                       <h4 className="text-2xl font-bold text-white">{farmers[currentFarmerIndex].name}</h4>
                       <p className="text-emerald-200 font-medium">{farmers[currentFarmerIndex].role}</p>
                     </div>
@@ -746,14 +760,14 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
 
                       <div className="relative">
                         <div className="absolute top-0 left-0 text-6xl text-emerald-100 font-serif leading-none">"</div>
-                        <p className="text-gray-700 text-lg md:text-xl leading-relaxed pl-8 pt-4">
+                        <p className="text-gray-700 text-lg md:text-xl leading-relaxed pl-8 pt-4 italic">
                           {farmers[currentFarmerIndex].quote}
                         </p>
                       </div>
                     </div>
 
                     {/* Navigation Dots */}
-                    <div className="flex justify-center mt-8 space-x-2">
+                    <div className="flex justify-center mt-4 space-x-2">
                       {farmers.map((_, index) => (
                         <button
                           key={index}
@@ -766,7 +780,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                     </div>
 
                     {/* Additional Info */}
-                    <div className="mt-8 pt-6 border-t border-emerald-100">
+                    <div className="mt-4 pt-6 border-t border-emerald-100">
                       <div className="flex flex-wrap gap-4">
                         <div className="flex items-center">
                           <CheckCircle className="w-5 h-5 text-emerald-500 mr-2" />
