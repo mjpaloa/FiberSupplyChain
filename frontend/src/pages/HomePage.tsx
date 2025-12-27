@@ -158,41 +158,6 @@ const maoStaff: MAOStaff[] = [
   }
 ];
 
-interface Article {
-  id: number;
-  title: string;
-  excerpt: string;
-  image: string;
-  date: string;
-  category: string;
-}
-
-const articles: Article[] = [
-  {
-    id: 1,
-    title: "Abaca Fiber: The Sustainable Choice for Modern Industries",
-    excerpt: "Discover how abaca fiber is revolutionizing eco-friendly manufacturing and why it's becoming the material of choice for sustainable products.",
-    image: "/assets/articles/AbacaFiber.jpg",
-    date: "October 28, 2024",
-    category: "Sustainability"
-  },
-  {
-    id: 2,
-    title: "MAO Culiram's Training Program Boosts Farmer Income by 40%",
-    excerpt: "Local farmers share their success stories after completing the comprehensive abaca cultivation and quality improvement training program.",
-    image: "/assets/articles/TrainingProgram.jpg",
-    date: "October 25, 2024",
-    category: "Success Stories"
-  },
-  {
-    id: 3,
-    title: "Understanding Abaca Fiber Grades: A Complete Guide",
-    excerpt: "Learn about the different grades of abaca fiber, from T1 to T3, and how quality standards impact market value and buyer preferences.",
-    image: "/assets/articles/AbacaGrades.jpg",
-    date: "October 20, 2024",
-    category: "Education"
-  }
-];
 
 const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -201,7 +166,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showCookieModal, setShowCookieModal] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedQuality, setSelectedQuality] = useState<typeof abacaQualities[0] | null>(null);
   const [showBuyerDetails, setShowBuyerDetails] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -798,94 +762,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
             </div>
           </div>
         </section>
-
-        {/* Articles Section */}
-        <section className="py-20 md:py-28 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16 scroll-animate">
-              <span className="inline-block px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold mb-4">
-                Latest Updates
-              </span>
-              <h3 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-                Articles & <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">News</span>
-              </h3>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Stay updated with the latest insights, success stories, and educational content about abaca farming
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {articles.map((article, index) => (
-                <div key={article.id} className="scroll-animate group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border-2 border-gray-200 hover:border-emerald-400 hover:-translate-y-2" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <div className="h-48 overflow-hidden">
-                    <img
-                      src={article.image}
-                      alt={article.title}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                    />
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
-                        {article.category}
-                      </span>
-                      <span className="text-xs text-gray-500">{article.date}</span>
-                    </div>
-                    <h4 className="text-xl font-bold text-gray-800 mb-3 line-clamp-2">{article.title}</h4>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">{article.excerpt}</p>
-                    <button
-                      onClick={() => setSelectedArticle(article)}
-                      className="text-emerald-600 hover:text-emerald-800 font-semibold text-sm flex items-center group"
-                    >
-                      View Details
-                      <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Article Modal */}
-        {selectedArticle && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedArticle(null)}>
-            <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="relative h-64 md:h-80">
-                <img src={selectedArticle.image} alt={selectedArticle.title} className="w-full h-full object-cover" />
-                <button
-                  onClick={() => setSelectedArticle(null)}
-                  className="absolute top-4 right-4 bg-white rounded-full p-2 hover:bg-gray-100 transition"
-                >
-                  <X className="w-6 h-6 text-gray-800" />
-                </button>
-              </div>
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-semibold rounded-full">
-                    {selectedArticle.category}
-                  </span>
-                  <span className="text-sm text-gray-500">{selectedArticle.date}</span>
-                </div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-4">{selectedArticle.title}</h2>
-                <p className="text-gray-600 leading-relaxed mb-6">{selectedArticle.excerpt}</p>
-                <div className="prose max-w-none text-gray-700">
-                  <p className="mb-4">
-                    This is a detailed article about {selectedArticle.title.toLowerCase()}. The content provides comprehensive information about the topic, including insights from local farmers, MAO officials, and industry experts.
-                  </p>
-                  <p className="mb-4">
-                    The abaca industry in Culiram continues to grow thanks to the dedicated efforts of our local farmers and the support from the Municipal Agriculture Office. Through proper training, quality control, and fair trade practices, we're building a sustainable future for our community.
-                  </p>
-                  <p>
-                    For more information or to get involved in the abaca farming program, please contact the MAO Culiram office or visit our facility in Barangay Culiram, Talacogon.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Terms of Service Modal */}
         {showTermsModal && (

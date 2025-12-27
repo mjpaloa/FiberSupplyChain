@@ -66,24 +66,24 @@ const BuyerInventory: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
-      
+
       console.log('📦 Purchases data:', data);
-      
+
       // Store purchases
       setPurchases(data.purchases || []);
-      
+
       // Fetch sales data with error handling
       try {
         const salesResponse = await fetch('https://easyabaca-api.vercel.app/api/buyer-purchases/sales', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         if (salesResponse.ok) {
           const salesData = await salesResponse.json();
           console.log('💰 Sales data:', salesData);
-          
+
           setSales(salesData.sales || []);
-          
+
           // Calculate total sales amount
           const salesTotal = (salesData.sales || []).reduce((sum: number, sale: Sale) => sum + sale.total_amount, 0);
           setTotalSales(salesTotal);
@@ -97,7 +97,7 @@ const BuyerInventory: React.FC = () => {
         setSales([]);
         setTotalSales(0);
       }
-      
+
       // Group purchases by fiber class
       const inventoryMap: { [key: string]: InventoryItem } = {
         'Class A': { fiber_class: 'Class A', total_kg: 0, purchase_count: 0, avg_purchase_price: 0 },
@@ -125,7 +125,7 @@ const BuyerInventory: React.FC = () => {
         // Deduct sold quantities
         const soldByClass = data.sold_by_class || {};
         console.log('💰 Sold by class:', soldByClass);
-        
+
         Object.keys(inventoryMap).forEach(fiberClass => {
           const soldQty = soldByClass[fiberClass] || 0;
           inventoryMap[fiberClass].total_kg -= soldQty;
@@ -159,7 +159,7 @@ const BuyerInventory: React.FC = () => {
 
   const handleSaleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedClass || saleFormData.quantity_kg <= 0 || saleFormData.quantity_kg > selectedClass.total_kg) {
       alert(`Invalid quantity. Available: ${selectedClass?.total_kg || 0} kg`);
       return;
@@ -268,33 +268,6 @@ const BuyerInventory: React.FC = () => {
         </div>
       </div>
 
-      {/* Transaction Counts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <ShoppingBag className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-gray-600 text-sm font-medium">Total Purchases</p>
-              <p className="text-3xl font-bold text-gray-900">{totalPurchaseCount}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-              <Receipt className="w-6 h-6 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-gray-600 text-sm font-medium">Total Sales Count</p>
-              <p className="text-3xl font-bold text-gray-900">{totalSalesCount}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Inventory Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {inventory.map((item) => (
@@ -338,11 +311,10 @@ const BuyerInventory: React.FC = () => {
               <button
                 onClick={() => openSaleModal(item)}
                 disabled={item.total_kg === 0}
-                className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 text-sm md:text-base ${
-                  item.total_kg > 0
+                className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 text-sm md:text-base ${item.total_kg > 0
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transform hover:scale-[1.02]'
                     : 'bg-gray-300 cursor-not-allowed opacity-60'
-                }`}
+                  }`}
               >
                 <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
                 Sell Fiber

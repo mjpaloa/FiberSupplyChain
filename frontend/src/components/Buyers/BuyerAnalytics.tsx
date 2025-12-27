@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  ShoppingCart, 
+import {
+  TrendingUp,
+  DollarSign,
+  ShoppingCart,
   Package,
   Calendar,
   BarChart3,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  PieChart as PieChartIcon,
+  Activity
 } from 'lucide-react';
 
 interface AnalyticsData {
@@ -15,9 +17,11 @@ interface AnalyticsData {
   totalPurchases: number;
   totalQuantity: number;
   monthlySpending: { month: string; amount: number }[];
+  monthlySales: { month: string; amount: number; transactions: number }[];
   recentTransactions: any[];
   yearlyProfit: number;
-  monthlyComparison: { month: string; current: number; previous: number }[];
+  salesByFiberType: { type: string; quantity: number; percentage: number; sales: number }[];
+  monthlyTransactions: { month: string; count: number }[];
 }
 
 const BuyerAnalytics: React.FC = () => {
@@ -26,13 +30,19 @@ const BuyerAnalytics: React.FC = () => {
     totalPurchases: 0,
     totalQuantity: 0,
     monthlySpending: [],
+    monthlySales: [],
     recentTransactions: [],
     yearlyProfit: 0,
-    monthlyComparison: []
+    salesByFiberType: [],
+    monthlyTransactions: []
   });
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState('all');
+  const [spendingViewMode, setSpendingViewMode] = useState<'monthly' | 'yearly'>('monthly');
+  const [salesViewMode, setSalesViewMode] = useState<'monthly' | 'yearly'>('monthly');
+  const [transactionsViewMode, setTransactionsViewMode] = useState<'monthly' | 'yearly'>('monthly');
+  const [hoveredPieSegment, setHoveredPieSegment] = useState<number | null>(null);
 
   useEffect(() => {
     fetchAnalytics();
@@ -41,38 +51,137 @@ const BuyerAnalytics: React.FC = () => {
   const fetchAnalytics = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(
-        `https://easyabaca-api.vercel.app/api/buyer-purchases/analytics?year=${selectedYear}&month=${selectedMonth}`,
+
+      // Fetch purchases data
+      const purchasesResponse = await fetch(
+        'https://easyabaca-api.vercel.app/api/buyer-purchases',
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+      if (!purchasesResponse.ok) {
+        throw new Error(`HTTP error! status: ${purchasesResponse.status}`);
       }
-      
-      const data = await response.json();
-      
-      // Ensure all required fields exist with defaults
+
+      const purchasesData = await purchasesResponse.json();
+      const purchases = purchasesData.purchases || [];
+
+      // Fetch sales data
+      let sales: any[] = [];
+      let totalSalesAmount = 0;
+      try {
+        const salesResponse = await fetch(
+          'https://easyabaca-api.vercel.app/api/buyer-purchases/sales',
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (salesResponse.ok) {
+          const salesData = await salesResponse.json();
+          sales = salesData.sales || [];
+          totalSalesAmount = sales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+        }
+      } catch (err) {
+        console.warn('Sales endpoint not available');
+      }
+
+      // Calculate totals
+      const totalSpent = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.price || 0), 0);
+      const totalPurchases = purchases.length;
+      const totalQuantity = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.quantity || 0), 0);
+
+      // Calculate profit (sales - cost)
+      const totalCost = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.price || 0), 0);
+      const yearlyProfit = totalSalesAmount - totalCost;
+
+      // Process monthly spending
+      const monthlySpendingMap: { [key: string]: number } = {};
+      purchases.forEach((p: any) => {
+        const date = new Date(p.created_at);
+        const monthName = months[date.getMonth()];
+        monthlySpendingMap[monthName] = (monthlySpendingMap[monthName] || 0) + parseFloat(p.price || 0);
+      });
+
+      const monthlySpending = months.map(month => ({
+        month,
+        amount: monthlySpendingMap[month] || 0
+      }));
+
+      // Process monthly sales
+      const monthlySalesMap: { [key: string]: { amount: number; transactions: number } } = {};
+      sales.forEach((s: any) => {
+        const date = new Date(s.sale_date);
+        const monthName = months[date.getMonth()];
+        if (!monthlySalesMap[monthName]) {
+          monthlySalesMap[monthName] = { amount: 0, transactions: 0 };
+        }
+        monthlySalesMap[monthName].amount += s.total_amount || 0;
+        monthlySalesMap[monthName].transactions += 1;
+      });
+
+      const monthlySales = months.map(month => ({
+        month,
+        amount: monthlySalesMap[month]?.amount || 0,
+        transactions: monthlySalesMap[month]?.transactions || 0
+      }));
+
+      // Process monthly transactions count
+      const monthlyTransactionsMap: { [key: string]: number } = {};
+      [...purchases, ...sales].forEach((t: any) => {
+        const date = new Date(t.created_at || t.sale_date);
+        const monthName = months[date.getMonth()];
+        monthlyTransactionsMap[monthName] = (monthlyTransactionsMap[monthName] || 0) + 1;
+      });
+
+      const monthlyTransactions = months.map(month => ({
+        month,
+        count: monthlyTransactionsMap[month] || 0
+      }));
+
+      // Calculate sales by fiber type
+      const salesByTypeMap: { [key: string]: { quantity: number; sales: number } } = {
+        'Class A': { quantity: 0, sales: 0 },
+        'Class B': { quantity: 0, sales: 0 },
+        'Class C': { quantity: 0, sales: 0 }
+      };
+
+      sales.forEach((s: any) => {
+        const fiberClass = s.fiber_class || 'Class C';
+        if (salesByTypeMap[fiberClass]) {
+          salesByTypeMap[fiberClass].quantity += s.quantity_kg || 0;
+          salesByTypeMap[fiberClass].sales += s.total_amount || 0;
+        }
+      });
+
+      const totalSoldQuantity = Object.values(salesByTypeMap).reduce((sum, v) => sum + v.quantity, 0);
+      const salesByFiberType = Object.entries(salesByTypeMap)
+        .map(([type, data]) => ({
+          type,
+          quantity: data.quantity,
+          sales: data.sales,
+          percentage: totalSoldQuantity > 0 ? (data.quantity / totalSoldQuantity) * 100 : 0
+        }));
+
       setAnalytics({
-        totalSpent: data.totalSpent || 0,
-        totalPurchases: data.totalPurchases || 0,
-        totalQuantity: data.totalQuantity || 0,
-        yearlyProfit: data.yearlyProfit || 0,
-        monthlySpending: data.monthlySpending || [],
-        recentTransactions: data.recentTransactions || [],
-        monthlyComparison: data.monthlyComparison || []
+        totalSpent,
+        totalPurchases,
+        totalQuantity,
+        yearlyProfit,
+        monthlySpending,
+        monthlySales,
+        recentTransactions: purchases.slice(0, 10),
+        salesByFiberType,
+        monthlyTransactions
       });
     } catch (error) {
       console.error('Error fetching analytics:', error);
-      // Set empty defaults on error
       setAnalytics({
         totalSpent: 0,
         totalPurchases: 0,
         totalQuantity: 0,
         monthlySpending: [],
+        monthlySales: [],
         recentTransactions: [],
         yearlyProfit: 0,
-        monthlyComparison: []
+        salesByFiberType: [],
+        monthlyTransactions: []
       });
     } finally {
       setLoading(false);
@@ -80,11 +189,223 @@ const BuyerAnalytics: React.FC = () => {
   };
 
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
 
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
+
+  // Modern Animated Pie Chart Component
+  const PieChart: React.FC<{ data: { type: string; percentage: number; quantity: number; sales: number }[] }> = ({ data }) => {
+    const gradients = [
+      { id: 'emerald', start: '#10b981', end: '#059669' },
+      { id: 'blue', start: '#3b82f6', end: '#2563eb' },
+      { id: 'amber', start: '#f59e0b', end: '#d97706' }
+    ];
+    let currentAngle = -90;
+
+    // Filter out items with 0 percentage to avoid display issues
+    const validData = data.filter(item => item.percentage > 0);
+
+    return (
+      <div className="relative w-full h-64 flex items-center justify-center">
+        <svg viewBox="0 0 240 240" className="w-56 h-56 drop-shadow-2xl" style={{ filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.15))' }}>
+          <defs>
+            {gradients.map((grad) => (
+              <linearGradient key={grad.id} id={grad.id} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={grad.start} />
+                <stop offset="100%" stopColor={grad.end} />
+              </linearGradient>
+            ))}
+            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+              <feOffset dx="0" dy="4" result="offsetblur" />
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3" />
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {validData.map((item, index) => {
+            const angle = (item.percentage / 100) * 360;
+            const startAngle = currentAngle;
+            const endAngle = currentAngle + angle;
+            const midAngle = (startAngle + endAngle) / 2;
+            currentAngle = endAngle;
+
+            const startRad = (startAngle * Math.PI) / 180;
+            const endRad = (endAngle * Math.PI) / 180;
+            const midRad = (midAngle * Math.PI) / 180;
+
+            const radius = hoveredPieSegment === index ? 95 : 90;
+            const x1 = 120 + radius * Math.cos(startRad);
+            const y1 = 120 + radius * Math.sin(startRad);
+            const x2 = 120 + radius * Math.cos(endRad);
+            const y2 = 120 + radius * Math.sin(endRad);
+
+            const labelRadius = 65;
+            const labelX = 120 + labelRadius * Math.cos(midRad);
+            const labelY = 120 + labelRadius * Math.sin(midRad);
+
+            const largeArc = angle > 180 ? 1 : 0;
+
+            return (
+              <g 
+                key={index}
+                onMouseEnter={() => setHoveredPieSegment(index)}
+                onMouseLeave={() => setHoveredPieSegment(null)}
+                style={{ cursor: 'pointer' }}
+              >
+                <path
+                  d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                  fill={`url(#${gradients[index].id})`}
+                  filter="url(#shadow)"
+                  className="transition-all duration-300"
+                  style={{
+                    transform: hoveredPieSegment === index ? 'scale(1.05)' : 'scale(1)',
+                    transformOrigin: '120px 120px',
+                    opacity: hoveredPieSegment === null || hoveredPieSegment === index ? 1 : 0.6
+                  }}
+                />
+                {item.percentage > 8 && (
+                  <text
+                    x={labelX}
+                    y={labelY}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="text-xs font-bold fill-white"
+                    style={{ pointerEvents: 'none', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
+                  >
+                    {item.percentage.toFixed(0)}%
+                  </text>
+                )}
+              </g>
+            );
+          })}
+          <circle cx="120" cy="120" r="55" fill="white" />
+          <circle cx="120" cy="120" r="52" fill="url(#gradient-center)" />
+          <defs>
+            <radialGradient id="gradient-center">
+              <stop offset="0%" stopColor="#f9fafb" />
+              <stop offset="100%" stopColor="#e5e7eb" />
+            </radialGradient>
+          </defs>
+        </svg>
+        
+        {hoveredPieSegment !== null && validData[hoveredPieSegment] && (
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+            <p className="text-2xl font-bold text-gray-800">{validData[hoveredPieSegment].percentage.toFixed(1)}%</p>
+            <p className="text-xs text-gray-600 font-semibold">{validData[hoveredPieSegment].type}</p>
+            <p className="text-xs text-gray-500">{validData[hoveredPieSegment].quantity.toLocaleString()} kg</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Bar Chart Component
+  const BarChart: React.FC<{
+    data: { label: string; value: number; value2?: number }[];
+    color?: string;
+    color2?: string;
+    showDual?: boolean;
+    formatValue?: (val: number) => string;
+  }> = ({ data, color = '#3b82f6', color2 = '#10b981', showDual = false, formatValue = (v) => v.toLocaleString() }) => {
+    const maxValue = Math.max(...data.map(d => Math.max(d.value, d.value2 || 0)));
+    // Ensure we have a non-zero max value to avoid division by zero
+    const effectiveMax = maxValue > 0 ? maxValue : 10;
+
+    // Generate 5 ticks for the Y-axis
+    const ticks = [0, 1, 2, 3, 4].map(i => {
+      const val = (effectiveMax / 4) * i;
+      // Round to nice numbers if possible, but for now just raw value
+      return Math.round(val);
+    }).reverse();
+
+    return (
+      <div className="w-full h-96 flex gap-4">
+        {/* Y-Axis Labels */}
+        <div className="flex flex-col justify-between h-full pb-8 text-xs text-gray-500 font-semibold min-w-[40px]">
+          {ticks.map((tick, i) => (
+            <div key={i} className="h-0 flex items-center justify-end">
+              {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
+            </div>
+          ))}
+        </div>
+
+        {/* Chart Area */}
+        <div className="relative flex-1 h-full">
+          {/* Horizontal Grid Lines */}
+          <div className="absolute inset-x-0 inset-y-0 flex flex-col justify-between pb-8">
+            {ticks.map((_, i) => (
+              <div key={i} className="border-b border-gray-200 w-full h-0"></div>
+            ))}
+          </div>
+
+          {/* Bars */}
+          <div className="relative h-full flex items-end gap-2 pb-8 px-2">
+            {data.map((item, index) => (
+              <div key={index} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+                <div className="w-full flex items-end justify-center h-full relative max-w-[60px] mx-auto">
+
+                  {/* Bar 1 */}
+                  <div className="relative flex-1 flex flex-col justify-end h-full">
+                    {/* Floating Value Label */}
+                    {item.value > 0 && (
+                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-700 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        {formatValue(item.value)}
+                      </div>
+                    )}
+
+                    <div
+                      className="w-full rounded-t-xl transition-all duration-500 ease-out group-hover:brightness-110"
+                      style={{
+                        height: `${(item.value / effectiveMax) * 100}%`,
+                        background: `linear-gradient(to top, ${color}, ${color}dd)`,
+                        minHeight: item.value > 0 ? '8px' : '0',
+                        boxShadow: item.value > 0 ? '0 4px 12px -2px rgba(0, 0, 0, 0.15)' : 'none'
+                      }}
+                    >
+                    </div>
+                  </div>
+
+                  {/* Bar 2 (Optional) */}
+                  {showDual && item.value2 !== undefined && (
+                    <div className="relative flex-1 flex flex-col justify-end h-full ml-1">
+                      {item.value2 > 0 && (
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-700 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          {formatValue(item.value2)}
+                        </div>
+                      )}
+                      <div
+                        className="w-full rounded-t-xl transition-all duration-500 ease-out group-hover:brightness-110"
+                        style={{
+                          height: `${(item.value2 / effectiveMax) * 100}%`,
+                          background: `linear-gradient(to top, ${color2}, ${color2}dd)`,
+                          minHeight: item.value2 > 0 ? '8px' : '0',
+                          boxShadow: item.value2 > 0 ? '0 4px 12px -2px rgba(0, 0, 0, 0.15)' : 'none'
+                        }}
+                      >
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* X-Axis Label */}
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 translate-y-full">
+                  <span className="text-xs text-gray-600 font-medium">
+                    {item.label}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -94,215 +415,400 @@ const BuyerAnalytics: React.FC = () => {
     );
   }
 
+  const fiberColors = {
+    'Class A': { bg: 'bg-emerald-500', text: 'text-emerald-700', light: 'bg-emerald-100' },
+    'Class B': { bg: 'bg-blue-500', text: 'text-blue-700', light: 'bg-blue-100' },
+    'Class C': { bg: 'bg-amber-500', text: 'text-amber-700', light: 'bg-amber-100' }
+  };
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      <div className="relative z-10">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics Dashboard</h1>
-        <p className="text-gray-600">Track your fiber purchases and spending</p>
+      <div className="mb-6 md:mb-8 lg:mb-10">
+        <div className="flex items-center gap-3 md:gap-4 mb-3">
+          <div className="w-1.5 md:w-2 h-8 md:h-12 bg-gradient-to-b from-emerald-500 to-blue-500 rounded-full"></div>
+          <div>
+            <h1 className="text-2xl md:text-4xl lg:text-5xl font-black bg-gradient-to-r from-slate-800 via-blue-700 to-purple-700 bg-clip-text text-transparent">
+              Analytics Dashboard
+            </h1>
+            <p className="text-xs md:text-sm text-gray-600 font-medium mt-1">Real-time insights into your fiber business performance</p>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-        <div className="flex gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <Calendar size={20} className="text-gray-500" />
+      <div className="bg-white/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-xl p-4 md:p-6 mb-6 md:mb-8 border border-white/60">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="flex items-center gap-2">
+              <Calendar size={20} className="text-gray-500" />
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                {years.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
             <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
-              {years.map(year => (
-                <option key={year} value={year}>{year}</option>
+              {months.map((month, idx) => (
+                <option key={month} value={idx + 1}>{month}</option>
               ))}
             </select>
           </div>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Months</option>
-            {months.map((month, idx) => (
-              <option key={month} value={idx + 1}>{month}</option>
-            ))}
-          </select>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-10">
         {/* Total Spent */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
+        <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <DollarSign size={24} />
-            </div>
-            <div className="flex items-center gap-1 text-sm">
-              <ArrowUp size={16} />
-              <span>12%</span>
+            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+              <span className="text-2xl font-bold">₱</span>
             </div>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Total Spent</h3>
-          <p className="text-3xl font-bold">₱{(analytics.totalSpent || 0).toLocaleString()}</p>
+          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Spent</h3>
+          <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.totalSpent || 0).toLocaleString()}</p>
+          <div className="flex items-center gap-1 text-xs opacity-80">
+            <span className="text-sm font-bold">₱</span>
+            <span>Purchase Expenses</span>
+          </div>
+          </div>
         </div>
 
         {/* Total Purchases */}
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl shadow-lg p-6 text-white">
+        <div className="group relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
+            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
               <ShoppingCart size={24} />
             </div>
-            <div className="flex items-center gap-1 text-sm">
-              <ArrowUp size={16} />
-              <span>8%</span>
-            </div>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Total Purchases</h3>
-          <p className="text-3xl font-bold">{analytics.totalPurchases || 0}</p>
+          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Purchases</h3>
+          <p className="text-3xl md:text-4xl font-black mb-1">{analytics.totalPurchases || 0}</p>
+          <div className="flex items-center gap-2 text-xs opacity-80">
+            <ShoppingCart size={14} />
+            <span>Transactions</span>
+          </div>
+          </div>
         </div>
 
         {/* Total Quantity */}
-        <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl shadow-lg p-6 text-white">
+        <div className="group relative bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
+            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
               <Package size={24} />
             </div>
-            <div className="flex items-center gap-1 text-sm">
-              <ArrowUp size={16} />
-              <span>15%</span>
-            </div>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Total Quantity</h3>
-          <p className="text-3xl font-bold">{(analytics.totalQuantity || 0).toLocaleString()} kg</p>
+          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Quantity</h3>
+          <p className="text-3xl md:text-4xl font-black mb-1">{(analytics.totalQuantity || 0).toLocaleString()} <span className="text-xl md:text-2xl">kg</span></p>
+          <div className="flex items-center gap-2 text-xs opacity-80">
+            <Package size={14} />
+            <span>Fiber Volume</span>
+          </div>
+          </div>
         </div>
 
-        {/* Yearly Profit */}
-        <div className="bg-gradient-to-br from-amber-500 to-amber-700 rounded-2xl shadow-lg p-6 text-white">
+        {/* Yearly Profit (from sales) */}
+        <div className="group relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
+            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
               <TrendingUp size={24} />
             </div>
-            <div className="flex items-center gap-1 text-sm">
-              <ArrowDown size={16} />
-              <span>3%</span>
-            </div>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Yearly Profit</h3>
-          <p className="text-3xl font-bold">₱{(analytics.yearlyProfit || 0).toLocaleString()}</p>
+          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Sales Profit</h3>
+          <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.yearlyProfit || 0).toLocaleString()}</p>
+          <div className="flex items-center gap-2 text-xs opacity-80">
+            <TrendingUp size={14} />
+            <span>Net Earnings</span>
+          </div>
+          </div>
         </div>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Monthly Spending Chart */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Monthly Spending</h2>
-            <BarChart3 className="text-blue-500" size={24} />
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
+        {/* Fiber Type Sales Distribution - Pie Chart */}
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 h-full">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
+                <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-blue-500 rounded-full"></div>
+                Sales by Fiber Type
+              </h2>
+              <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Distribution of sold fiber classes</p>
+            </div>
+            <div className="p-3 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl">
+              <PieChartIcon className="text-blue-600" size={28} />
+            </div>
           </div>
-          <div className="space-y-4">
-            {(analytics.monthlySpending || []).slice(0, 6).map((item, idx) => (
-              <div key={idx}>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">{item.month}</span>
-                  <span className="font-semibold text-gray-900">₱{item.amount.toLocaleString()}</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${(item.amount / Math.max(...(analytics.monthlySpending || []).map(m => m.amount), 1)) * 100}%` }}
-                  ></div>
-                </div>
+
+          {analytics.salesByFiberType && analytics.salesByFiberType.length > 0 && analytics.salesByFiberType.some(item => item.quantity > 0) ? (
+            <>
+              <PieChart data={analytics.salesByFiberType} />
+              {/* Fiber Type Percentages */}
+              <div className="mt-8 grid grid-cols-3 gap-3">
+                {analytics.salesByFiberType.filter(item => item.percentage > 0).map((item, index) => {
+                  const colorClass = fiberColors[item.type as keyof typeof fiberColors];
+                  return (
+                    <div key={index} className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
+                      <div className={`w-4 h-4 rounded-full ${colorClass.bg} mb-2`}></div>
+                      <p className="text-xs text-gray-600 font-medium mb-1">{item.type}</p>
+                      <p className="text-2xl font-black text-gray-900">{item.percentage.toFixed(1)}%</p>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <div className="p-6 bg-gray-100 rounded-full mb-4">
+                <PieChartIcon size={48} className="text-gray-300" />
+              </div>
+              <p className="font-semibold text-gray-500">No sales data available</p>
+              <p className="text-sm text-gray-400 mt-2">Sales data will appear here once you make sales</p>
+            </div>
+          )}
         </div>
 
-        {/* Monthly Comparison */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Month Comparison</h2>
-            <TrendingUp className="text-emerald-500" size={24} />
-          </div>
-          <div className="space-y-4">
-            {(analytics.monthlyComparison || []).slice(0, 6).map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 w-24">{item.month}</span>
-                <div className="flex-1 flex gap-2">
-                  <div className="flex-1">
-                    <div className="w-full bg-blue-100 rounded-full h-6 relative overflow-hidden">
-                      <div
-                        className="bg-blue-500 h-6 rounded-full flex items-center justify-end pr-2"
-                        style={{ width: `${(item.current / Math.max(item.current, item.previous)) * 100}%` }}
-                      >
-                        <span className="text-xs text-white font-medium">₱{item.current.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="w-full bg-gray-100 rounded-full h-6 relative overflow-hidden">
-                      <div
-                        className="bg-gray-400 h-6 rounded-full flex items-center justify-end pr-2"
-                        style={{ width: `${(item.previous / Math.max(item.current, item.previous)) * 100}%` }}
-                      >
-                        <span className="text-xs text-white font-medium">₱{item.previous.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+        {/* Monthly Spending Bar Chart */}
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 h-full">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
+                <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
+                Spending
+              </h2>
+              <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Purchase expenses over time</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setSpendingViewMode('monthly')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${spendingViewMode === 'monthly'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setSpendingViewMode('yearly')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${spendingViewMode === 'yearly'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  Yearly
+                </button>
               </div>
-            ))}
-          </div>
-          <div className="flex gap-4 mt-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span className="text-gray-600">Current</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-400 rounded"></div>
-              <span className="text-gray-600">Previous</span>
+              <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl">
+                <BarChart3 className="text-blue-600" size={28} />
+              </div>
             </div>
           </div>
+
+          {analytics.monthlySpending && analytics.monthlySpending.length > 0 ? (
+            <BarChart
+              data={spendingViewMode === 'monthly' 
+                ? analytics.monthlySpending.map(item => ({
+                    label: item.month,
+                    value: item.amount
+                  }))
+                : [{ label: String(selectedYear), value: analytics.monthlySpending.reduce((sum, m) => sum + m.amount, 0) }]
+              }
+              color="#3b82f6"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-72 text-gray-400">
+              <div className="p-6 bg-gray-100 rounded-full mb-4">
+                <BarChart3 size={48} className="text-gray-300" />
+              </div>
+              <p className="font-semibold text-gray-500">No spending data available</p>
+              <p className="text-sm text-gray-400 mt-2">Your purchase history will appear here</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sales and Transactions Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6 items-start">
+        {/* Monthly Sales Bar Chart */}
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 self-start">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
+                <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
+                Sales
+              </h2>
+              <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Revenue from fiber sales</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setSalesViewMode('monthly')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${salesViewMode === 'monthly'
+                    ? 'bg-white text-emerald-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setSalesViewMode('yearly')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${salesViewMode === 'yearly'
+                    ? 'bg-white text-emerald-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  Yearly
+                </button>
+              </div>
+              <div className="p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl">
+                <TrendingUp className="text-emerald-600" size={28} />
+              </div>
+            </div>
+          </div>
+
+          {analytics.monthlySales && analytics.monthlySales.length > 0 ? (
+            <BarChart
+              data={salesViewMode === 'monthly'
+                ? analytics.monthlySales.map(item => ({
+                    label: item.month,
+                    value: item.amount
+                  }))
+                : [{ label: String(selectedYear), value: analytics.monthlySales.reduce((sum, m) => sum + m.amount, 0) }]
+              }
+              color="#10b981"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-72 text-gray-400">
+              <div className="p-6 bg-gray-100 rounded-full mb-4">
+                <TrendingUp size={48} className="text-gray-300" />
+              </div>
+              <p className="font-semibold text-gray-500">No sales data available</p>
+              <p className="text-sm text-gray-400 mt-2">Sales revenue will be displayed here</p>
+            </div>
+          )}
+        </div>
+
+        {/* Monthly Transactions Bar Chart */}
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 self-start">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
+                <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-purple-500 to-indigo-500 rounded-full"></div>
+                Transactions
+              </h2>
+              <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Number of purchases & sales</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setTransactionsViewMode('monthly')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${transactionsViewMode === 'monthly'
+                    ? 'bg-white text-purple-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setTransactionsViewMode('yearly')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${transactionsViewMode === 'yearly'
+                    ? 'bg-white text-purple-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  Yearly
+                </button>
+              </div>
+              <div className="p-3 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl">
+                <Activity className="text-purple-600" size={28} />
+              </div>
+            </div>
+          </div>
+
+          {analytics.monthlyTransactions && analytics.monthlyTransactions.length > 0 ? (
+            <BarChart
+              data={transactionsViewMode === 'monthly'
+                ? analytics.monthlyTransactions.map(item => ({
+                    label: item.month,
+                    value: item.count
+                  }))
+                : [{ label: String(selectedYear), value: analytics.monthlyTransactions.reduce((sum, m) => sum + m.count, 0) }]
+              }
+              color="#a855f7"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-72 text-gray-400">
+              <div className="p-6 bg-gray-100 rounded-full mb-4">
+                <Activity size={48} className="text-gray-300" />
+              </div>
+              <p className="font-semibold text-gray-500">No transaction data available</p>
+              <p className="text-sm text-gray-400 mt-2">Transaction history will be shown here</p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Recent Transactions Table */}
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Transactions</h2>
+      <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 lg:p-8 border border-white/60">
+        <div className="flex items-center gap-2 md:gap-3 mb-6 md:mb-8">
+          <div className="w-1 md:w-1.5 h-8 md:h-10 bg-gradient-to-b from-slate-700 to-slate-900 rounded-full"></div>
+          <h2 className="text-lg md:text-2xl font-black text-gray-900">Recent Transactions</h2>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gradient-to-r from-slate-50 via-blue-50 to-purple-50 border-b-2 border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Purchase ID</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Quality</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Quantity</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Amount</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Variety</th>
+                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">ID</th>
+                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">Quality</th>
+                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">Quantity</th>
+                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">Variety</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {(analytics.recentTransactions || []).slice(0, 10).map((transaction) => (
-                <tr key={transaction.purchase_id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                <tr key={transaction.purchase_id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 border-b border-gray-100">
+                  <td className="px-6 py-5 text-sm font-bold text-gray-900">
                     #{transaction.purchase_id?.slice(0, 8) || 'N/A'}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
+                  <td className="px-6 py-5 text-sm text-gray-700 font-medium">
                     {new Date(transaction.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">
+                  <td className="px-6 py-5">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${fiberColors[transaction.fiber_quality as keyof typeof fiberColors]?.light || 'bg-gray-100'
+                      } ${fiberColors[transaction.fiber_quality as keyof typeof fiberColors]?.text || 'text-gray-700'
+                      }`}>
                       {transaction.fiber_quality}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                  <td className="px-6 py-5 text-sm text-gray-900 font-bold">
                     {transaction.quantity} kg
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900">
+                  <td className="px-6 py-5 text-sm font-black text-gray-900">
                     ₱{transaction.total_price?.toLocaleString() || '0'}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-5">
                     <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                       {transaction.variety}
                     </span>
@@ -314,10 +820,12 @@ const BuyerAnalytics: React.FC = () => {
           {(analytics.recentTransactions || []).length === 0 && (
             <div className="text-center py-12">
               <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No transactions yet</p>
+              <p className="text-gray-600 font-medium">No transactions yet</p>
+              <p className="text-gray-400 text-sm mt-2">Your purchase history will appear here</p>
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
