@@ -15,6 +15,8 @@ import {
 interface AnalyticsData {
   totalSpent: number;
   totalPurchases: number;
+  totalSales: number;
+  totalSalesAmount: number;
   totalQuantity: number;
   monthlySpending: { month: string; amount: number }[];
   monthlySales: { month: string; amount: number; transactions: number }[];
@@ -28,6 +30,8 @@ const BuyerAnalytics: React.FC = () => {
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalSpent: 0,
     totalPurchases: 0,
+    totalSales: 0,
+    totalSalesAmount: 0,
     totalQuantity: 0,
     monthlySpending: [],
     monthlySales: [],
@@ -83,12 +87,12 @@ const BuyerAnalytics: React.FC = () => {
       }
 
       // Calculate totals
-      const totalSpent = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.price || 0), 0);
+      const totalSpent = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.total_price || 0), 0);
       const totalPurchases = purchases.length;
       const totalQuantity = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.quantity || 0), 0);
 
       // Calculate profit (sales - cost)
-      const totalCost = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.price || 0), 0);
+      const totalCost = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.total_price || 0), 0);
       const yearlyProfit = totalSalesAmount - totalCost;
 
       // Process monthly spending
@@ -96,7 +100,7 @@ const BuyerAnalytics: React.FC = () => {
       purchases.forEach((p: any) => {
         const date = new Date(p.created_at);
         const monthName = months[date.getMonth()];
-        monthlySpendingMap[monthName] = (monthlySpendingMap[monthName] || 0) + parseFloat(p.price || 0);
+        monthlySpendingMap[monthName] = (monthlySpendingMap[monthName] || 0) + parseFloat(p.total_price || 0);
       });
 
       const monthlySpending = months.map(month => ({
@@ -162,6 +166,8 @@ const BuyerAnalytics: React.FC = () => {
       setAnalytics({
         totalSpent,
         totalPurchases,
+        totalSales: sales.length,
+        totalSalesAmount,
         totalQuantity,
         yearlyProfit,
         monthlySpending,
@@ -175,6 +181,8 @@ const BuyerAnalytics: React.FC = () => {
       setAnalytics({
         totalSpent: 0,
         totalPurchases: 0,
+        totalSales: 0,
+        totalSalesAmount: 0,
         totalQuantity: 0,
         monthlySpending: [],
         monthlySales: [],
@@ -315,20 +323,17 @@ const BuyerAnalytics: React.FC = () => {
     formatValue?: (val: number) => string;
   }> = ({ data, color = '#3b82f6', color2 = '#10b981', showDual = false, formatValue = (v) => v.toLocaleString() }) => {
     const maxValue = Math.max(...data.map(d => Math.max(d.value, d.value2 || 0)));
-    // Ensure we have a non-zero max value to avoid division by zero
     const effectiveMax = maxValue > 0 ? maxValue : 10;
 
-    // Generate 5 ticks for the Y-axis
     const ticks = [0, 1, 2, 3, 4].map(i => {
       const val = (effectiveMax / 4) * i;
-      // Round to nice numbers if possible, but for now just raw value
       return Math.round(val);
     }).reverse();
 
     return (
-      <div className="w-full h-96 flex gap-4">
+      <div className="w-full h-64 sm:h-72 md:h-96 flex gap-1 sm:gap-2 md:gap-4">
         {/* Y-Axis Labels */}
-        <div className="flex flex-col justify-between h-full pb-8 text-xs text-gray-500 font-semibold min-w-[40px]">
+        <div className="flex flex-col justify-between h-full pb-6 sm:pb-8 md:pb-10 text-[10px] sm:text-xs text-gray-500 font-semibold min-w-[30px] sm:min-w-[35px] md:min-w-[40px]">
           {ticks.map((tick, i) => (
             <div key={i} className="h-0 flex items-center justify-end">
               {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
@@ -337,35 +342,35 @@ const BuyerAnalytics: React.FC = () => {
         </div>
 
         {/* Chart Area */}
-        <div className="relative flex-1 h-full">
+        <div className="relative flex-1 h-full overflow-x-auto scrollbar-thin">
           {/* Horizontal Grid Lines */}
-          <div className="absolute inset-x-0 inset-y-0 flex flex-col justify-between pb-8">
+          <div className="absolute inset-x-0 inset-y-0 flex flex-col justify-between pb-6 sm:pb-8 md:pb-10">
             {ticks.map((_, i) => (
               <div key={i} className="border-b border-gray-200 w-full h-0"></div>
             ))}
           </div>
 
           {/* Bars */}
-          <div className="relative h-full flex items-end gap-2 pb-8 px-2">
+          <div className="relative h-full flex items-end gap-1 sm:gap-2 pb-6 sm:pb-8 md:pb-10 px-1 sm:px-2 min-w-full">
             {data.map((item, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center h-full justify-end group relative">
-                <div className="w-full flex items-end justify-center h-full relative max-w-[60px] mx-auto">
+              <div key={index} className="flex-1 flex flex-col items-center h-full justify-end group relative min-w-[20px] sm:min-w-[30px] md:min-w-[40px]">
+                <div className="w-full flex items-end justify-center h-full relative max-w-[40px] sm:max-w-[50px] md:max-w-[60px] mx-auto">
 
                   {/* Bar 1 */}
                   <div className="relative flex-1 flex flex-col justify-end h-full">
                     {/* Floating Value Label */}
                     {item.value > 0 && (
-                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-700 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="absolute -top-6 sm:-top-8 left-1/2 transform -translate-x-1/2 text-[10px] sm:text-xs font-bold text-gray-700 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         {formatValue(item.value)}
                       </div>
                     )}
 
                     <div
-                      className="w-full rounded-t-xl transition-all duration-500 ease-out group-hover:brightness-110"
+                      className="w-full rounded-t-lg sm:rounded-t-xl transition-all duration-500 ease-out group-hover:brightness-110"
                       style={{
                         height: `${(item.value / effectiveMax) * 100}%`,
                         background: `linear-gradient(to top, ${color}, ${color}dd)`,
-                        minHeight: item.value > 0 ? '8px' : '0',
+                        minHeight: item.value > 0 ? '6px' : '0',
                         boxShadow: item.value > 0 ? '0 4px 12px -2px rgba(0, 0, 0, 0.15)' : 'none'
                       }}
                     >
@@ -376,16 +381,16 @@ const BuyerAnalytics: React.FC = () => {
                   {showDual && item.value2 !== undefined && (
                     <div className="relative flex-1 flex flex-col justify-end h-full ml-1">
                       {item.value2 > 0 && (
-                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-700 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="absolute -top-6 sm:-top-8 left-1/2 transform -translate-x-1/2 text-[10px] sm:text-xs font-bold text-gray-700 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           {formatValue(item.value2)}
                         </div>
                       )}
                       <div
-                        className="w-full rounded-t-xl transition-all duration-500 ease-out group-hover:brightness-110"
+                        className="w-full rounded-t-lg sm:rounded-t-xl transition-all duration-500 ease-out group-hover:brightness-110"
                         style={{
                           height: `${(item.value2 / effectiveMax) * 100}%`,
                           background: `linear-gradient(to top, ${color2}, ${color2}dd)`,
-                          minHeight: item.value2 > 0 ? '8px' : '0',
+                          minHeight: item.value2 > 0 ? '6px' : '0',
                           boxShadow: item.value2 > 0 ? '0 4px 12px -2px rgba(0, 0, 0, 0.15)' : 'none'
                         }}
                       >
@@ -394,8 +399,8 @@ const BuyerAnalytics: React.FC = () => {
                   )}
                 </div>
                 {/* X-Axis Label */}
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 translate-y-full">
-                  <span className="text-xs text-gray-600 font-medium">
+                <div className="absolute -bottom-0.5 sm:-bottom-1 left-1/2 transform -translate-x-1/2 translate-y-full">
+                  <span className="text-[9px] sm:text-[10px] md:text-xs text-gray-600 font-medium whitespace-nowrap">
                     {item.label}
                   </span>
                 </div>
@@ -425,48 +430,6 @@ const BuyerAnalytics: React.FC = () => {
     <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
       <div className="relative z-10">
-      {/* Header */}
-      <div className="mb-6 md:mb-8 lg:mb-10">
-        <div className="flex items-center gap-3 md:gap-4 mb-3">
-          <div className="w-1.5 md:w-2 h-8 md:h-12 bg-gradient-to-b from-emerald-500 to-blue-500 rounded-full"></div>
-          <div>
-            <h1 className="text-2xl md:text-4xl lg:text-5xl font-black bg-gradient-to-r from-slate-800 via-blue-700 to-purple-700 bg-clip-text text-transparent">
-              Analytics Dashboard
-            </h1>
-            <p className="text-xs md:text-sm text-gray-600 font-medium mt-1">Real-time insights into your fiber business performance</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-xl p-4 md:p-6 mb-6 md:mb-8 border border-white/60">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex flex-wrap gap-3 items-center">
-            <div className="flex items-center gap-2">
-              <Calendar size={20} className="text-gray-500" />
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-              >
-                {years.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              {months.map((month, idx) => (
-                <option key={month} value={idx + 1}>{month}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-10">
         {/* Total Spent */}
@@ -482,25 +445,25 @@ const BuyerAnalytics: React.FC = () => {
           <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.totalSpent || 0).toLocaleString()}</p>
           <div className="flex items-center gap-1 text-xs opacity-80">
             <span className="text-sm font-bold">₱</span>
-            <span>Purchase Expenses</span>
+            <span>Total Purchases</span>
           </div>
           </div>
         </div>
 
-        {/* Total Purchases */}
+        {/* Total Sales */}
         <div className="group relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-              <ShoppingCart size={24} />
+              <TrendingUp size={24} />
             </div>
           </div>
-          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Purchases</h3>
-          <p className="text-3xl md:text-4xl font-black mb-1">{analytics.totalPurchases || 0}</p>
-          <div className="flex items-center gap-2 text-xs opacity-80">
-            <ShoppingCart size={14} />
-            <span>Transactions</span>
+          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Sales</h3>
+          <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.totalSalesAmount || 0).toLocaleString()}</p>
+          <div className="flex items-center gap-1 text-xs opacity-80">
+            <span className="text-sm font-bold">₱</span>
+            <span>Sales Revenue</span>
           </div>
           </div>
         </div>
@@ -532,11 +495,11 @@ const BuyerAnalytics: React.FC = () => {
               <TrendingUp size={24} />
             </div>
           </div>
-          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Sales Profit</h3>
+          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Net Profit</h3>
           <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.yearlyProfit || 0).toLocaleString()}</p>
           <div className="flex items-center gap-2 text-xs opacity-80">
             <TrendingUp size={14} />
-            <span>Net Earnings</span>
+            <span>Sales Minus Purchases</span>
           </div>
           </div>
         </div>
@@ -778,43 +741,52 @@ const BuyerAnalytics: React.FC = () => {
           <table className="w-full">
             <thead className="bg-gradient-to-r from-slate-50 via-blue-50 to-purple-50 border-b-2 border-gray-200">
               <tr>
-                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">Quality</th>
-                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">Quantity</th>
-                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-5 text-left text-xs font-black text-gray-700 uppercase tracking-wider">Variety</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">ID</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Date</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Quality</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Quantity</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Amount</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Variety</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {(analytics.recentTransactions || []).slice(0, 10).map((transaction) => (
+              {(analytics.recentTransactions || []).slice(0, 10).map((transaction, index) => {
+                const date = new Date(transaction.created_at);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const sequentialNum = String(index + 1).padStart(4, '0');
+                const transactionId = `ABF-${year}${month}${day}-${sequentialNum}`;
+                
+                return (
                 <tr key={transaction.purchase_id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 border-b border-gray-100">
-                  <td className="px-6 py-5 text-sm font-bold text-gray-900">
-                    #{transaction.purchase_id?.slice(0, 8) || 'N/A'}
+                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm font-bold text-gray-900">
+                    {transactionId}
                   </td>
-                  <td className="px-6 py-5 text-sm text-gray-700 font-medium">
+                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm text-gray-700 font-medium">
                     {new Date(transaction.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-5">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${fiberColors[transaction.fiber_quality as keyof typeof fiberColors]?.light || 'bg-gray-100'
+                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5">
+                    <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-xs md:text-sm font-medium ${fiberColors[transaction.fiber_quality as keyof typeof fiberColors]?.light || 'bg-gray-100'
                       } ${fiberColors[transaction.fiber_quality as keyof typeof fiberColors]?.text || 'text-gray-700'
                       }`}>
                       {transaction.fiber_quality}
                     </span>
                   </td>
-                  <td className="px-6 py-5 text-sm text-gray-900 font-bold">
+                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm text-gray-900 font-bold">
                     {transaction.quantity} kg
                   </td>
-                  <td className="px-6 py-5 text-sm font-black text-gray-900">
+                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm font-black text-gray-900">
                     ₱{transaction.total_price?.toLocaleString() || '0'}
                   </td>
-                  <td className="px-6 py-5">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5">
+                    <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full text-[9px] sm:text-xs md:text-sm font-medium">
                       {transaction.variety}
                     </span>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
           {(analytics.recentTransactions || []).length === 0 && (

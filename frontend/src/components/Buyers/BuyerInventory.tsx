@@ -232,96 +232,156 @@ const BuyerInventory: React.FC = () => {
   const totalSalesCount = sales.length;
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      <div className="relative z-10 space-y-6">
+      
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
-          <div className="w-12 h-12 bg-blue-400 bg-opacity-30 rounded-xl flex items-center justify-center mb-4">
-            <Package className="w-6 h-6 text-white" />
+        <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                <Package size={24} />
+              </div>
+            </div>
+            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Stock</h3>
+            <p className="text-3xl md:text-4xl font-black mb-1">{totalKg.toFixed(2)} kg</p>
+            <div className="flex items-center gap-2 text-xs opacity-80">
+              <Package size={14} />
+              <span>Available Inventory</span>
+            </div>
           </div>
-          <p className="text-blue-100 text-sm font-medium mb-2">Total Stock</p>
-          <p className="text-4xl font-bold">{totalKg.toFixed(2)} kg</p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
-          <div className="w-12 h-12 bg-emerald-400 bg-opacity-30 rounded-xl flex items-center justify-center mb-4">
-            <span className="text-2xl font-bold text-white">₱</span>
+        <div className="group relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                <span className="text-2xl font-bold">₱</span>
+              </div>
+            </div>
+            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Value</h3>
+            <p className="text-3xl md:text-4xl font-black mb-1">₱{totalValue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <div className="flex items-center gap-1 text-xs opacity-80">
+              <span className="text-sm font-bold">₱</span>
+              <span>Inventory Worth</span>
+            </div>
           </div>
-          <p className="text-emerald-100 text-sm font-medium mb-2">Total Value</p>
-          <p className="text-4xl font-bold">₱{totalValue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
-          <div className="w-12 h-12 bg-orange-400 bg-opacity-30 rounded-xl flex items-center justify-center mb-4">
-            <span className="text-2xl font-bold text-white">₱</span>
+        <div className="group relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                <TrendingUp size={24} />
+              </div>
+            </div>
+            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Sales</h3>
+            <p className="text-3xl md:text-4xl font-black mb-1">₱{totalSales.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <div className="flex items-center gap-1 text-xs opacity-80">
+              <span className="text-sm font-bold">₱</span>
+              <span>Sales Revenue</span>
+            </div>
           </div>
-          <p className="text-orange-100 text-sm font-medium mb-2">Total Sales</p>
-          <p className="text-4xl font-bold">₱{totalSales.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
-          <div className="w-12 h-12 bg-purple-400 bg-opacity-30 rounded-xl flex items-center justify-center mb-4">
-            <TrendingUp className="w-6 h-6 text-white" />
+        <div className="group relative bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                <TrendingUp size={24} />
+              </div>
+            </div>
+            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Active Classes</h3>
+            <p className="text-3xl md:text-4xl font-black mb-1">{inventory.filter(i => i.total_kg > 0).length}</p>
+            <div className="flex items-center gap-2 text-xs opacity-80">
+              <TrendingUp size={14} />
+              <span>With Stock</span>
+            </div>
           </div>
-          <p className="text-purple-100 text-sm font-medium mb-2">Fiber Classes</p>
-          <p className="text-4xl font-bold">{inventory.filter(i => i.total_kg > 0).length}</p>
         </div>
       </div>
 
       {/* Inventory Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {inventory.map((item) => (
-          <div key={item.fiber_class} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300">
-            <div className={`bg-gradient-to-r ${getClassColor(item.fiber_class)} p-5 md:p-6 text-white`}>
+          <div key={item.fiber_class} className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-xl border border-white/60 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 p-5 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl md:text-2xl font-bold">{item.fiber_class}</h3>
-                  <p className="text-xs md:text-sm opacity-90 mt-1">Abaca Fiber</p>
+                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${getClassBadgeColor(item.fiber_class)}`}>
+                    {item.fiber_class}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2 font-medium">Abaca Fiber</p>
                 </div>
-                <Package className="w-9 h-9 md:w-10 md:h-10 opacity-80" />
+                <div className={`p-3 rounded-xl bg-gradient-to-br ${getClassColor(item.fiber_class)} bg-opacity-10`}>
+                  <Package className="w-6 h-6 text-gray-700" />
+                </div>
               </div>
             </div>
 
-            <div className="p-5 md:p-6 space-y-3 md:space-y-4">
-              {/* Quantity */}
-              <div className="flex justify-between items-center pb-3 md:pb-4 border-b border-gray-200">
-                <span className="text-sm md:text-base text-gray-600 font-medium">Available Stock</span>
-                <span className="text-xl md:text-2xl font-bold text-gray-900">{item.total_kg.toFixed(2)} kg</span>
+            <div className="p-5 md:p-6 space-y-4">
+              {/* Available Stock - Highlighted */}
+              <div className={`bg-gradient-to-br ${
+                item.total_kg > 0 
+                  ? 'from-blue-50 to-indigo-50 border-blue-200' 
+                  : item.fiber_class === 'Class A' 
+                    ? 'from-emerald-50/60 to-teal-50/50 border-emerald-200/60' 
+                    : item.fiber_class === 'Class B' 
+                      ? 'from-sky-50/60 to-blue-50/50 border-blue-200/60' 
+                      : 'from-amber-50/60 to-orange-50/50 border-orange-200/60'
+              } border rounded-xl p-4`}>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Available Stock</p>
+                <p className="text-3xl font-black text-gray-900">{item.total_kg.toFixed(2)} <span className="text-lg text-gray-600">kg</span></p>
+                {item.total_kg === 0 && (
+                  <p className="text-xs text-red-500/70 font-semibold mt-2">OUT OF STOCK</p>
+                )}
               </div>
 
-              {/* Purchase Count */}
-              <div className="flex justify-between items-center pb-3 md:pb-4 border-b border-gray-200">
-                <span className="text-sm md:text-base text-gray-600 font-medium">Purchases</span>
-                <span className="text-base md:text-lg font-semibold text-gray-700">{item.purchase_count}</span>
-              </div>
+              {/* Stats Grid - Only show if stock available */}
+              {item.total_kg > 0 && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 font-medium mb-1">Purchases</p>
+                      <p className="text-lg font-bold text-gray-900">{item.purchase_count}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 font-medium mb-1">Avg. Price</p>
+                      <p className="text-lg font-bold text-gray-900">₱{item.avg_purchase_price.toFixed(2)}</p>
+                    </div>
+                  </div>
 
-              {/* Avg Price */}
-              <div className="flex justify-between items-center pb-3 md:pb-4 border-b border-gray-200">
-                <span className="text-sm md:text-base text-gray-600 font-medium">Avg. Purchase Price</span>
-                <span className="text-base md:text-lg font-semibold text-gray-700">₱{item.avg_purchase_price.toFixed(2)}/kg</span>
-              </div>
-
-              {/* Total Value */}
-              <div className="flex justify-between items-center pb-3 md:pb-4 border-b border-gray-200">
-                <span className="text-sm md:text-base text-gray-600 font-medium">Total Value</span>
-                <span className="text-base md:text-lg font-bold text-emerald-600">₱{(item.total_kg * item.avg_purchase_price).toFixed(2)}</span>
-              </div>
+                  {/* Total Value */}
+                  <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Total Value</p>
+                    <p className="text-2xl font-black text-emerald-600">₱{(item.total_kg * item.avg_purchase_price).toFixed(2)}</p>
+                  </div>
+                </>
+              )}
 
               {/* Sell Button */}
               <button
                 onClick={() => openSaleModal(item)}
                 disabled={item.total_kg === 0}
-                className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 text-sm md:text-base ${item.total_kg > 0
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transform hover:scale-[1.02]'
+                className={`w-full py-3 px-4 rounded-xl font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 text-sm md:text-base ${item.total_kg > 0
+                    ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:via-blue-800 hover:to-indigo-800 shadow-lg hover:shadow-xl transform hover:scale-[1.02]'
                     : 'bg-gray-300 cursor-not-allowed opacity-60'
                   }`}
               >
                 <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-                Sell Fiber
+                {item.total_kg > 0 ? 'Sell Fiber' : 'Out of Stock'}
               </button>
             </div>
           </div>
         ))}
+      </div>
       </div>
 
       {/* Sale Modal */}
