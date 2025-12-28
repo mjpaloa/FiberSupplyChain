@@ -314,7 +314,7 @@ const UserManagement: React.FC = () => {
       } else if (activeTab === 'buyers') {
         headers = ['Business Name', 'Owner Name', 'Email', 'Contact Number', 'Business Address', 'Status', 'Date Registered'];
       } else if (activeTab === 'associations') {
-        headers = ['Name', 'Email', 'Contact Number', 'Organization', 'Position', 'Status', 'Date Registered'];
+        headers = ['Name', 'Email', 'Contact Number', 'Association', 'Position', 'Status', 'Date Registered'];
       }
 
       // Prepare CSV rows
@@ -555,64 +555,6 @@ const UserManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
-      {/* Modern Tabs with Glassmorphism */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 sm:mb-8">
-        <button
-          onClick={() => setActiveTab('farmers')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'farmers'
-              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
-        >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'farmers' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
-          }`}>
-            <Users className="w-5 h-5" />
-          </div>
-          <span>Farmers</span>
-          {activeTab === 'farmers' && (
-            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('buyers')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'buyers'
-              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
-        >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'buyers' ? 'bg-white/20' : 'bg-blue-50 group-hover:bg-blue-100'
-          }`}>
-            <ShoppingCart className="w-5 h-5" />
-          </div>
-          <span>Buyers</span>
-          {activeTab === 'buyers' && (
-            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('associations')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'associations'
-              ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl shadow-purple-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
-        >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'associations' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
-          }`}>
-            <Building2 className="w-5 h-5" />
-          </div>
-          <span>Association</span>
-          {activeTab === 'associations' && (
-            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
-          )}
-        </button>
-      </div>
-
       {/* Modern Stats Cards with Gradients */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
         {/* Total Card */}
@@ -677,6 +619,64 @@ const UserManagement: React.FC = () => {
             <p className="text-4xl font-bold text-white">{stats.rejected}</p>
           </div>
         </div>
+      </div>
+
+      {/* Modern Tabs with Glassmorphism */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 sm:mb-8">
+        <button
+          onClick={() => setActiveTab('farmers')}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'farmers'
+              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'farmers' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
+          }`}>
+            <Users className="w-5 h-5" />
+          </div>
+          <span>Farmers</span>
+          {activeTab === 'farmers' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('buyers')}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'buyers'
+              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'buyers' ? 'bg-white/20' : 'bg-blue-50 group-hover:bg-blue-100'
+          }`}>
+            <ShoppingCart className="w-5 h-5" />
+          </div>
+          <span>Buyers</span>
+          {activeTab === 'buyers' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('associations')}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'associations'
+              ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl shadow-purple-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'associations' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
+          }`}>
+            <Building2 className="w-5 h-5" />
+          </div>
+          <span>Association</span>
+          {activeTab === 'associations' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
       </div>
 
       {/* Modern Filters with Glassmorphism */}
@@ -774,7 +774,7 @@ const UserManagement: React.FC = () => {
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4" />
-                        {activeTab === 'farmers' ? 'Organization' : activeTab === 'buyers' ? 'Business' : 'Organization'}
+                        {activeTab === 'farmers' ? 'Association' : activeTab === 'buyers' ? 'Business' : 'Association'}
                       </div>
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">

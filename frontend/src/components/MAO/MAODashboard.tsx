@@ -23,7 +23,8 @@ import {
   Award,
   Eye,
   Clock,
-  Bell
+  Bell,
+  Coins
 } from 'lucide-react';
 
 // Add CSS animations for charts
@@ -406,7 +407,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           
           const totalReceived = monthlyReceived.reduce((a, b) => a + b, 0);
           console.log('? Total Received from database:', totalReceived);
-          console.log('?? Monthly Received:', monthlyReceived);
+          console.log('📅 Monthly Received:', monthlyReceived);
         }
         
         // For distributed data, fetch from CUSAFA endpoint which has all farmer distributions
@@ -435,7 +436,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             
             const totalDistributed = monthlyDistributed.reduce((a, b) => a + b, 0);
             console.log('? Total Distributed from database:', totalDistributed);
-            console.log('?? Monthly Distributed:', monthlyDistributed);
+            console.log('📅 Monthly Distributed:', monthlyDistributed);
           }
         } catch (err) {
           console.log('Could not fetch distributed data:', err);
@@ -595,212 +596,15 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       
       // Create notifications array
       const notifs: any[] = [];
       
-      // Fetch recent users (24h)
-      try {
-        const usersRes = await fetch('https://easyabaca-api.vercel.app/api/admin/users-report', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const usersData = await usersRes.json();
-        if (usersData.recentUsers && Array.isArray(usersData.recentUsers)) {
-          usersData.recentUsers.forEach((user: any) => {
-            const userDate = new Date(user.createdAt);
-            if (userDate > twentyFourHoursAgo) {
-              notifs.push({
-                id: `user-${user.id}`,
-                type: 'user',
-                title: 'New User Registered',
-                message: `${user.fullName} registered as ${user.userType}`,
-                date: user.createdAt,
-                icon: '??',
-                color: 'blue'
-              });
-            }
-          });
-        }
-      } catch (e) { console.log('Error fetching users:', e); }
+      // Note: Notification fetching is disabled for now
+      // Can be re-enabled by implementing proper notification endpoints
       
-      // Fetch monitoring records (24h)
-      try {
-        const monitoringRes = await fetch('https://easyabaca-api.vercel.app/api/monitoring/records', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const monitoringData = await monitoringRes.json();
-        if (Array.isArray(monitoringData)) {
-          monitoringData.forEach((record: any) => {
-            const recordDate = new Date(record.date_of_visit);
-            if (recordDate > twentyFourHoursAgo) {
-              notifs.push({
-                id: `monitoring-${record.monitoring_id}`,
-                type: 'monitoring',
-                title: 'New Field Monitoring',
-                message: `${record.farmer_name} farm monitored by ${record.monitored_by}`,
-                date: record.date_of_visit,
-                icon: '??',
-                color: 'green'
-              });
-            }
-          });
-        }
-      } catch (e) { console.log('Error fetching monitoring:', e); }
-      
-      // Fetch seedling distributions (24h)
-      try {
-        const seedlingsRes = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/all', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const seedlingsData = await seedlingsRes.json();
-        if (Array.isArray(seedlingsData)) {
-          seedlingsData.forEach((seedling: any) => {
-            const distDate = new Date(seedling.distribution_date);
-            if (distDate > twentyFourHoursAgo) {
-              notifs.push({
-                id: `seedling-${seedling.distribution_id}`,
-                type: 'seedling',
-                title: 'Seedling Distribution',
-                message: `${seedling.quantity_distributed} ${seedling.variety} seedlings to ${seedling.farmer_name || 'farmer'}`,
-                date: seedling.distribution_date,
-                icon: '??',
-                color: 'emerald'
-              });
-            }
-          });
-        }
-      } catch (e) { console.log('Error fetching seedlings:', e); }
-      
-      // Fetch planted seedlings updates (24h)
-      try {
-        const plantedRes = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/farmer/planted-overview', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const plantedData = await plantedRes.json();
-        if (Array.isArray(plantedData)) {
-          plantedData.forEach((planted: any) => {
-            if (planted.planting_date) {
-              const plantDate = new Date(planted.planting_date);
-              if (plantDate > twentyFourHoursAgo) {
-                notifs.push({
-                  id: `planted-${planted.distribution_id}`,
-                  type: 'planted',
-                  title: 'Seedlings Planted',
-                  message: `${planted.farmer_name} planted ${planted.quantity_distributed} ${planted.variety}`,
-                  date: planted.planting_date,
-                  icon: '??',
-                  color: 'teal'
-                });
-              }
-            }
-          });
-        }
-      } catch (e) { console.log('Error fetching planted:', e); }
-      
-      // Fetch harvest submissions (24h)
-      try {
-        const harvestRes = await fetch('https://easyabaca-api.vercel.app/api/harvests', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const harvestData = await harvestRes.json();
-        if (Array.isArray(harvestData)) {
-          harvestData.forEach((harvest: any) => {
-            const harvestDate = new Date(harvest.harvest_date || harvest.createdAt);
-            if (harvestDate > twentyFourHoursAgo) {
-              notifs.push({
-                id: `harvest-${harvest.harvest_id}`,
-                type: 'harvest',
-                title: 'Harvest Submitted',
-                message: `${harvest.farmer_name} submitted harvest: ${harvest.total_kg}kg`,
-                date: harvest.harvest_date || harvest.createdAt,
-                icon: '??',
-                color: 'amber'
-              });
-            }
-          });
-        }
-      } catch (e) { console.log('Error fetching harvests:', e); }
-      
-      // Fetch sales reports (24h)
-      try {
-        const salesRes = await fetch('https://easyabaca-api.vercel.app/api/sales/all', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const salesData = await salesRes.json();
-        if (Array.isArray(salesData)) {
-          salesData.forEach((sale: any) => {
-            const saleDate = new Date(sale.sale_date || sale.createdAt);
-            if (saleDate > twentyFourHoursAgo) {
-              notifs.push({
-                id: `sale-${sale.sale_id}`,
-                type: 'sale',
-                title: 'Sales Report Submitted',
-                message: `${sale.farmer_name || 'Farmer'} sold ${sale.quantity_kg}kg for ?${sale.total_amount}`,
-                date: sale.sale_date || sale.createdAt,
-                icon: '??',
-                color: 'purple'
-              });
-            }
-          });
-        }
-      } catch (e) { console.log('Error fetching sales:', e); }
-      
-      // Fetch buyer price updates (24h)
-      try {
-        const pricesRes = await fetch('https://easyabaca-api.vercel.app/api/buyer-prices/all', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const pricesData = await pricesRes.json();
-        if (Array.isArray(pricesData)) {
-          pricesData.forEach((price: any) => {
-            const priceDate = new Date(price.date_posted || price.createdAt);
-            if (priceDate > twentyFourHoursAgo) {
-              notifs.push({
-                id: `price-${price.price_id}`,
-                type: 'price',
-                title: 'Buyer Price Updated',
-                message: `${price.buyer_name} posted ?${price.price_per_kg}/kg for ${price.grade}`,
-                date: price.date_posted || price.createdAt,
-                icon: '??',
-                color: 'indigo'
-              });
-            }
-          });
-        }
-      } catch (e) { console.log('Error fetching prices:', e); }
-      
-      // Fetch delivery tracking updates (24h)
-      try {
-        const deliveriesRes = await fetch('https://easyabaca-api.vercel.app/api/deliveries/all', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const deliveriesData = await deliveriesRes.json();
-        if (Array.isArray(deliveriesData)) {
-          deliveriesData.forEach((delivery: any) => {
-            const deliveryDate = new Date(delivery.created_at || delivery.createdAt);
-            if (deliveryDate > twentyFourHoursAgo) {
-              notifs.push({
-                id: `delivery-${delivery.delivery_id}`,
-                type: 'delivery',
-                title: 'Delivery Update',
-                message: `${delivery.farmer_name} to ${delivery.buyer_name}: ${delivery.status}`,
-                date: delivery.created_at || delivery.createdAt,
-                icon: '??',
-                color: 'cyan'
-              });
-            }
-          });
-        }
-      } catch (e) { console.log('Error fetching deliveries:', e); }
-      
-      // Sort by date (newest first) and limit to 15
-      notifs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      const recentNotifs = notifs.slice(0, 15);
-      
-      setNotifications(recentNotifs);
-      setUnreadCount(recentNotifs.length > 0 ? Math.min(recentNotifs.length, 9) : 0);
+      setNotifications(notifs);
+      setUnreadCount(0);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -852,8 +656,12 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         <div className="p-4 md:p-6 flex items-center justify-between border-b border-slate-700">
           <div className={`transition-all duration-300 ease-in-out ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
             <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">MAO Culiram</h1>
-            <p className="text-xs text-slate-400 whitespace-nowrap">
-              {isSuperAdmin ? '? Super Admin Panel' : '??? Admin Panel'}
+            <p className="text-xs text-slate-400 whitespace-nowrap flex items-center gap-1">
+              {isSuperAdmin ? (
+                <><Shield className="w-3 h-3" /> Super Admin Panel</>
+              ) : (
+                <><User className="w-3 h-3" /> Admin Panel</>
+              )}
             </p>
           </div>
           <button
@@ -940,7 +748,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               currentPage === 'sales-analytics' ? 'bg-emerald-600' : 'hover:bg-slate-700'
             } ${!sidebarOpen && 'justify-center'}`}
           >
-            <span className="text-lg font-bold flex-shrink-0">?</span>
+            <TrendingUp className="w-5 h-5 flex-shrink-0" />
             <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Sales Management</span>
           </button>
 
@@ -950,7 +758,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               currentPage === 'buyer-prices' ? 'bg-emerald-600' : 'hover:bg-slate-700'
             } ${!sidebarOpen && 'justify-center'}`}
           >
-            <Package className="w-5 h-5 flex-shrink-0" />
+            <Coins className="w-5 h-5 flex-shrink-0" />
             <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Buyer Price Listings</span>
           </button>
 
@@ -1164,9 +972,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   </p>
                   <p className="text-xs text-gray-500">
                     {isSuperAdmin ? (
-                      <span className="text-amber-600 font-semibold">? Super Admin</span>
+                      <span className="text-amber-600 font-semibold flex items-center gap-1"><Shield className="w-3 h-3" /> Super Admin</span>
                     ) : (
-                      <span className="text-blue-600 font-semibold">??? Admin</span>
+                      <span className="text-blue-600 font-semibold flex items-center gap-1"><User className="w-3 h-3" /> Admin</span>
                     )}
                   </p>
                 </div>
@@ -1278,14 +1086,14 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           </div>
         ) : (
           /* Dashboard Content - Modern Design */
-          <div className="p-8 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 min-h-screen">
+          <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 min-h-screen">
             {/* Top Section - Title & Tabs */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
+            <div className="mb-4 md:mb-8">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <div className="flex items-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide pb-2 w-full">
                   <button 
                     onClick={() => setDashboardSection('production')}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    className={`px-3 md:px-4 py-2 text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                       dashboardSection === 'production' 
                         ? 'text-emerald-600 border-b-2 border-emerald-600' 
                         : 'text-gray-600 hover:text-gray-800'
@@ -1295,23 +1103,25 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   </button>
                   <button 
                     onClick={() => setDashboardSection('reports')}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    className={`px-3 md:px-4 py-2 text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                       dashboardSection === 'reports' 
                         ? 'text-emerald-600 border-b-2 border-emerald-600' 
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    Sales & Delivery Reports
+                    <span className="hidden sm:inline">Sales & Delivery Reports</span>
+                    <span className="sm:hidden">Sales & Delivery</span>
                   </button>
                   <button 
                     onClick={() => setDashboardSection('users')}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    className={`px-3 md:px-4 py-2 text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                       dashboardSection === 'users' 
                         ? 'text-emerald-600 border-b-2 border-emerald-600' 
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    Users (MAO/CUSAFA/Farmers/Buyers)
+                    <span className="hidden lg:inline">Users (MAO/CUSAFA/Farmers/Buyers)</span>
+                    <span className="lg:hidden">Users</span>
                   </button>
                 </div>
               </div>
@@ -1442,8 +1252,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             value={chartView}
                             onChange={(e) => setChartView(e.target.value as 'monthly' | 'yearly')}
                           >
-                            <option value="monthly">?? Monthly View</option>
-                            <option value="yearly">?? Yearly View</option>
+                            <option value="monthly">Monthly View</option>
+                            <option value="yearly">Yearly View</option>
                           </select>
                         </div>
                       </div>
@@ -1481,7 +1291,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               yearlyDistTotal
                             ];
                             
-                            console.log('?? YEARLY VIEW DATA (2021-2025):');
+                            console.log('YEARLY VIEW DATA (2021-2025):');
                             console.log('Years:', labels);
                             console.log('Received:', dataReceived);
                             console.log('Distributed:', dataDistributed);
@@ -1491,7 +1301,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             dataDistributed = dashboardData.production.monthlyDistributed || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
                             labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                             
-                            console.log('?? MONTHLY VIEW DATA (2025):');
+                            console.log('MONTHLY VIEW DATA (2025):');
                             console.log('Received:', dataReceived, 'Total:', dataReceived.reduce((a, b) => a + b, 0));
                             console.log('Distributed:', dataDistributed, 'Total:', dataDistributed.reduce((a, b) => a + b, 0));
                           }
@@ -1845,7 +1655,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   </div>
                 </div>
 
-                {/* ?? FIELD MONITORING - Enhanced */}
+                {/* FIELD MONITORING - Enhanced */}
                 <div className="mb-8">
                   <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-6">Field Monitoring</h2>
                   
@@ -1909,8 +1719,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           value={monitoringView}
                           onChange={(e) => setMonitoringView(e.target.value as 'monthly' | 'yearly')}
                         >
-                          <option value="monthly">?? Monthly View</option>
-                          <option value="yearly">?? Yearly View</option>
+                          <option value="monthly">Monthly View</option>
+                          <option value="yearly">Yearly View</option>
                         </select>
                       </div>
                     </div>
@@ -2220,8 +2030,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               onChange={(e) => setDeliveryStatusView(e.target.value as 'monthly' | 'yearly')}
                               className="text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                             >
-                              <option value="monthly">?? Monthly</option>
-                              <option value="yearly">?? Yearly</option>
+                              <option value="monthly">📅 Monthly</option>
+                              <option value="yearly">📊 Yearly</option>
                             </select>
                           </div>
 
@@ -2405,8 +2215,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               onChange={(e) => setDeliveryView(e.target.value as 'monthly' | 'yearly')}
                               className="text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                             >
-                              <option value="monthly">?? Monthly</option>
-                              <option value="yearly">?? Yearly</option>
+                              <option value="monthly">📅 Monthly</option>
+                              <option value="yearly">📊 Yearly</option>
                             </select>
                           </div>
 
@@ -2563,7 +2373,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             <span className="text-sm text-gray-600">Verified Revenue</span>
                           </div>
                         </div>
-                        <p className="text-3xl font-bold text-gray-900 mb-1">?{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</p>
+                        <p className="text-3xl font-bold text-gray-900 mb-1">₱{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</p>
                         <p className="text-xs text-green-600">+13.6%</p>
                       </div>
 
@@ -2664,7 +2474,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center">
                               <div className="text-center">
-                                <p className="text-2xl font-bold text-gray-900">?{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k</p>
+                                <p className="text-2xl font-bold text-gray-900">₱{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k</p>
                                 <p className="text-xs text-gray-500 mt-1">Total</p>
                               </div>
                             </div>
@@ -2675,11 +2485,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Approved</span>
-                            <span className="font-semibold text-emerald-600">?{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</span>
+                            <span className="font-semibold text-emerald-600">₱{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Pending</span>
-                            <span className="font-semibold text-yellow-600">?{(dashboardData.sales?.pendingAmount || 0).toLocaleString()}</span>
+                            <span className="font-semibold text-yellow-600">₱{(dashboardData.sales?.pendingAmount || 0).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -2946,7 +2756,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             {/* Stats */}
                             <div className="flex justify-between text-sm">
                               <span className="text-blue-600 font-semibold">
-                                ?{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k
+                                ₱{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k
                               </span>
                               <span className="text-gray-600">
                                 {(dashboardData.sales?.totalKgSold || 0).toLocaleString()} kg
@@ -3036,7 +2846,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             {/* Stats */}
                             <div className="flex justify-between text-sm">
                               <span className="text-blue-600 font-semibold">
-                                ?{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k
+                                ₱{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k
                               </span>
                               <span className="text-gray-600">
                                 {(dashboardData.sales?.totalKgSold || 0).toLocaleString()} kg
@@ -3067,7 +2877,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                 <td className="py-3 px-4 text-sm font-medium text-gray-900">{sale.farmer_name || 'N/A'}</td>
                                 <td className="py-3 px-4 text-sm text-gray-700">{sale.buyer_company_name || sale.buyer_name || 'N/A'}</td>
-                                <td className="py-3 px-4 text-sm font-semibold text-gray-900">?{sale.total_amount?.toLocaleString() || '0'}</td>
+                                <td className="py-3 px-4 text-sm font-semibold text-gray-900">₱{sale.total_amount?.toLocaleString() || '0'}</td>
                                 <td className="py-3 px-4 text-sm text-gray-700">{sale.quantity_sold || 0} kg</td>
                                 <td className="py-3 px-4">
                                   <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
