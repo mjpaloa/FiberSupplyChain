@@ -24,7 +24,8 @@ import {
   Eye,
   Clock,
   Bell,
-  Coins
+  Coins,
+  Upload
 } from 'lucide-react';
 
 // Add CSS animations for charts
@@ -83,8 +84,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [contentTab, setContentTab] = useState<'articles' | 'team'>('articles');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [, setIsEditMode] = useState(false);
-  const [, setOfficerData] = useState<any>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [officerData, setOfficerData] = useState<any>(null);
   const [editFormData, setEditFormData] = useState<any>({
     email: '',
     contact_number: '',
@@ -93,9 +94,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     association_name: '',
     full_name: ''
   });
-  const [, setLoadingProfile] = useState(false);
-  const [, setSavingProfile] = useState(false);
-  const [, setUploadingPhoto] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
   // Notification states
@@ -2904,8 +2905,212 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           </div>
         )}
       </main>
+
+      {/* Profile Modal - Enhanced Professional Design */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header - Enhanced */}
+            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 px-8 py-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    {isEditMode ? 'Edit Profile' : 'My Profile'}
+                  </h2>
+                  <p className="text-emerald-100 text-sm">Manage your account information</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowProfileModal(false);
+                  setIsEditMode(false);
+                }}
+                className="text-white hover:bg-white/20 rounded-xl p-2 transition-all duration-200"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body - Enhanced */}
+            <div className="p-8 bg-gradient-to-br from-gray-50 to-white overflow-y-auto" style={{maxHeight: 'calc(90vh - 100px)'}}>
+              {loadingProfile ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Profile Picture Section - Enhanced */}
+                  <div className="flex flex-col items-center mb-8 pb-8 border-b-2 border-gray-200">
+                    <div className="relative">
+                      {profilePhoto ? (
+                        <img
+                          src={profilePhoto}
+                          alt="Profile"
+                          className="w-40 h-40 rounded-full object-cover border-4 border-emerald-500 shadow-2xl"
+                        />
+                      ) : (
+                        <div className="w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-5xl font-bold border-4 border-white shadow-2xl">
+                          {user?.fullName?.charAt(0) || 'A'}
+                        </div>
+                      )}
+                      {isEditMode && (
+                        <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-lg">
+                          <label className="cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white p-3 rounded-full transition-all flex items-center justify-center shadow-md">
+                            <Upload className="w-5 h-5" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={_handlePhotoUpload}
+                              className="hidden"
+                              disabled={uploadingPhoto}
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 mt-4">{editFormData.full_name || user?.fullName || 'MAO Officer'}</h3>
+                    <p className="text-emerald-600 font-semibold">{editFormData.position || 'Municipal Agriculture Officer'}</p>
+                    {uploadingPhoto && (
+                      <p className="text-sm text-emerald-600 mt-2 flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
+                        Uploading photo...
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Profile Information Section */}
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                      <div className="p-2 bg-emerald-100 rounded-lg">
+                        <User className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      Personal & Professional Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Full Name */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Full Name</label>
+                        <input
+                          type="text"
+                          value={editFormData.full_name || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
+                          disabled={!isEditMode}
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          placeholder="Enter your full name"
+                        />
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Email Address</label>
+                        <input
+                          type="email"
+                          value={editFormData.email || ''}
+                          disabled={true}
+                          className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-gray-700 font-medium"
+                        />
+                      </div>
+
+                      {/* Position */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Position / Role</label>
+                        <input
+                          type="text"
+                          value={editFormData.position || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, position: e.target.value })}
+                          disabled={!isEditMode}
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          placeholder="e.g., Municipal Agriculturist"
+                        />
+                      </div>
+
+                      {/* Organization */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Organization</label>
+                        <input
+                          type="text"
+                          value={editFormData.association_name || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, association_name: e.target.value })}
+                          disabled={!isEditMode}
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          placeholder="e.g., Municipal Agriculture Office"
+                        />
+                      </div>
+
+                      {/* Contact Number */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Contact Number</label>
+                        <input
+                          type="tel"
+                          value={editFormData.contact_number || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, contact_number: e.target.value })}
+                          disabled={!isEditMode}
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          placeholder="e.g., 09171234567"
+                        />
+                      </div>
+
+                      {/* Address */}
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Complete Address</label>
+                        <textarea
+                          value={editFormData.address || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                          disabled={!isEditMode}
+                          rows={3}
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium resize-none transition-all"
+                          placeholder="Enter your complete address (Purok, Barangay, Municipality)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons - Enhanced */}
+                  <div className="flex justify-end gap-3 pt-6 mt-6 border-t-2 border-gray-200">
+                    {isEditMode ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            setIsEditMode(false);
+                            fetchOfficerProfile();
+                          }}
+                          className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-bold shadow-md hover:shadow-lg"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={_handleSaveProfile}
+                          disabled={savingProfile}
+                          className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all font-bold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                        >
+                          {savingProfile ? (
+                            <span className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              Saving...
+                            </span>
+                          ) : 'Save Changes'}
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setIsEditMode(true)}
+                        className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+                      >
+                        Edit Profile
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default MAODashboard; 
+export default MAODashboard;
