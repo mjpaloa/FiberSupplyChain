@@ -427,9 +427,8 @@ const BuyerAnalytics: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-      <div className="relative z-10">
+    <div className="w-full max-w-full">
+      <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-10">
         {/* Total Spent */}
@@ -460,7 +459,11 @@ const BuyerAnalytics: React.FC = () => {
             </div>
           </div>
           <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Sales</h3>
-          <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.totalSalesAmount || 0).toLocaleString()}</p>
+          {analytics.totalSales > 0 || analytics.totalSalesAmount > 0 ? (
+            <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.totalSalesAmount || 0).toLocaleString()}</p>
+          ) : (
+            <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
+          )}
           <div className="flex items-center gap-1 text-xs opacity-80">
             <span className="text-sm font-bold">₱</span>
             <span>Sales Revenue</span>
@@ -496,7 +499,11 @@ const BuyerAnalytics: React.FC = () => {
             </div>
           </div>
           <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Net Profit</h3>
-          <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.yearlyProfit || 0).toLocaleString()}</p>
+          {analytics.totalSales > 0 || analytics.totalSalesAmount > 0 ? (
+            <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.yearlyProfit || 0).toLocaleString()}</p>
+          ) : (
+            <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
+          )}
           <div className="flex items-center gap-2 text-xs opacity-80">
             <TrendingUp size={14} />
             <span>Sales Minus Purchases</span>
@@ -581,7 +588,7 @@ const BuyerAnalytics: React.FC = () => {
                   Yearly
                 </button>
               </div>
-              <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl">
+              <div className="hidden md:block p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl">
                 <BarChart3 className="text-blue-600" size={28} />
               </div>
             </div>
@@ -643,7 +650,7 @@ const BuyerAnalytics: React.FC = () => {
                   Yearly
                 </button>
               </div>
-              <div className="p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl">
+              <div className="hidden md:block p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl">
                 <TrendingUp className="text-emerald-600" size={28} />
               </div>
             </div>
@@ -702,7 +709,7 @@ const BuyerAnalytics: React.FC = () => {
                   Yearly
                 </button>
               </div>
-              <div className="p-3 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl">
+              <div className="hidden md:block p-3 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl">
                 <Activity className="text-purple-600" size={28} />
               </div>
             </div>

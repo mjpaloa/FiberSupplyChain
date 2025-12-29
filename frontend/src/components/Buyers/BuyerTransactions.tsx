@@ -439,9 +439,8 @@ const BuyerTransactions: React.FC = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-      <div className="relative z-10">
+    <div className="w-full max-w-full">
+      <div className="space-y-6">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
@@ -473,8 +472,14 @@ const BuyerTransactions: React.FC = () => {
               </div>
             </div>
             <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Sales</h3>
-            <p className="text-3xl md:text-4xl font-black mb-1">{totalSales}</p>
-            <p className="text-sm opacity-80">₱{totalSalesAmount.toLocaleString()}</p>
+            {totalSales > 0 ? (
+              <>
+                <p className="text-3xl md:text-4xl font-black mb-1">{totalSales}</p>
+                <p className="text-sm opacity-80">₱{totalSalesAmount.toLocaleString()}</p>
+              </>
+            ) : (
+              <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
+            )}
           </div>
         </div>
 
@@ -503,7 +508,11 @@ const BuyerTransactions: React.FC = () => {
               </div>
             </div>
             <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Net Profit</h3>
-            <p className="text-3xl md:text-4xl font-black mb-1">₱{(totalSalesAmount - totalPurchasesAmount).toLocaleString()}</p>
+            {totalSales > 0 ? (
+              <p className="text-3xl md:text-4xl font-black mb-1">₱{(totalSalesAmount - totalPurchasesAmount).toLocaleString()}</p>
+            ) : (
+              <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
+            )}
             <div className="flex items-center gap-1 text-xs opacity-80">
               <span>Sales - Purchases</span>
             </div>
@@ -782,11 +791,11 @@ const BuyerTransactions: React.FC = () => {
 
       {/* Transaction Detail Modal */}
       {showDetailModal && selectedTransaction && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-2 sm:p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
-              <h2 className="text-xl font-bold text-gray-900">Transaction Details</h2>
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center z-10">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">Transaction Details</h2>
               <button
                 onClick={() => setShowDetailModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -795,7 +804,7 @@ const BuyerTransactions: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* Transaction Image */}
               {selectedTransaction.image_url && (
                 <div className="mb-6">
@@ -813,12 +822,12 @@ const BuyerTransactions: React.FC = () => {
               )}
 
               {/* Transaction Details Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* Transaction Type */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Transaction Type</label>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Transaction Type</label>
                   <div className="mt-1">
-                    <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold ${
+                    <span className={`inline-block px-2 sm:px-3 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm font-semibold ${
                       selectedTransaction.type === 'purchase' 
                         ? 'bg-blue-100 text-blue-700' 
                         : 'bg-emerald-100 text-emerald-700'
@@ -830,14 +839,14 @@ const BuyerTransactions: React.FC = () => {
 
                 {/* Transaction ID */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Transaction ID</label>
-                  <p className="mt-1 text-sm font-mono font-semibold text-gray-900">ABF-{selectedTransaction.id.slice(0, 13)}</p>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Transaction ID</label>
+                  <p className="mt-1 text-xs sm:text-sm font-mono font-semibold text-gray-900 break-all">ABF-{selectedTransaction.id.slice(0, 13)}</p>
                 </div>
 
                 {/* Date & Time */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Date & Time</label>
-                  <p className="mt-1 text-sm font-medium text-gray-900">
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Date & Time</label>
+                  <p className="mt-1 text-xs sm:text-sm font-medium text-gray-900">
                     {new Date(selectedTransaction.created_at).toLocaleString('en-US', {
                       year: 'numeric',
                       month: 'short',
@@ -850,18 +859,18 @@ const BuyerTransactions: React.FC = () => {
 
                 {/* Name */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     {selectedTransaction.type === 'purchase' ? 'Farmer Name' : 'Buyer Name'}
                   </label>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">{selectedTransaction.name}</p>
+                  <p className="mt-1 text-xs sm:text-sm font-semibold text-gray-900">{selectedTransaction.name}</p>
                 </div>
 
                 {/* Status */}
                 {selectedTransaction.status && (
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</label>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</label>
                     <div className="mt-1">
-                      <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold ${
+                      <span className={`inline-block px-2 sm:px-3 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm font-semibold ${
                         selectedTransaction.status === 'Completed' ? 'bg-green-100 text-green-700' :
                         selectedTransaction.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
                         'bg-red-100 text-red-700'
@@ -874,69 +883,69 @@ const BuyerTransactions: React.FC = () => {
 
                 {/* Fiber Quality */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fiber Quality</label>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">{selectedTransaction.fiber_quality}</p>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Fiber Quality</label>
+                  <p className="mt-1 text-xs sm:text-sm font-semibold text-gray-900">{selectedTransaction.fiber_quality}</p>
                 </div>
 
                 {/* Quantity */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quantity</label>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">{selectedTransaction.quantity} kg</p>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Quantity</label>
+                  <p className="mt-1 text-xs sm:text-sm font-semibold text-gray-900">{selectedTransaction.quantity} kg</p>
                 </div>
 
                 {/* Price per kg */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Price per kg</label>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">₱{selectedTransaction.price.toLocaleString()}</p>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Price per kg</label>
+                  <p className="mt-1 text-xs sm:text-sm font-semibold text-gray-900">₱{selectedTransaction.price.toLocaleString()}</p>
                 </div>
 
                 {/* Variety */}
                 {selectedTransaction.variety && (
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Variety</label>
-                    <p className="mt-1 text-sm font-semibold text-gray-900">{selectedTransaction.variety}</p>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Variety</label>
+                    <p className="mt-1 text-xs sm:text-sm font-semibold text-gray-900">{selectedTransaction.variety}</p>
                   </div>
                 )}
 
                 {/* Location */}
                 {selectedTransaction.location && (
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Location</label>
-                    <p className="mt-1 text-sm font-semibold text-gray-900">{selectedTransaction.location}</p>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Location</label>
+                    <p className="mt-1 text-xs sm:text-sm font-semibold text-gray-900">{selectedTransaction.location}</p>
                   </div>
                 )}
 
                 {/* Contact Number */}
                 {selectedTransaction.contact_number && (
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contact Number</label>
-                    <p className="mt-1 text-sm font-semibold text-gray-900">{selectedTransaction.contact_number}</p>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Contact Number</label>
+                    <p className="mt-1 text-xs sm:text-sm font-semibold text-gray-900">{selectedTransaction.contact_number}</p>
                   </div>
                 )}
               </div>
 
               {/* Notes */}
               {selectedTransaction.notes && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Notes</label>
-                  <p className="mt-2 text-sm text-gray-700 leading-relaxed">{selectedTransaction.notes}</p>
+                <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Notes</label>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-700 leading-relaxed">{selectedTransaction.notes}</p>
                 </div>
               )}
 
               {/* Total Amount */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Amount</label>
-                <p className="mt-1 text-3xl font-bold text-gray-900">
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+                <label className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Amount</label>
+                <p className="mt-1 text-2xl sm:text-3xl font-bold text-gray-900">
                   ₱{selectedTransaction.total_price.toLocaleString()}
                 </p>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition-colors font-semibold"
+                className="w-full bg-gray-900 text-white py-2.5 sm:py-3 rounded-lg hover:bg-gray-800 transition-colors font-semibold text-sm sm:text-base"
               >
                 Close
               </button>

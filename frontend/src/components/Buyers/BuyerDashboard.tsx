@@ -62,14 +62,31 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
   const fetchBuyerProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await apiGet('/api/buyers/profile');
-      const data = await response.json();
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      // Use user data from localStorage as fallback
       setBuyerInfo({
-        name: data.buyer?.full_name || 'Buyer',
-        email: data.buyer?.email || '',
-        company: data.buyer?.company_name || '',
-        contact: data.buyer?.contact_number || ''
+        name: user.full_name || user.username || 'Buyer',
+        email: user.email || '',
+        company: user.company_name || 'My Company',
+        contact: user.contact_number || user.phone || ''
       });
+
+      // Try to fetch from API but don't fail if unavailable
+      try {
+        const response = await apiGet('/api/buyers/profile');
+        if (response.ok) {
+          const data = await response.json();
+          setBuyerInfo({
+            name: data.buyer?.full_name || user.full_name || 'Buyer',
+            email: data.buyer?.email || user.email || '',
+            company: data.buyer?.company_name || user.company_name || '',
+            contact: data.buyer?.contact_number || user.contact_number || ''
+          });
+        }
+      } catch (apiError) {
+        console.log('Profile API unavailable, using cached data');
+      }
     } catch (error) {
       console.error('Error fetching buyer profile:', error);
     }
@@ -78,53 +95,60 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      
-      // Fetch recent purchases
-      const purchasesRes = await fetch('https://easyabaca-api.vercel.app/api/buyer-purchases', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Fetch recent sales
-      const salesRes = await fetch('https://easyabaca-api.vercel.app/api/buyer-sales', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
       const notificationsList: any[] = [];
       
-      if (purchasesRes.ok) {
-        const purchasesData = await purchasesRes.json();
-        const recentPurchases = (purchasesData.purchases || []).slice(0, 3);
-        
-        recentPurchases.forEach((purchase: any) => {
-          const date = new Date(purchase.created_at);
-          const timeAgo = getTimeAgo(date);
-          notificationsList.push({
-            type: 'purchase',
-            title: 'Purchase Order Confirmed',
-            message: `${purchase.quantity} kg of ${purchase.fiber_quality} fiber purchased`,
-            time: timeAgo,
-            color: 'blue',
-            date: date
-          });
+      // Try to fetch recent purchases (handle 404/500 gracefully)
+      try {
+        const purchasesRes = await fetch('https://easyabaca-api.vercel.app/api/buyer-purchases', {
+          headers: { Authorization: `Bearer ${token}` }
         });
+        
+        if (purchasesRes.ok) {
+          const purchasesData = await purchasesRes.json();
+          const recentPurchases = (purchasesData.purchases || []).slice(0, 3);
+          
+          recentPurchases.forEach((purchase: any) => {
+            const date = new Date(purchase.created_at);
+            const timeAgo = getTimeAgo(date);
+            notificationsList.push({
+              type: 'purchase',
+              title: 'Purchase Order Confirmed',
+              message: `${purchase.quantity} kg of ${purchase.fiber_quality} fiber purchased`,
+              time: timeAgo,
+              color: 'blue',
+              date: date
+            });
+          });
+        }
+      } catch (error) {
+        console.log('Purchases API unavailable');
       }
       
-      if (salesRes.ok) {
-        const salesData = await salesRes.json();
-        const recentSales = (salesData.sales || []).slice(0, 3);
-        
-        recentSales.forEach((sale: any) => {
-          const date = new Date(sale.created_at);
-          const timeAgo = getTimeAgo(date);
-          notificationsList.push({
-            type: 'sale',
-            title: 'Sale Completed',
-            message: `Sold ${sale.quantity} kg of ${sale.fiber_quality} fiber`,
-            time: timeAgo,
-            color: 'green',
-            date: date
-          });
+      // Try to fetch recent sales (handle 404 gracefully)
+      try {
+        const salesRes = await fetch('https://easyabaca-api.vercel.app/api/buyer-sales', {
+          headers: { Authorization: `Bearer ${token}` }
         });
+        
+        if (salesRes.ok) {
+          const salesData = await salesRes.json();
+          const recentSales = (salesData.sales || []).slice(0, 3);
+          
+          recentSales.forEach((sale: any) => {
+            const date = new Date(sale.created_at);
+            const timeAgo = getTimeAgo(date);
+            notificationsList.push({
+              type: 'sale',
+              title: 'Sale Completed',
+              message: `Sold ${sale.quantity} kg of ${sale.fiber_quality} fiber`,
+              time: timeAgo,
+              color: 'green',
+              date: date
+            });
+          });
+        }
+      } catch (error) {
+        console.log('Sales API unavailable');
       }
       
       // Sort by date (most recent first)
@@ -149,7 +173,6 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'inventory', label: 'My Inventory', icon: Package },
-    { id: 'create-listing', label: 'Create Price Listing', icon: ShoppingCart },
     { id: 'my-listings', label: 'My Price Listings', icon: FileText },
     { id: 'purchase', label: 'Purchase Fiber', icon: ShoppingCart },
     { id: 'transactions', label: 'Transactions', icon: FileText }
@@ -161,8 +184,6 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
         return <BuyerAnalytics />;
       case 'inventory':
         return <BuyerInventory />;
-      case 'create-listing':
-        return <BuyerPriceListingFormWithClasses />;
       case 'my-listings':
         return <BuyerPriceListings />;
       case 'purchase':
@@ -257,7 +278,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto bg-gray-50">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
+        <header className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
           <div className="px-4 md:px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -372,7 +393,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
         </header>
         
         {/* Content Area */}
-        <div className="p-4 md:p-6">
+        <div className="p-4 md:p-6 max-w-full overflow-x-hidden">
           {renderContent()}
         </div>
       </main>

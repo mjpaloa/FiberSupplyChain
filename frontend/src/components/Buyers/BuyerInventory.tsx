@@ -232,9 +232,8 @@ const BuyerInventory: React.FC = () => {
   const totalSalesCount = sales.length;
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-      <div className="relative z-10 space-y-6">
+    <div className="w-full max-w-full">
+      <div className="space-y-6">
       
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">

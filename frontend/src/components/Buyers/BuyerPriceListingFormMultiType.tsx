@@ -225,16 +225,10 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Price Listing</h1>
-        <p className="text-gray-600">Post your buying price and requirements. This will be visible to all farmers, MAO, associations, and CUSAFA.</p>
-      </div>
-
+    <div className="w-full max-w-full">
       {/* Success/Error Message */}
       {message && (
-        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 shadow-sm ${message.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
           }`}>
           {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
           <span className="font-medium">{message.text}</span>
@@ -242,12 +236,12 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
       )}
 
       {/* Info Banner */}
-      <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+      <div className="mb-8 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl shadow-sm">
         <div className="flex items-start gap-3">
-          <AlertCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
+          <AlertCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={22} />
           <div>
-            <p className="text-blue-900 font-semibold mb-1">Public Listing</p>
-            <p className="text-blue-800 text-sm">
+            <p className="text-blue-900 font-bold mb-1.5 text-base">📢 Public Listing</p>
+            <p className="text-blue-800 text-sm leading-relaxed">
               Your price listing will be publicly visible to all farmers, associations, MAO officers, and CUSAFA.
               Make sure to provide accurate information and keep your contact details updated.
             </p>
@@ -255,17 +249,17 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         {/* Company Information Card */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Building className="text-blue-600" size={24} />
+        <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-7 border border-gray-100">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm">
+              <Building className="text-white" size={24} />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Company Information</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Company Name <span className="text-red-500">*</span>
@@ -276,7 +270,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 value={formData.company_name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
                 placeholder="Enter company name"
               />
             </div>
@@ -291,7 +285,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 value={formData.contact_person}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
                 placeholder="Enter contact person name"
               />
             </div>
@@ -301,14 +295,14 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 Phone Number <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Phone className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
                   placeholder="+63 912 345 6789"
                 />
               </div>
@@ -319,14 +313,14 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 Email Address <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
                   placeholder="email@example.com"
                 />
               </div>
@@ -342,7 +336,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 value={formData.municipality}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
                 placeholder="Enter municipality"
               />
             </div>
@@ -357,7 +351,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 value={formData.barangay}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
                 placeholder="Enter barangay"
               />
             </div>
@@ -367,13 +361,13 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 Complete Address/Location <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
+                <MapPin className="absolute left-3.5 top-3.5 text-gray-400" size={18} />
                 <textarea
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
                   rows={2}
                   placeholder="Enter complete address or landmark"
                 />
@@ -383,18 +377,18 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
         </div>
 
         {/* Abaca Types Pricing Card */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-emerald-100 rounded-xl">
-              <DollarSign className="text-emerald-600" size={24} />
+        <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-7 border border-gray-100">
+          <div className="flex items-start gap-3 mb-6 pb-4 border-b border-gray-100">
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-sm">
+              <DollarSign className="text-white" size={24} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Abaca Types & Pricing</h2>
-              <p className="text-sm text-gray-600">Enable and set prices for the abaca types you want to buy</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Abaca Types & Pricing</h2>
+              <p className="text-sm text-gray-600 leading-relaxed">Enable and set prices for the abaca types you want to buy</p>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {renderTypeCard('t1', 'Type 1 (T1)', 'Premium quality abaca fiber', 'emerald')}
             {renderTypeCard('t2', 'Type 2 (T2)', 'Standard quality abaca fiber', 'blue')}
             {renderTypeCard('t3', 'Type 3 (T3)', 'Basic quality abaca fiber', 'amber')}
@@ -402,15 +396,15 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
         </div>
 
         {/* Payment & Terms Card */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <FileText className="text-purple-600" size={24} />
+        <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-7 border border-gray-100">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-sm">
+              <FileText className="text-white" size={24} />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Payment Terms & Requirements</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Payment Terms <span className="text-red-500">*</span>
@@ -420,7 +414,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 value={formData.payment_terms}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm bg-gray-50 hover:bg-white"
               >
                 <option value="">Select payment terms</option>
                 {paymentTermsOptions.map(term => (
@@ -438,7 +432,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 value={formData.availability}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm bg-gray-50 hover:bg-white"
               >
                 <option value="Available">Available - Actively Buying</option>
                 <option value="Limited">Limited - Low Demand</option>
@@ -451,7 +445,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 Valid Until <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Calendar className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   type="date"
                   name="valid_until"
@@ -459,7 +453,7 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                   onChange={handleInputChange}
                   required
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm bg-gray-50 hover:bg-white"
                 />
               </div>
             </div>
@@ -469,12 +463,12 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
                 Requirements & Specifications
               </label>
               <div className="relative">
-                <FileText className="absolute left-3 top-3 text-gray-400" size={18} />
+                <FileText className="absolute left-3.5 top-3.5 text-gray-400" size={18} />
                 <textarea
                   name="requirements"
                   value={formData.requirements}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm bg-gray-50 hover:bg-white resize-none"
                   rows={4}
                   placeholder="Enter your specific requirements (e.g., moisture content, fiber length, color, packaging, delivery preferences, etc.)"
                 />
@@ -484,23 +478,23 @@ const BuyerPriceListingFormMultiType: React.FC = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-4 pt-4">
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="px-8 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-semibold"
+            className="px-8 py-3.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-semibold border border-gray-300"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold disabled:opacity-50 flex items-center gap-2"
+            className="px-10 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2.5"
           >
             {submitting ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                Creating...
+                Creating Listing...
               </>
             ) : (
               <>

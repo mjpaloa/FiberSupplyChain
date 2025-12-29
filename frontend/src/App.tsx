@@ -149,54 +149,64 @@ const AppContent: React.FC = () => {
 
   return (
     <Routes>
-      {/* Public Routes */}
+      {/* Public Routes - WITH reCAPTCHA */}
       <Route 
         path="/" 
-        element={<HomePage onLoginClick={handleLoginClick} />} 
+        element={
+          <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
+            <HomePage onLoginClick={handleLoginClick} />
+          </GoogleReCaptchaProvider>
+        } 
       />
       
-      {/* Authentication Routes */}
+      {/* Authentication Routes - WITH reCAPTCHA */}
       <Route 
         path="/farmer-login" 
         element={
-          <FarmerAuth 
-            onBack={() => navigate('/')} 
-            onLoginSuccess={handleLoginSuccess} 
-          />
+          <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
+            <FarmerAuth 
+              onBack={() => navigate('/')} 
+              onLoginSuccess={handleLoginSuccess} 
+            />
+          </GoogleReCaptchaProvider>
         } 
       />
       
       <Route 
         path="/buyer-login" 
         element={
-          <BuyerAuth 
-            onBack={() => navigate('/')} 
-            onLoginSuccess={handleLoginSuccess} 
-          />
+          <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
+            <BuyerAuth 
+              onBack={() => navigate('/')} 
+              onLoginSuccess={handleLoginSuccess} 
+            />
+          </GoogleReCaptchaProvider>
         } 
       />
       
       <Route 
         path="/cusafa-login" 
         element={
-          <CUSAFAAuth 
-            onBack={() => navigate('/')} 
-            onLoginSuccess={handleLoginSuccess} 
-          />
+          <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
+            <CUSAFAAuth 
+              onBack={() => navigate('/')} 
+              onLoginSuccess={handleLoginSuccess} 
+            />
+          </GoogleReCaptchaProvider>
         } 
       />
 
-   
-
-   
-
-      {/* Secure Officer Login Route - Not exposed on homepage */}
+      {/* Secure Officer Login Route - WITH reCAPTCHA */}
       <Route 
         path="/mao" 
-        element={<OfficerAuth onBack={() => {}} onLoginSuccess={handleLoginSuccess} />} 
+        element={
+          <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
+            <OfficerAuth onBack={() => {}} onLoginSuccess={handleLoginSuccess} />
+          </GoogleReCaptchaProvider>
+        } 
       />
 
-      {/* Protected Dashboard Route */}
+      {/* Protected Dashboard Route - NO reCAPTCHA */}
       <Route 
         path="/dashboard" 
         element={
@@ -220,15 +230,13 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
-      <MaintenanceChecker>
-        <Router>
-          <div className="App">
-            <AppContent />
-          </div>
-        </Router>
-      </MaintenanceChecker>
-    </GoogleReCaptchaProvider>
+    <MaintenanceChecker>
+      <Router>
+        <div className="App">
+          <AppContent />
+        </div>
+      </Router>
+    </MaintenanceChecker>
   );
 };
 
