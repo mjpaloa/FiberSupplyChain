@@ -14,7 +14,11 @@ import {
   Building,
   Calendar,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Lock,
+  Eye,
+  EyeOff,
+  Key
 } from 'lucide-react';
 
 interface BuyerInfo {
@@ -51,6 +55,17 @@ const BuyerProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
     fetchBuyerProfile();
@@ -109,6 +124,60 @@ const BuyerProfile: React.FC = () => {
     setPrices(newPrices);
   };
 
+  const handlePasswordChange = async () => {
+    setPasswordMessage(null);
+
+    // Validation
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'Please fill in all password fields' });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'New passwords do not match' });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordMessage({ type: 'error', text: 'New password must be at least 6 characters long' });
+      return;
+    }
+
+    setChangingPassword(true);
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('https://easyabaca-api.vercel.app/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setPasswordMessage({ type: 'success', text: 'Password changed successfully!' });
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setTimeout(() => {
+          setShowPasswordSection(false);
+          setPasswordMessage(null);
+        }, 2000);
+      } else {
+        setPasswordMessage({ type: 'error', text: data.message || 'Current password is incorrect' });
+      }
+    } catch (error) {
+      setPasswordMessage({ type: 'error', text: 'Failed to change password. Please try again.' });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -118,9 +187,10 @@ const BuyerProfile: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-full">
+    <div className="w-full max-w-full min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Header */}
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Buyer Profile & Pricing</h1>
           <p className="text-gray-600">Manage your company information and abaca fiber pricing</p>
@@ -165,6 +235,152 @@ const BuyerProfile: React.FC = () => {
           <span className="font-medium">{message.text}</span>
         </div>
       )}
+
+      {/* Password Change Section */}
+      <div className="mb-6 bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
+              <Lock className="text-white" size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">Security Settings</h2>
+              <p className="text-xs sm:text-sm text-gray-500">Update your password</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowPasswordSection(!showPasswordSection)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-semibold text-sm"
+          >
+            <Key size={16} />
+            {showPasswordSection ? 'Hide' : 'Change Password'}
+          </button>
+        </div>
+
+        {showPasswordSection && (
+          <div className="space-y-4">
+            {/* Password Message */}
+            {passwordMessage && (
+              <div className={`p-4 rounded-xl flex items-center gap-3 ${passwordMessage.type === 'success' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
+                {passwordMessage.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                <span className="font-medium text-sm">{passwordMessage.text}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Current Password */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Current Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    className="w-full pl-11 pr-11 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                    placeholder="Enter current password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New Password */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  New Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    className="w-full pl-11 pr-11 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                    placeholder="Enter new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Confirm New Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    className="w-full pl-11 pr-11 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                    placeholder="Confirm new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPasswordSection(false);
+                  setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                  setPasswordMessage(null);
+                }}
+                className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-semibold text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handlePasswordChange}
+                disabled={changingPassword}
+                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+              >
+                {changingPassword ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Changing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Key size={16} />
+                    <span>Change Password</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+              <p className="text-xs text-purple-800">
+                <strong>Note:</strong> Password must be at least 6 characters long. Make sure to remember your new password.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Company Information */}
@@ -501,6 +717,7 @@ const BuyerProfile: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

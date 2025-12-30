@@ -30,3 +30,41 @@
   animation: fadeInUp 0.6s ease-out forwards;
   opacity: 0;
 }
+
+/* reCAPTCHA Badge - Position outside all containers on mobile */
+.grecaptcha-badge {
+  z-index: 999999 !important;
+  position: fixed !important;
+  bottom: 14px !important;
+  right: 14px !important;
+  pointer-events: auto !important;
+  width: 70px !important;
+  height: 60px !important;
+  overflow: hidden !important;
+  transition: width 0.3s ease, height 0.3s ease !important;
+}
+
+/* Expand on hover - show full reCAPTCHA badge */
+.grecaptcha-badge:hover {
+  width: 256px !important;
+  height: 60px !important;
+  overflow: visible !important;
+}
+
+/* Mobile-specific positioning */
+@media (max-width: 768px) {
+  .grecaptcha-badge {
+    bottom: 10px !important;
+    right: 10px !important;
+    width: 70px !important;
+    height: 60px !important;
+  }
+  
+  /* On mobile, expand on active/focus */
+  .grecaptcha-badge:active,
+  .grecaptcha-badge:focus {
+    width: 256px !important;
+    height: 60px !important;
+    overflow: visible !important;
+  }
+}

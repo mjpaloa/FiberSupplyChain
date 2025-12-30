@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Leaf, Users, CheckCircle, Phone, Mail, Facebook, MapPin, ShieldCheck, TrendingUp, Award, Menu, X, Quote, ArrowRight, Zap, User, DollarSign, Search, Filter, Truck, Activity, FileText, Users as UsersIcon } from 'lucide-react';
+import { Leaf, Users, CheckCircle, Phone, Mail, Facebook, MapPin, ShieldCheck, TrendingUp, Award, Menu, X, Quote, ArrowRight, Zap, User, Coins, Search, Filter, Truck, Activity, FileText, Users as UsersIcon, Languages, MessageCircle } from 'lucide-react';
 import { getCookiePreferences, saveCookiePreferences, hasConsent, trackPageView } from '../utils/cookieManager';
 import { QualityModal, BuyerDetailsModal } from './HomePageModals';
+import { AIChatWidget } from '../components/Support/AIChatWidget';
 
 // Types
 interface Buyer {
@@ -158,6 +159,134 @@ const maoStaff: MAOStaff[] = [
   }
 ];
 
+// Centralized Language Object for How It Works Modal
+const howItWorksContent = {
+  header: {
+    title: 'How E.A.S.Y ABACA Works',
+    subtitle: {
+      en: 'Complete workflow guide for farmers, buyers, and associations',
+      bis: 'Kompleto nga giya sa trabaho para sa mga mag-uuma, buyer, ug asosasyon'
+    }
+  },
+  tabs: {
+    farmer: { en: 'Farmers', bis: 'Mag-uuma' },
+    buyer: { en: 'Buyers', bis: 'Buyer' },
+    association: { en: 'Association', bis: 'Asosasyon' }
+  },
+  farmer: {
+    steps: [
+      {
+        title: { en: '1. Register & Get Verified', bis: '1. Pag-rehistro ug Pag-verify' },
+        desc: { en: 'Register in the system and submit your valid ID. Wait for CUSAFA/MAO verification. Status: Pending → Verified.', bis: 'Mag-rehistro sa system ug i-submit ang valid ID. Hulaton ang CUSAFA/MAO verification. Status: Pending → Verified.' }
+      },
+      {
+        title: { en: '2. Receive Seedlings & Plant', bis: '2. Dawat og Seedlings ug Mag-tanom' },
+        desc: { en: 'Receive abaca seedlings from CUSAFA. Plant on your farm and record planting date, location, and variety. Upload photos.', bis: 'Dawata ang abaca seedlings gikan sa CUSAFA. Itanom sa farm ug i-record ang planting date, location, ug variety. Upload pictures.' }
+      },
+      {
+        title: { en: '3. Farm Monitoring (By CUSAFA)', bis: '3. Farm Monitoring (Monitored by CUSAFA)' },
+        desc: { en: 'CUSAFA officers visit your farm to monitor growth stage, farm condition (Healthy/Needs Support/Damaged), and issues. Recommendations provided.', bis: 'Ang CUSAFA officer mag-visit sa farm para i-monitor ang growth stage, farm condition (Healthy/Needs Support/Damaged), ug issues. Recommendations provided.' }
+      },
+      {
+        title: { en: '4. Harvest & Submit for Verification', bis: '4. I-harvest ug I-submit para Verification' },
+        desc: { en: 'Harvest abaca fiber. Record: variety, quantity (kg), grade, harvest date, and upload photos. Submit to system. Status: Pending Verification → Verified by CUSAFA.', bis: 'I-harvest ang abaca fiber. I-record: variety, quantity (kg), grade, harvest date, photos. I-submit sa system. Status: Pending Verification → Verified by CUSAFA.' }
+      },
+      {
+        title: { en: '5. Browse Buyer Listings & Connect', bis: '5. Tan-awa ang Buyer Listings ug Connect' },
+        desc: { en: 'Browse buyer listings offering Class A/B/C fiber. Compare prices (₱/kg), requirements, and payment terms. Contact buyers directly for negotiations.', bis: 'Tan-awa ang mga buyer listings nga nag-offer sa Class A/B/C fiber. Compare prices (₱/kg), requirements, payment terms. Contact buyer directly.' }
+      },
+      {
+        title: { en: '6. Delivery, Payment & Sales Report', bis: '6. Delivery, Payment ug Sales Report' },
+        desc: { en: 'Arrange delivery with buyer. Receive payment (₱). Submit sales report for records. Status: In Transit → Delivered → Completed.', bis: 'Mag-arrange og delivery sa buyer. Dawaton ang bayad (₱). I-submit ang sales report para sa records. Status: In Transit → Delivered → Completed.' }
+      }
+    ],
+    benefits: {
+      title: { en: 'Why Farmers Love E.A.S.Y ABACA', bis: 'Ngano nga Ganahan ang Mag-uuma sa E.A.S.Y ABACA' },
+      items: [
+        { en: 'Direct access to verified buyers nationwide', bis: 'Direktang koneksyon sa verified buyers sa tibuok nasud' },
+        { en: 'Fair market prices in Philippine Peso (₱)', bis: 'Hustong presyo sa merkado sa Philippine Peso (₱)' },
+        { en: 'No middleman - higher profits for you', bis: 'Walay middleman - mas taas ang kita' },
+        { en: 'Free technical support from MAO Culiram', bis: 'Libre nga technical support gikan sa MAO Culiram' },
+        { en: 'Track all your sales and inventory in one place', bis: 'I-track ang tanan nga baligya ug inventory sa usa ka lugar' }
+      ],
+      button: { en: 'Start as Farmer', bis: 'Magsugod isip Mag-uuma' }
+    }
+  },
+  buyer: {
+    steps: [
+      {
+        title: { en: '1. Register & Get Verified', bis: '1. Pag-rehistro ug Pag-verify' },
+        desc: { en: 'Register in the system and submit business permit and valid ID. Wait for MAO verification. Status: Pending → Verified.', bis: 'Mag-register sa system ug i-submit ang business permit, valid ID. Hulaton ang MAO verification. Status: Pending → Verified.' }
+      },
+      {
+        title: { en: '2. Create Buyer Listing', bis: '2. Paghimo og Buyer Listing' },
+        desc: { en: 'Post your buying requirements: Class A/B/C prices (₱/kg), payment terms, location, and valid until date. Enable/disable your Class preferences.', bis: 'I-post ang imong buying requirements: Class A/B/C prices (₱/kg), payment terms, location, valid until date. Enable/disable ang imong Class preferences.' }
+      },
+      {
+        title: { en: '3. Browse Available Harvests', bis: '3. Pangita og Available Harvests' },
+        desc: { en: 'View verified harvests in CUSAFA inventory. Filter by variety, grade, and quantity. View farmer details, harvest date, and quality photos.', bis: 'Tan-awa ang verified harvests sa CUSAFA inventory. Filter by variety, grade, quantity. View farmer details, harvest date, quality photos.' }
+      },
+      {
+        title: { en: '4. Arrange Fiber Delivery', bis: '4. Mag-arrange og Fiber Delivery' },
+        desc: { en: 'Contact farmer and agree on delivery terms. Record: delivery date, time, quantity, price (₱/kg), and pickup/delivery location. Status: In Transit → Delivered.', bis: 'Contact farmer ug mag-agree sa delivery. I-record: delivery date, time, quantity, price (₱/kg), pickup/delivery location. Status: In Transit → Delivered.' }
+      },
+      {
+        title: { en: '5. Record Purchase & Payment', bis: '5. I-record ang Purchase ug Bayad' },
+        desc: { en: 'Confirm delivery and upload receipt/proof. Record purchase details: fiber quality, quantity, and total price (₱). Payment status: Pending → Paid.', bis: 'Confirm delivery, i-upload ang receipt/proof. I-record ang purchase details: fiber quality, quantity, total price (₱). Payment status: Pending → Paid.' }
+      }
+    ],
+    benefits: {
+      title: { en: 'Why Buyers Choose E.A.S.Y ABACA', bis: 'Ngano nga Mopili ang Buyers sa E.A.S.Y ABACA' },
+      items: [
+        { en: 'Reliable and consistent supply chain', bis: 'Kasaligan ug kanunay nga supply chain' },
+        { en: 'Quality-graded fiber with MAO verification', bis: 'Quality-graded fiber uban sa MAO verification' },
+        { en: 'Direct negotiation - better prices (₱)', bis: 'Direktang negotiation - mas maayo nga presyo (₱)' },
+        { en: 'Access to multiple verified suppliers', bis: 'Access sa daghang verified suppliers' },
+        { en: 'Transparent pricing and transaction records', bis: 'Transparent nga presyo ug transaction records' }
+      ],
+      button: { en: 'Start as Buyer', bis: 'Magsugod isip Buyer' }
+    }
+  },
+  association: {
+    steps: [
+      {
+        title: { en: '1. Verify Farmers & Buyers', bis: '1. I-verify ang Farmers ug Buyers' },
+        desc: { en: 'Review farmer/buyer registrations. Validate IDs, business permits, and farm locations. Set verification status: Pending → Verified/Rejected with reasons.', bis: 'Review farmer/buyer registrations. Validate valid IDs, business permits, farm locations. Set verification_status: Pending → Verified/Rejected with reasons.' }
+      },
+      {
+        title: { en: '2. Distribute Seedlings to Farmers', bis: '2. I-distribute ang Seedlings' },
+        desc: { en: 'Receive seedlings from MAO. Distribute to farmers: variety, quantity, and photos. Track status: Distributed to Farmer → Planted. Monitor planting records.', bis: 'Dawat og seedlings gikan sa MAO. I-distribute sa farmers: variety, quantity, photos. Track status: Distributed to Farmer → Planted. Monitor planting records.' }
+      },
+      {
+        title: { en: '3. Monitor Farm Conditions', bis: '3. Mag-monitor sa Farms' },
+        desc: { en: 'Visit farms and record: farm condition (Healthy/Needs Support/Damaged), growth stage, issues observed, actions taken, and recommendations. Upload photos.', bis: 'Mag-visit og farms. I-record: farm condition (Healthy/Needs Support/Damaged), growth stage, issues observed, actions taken, recommendations. Upload photos.' }
+      },
+      {
+        title: { en: '4. Verify Farmer Harvests', bis: '4. I-verify ang Harvests' },
+        desc: { en: 'Review harvest submissions: variety, quantity, grade, and quality photos. Approve/reject with notes. Verified harvests go to CUSAFA inventory for buyer access.', bis: 'Review harvest submissions: variety, quantity, grade, quality photos. Approve/reject with notes. Verified harvests go to CUSAFA inventory for buyer access.' }
+      },
+      {
+        title: { en: '5. Manage CUSAFA Inventory', bis: '5. I-manage ang Inventory' },
+        desc: { en: 'Track all verified harvests in warehouse. Status: In Stock/Sold/Processed/Damaged. Monitor distributions to buyers. Location: shelf numbers.', bis: 'Track ang tanang verified harvests sa warehouse. Status: In Stock/Sold/Processed/Damaged. Monitor distributions sa buyers. Location: shelf numbers.' }
+      },
+      {
+        title: { en: '6. Generate Reports & Analytics', bis: '6. Paghimo og Reports' },
+        desc: { en: 'Create monthly/annual reports: production volume, sales (₱), member count, deliveries, and monitoring records. Export for municipal planning and analysis.', bis: 'Create monthly/annual reports: production volume, sales (₱), member count, deliveries, monitoring records. Export for municipal planning ug analysis.' }
+      }
+    ],
+    benefits: {
+      title: { en: 'CUSAFA & MAO Benefits', bis: 'CUSAFA & MAO nga Kaayohan' },
+      items: [
+        { en: 'Empower local farmers with direct market access', bis: 'Paghatag og gahum sa lokal nga mag-uuma pinaagi sa direktang access sa merkado' },
+        { en: 'Real-time data for better agricultural planning', bis: 'Real-time data para sa mas maayong agricultural planning' },
+        { en: 'Transparent monitoring of all transactions (₱)', bis: 'Transparent nga monitoring sa tanang transactions (₱)' },
+        { en: 'Promote community growth and sustainability', bis: 'Pagpalambo sa komunidad ug sustainability' },
+        { en: 'Data-driven policy and support programs', bis: 'Data-driven policy ug support programs' }
+      ],
+      button: { en: 'Login as Association', bis: 'Login isip Asosasyon' }
+    }
+  }
+};
 
 const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -171,6 +300,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   const [howItWorksRole, setHowItWorksRole] = useState<'farmer' | 'buyer' | 'association'>('farmer');
+  const [howItWorksLang, setHowItWorksLang] = useState<'bisaya' | 'english'>('bisaya');
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
 
   const handleContactSubmit = (e: React.FormEvent) => {
@@ -426,7 +556,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                         onClick={() => setShowContactModal(true)}
                         className="group w-full sm:w-auto px-8 py-4 bg-white text-emerald-900 rounded-lg hover:bg-emerald-50 transition-all duration-300 font-bold flex items-center justify-center space-x-2 shadow-2xl hover:shadow-emerald-500/50 hover:scale-105"
                       >
-                        <span>Contact MAO</span>
+                        <span>Get MAO Support</span>
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </button>
                       <button
@@ -1207,7 +1337,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                     <span>🧾</span><span>Buyers List</span>
                   </a></li>
                   <li><button onClick={() => setShowContactModal(true)} className="text-emerald-200 hover:text-white transition flex items-center space-x-2 w-full text-left">
-                    <span>📩</span><span>Contact MAO</span>
+                    <span>💬</span><span>Get MAO Support</span>
                   </button></li>
                 </ul>
               </div>
@@ -1280,126 +1410,78 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
           onClose={() => setShowBuyerDetails(false)}
         />
 
-        {/* Contact Modal */}
-        {showContactModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="relative h-32 bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 bg-pattern opacity-10"></div>
-                <div className="text-center z-10">
-                  <h2 className="text-3xl font-bold text-white mb-2">Contact Us</h2>
-                  <p className="text-emerald-100">We'd love to hear from you</p>
-                </div>
-                <button
-                  onClick={() => setShowContactModal(false)}
-                  className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="p-8">
-                <form onSubmit={handleContactSubmit} className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none"
-                      placeholder="Your Name"
-                      value={contactForm.name}
-                      onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                    <input
-                      type="email"
-                      required
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none"
-                      placeholder="your.email@example.com"
-                      value={contactForm.email}
-                      onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                    <textarea
-                      required
-                      rows={4}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none resize-none"
-                      placeholder="How can we help you?"
-                      value={contactForm.message}
-                      onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                    ></textarea>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-lg hover:shadow-lg hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-2"
-                  >
-                    <Mail className="w-5 h-5" />
-                    <span>Send Message</span>
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* AI Chat Widget */}
+        <AIChatWidget 
+          isOpen={showContactModal} 
+          onClose={() => setShowContactModal(false)} 
+        />
 
         {/* How It Works Modal */}
         {showHowItWorksModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
-              <div className="relative h-40 bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center overflow-hidden shrink-0">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
+              {/* Fixed Header */}
+              <div className="relative h-36 bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center overflow-hidden shrink-0 rounded-t-3xl">
                 <div className="absolute inset-0 bg-pattern opacity-10"></div>
-                <div className="text-center z-10">
-                  <h2 className="text-3xl font-bold text-white mb-2">How E.A.S.Y ABACA Works</h2>
-                  <p className="text-emerald-100">Simple steps to get started with our platform</p>
+                <div className="text-center z-10 px-4">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">{howItWorksContent.header.title}</h2>
+                  <p className="text-emerald-100 text-sm md:text-base">{howItWorksLang === 'english' ? howItWorksContent.header.subtitle.en : howItWorksContent.header.subtitle.bis}</p>
                 </div>
-                <button
-                  onClick={() => setShowHowItWorksModal(false)}
-                  className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="absolute top-4 right-4 flex items-center gap-2">
+                  <button
+                    onClick={() => setHowItWorksLang(howItWorksLang === 'bisaya' ? 'english' : 'bisaya')}
+                    className="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors text-sm font-medium"
+                  >
+                    <Languages className="w-4 h-4" />
+                    <span>{howItWorksLang === 'bisaya' ? 'English' : 'Bisaya'}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowHowItWorksModal(false)}
+                    className="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
-              <div className="p-6 md:p-8">
-                {/* Role Tabs */}
-                <div className="flex bg-gray-100 p-1 rounded-xl mb-8">
+              {/* Fixed Role Tabs */}
+              <div className="px-6 md:px-8 pt-6 shrink-0 bg-white">
+                <div className="flex bg-gray-100 p-1 rounded-xl">
                   <button
                     onClick={() => setHowItWorksRole('farmer')}
                     className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${howItWorksRole === 'farmer' ? 'bg-white text-emerald-700 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
                   >
-                    Farmers
+                    {howItWorksLang === 'english' ? howItWorksContent.tabs.farmer.en : howItWorksContent.tabs.farmer.bis}
                   </button>
                   <button
                     onClick={() => setHowItWorksRole('buyer')}
                     className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${howItWorksRole === 'buyer' ? 'bg-white text-emerald-700 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
                   >
-                    Buyers
+                    {howItWorksLang === 'english' ? howItWorksContent.tabs.buyer.en : howItWorksContent.tabs.buyer.bis}
                   </button>
                   <button
                     onClick={() => setHowItWorksRole('association')}
                     className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${howItWorksRole === 'association' ? 'bg-white text-emerald-700 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
                   >
-                    Association
+                    {howItWorksLang === 'english' ? howItWorksContent.tabs.association.en : howItWorksContent.tabs.association.bis}
                   </button>
                 </div>
+              </div>
 
-                {/* Content based on Role */}
-                <div className="space-y-8 animate-in slide-in-from-right duration-300" key={howItWorksRole}>
+              {/* Scrollable Content Area - 2 Column Layout */}
+              <div className="flex-1 overflow-y-auto lg:overflow-hidden px-4 md:px-6 lg:px-8 pb-6 pt-4">
+                <div className="h-full grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6" key={howItWorksRole}>
                   {howItWorksRole === 'farmer' && (
-                    <div className="grid md:grid-cols-2 gap-8 items-center">
-                      <div className="space-y-6">
+                    <>
+                      {/* LEFT: Scrollable Steps */}
+                      <div className="lg:overflow-y-auto lg:pr-4 space-y-5">
                         <div className="flex gap-4">
                           <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                             <User className="w-6 h-6 text-emerald-600" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg text-gray-900">1. Register & Login</h3>
-                            <p className="text-gray-600">Create your farmer account and log in to access your dashboard.</p>
+                            <h3 className="font-bold text-lg text-gray-900">1. Pag-rehistro ug Pag-verify (Register & Get Verified)</h3>
+                            <p className="text-gray-600">Mag-register sa system ug i-submit ang valid ID. Hulaton ang CUSAFA/MAO verification. Status: Pending → Verified.</p>
                           </div>
                         </div>
                         <div className="flex gap-4">
@@ -1407,62 +1489,117 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                             <Leaf className="w-6 h-6 text-emerald-600" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg text-gray-900">2. Post Your Harvest</h3>
-                            <p className="text-gray-600">Share details about your abaca harvest, including quantity and quality (grade).</p>
+                            <h3 className="font-bold text-lg text-gray-900">2. Dawat og Seedlings ug Mag-tanom (Receive Seedlings & Plant)</h3>
+                            <p className="text-gray-600">Dawata ang abaca seedlings gikan sa CUSAFA. Itanom sa farm ug i-record ang planting date, location, ug variety. Upload pictures.</p>
                           </div>
                         </div>
                         <div className="flex gap-4">
                           <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                            <DollarSign className="w-6 h-6 text-emerald-600" />
+                            <Activity className="w-6 h-6 text-emerald-600" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg text-gray-900">3. Check Prices & Connect</h3>
-                            <p className="text-gray-600">View current market prices and connect with verified buyers in the network.</p>
+                            <h3 className="font-bold text-lg text-gray-900">3. Farm Monitoring (Monitored by CUSAFA)</h3>
+                            <p className="text-gray-600">Ang CUSAFA officer mag-visit sa farm para i-monitor ang growth stage, farm condition (Healthy/Needs Support/Damaged), ug issues. Recommendations provided.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                            <CheckCircle className="w-6 h-6 text-emerald-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-lg text-gray-900">4. I-harvest ug I-submit para Verification (Harvest & Submit for Verification)</h3>
+                            <p className="text-gray-600">I-harvest ang abaca fiber. I-record: variety, quantity (kg), grade, harvest date, photos. I-submit sa system. Status: Pending Verification → Verified by CUSAFA.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                            <Coins className="w-6 h-6 text-emerald-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-lg text-gray-900">{howItWorksLang === 'bisaya' ? '5. Tan-awa ang Buyer Listings ug Connect' : '5. Check Buyer Listings & Connect'}</h3>
+                            <p className="text-gray-600">{howItWorksLang === 'bisaya' ? 'Tan-awa ang mga buyer listings nga nag-offer sa Class A/B/C fiber. Compare prices (₱/kg), requirements, payment terms. Contact buyer directly.' : 'Browse buyer listings offering Class A/B/C fiber. Compare prices (₱/kg), requirements, payment terms. Contact buyer directly.'}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                            <Truck className="w-6 h-6 text-emerald-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-lg text-gray-900">6. Delivery, Payment ug Sales Report (Delivery, Payment & Report)</h3>
+                            <p className="text-gray-600">Mag-arrange og delivery sa buyer. Dawaton ang bayad (₱). I-submit ang sales report para sa records. Status: In Transit → Delivered → Completed.</p>
                           </div>
                         </div>
                       </div>
-                      <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100">
-                        <h4 className="font-bold text-emerald-900 mb-4">Farmer Benefits</h4>
-                        <ul className="space-y-3">
-                          <li className="flex items-center gap-2 text-emerald-800">
-                            <CheckCircle className="w-5 h-5 text-emerald-500" />
-                            <span>Direct access to buyers</span>
+                      <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 h-fit">
+                        <h4 className="font-bold text-emerald-900 mb-4 text-base">Why Farmers Love E.A.S.Y ABACA</h4>
+                        <ul className="space-y-2.5">
+                          <li className="flex items-start gap-2 text-emerald-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" />
+                            <span className="text-sm leading-snug">Direct access to verified buyers nationwide</span>
                           </li>
-                          <li className="flex items-center gap-2 text-emerald-800">
-                            <CheckCircle className="w-5 h-5 text-emerald-500" />
-                            <span>Fair market price transparency</span>
+                          <li className="flex items-start gap-2 text-emerald-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" />
+                            <span className="text-sm leading-snug">Fair market prices in Philippine Peso (₱)</span>
                           </li>
-                          <li className="flex items-center gap-2 text-emerald-800">
-                            <CheckCircle className="w-5 h-5 text-emerald-500" />
-                            <span>Technical support from MAO</span>
+                          <li className="flex items-start gap-2 text-emerald-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" />
+                            <span className="text-sm leading-snug">No middleman - higher profits for you</span>
+                          </li>
+                          <li className="flex items-start gap-2 text-emerald-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" />
+                            <span className="text-sm leading-snug">Free technical support from MAO Culiram</span>
+                          </li>
+                          <li className="flex items-start gap-2 text-emerald-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" />
+                            <span className="text-sm leading-snug">Track all your sales and inventory in one place</span>
                           </li>
                         </ul>
-                        <button onClick={() => { setShowHowItWorksModal(false); onLoginClick('farmer'); }} className="mt-6 w-full py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">
+                        <button onClick={() => { setShowHowItWorksModal(false); onLoginClick('farmer'); }} className="mt-8 w-full py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">
                           Start as Farmer
                         </button>
                       </div>
-                    </div>
+                       </>
+                    
                   )}
 
                   {howItWorksRole === 'buyer' && (
-                    <div className="grid md:grid-cols-2 gap-8 items-center">
-                      <div className="space-y-6">
+                    <>
+                      {/* LEFT: Scrollable Steps */}
+                      <div className="lg:overflow-y-auto lg:pr-4 space-y-5">
+                        <div className="flex gap-4">
+                          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                            <User className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-lg text-gray-900">1. Pag-rehistro ug Pag-verify (Register & Get Verified)</h3>
+                            <p className="text-gray-600">Mag-register sa system ug i-submit ang business permit, valid ID. Hulaton ang MAO verification. Status: Pending → Verified.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                            <FileText className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-lg text-gray-900">2. Paghimo og Buyer Listing (Create Buyer Listing)</h3>
+                            <p className="text-gray-600">I-post ang imong buying requirements: Class A/B/C prices (₱/kg), payment terms, location, valid until date. Enable/disable ang imong Class preferences.</p>
+                          </div>
+                        </div>
                         <div className="flex gap-4">
                           <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                             <Search className="w-6 h-6 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg text-gray-900">1. Browse Supply</h3>
-                            <p className="text-gray-600">Explore available abaca fiber listings from verified local farmers.</p>
+                            <h3 className="font-bold text-lg text-gray-900">3. Pangita og Available Harvests (Browse Available Harvests)</h3>
+                            <p className="text-gray-600">Tan-awa ang verified harvests sa CUSAFA inventory. Filter by variety, grade, quantity. View farmer details, harvest date, quality photos.</p>
                           </div>
                         </div>
                         <div className="flex gap-4">
                           <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                            <Filter className="w-6 h-6 text-blue-600" />
+                            <Coins className="w-6 h-6 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg text-gray-900">2. Filter by Quality</h3>
-                            <p className="text-gray-600">Find the specific fiber grades (T1, T2, etc.) you need for your production.</p>
+                            <h3 className="font-bold text-lg text-gray-900">{howItWorksLang === 'bisaya' ? '4. Mag-arrange og Fiber Delivery' : '4. Arrange Fiber Delivery'}</h3>
+                            <p className="text-gray-600">{howItWorksLang === 'bisaya' ? 'Contact farmer ug mag-agree sa delivery. I-record: delivery date, time, quantity, price (₱/kg), pickup/delivery location. Status: In Transit → Delivered.' : 'Contact farmer and agree on delivery terms. Record: delivery date, time, quantity, price (₱/kg), pickup/delivery location. Status: In Transit → Delivered.'}</p>
                           </div>
                         </div>
                         <div className="flex gap-4">
@@ -1470,44 +1607,63 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                             <Truck className="w-6 h-6 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg text-gray-900">3. Transact Securely</h3>
-                            <p className="text-gray-600">Coordinate pickup and payment directly with farmers through the system.</p>
+                            <h3 className="font-bold text-lg text-gray-900">5. I-record ang Purchase ug Bayad (Record Purchase & Payment)</h3>
+                            <p className="text-gray-600">Confirm delivery, i-upload ang receipt/proof. I-record ang purchase details: fiber quality, quantity, total price (₱). Payment status: Pending → Paid.</p>
                           </div>
                         </div>
                       </div>
                       <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100">
-                        <h4 className="font-bold text-blue-900 mb-4">Buyer Benefits</h4>
+                        <h4 className="font-bold text-blue-900 mb-4">Why Buyers Choose E.A.S.Y ABACA</h4>
                         <ul className="space-y-3">
-                          <li className="flex items-center gap-2 text-blue-800">
-                            <CheckCircle className="w-5 h-5 text-blue-500" />
-                            <span>Consistent supply chain</span>
+                          <li className="flex items-start gap-2 text-blue-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-blue-500 shrink-0" />
+                            <span className="text-sm leading-snug">Reliable and consistent supply chain</span>
                           </li>
-                          <li className="flex items-center gap-2 text-blue-800">
-                            <CheckCircle className="w-5 h-5 text-blue-500" />
-                            <span>Quality assured produce</span>
+                          <li className="flex items-start gap-2 text-blue-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-blue-500 shrink-0" />
+                            <span className="text-sm leading-snug">Quality-graded fiber with MAO verification</span>
                           </li>
-                          <li className="flex items-center gap-2 text-blue-800">
-                            <CheckCircle className="w-5 h-5 text-blue-500" />
-                            <span>Direct negotiation</span>
+                          <li className="flex items-start gap-2 text-blue-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-blue-500 shrink-0" />
+                            <span className="text-sm leading-snug">Direct negotiation - better prices (₱)</span>
+                          </li>
+                          <li className="flex items-start gap-2 text-blue-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-blue-500 shrink-0" />
+                            <span className="text-sm leading-snug">Access to multiple verified suppliers</span>
+                          </li>
+                          <li className="flex items-start gap-2 text-blue-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-blue-500 shrink-0" />
+                            <span className="text-sm leading-snug">Transparent pricing and transaction records</span>
                           </li>
                         </ul>
                         <button onClick={() => { setShowHowItWorksModal(false); onLoginClick('buyer'); }} className="mt-6 w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
                           Start as Buyer
                         </button>
                       </div>
-                    </div>
+                    </>
+
                   )}
 
                   {howItWorksRole === 'association' && (
-                    <div className="grid md:grid-cols-2 gap-8 items-center">
-                      <div className="space-y-6">
+                    <>
+                      {/* LEFT: Scrollable Steps */}
+                      <div className="lg:overflow-y-auto lg:pr-4 space-y-5">
                         <div className="flex gap-4">
                           <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
                             <UsersIcon className="w-6 h-6 text-purple-600" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg text-gray-900">1. Manage Members</h3>
-                            <p className="text-gray-600">Verify and oversee farmer and buyer accounts within the system.</p>
+                            <h3 className="font-bold text-lg text-gray-900">1. I-verify ang Farmers ug Buyers (Verify Farmers & Buyers)</h3>
+                            <p className="text-gray-600">Review farmer/buyer registrations. Validate valid IDs, business permits, farm locations. Set verification_status: Pending → Verified/Rejected with reasons.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                            <Leaf className="w-6 h-6 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-lg text-gray-900">2. I-distribute ang Seedlings (Distribute Seedlings to Farmers)</h3>
+                            <p className="text-gray-600">Dawat og seedlings gikan sa MAO. I-distribute sa farmers: variety, quantity, photos. Track status: Distributed to Farmer → Planted. Monitor planting records.</p>
                           </div>
                         </div>
                         <div className="flex gap-4">
@@ -1515,8 +1671,26 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                             <Activity className="w-6 h-6 text-purple-600" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg text-gray-900">2. Monitor Transactions</h3>
-                            <p className="text-gray-600">Track sales volume and market trends in real-time.</p>
+                            <h3 className="font-bold text-lg text-gray-900">3. Mag-monitor sa Farms (Monitor Farm Conditions)</h3>
+                            <p className="text-gray-600">Mag-visit og farms. I-record: farm condition (Healthy/Needs Support/Damaged), growth stage, issues observed, actions taken, recommendations. Upload photos.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                            <CheckCircle className="w-6 h-6 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-lg text-gray-900">4. I-verify ang Harvests (Verify Farmer Harvests)</h3>
+                            <p className="text-gray-600">Review harvest submissions: variety, quantity, grade, quality photos. Approve/reject with notes. Verified harvests go to CUSAFA inventory for buyer access.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                            <Coins className="w-6 h-6 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-lg text-gray-900">{howItWorksLang === 'bisaya' ? '5. I-manage ang Inventory' : '5. Manage CUSAFA Inventory'}</h3>
+                            <p className="text-gray-600">{howItWorksLang === 'bisaya' ? 'Track ang tanang verified harvests sa warehouse. Status: In Stock/Sold/Processed/Damaged. Monitor distributions sa buyers. Location: shelf numbers.' : 'Track all verified harvests in warehouse. Status: In Stock/Sold/Processed/Damaged. Monitor distributions to buyers. Location: shelf numbers.'}</p>
                           </div>
                         </div>
                         <div className="flex gap-4">
@@ -1524,34 +1698,85 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
                             <FileText className="w-6 h-6 text-purple-600" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg text-gray-900">3. Generate Reports</h3>
-                            <p className="text-gray-600">Create detailed reports for municipal records and planning.</p>
+                            <h3 className="font-bold text-lg text-gray-900">6. Paghimo og Reports (Generate Reports & Analytics)</h3>
+                            <p className="text-gray-600">Create monthly/annual reports: production volume, sales (₱), member count, deliveries, monitoring records. Export for municipal planning ug analysis.</p>
                           </div>
                         </div>
                       </div>
-                      <div className="bg-purple-50 rounded-2xl p-6 border border-purple-100">
-                        <h4 className="font-bold text-purple-900 mb-4">Association Goals</h4>
-                        <ul className="space-y-3">
-                          <li className="flex items-center gap-2 text-purple-800">
-                            <CheckCircle className="w-5 h-5 text-purple-500" />
-                            <span>Empower local farmers</span>
+                      <div className="bg-purple-50 rounded-2xl p-6 border border-purple-100 h-fit">
+                        <h4 className="font-bold text-purple-900 mb-4 text-base">CUSAFA & MAO Benefits</h4>
+                        <ul className="space-y-2.5">
+                          <li className="flex items-start gap-2 text-purple-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-purple-500 shrink-0" />
+                            <span className="text-sm leading-snug">Empower local farmers with direct market access</span>
                           </li>
-                          <li className="flex items-center gap-2 text-purple-800">
-                            <CheckCircle className="w-5 h-5 text-purple-500" />
-                            <span>Systematic data collection</span>
+                          <li className="flex items-start gap-2 text-purple-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-purple-500 shrink-0" />
+                            <span className="text-sm leading-snug">Real-time data for better agricultural planning</span>
                           </li>
-                          <li className="flex items-center gap-2 text-purple-800">
-                            <CheckCircle className="w-5 h-5 text-purple-500" />
-                            <span>Community growth</span>
+                          <li className="flex items-start gap-2 text-purple-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-purple-500 shrink-0" />
+                            <span className="text-sm leading-snug">Transparent monitoring of all transactions (₱)</span>
+                          </li>
+                          <li className="flex items-start gap-2 text-purple-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-purple-500 shrink-0" />
+                            <span className="text-sm leading-snug">Promote community growth and sustainability</span>
+                          </li>
+                          <li className="flex items-start gap-2 text-purple-800">
+                            <CheckCircle className="w-4 h-4 mt-0.5 text-purple-500 shrink-0" />
+                            <span className="text-sm leading-snug">Data-driven policy and support programs</span>
                           </li>
                         </ul>
-                        <button onClick={() => { setShowHowItWorksModal(false); onLoginClick('cusafa'); }} className="mt-6 w-full py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition">
+                        <button onClick={() => { setShowHowItWorksModal(false); onLoginClick('cusafa'); }} className="mt-8 w-full py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition">
                           Login as Association
                         </button>
                       </div>
-                    </div>
+                    </> 
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Coming Soon Modal */}
+        {showContactModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 relative animate-in zoom-in-95 duration-200">
+              <button
+                onClick={() => setShowContactModal(false)}
+                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+              
+              <div className="text-center">
+                <div className="mb-6 flex justify-center">
+                  <div className="relative">
+                    <div className="w-20 h-20 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <MessageCircle className="w-8 h-8 text-emerald-600" />
+                    </div>
+                  </div>
+                </div>
+                
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon!</h3>
+                <p className="text-gray-600 mb-6">
+                  MAO Support feature is currently under development. We're working hard to bring you the best support experience.
+                </p>
+                
+                <div className="bg-emerald-50 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-emerald-800">
+                    <strong>What to expect:</strong> Direct chat support with MAO Culiram officers, technical assistance, and agricultural guidance.
+                  </p>
+                </div>
+                
+                <button
+                  onClick={() => setShowContactModal(false)}
+                  className="w-full py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition"
+                >
+                  Back to Home
+                </button>
               </div>
             </div>
           </div>
