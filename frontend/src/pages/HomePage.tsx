@@ -1421,25 +1421,25 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
               {/* Fixed Header */}
-              <div className="relative h-36 bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center overflow-hidden shrink-0 rounded-t-3xl">
+              <div className="relative h-24 md:h-36 bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center overflow-hidden shrink-0 rounded-t-3xl">
                 <div className="absolute inset-0 bg-pattern opacity-10"></div>
-                <div className="text-center z-10 px-4">
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">{howItWorksContent.header.title}</h2>
-                  <p className="text-emerald-100 text-sm md:text-base">{howItWorksLang === 'english' ? howItWorksContent.header.subtitle.en : howItWorksContent.header.subtitle.bis}</p>
+                <div className="text-center z-10 px-4 pr-20 md:pr-4">
+                  <h2 className="text-xl md:text-3xl font-bold text-white mb-1 md:mb-2">{howItWorksContent.header.title}</h2>
+                  <p className="text-emerald-100 text-xs md:text-base">{howItWorksLang === 'english' ? howItWorksContent.header.subtitle.en : howItWorksContent.header.subtitle.bis}</p>
                 </div>
-                <div className="absolute top-4 right-4 flex items-center gap-2">
+                <div className="absolute top-2 md:top-4 right-2 md:right-4 flex items-center gap-1 md:gap-2 z-20">
                   <button
                     onClick={() => setHowItWorksLang(howItWorksLang === 'bisaya' ? 'english' : 'bisaya')}
-                    className="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors text-sm font-medium"
+                    className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors text-xs md:text-sm font-medium"
                   >
-                    <Languages className="w-4 h-4" />
-                    <span>{howItWorksLang === 'bisaya' ? 'English' : 'Bisaya'}</span>
+                    <Languages className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="hidden sm:inline">{howItWorksLang === 'bisaya' ? 'English' : 'Bisaya'}</span>
                   </button>
                   <button
                     onClick={() => setShowHowItWorksModal(false)}
-                    className="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
+                    className="p-2 md:p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-5 h-5 md:w-5 md:h-5" />
                   </button>
                 </div>
               </div>
