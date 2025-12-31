@@ -252,10 +252,10 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
               <Building2 className="w-8 h-8 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-1">
-              {isLogin ? 'CUSAFA Portal' : 'CUSAFA Registration'}
+              {isLogin ? 'Association Portal' : 'Association Registration'}
             </h2>
             <p className="text-gray-600 text-sm">
-              {isLogin ? 'For CUSAFA Organization Officers' : 'Register as CUSAFA officer'}
+              {isLogin ? 'Login Here as Association Officer' : 'Register as Association officer'}
             </p>
           </div>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users } from 'lucide-react';
+import { Users, Eye, EyeOff } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
@@ -10,6 +10,7 @@ interface OfficerAuthProps {
 
 export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onLoginSuccess }) => {
   const { executeRecaptcha } = useGoogleReCaptcha();
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<any>({
     email: '',
     password: '',
@@ -102,14 +103,23 @@ export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onLoginSuccess }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-              <input
-                type="password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             {/* reCAPTCHA v3 - Invisible, automatic verification */}
