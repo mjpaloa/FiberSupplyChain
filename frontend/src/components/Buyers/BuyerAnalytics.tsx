@@ -408,8 +408,8 @@ const BuyerAnalytics: React.FC = () => {
           ))}
         </div>
 
-        {/* Chart Area */}
-        <div className="relative flex-1 h-full overflow-x-auto scrollbar-thin">
+        {/* Chart Area with Horizontal Scroll */}
+        <div className="relative flex-1 h-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           {/* Horizontal Grid Lines */}
           <div className="absolute inset-x-0 inset-y-0 flex flex-col justify-between pb-6 sm:pb-8 md:pb-10">
             {ticks.map((_, i) => (
@@ -418,7 +418,7 @@ const BuyerAnalytics: React.FC = () => {
           </div>
 
           {/* Bars */}
-          <div className="relative h-full flex items-end gap-1 sm:gap-2 pb-6 sm:pb-8 md:pb-10 px-1 sm:px-2 min-w-full">
+          <div className="relative h-full flex items-end gap-1 sm:gap-2 pb-6 sm:pb-8 md:pb-10 px-1 sm:px-2" style={{ minWidth: data.length > 8 ? `${data.length * 60}px` : '100%' }}>
             {data.map((item, index) => (
               <div key={index} className="flex-1 flex flex-col items-center h-full justify-end group relative min-w-[20px] sm:min-w-[30px] md:min-w-[40px]">
                 <div className="w-full flex items-end justify-center h-full relative max-w-[40px] sm:max-w-[50px] md:max-w-[60px] mx-auto">
@@ -497,7 +497,7 @@ const BuyerAnalytics: React.FC = () => {
     <div className="w-full max-w-full">
       <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
         {/* Total Spent */}
         <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -580,7 +580,7 @@ const BuyerAnalytics: React.FC = () => {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
         {/* Fiber Type Sales Distribution - Pie Chart */}
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 h-full">
           <div className="flex items-center justify-between mb-4">
@@ -688,7 +688,7 @@ const BuyerAnalytics: React.FC = () => {
       </div>
 
       {/* Sales and Transactions Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4 items-start">
         {/* Monthly Sales Bar Chart */}
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 self-start">
           <div className="flex items-center justify-between mb-4">
