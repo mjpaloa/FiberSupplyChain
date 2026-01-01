@@ -24,9 +24,9 @@ interface AnalyticsData {
   yearlyProfit: number;
   salesByFiberType: { type: string; quantity: number; percentage: number; sales: number }[];
   monthlyTransactions: { month: string; count: number }[];
-  yearlyTotalSpending: number;
-  yearlyTotalSales: number;
-  yearlyTotalTransactions: number;
+  yearlySpendingByYear: { year: string; amount: number }[];
+  yearlySalesByYear: { year: string; amount: number }[];
+  yearlyTransactionsByYear: { year: string; count: number }[];
 }
 
 const BuyerAnalytics: React.FC = () => {
@@ -42,9 +42,9 @@ const BuyerAnalytics: React.FC = () => {
     yearlyProfit: 0,
     salesByFiberType: [],
     monthlyTransactions: [],
-    yearlyTotalSpending: 0,
-    yearlyTotalSales: 0,
-    yearlyTotalTransactions: 0
+    yearlySpendingByYear: [],
+    yearlySalesByYear: [],
+    yearlyTransactionsByYear: []
   });
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -92,10 +92,46 @@ const BuyerAnalytics: React.FC = () => {
         console.warn('Sales endpoint not available');
       }
 
-      // Calculate yearly totals from ALL data (for yearly view)
-      const yearlyTotalSpending = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.total_price || 0), 0);
-      const yearlyTotalSalesAmount = sales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
-      const yearlyTotalTransactionCount = purchases.length + sales.length;
+      // Calculate yearly totals grouped by year (for yearly view)
+      const yearlySpendingMap: { [year: string]: number } = {};
+      purchases.forEach((p: any) => {
+        const year = new Date(p.created_at).getFullYear().toString();
+        yearlySpendingMap[year] = (yearlySpendingMap[year] || 0) + parseFloat(p.total_price || 0);
+      });
+
+      const yearlySalesMap: { [year: string]: number } = {};
+      sales.forEach((s: any) => {
+        const year = new Date(s.sale_date || s.created_at).getFullYear().toString();
+        yearlySalesMap[year] = (yearlySalesMap[year] || 0) + (s.total_amount || 0);
+      });
+
+      const yearlyTransactionsMap: { [year: string]: number } = {};
+      [...purchases, ...sales].forEach((t: any) => {
+        const year = new Date(t.created_at || t.sale_date).getFullYear().toString();
+        yearlyTransactionsMap[year] = (yearlyTransactionsMap[year] || 0) + 1;
+      });
+
+      // Get all unique years and sort them
+      const allYears = Array.from(new Set([
+        ...Object.keys(yearlySpendingMap),
+        ...Object.keys(yearlySalesMap),
+        ...Object.keys(yearlyTransactionsMap)
+      ])).sort();
+
+      const yearlySpendingByYear = allYears.map(year => ({
+        year,
+        amount: yearlySpendingMap[year] || 0
+      }));
+
+      const yearlySalesByYear = allYears.map(year => ({
+        year,
+        amount: yearlySalesMap[year] || 0
+      }));
+
+      const yearlyTransactionsByYear = allYears.map(year => ({
+        year,
+        count: yearlyTransactionsMap[year] || 0
+      }));
 
       // Filter data by selected year (for monthly view)
       const filteredPurchases = purchases.filter((p: any) => {
@@ -200,9 +236,9 @@ const BuyerAnalytics: React.FC = () => {
         recentTransactions: filteredPurchases.slice(0, 10),
         salesByFiberType,
         monthlyTransactions,
-        yearlyTotalSpending,
-        yearlyTotalSales: yearlyTotalSalesAmount,
-        yearlyTotalTransactions: yearlyTotalTransactionCount
+        yearlySpendingByYear,
+        yearlySalesByYear,
+        yearlyTransactionsByYear
       });
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -218,9 +254,9 @@ const BuyerAnalytics: React.FC = () => {
         yearlyProfit: 0,
         salesByFiberType: [],
         monthlyTransactions: [],
-        yearlyTotalSpending: 0,
-        yearlyTotalSales: 0,
-        yearlyTotalTransactions: 0
+        yearlySpendingByYear: [],
+        yearlySalesByYear: [],
+        yearlyTransactionsByYear: []
       });
     } finally {
       setLoading(false);
@@ -632,7 +668,10 @@ const BuyerAnalytics: React.FC = () => {
                     label: item.month,
                     value: item.amount
                   }))
-                : [{ label: 'All Years', value: analytics.yearlyTotalSpending }]
+                : analytics.yearlySpendingByYear.map(item => ({
+                    label: item.year,
+                    value: item.amount
+                  }))
               }
               color="#3b82f6"
             />
@@ -694,7 +733,10 @@ const BuyerAnalytics: React.FC = () => {
                     label: item.month,
                     value: item.amount
                   }))
-                : [{ label: 'All Years', value: analytics.yearlyTotalSales }]
+                : analytics.yearlySalesByYear.map(item => ({
+                    label: item.year,
+                    value: item.amount
+                  }))
               }
               color="#10b981"
             />
@@ -753,7 +795,10 @@ const BuyerAnalytics: React.FC = () => {
                     label: item.month,
                     value: item.count
                   }))
-                : [{ label: 'All Years', value: analytics.yearlyTotalTransactions }]
+                : analytics.yearlyTransactionsByYear.map(item => ({
+                    label: item.year,
+                    value: item.count
+                  }))
               }
               color="#a855f7"
             />
