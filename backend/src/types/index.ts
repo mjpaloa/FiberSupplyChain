@@ -147,6 +147,7 @@ export interface BuyerRegistration {
   
   // Verification Documents
   profilePhoto?: string; // Base64 or URL - Owner's photo
+  profilePicture?: string; // Base64 or URL - Profile picture (alternative field name)
   validIdPhoto?: string; // Base64 or URL - Owner's ID
   businessPermitPhoto?: string; // Base64 or URL - Business permit/license
   

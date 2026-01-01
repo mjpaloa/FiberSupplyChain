@@ -38,7 +38,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
     name: '',
     email: '',
     company: '',
-    contact: ''
+    contact: '',
+    profilePicture: null as string | null
   });
 
   useEffect(() => {
@@ -66,10 +67,11 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
       
       // Use user data from localStorage as fallback
       setBuyerInfo({
-        name: user.full_name || user.username || 'Buyer',
+        name: user.full_name || user.ownerName || user.username || 'Buyer',
         email: user.email || '',
-        company: user.company_name || 'My Company',
-        contact: user.contact_number || user.phone || ''
+        company: user.company_name || user.businessName || 'My Company',
+        contact: user.contact_number || user.phone || '',
+        profilePicture: user.profile_picture || null
       });
 
       // Try to fetch from API but don't fail if unavailable
@@ -77,11 +79,13 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
         const response = await apiGet('/api/buyers/profile');
         if (response.ok) {
           const data = await response.json();
+          console.log('✅ Buyer profile loaded:', data);
           setBuyerInfo({
-            name: data.buyer?.full_name || user.full_name || 'Buyer',
+            name: data.buyer?.contact_person || data.buyer?.full_name || user.full_name || user.ownerName || 'Buyer',
             email: data.buyer?.email || user.email || '',
-            company: data.buyer?.company_name || user.company_name || '',
-            contact: data.buyer?.contact_number || user.contact_number || ''
+            company: data.buyer?.company_name || user.company_name || user.businessName || '',
+            contact: data.buyer?.phone || data.buyer?.contact_number || user.contact_number || '',
+            profilePicture: data.buyer?.profile_picture || user.profile_picture || null
           });
         }
       } catch (apiError) {
@@ -354,10 +358,18 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
                     onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                     className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition"
                   >
-                    <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                      {buyerInfo.name ? buyerInfo.name.charAt(0).toUpperCase() : 'B'}
+                    <div className="w-9 h-9 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center text-white font-semibold border-2 border-blue-200">
+                      {buyerInfo.profilePicture ? (
+                        <img 
+                          src={buyerInfo.profilePicture} 
+                          alt={buyerInfo.name || 'Buyer'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>{buyerInfo.name ? buyerInfo.name.charAt(0).toUpperCase() : 'B'}</span>
+                      )}
                     </div>
-                    <span className="font-medium text-sm text-gray-800">{buyerInfo.name || 'Buyer'}</span>
+                    <span className="font-medium text-sm text-gray-800 hidden sm:block">{buyerInfo.name || 'Buyer'}</span>
                     <ChevronDown className="w-4 h-4 text-gray-500" />
                   </button>
 
@@ -365,9 +377,24 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
                   {showProfileDropdown && (
                     <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
                       <div className="p-4 border-b border-gray-100">
-                        <p className="font-semibold text-gray-900">{buyerInfo.name}</p>
-                        <p className="text-sm text-gray-600 mt-1">{buyerInfo.email}</p>
-                        <p className="text-sm text-gray-500 mt-1">{buyerInfo.company}</p>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center text-white font-semibold border-2 border-blue-200">
+                            {buyerInfo.profilePicture ? (
+                              <img 
+                                src={buyerInfo.profilePicture} 
+                                alt={buyerInfo.name || 'Buyer'}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-lg">{buyerInfo.name ? buyerInfo.name.charAt(0).toUpperCase() : 'B'}</span>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{buyerInfo.name}</p>
+                            <p className="text-xs text-gray-500">{buyerInfo.company}</p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600">{buyerInfo.email}</p>
                         <p className="text-xs text-gray-400 mt-1">{buyerInfo.contact}</p>
                       </div>
                       <button

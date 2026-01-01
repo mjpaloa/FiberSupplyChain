@@ -67,6 +67,7 @@ export class BuyersController {
           business_permit: buyerInfo.business_permit,
           requirements: buyerInfo.requirements,
           payment_terms: buyerInfo.payment_terms,
+          profile_picture: buyerInfo.profile_picture,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', userId);

@@ -18,7 +18,9 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Key
+  Key,
+  Camera,
+  Upload
 } from 'lucide-react';
 
 interface BuyerInfo {
@@ -34,6 +36,7 @@ interface BuyerInfo {
   requirements: string;
   payment_terms: string;
   created_at: string;
+  profile_picture?: string;
 }
 
 interface PriceInfo {
@@ -66,6 +69,8 @@ const BuyerProfile: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     fetchBuyerProfile();
@@ -73,22 +78,147 @@ const BuyerProfile: React.FC = () => {
 
   const fetchBuyerProfile = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('Fetching profile for user:', user);
       
-      const response = await apiGet(`/api/buyers/profile/${user.user_id}`);
+      // Use /api/buyers/profile without ID - backend uses req.user.userId from token
+      const response = await apiGet('/api/buyers/profile');
       
       if (response.ok) {
         const data = await response.json();
-        setBuyerInfo(data.buyer);
+        console.log('✅ Profile data loaded:', data);
+        setBuyerInfo({
+          buyer_id: data.buyer.user_id || '',
+          company_name: data.buyer.company_name || '',
+          contact_person: data.buyer.contact_person || data.buyer.full_name || '',
+          email: data.buyer.email || '',
+          phone: data.buyer.phone || data.buyer.contact_number || '',
+          address: data.buyer.address || '',
+          municipality: data.buyer.municipality || '',
+          barangay: data.buyer.barangay || '',
+          business_permit: data.buyer.business_permit || '',
+          requirements: data.buyer.requirements || '',
+          payment_terms: data.buyer.payment_terms || '',
+          created_at: data.buyer.created_at || new Date().toISOString(),
+          profile_picture: data.buyer.profile_picture || ''
+        });
+        setProfilePicture(data.buyer.profile_picture || null);
+        
+        // Load pricing data from buyer_prices table
         if (data.prices && data.prices.length > 0) {
-          setPrices(data.prices);
+          console.log('✅ Pricing data loaded:', data.prices);
+          const priceMap: any = {};
+          data.prices.forEach((p: any) => {
+            priceMap[p.quality] = p;
+          });
+          
+          // Update prices array with database values
+          setPrices([
+            {
+              quality: 'Class A (Premium)',
+              price_per_kg: priceMap['Class A (Premium)']?.price_per_kg || 0,
+              minimum_order: priceMap['Class A (Premium)']?.minimum_order || 0,
+              availability: priceMap['Class A (Premium)']?.availability || 'Available'
+            },
+            {
+              quality: 'Class B (High Quality)',
+              price_per_kg: priceMap['Class B (High Quality)']?.price_per_kg || 0,
+              minimum_order: priceMap['Class B (High Quality)']?.minimum_order || 0,
+              availability: priceMap['Class B (High Quality)']?.availability || 'Available'
+            },
+            {
+              quality: 'Medium Grade',
+              price_per_kg: priceMap['Medium Grade']?.price_per_kg || 0,
+              minimum_order: priceMap['Medium Grade']?.minimum_order || 0,
+              availability: priceMap['Medium Grade']?.availability || 'Available'
+            },
+            {
+              quality: 'Low Grade',
+              price_per_kg: priceMap['Low Grade']?.price_per_kg || 0,
+              minimum_order: priceMap['Low Grade']?.minimum_order || 0,
+              availability: priceMap['Low Grade']?.availability || 'Available'
+            }
+          ]);
         }
+      } else {
+        console.warn('Failed to fetch profile from API, using localStorage data');
+        setBuyerInfo({
+          buyer_id: user.user_id || '',
+          company_name: user.businessName || user.company_name || '',
+          contact_person: user.ownerName || user.contact_person || user.full_name || '',
+          email: user.email || '',
+          phone: user.phone || user.contactNumber || '',
+          address: user.address || '',
+          municipality: user.municipality || '',
+          barangay: user.barangay || '',
+          business_permit: user.businessPermit || user.business_permit || '',
+          requirements: user.requirements || '',
+          payment_terms: user.paymentTerms || user.payment_terms || '',
+          created_at: user.created_at || new Date().toISOString()
+        });
       }
     } catch (error) {
       console.error('Error fetching buyer profile:', error);
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      setBuyerInfo({
+        buyer_id: user.user_id || '',
+        company_name: user.businessName || user.company_name || '',
+        contact_person: user.ownerName || user.contact_person || user.full_name || '',
+        email: user.email || '',
+        phone: user.phone || user.contactNumber || '',
+        address: user.address || '',
+        municipality: user.municipality || '',
+        barangay: user.barangay || '',
+        business_permit: user.businessPermit || user.business_permit || '',
+        requirements: user.requirements || '',
+        payment_terms: user.paymentTerms || user.payment_terms || '',
+        created_at: user.created_at || new Date().toISOString()
+      });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'File size must be less than 5MB' });
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please upload an image file' });
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        setProfilePicture(base64String);
+        
+        // Update profile with new photo
+        const response = await apiPut('/api/buyers/update-profile', {
+          buyerInfo: { ...buyerInfo, profile_picture: base64String },
+          prices
+        });
+
+        if (response.ok) {
+          setMessage({ type: 'success', text: 'Profile picture updated successfully!' });
+          setTimeout(() => setMessage(null), 3000);
+        } else {
+          throw new Error('Failed to upload photo');
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      setMessage({ type: 'error', text: 'Failed to upload photo. Please try again.' });
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -97,22 +227,24 @@ const BuyerProfile: React.FC = () => {
     setMessage(null);
     
     try {
-      const token = localStorage.getItem('accessToken');
-      const formData = new FormData();
-      formData.append('buyerInfo', JSON.stringify(buyerInfo));
-      formData.append('prices', JSON.stringify(prices));
-
-      const response = await apiPut('/api/buyers/update-profile', formData);
+      const response = await apiPut('/api/buyers/update-profile', {
+        buyerInfo,
+        prices
+      });
 
       if (response.ok) {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
         setIsEditing(false);
-        fetchBuyerProfile();
+        setTimeout(() => {
+          fetchBuyerProfile();
+        }, 500);
       } else {
-        throw new Error('Failed to update profile');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update profile');
       }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      setMessage({ type: 'error', text: error.message || 'Failed to update profile. Please try again.' });
     } finally {
       setSaving(false);
     }
@@ -128,7 +260,7 @@ const BuyerProfile: React.FC = () => {
     setPasswordMessage(null);
 
     // Validation
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
       setPasswordMessage({ type: 'error', text: 'Please fill in all password fields' });
       return;
     }
@@ -138,23 +270,22 @@ const BuyerProfile: React.FC = () => {
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      setPasswordMessage({ type: 'error', text: 'New password must be at least 6 characters long' });
+    if (passwordData.newPassword.length < 4) {
+      setPasswordMessage({ type: 'error', text: 'New password must be at least 4 characters long' });
       return;
     }
 
     setChangingPassword(true);
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/auth/change-password', {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const response = await fetch('https://easyabaca-api.vercel.app/api/auth/reset-password', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
+          email: user.email || buyerInfo?.email,
           newPassword: passwordData.newPassword
         })
       });
@@ -169,9 +300,10 @@ const BuyerProfile: React.FC = () => {
           setPasswordMessage(null);
         }, 2000);
       } else {
-        setPasswordMessage({ type: 'error', text: data.message || 'Current password is incorrect' });
+        setPasswordMessage({ type: 'error', text: data.error || 'Failed to change password' });
       }
     } catch (error) {
+      console.error('Password change error:', error);
       setPasswordMessage({ type: 'error', text: 'Failed to change password. Please try again.' });
     } finally {
       setChangingPassword(false);
@@ -187,72 +319,91 @@ const BuyerProfile: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-full min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
       {/* Header */}
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Buyer Profile & Pricing</h1>
-          <p className="text-gray-600">Manage your company information and abaca fiber pricing</p>
-        </div>
-        <div className="flex gap-3">
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold"
-            >
-              <Edit2 size={20} />
-              Edit Profile
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="flex items-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-semibold"
-              >
-                <X size={20} />
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveProfile}
-                disabled={saving}
-                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-semibold disabled:opacity-50"
-              >
-                <Save size={20} />
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </>
-          )}
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <div className="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 md:p-8 text-white">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                <Building className="w-6 h-6 sm:w-8 sm:h-8" />
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Buyer Profile</h1>
+              </div>
+              <p className="text-blue-50 text-sm sm:text-base">Manage your company information and abaca fiber pricing</p>
+              {buyerInfo && (
+                <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+                  <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 sm:px-3 py-1.5 rounded-lg">
+                    <CheckCircle size={14} className="sm:w-4 sm:h-4" />
+                    <span className="font-medium">Verified</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 sm:px-3 py-1.5 rounded-lg">
+                    <Calendar size={14} className="sm:w-4 sm:h-4" />
+                    <span>Since {buyerInfo?.created_at ? new Date(buyerInfo.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
+              {!isEditing ? (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-all font-semibold shadow-lg hover:shadow-xl text-sm sm:text-base flex-1 sm:flex-initial"
+                >
+                  <Edit2 size={18} className="sm:w-5 sm:h-5" />
+                  <span>Edit Profile</span>
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all font-semibold text-sm sm:text-base flex-1 sm:flex-initial"
+                  >
+                    <X size={18} className="sm:w-5 sm:h-5" />
+                    <span>Cancel</span>
+                  </button>
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={saving}
+                    className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-emerald-600 rounded-xl hover:bg-emerald-50 transition-all font-semibold disabled:opacity-50 shadow-lg text-sm sm:text-base flex-1 sm:flex-initial"
+                  >
+                    <Save size={18} className="sm:w-5 sm:h-5" />
+                    <span>{saving ? 'Saving...' : 'Save'}</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Success/Error Message */}
       {message && (
-        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
-          message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+        <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 shadow-lg animate-in slide-in-from-top-2 ${
+          message.type === 'success' ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-200' : 'bg-red-100 text-red-800 border-2 border-red-200'
         }`}>
-          {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-          <span className="font-medium">{message.text}</span>
+          {message.type === 'success' ? <CheckCircle size={18} className="sm:w-5 sm:h-5 flex-shrink-0" /> : <AlertCircle size={18} className="sm:w-5 sm:h-5 flex-shrink-0" />}
+          <span className="font-medium text-sm sm:text-base">{message.text}</span>
         </div>
       )}
 
       {/* Password Change Section */}
-      <div className="mb-6 bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
-              <Lock className="text-white" size={20} />
+      <div className="mb-4 sm:mb-6 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 md:p-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-4 border-b border-gray-100">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg sm:rounded-xl">
+              <Lock className="text-white" size={18} />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900">Security Settings</h2>
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Security Settings</h2>
               <p className="text-xs sm:text-sm text-gray-500">Update your password</p>
             </div>
           </div>
           <button
             onClick={() => setShowPasswordSection(!showPasswordSection)}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-semibold text-sm"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-semibold text-xs sm:text-sm w-full sm:w-auto justify-center"
           >
-            <Key size={16} />
+            <Key size={14} className="sm:w-4 sm:h-4" />
             {showPasswordSection ? 'Hide' : 'Change Password'}
           </button>
         </div>
@@ -267,31 +418,7 @@ const BuyerProfile: React.FC = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Current Password */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Current Password *
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                    className="w-full pl-11 pr-11 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
-                    placeholder="Enter current password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* New Password */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -382,17 +509,17 @@ const BuyerProfile: React.FC = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Company Information */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Building className="text-blue-600" size={24} />
+        <div className="lg:col-span-2 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-100">
+            <div className="p-2 sm:p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl">
+              <Building className="text-white" size={20} />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Company Information</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Company Information</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Company Name */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Company Name</label>
@@ -587,13 +714,53 @@ const BuyerProfile: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Info Card */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl shadow-lg p-6 text-white h-fit">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <CheckCircle size={24} />
+        {/* Quick Info Card with Profile Picture */}
+        <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-emerald-600 rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 text-white h-fit border-2 border-white/20">
+          {/* Profile Picture Section */}
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative group">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-white/20 backdrop-blur-sm border-4 border-white/30 shadow-lg">
+                {profilePicture ? (
+                  <img 
+                    src={profilePicture} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-emerald-400">
+                    <User className="w-12 h-12 sm:w-16 sm:h-16 text-white" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Upload Button Overlay */}
+              <label 
+                htmlFor="profile-photo-upload"
+                className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              >
+                {uploadingPhoto ? (
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                ) : (
+                  <Camera className="w-8 h-8 text-white" />
+                )}
+              </label>
+              <input
+                id="profile-photo-upload"
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+                disabled={uploadingPhoto}
+              />
             </div>
-            <h3 className="text-xl font-bold">Verified Buyer</h3>
+            <p className="text-xs text-blue-100 mt-3 text-center">Click to upload profile picture</p>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 pb-4 border-b border-white/20">
+            <div className="p-2 sm:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+              <CheckCircle size={20} />
+            </div>
+            <h3 className="text-lg sm:text-xl font-bold">Verified Buyer</h3>
           </div>
           <div className="space-y-4">
             <div>
@@ -618,26 +785,28 @@ const BuyerProfile: React.FC = () => {
       </div>
 
       {/* Pricing Information */}
-      <div className="mt-6 bg-white rounded-2xl shadow-sm p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-emerald-100 rounded-xl">
-            <DollarSign className="text-emerald-600" size={24} />
+      <div className="mt-4 sm:mt-6 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-100">
+          <div className="p-2 sm:p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg sm:rounded-xl">
+            <DollarSign className="text-white" size={20} />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Abaca Fiber Pricing</h2>
-            <p className="text-gray-600 text-sm">Set your buying prices for different fiber qualities</p>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Abaca Fiber Pricing</h2>
+            <p className="text-gray-600 text-xs sm:text-sm">Set your buying prices for different fiber qualities</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {prices.map((price, index) => (
-            <div key={index} className="border-2 border-gray-200 rounded-xl p-6 hover:border-emerald-400 transition-colors">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">{price.quality}</h3>
-                <Package className="text-emerald-600" size={20} />
+            <div key={index} className="border-2 border-gray-200 rounded-lg sm:rounded-xl p-4 sm:p-6 hover:border-emerald-400 hover:shadow-lg transition-all bg-gradient-to-br from-white to-gray-50">
+              <div className="flex items-center justify-between mb-3 sm:mb-4 pb-3 border-b border-gray-200">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">{price.quality}</h3>
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <Package className="text-emerald-600" size={18} />
+                </div>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Price per KG */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Price per KG (₱)</label>
