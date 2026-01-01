@@ -522,7 +522,7 @@ export class AuthController {
   }
 
   /**
-   * Reset password for a user (temporary fix for association officers)
+   * Reset password for a user (buyers, association officers, etc.)
    * POST /api/auth/reset-password
    */
   static async resetPassword(req: Request, res: Response): Promise<void> {
@@ -537,22 +537,62 @@ export class AuthController {
       // Hash the new password
       const passwordHash = await AuthService.hashPasswordPublic(newPassword);
 
-      // Update the password for the association officer
-      const { error } = await supabase
-        .from('association_officers')
-        .update({
-          password_hash: passwordHash,
-          updated_at: new Date().toISOString()
-        })
-        .eq('email', email);
+      // Try to update password in buyers table first
+      const { data: buyerData, error: buyerError } = await supabase
+        .from('buyers')
+        .select('buyer_id')
+        .eq('email', email)
+        .single();
 
-      if (error) {
-        console.error('Error resetting password:', error);
-        res.status(500).json({ error: 'Failed to reset password' });
+      if (buyerData && !buyerError) {
+        // Update buyer password
+        const { error: updateError } = await supabase
+          .from('buyers')
+          .update({
+            password_hash: passwordHash,
+            updated_at: new Date().toISOString()
+          })
+          .eq('email', email);
+
+        if (updateError) {
+          console.error('Error resetting buyer password:', updateError);
+          res.status(500).json({ error: 'Failed to reset password' });
+          return;
+        }
+
+        res.status(200).json({ message: 'Password reset successfully' });
         return;
       }
 
-      res.status(200).json({ message: 'Password reset successfully' });
+      // If not a buyer, try association officer
+      const { data: officerData, error: officerCheckError } = await supabase
+        .from('association_officers')
+        .select('officer_id')
+        .eq('email', email)
+        .single();
+
+      if (officerData && !officerCheckError) {
+        // Update association officer password
+        const { error: updateError } = await supabase
+          .from('association_officers')
+          .update({
+            password_hash: passwordHash,
+            updated_at: new Date().toISOString()
+          })
+          .eq('email', email);
+
+        if (updateError) {
+          console.error('Error resetting officer password:', updateError);
+          res.status(500).json({ error: 'Failed to reset password' });
+          return;
+        }
+
+        res.status(200).json({ message: 'Password reset successfully' });
+        return;
+      }
+
+      // User not found in any table
+      res.status(404).json({ error: 'User not found with this email' });
     } catch (error: any) {
       console.error('Error in resetPassword:', error);
       res.status(500).json({ error: error.message || 'Failed to reset password' });

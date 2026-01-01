@@ -374,7 +374,7 @@ const BuyerProfile: React.FC = () => {
                 <Building className="w-6 h-6 sm:w-8 sm:h-8" />
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Buyer Profile</h1>
               </div>
-              <p className="text-blue-50 text-sm sm:text-base">Manage your company information and abaca fiber pricing</p>
+              <p className="text-blue-50 text-sm sm:text-base">Manage your company information and profile settings</p>
               {buyerInfo && (
                 <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                   <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 sm:px-3 py-1.5 rounded-lg">
@@ -839,109 +839,6 @@ const BuyerProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* Pricing Information */}
-      <div className="mt-4 sm:mt-6 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-100">
-          <div className="p-2 sm:p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg sm:rounded-xl">
-            <DollarSign className="text-white" size={20} />
-          </div>
-          <div>
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Abaca Fiber Pricing</h2>
-            <p className="text-gray-600 text-xs sm:text-sm">Set your buying prices for different fiber qualities</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          {prices.map((price, index) => (
-            <div key={index} className="border-2 border-gray-200 rounded-lg sm:rounded-xl p-4 sm:p-6 hover:border-emerald-400 hover:shadow-lg transition-all bg-gradient-to-br from-white to-gray-50">
-              <div className="flex items-center justify-between mb-3 sm:mb-4 pb-3 border-b border-gray-200">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900">{price.quality}</h3>
-                <div className="p-2 bg-emerald-100 rounded-lg">
-                  <Package className="text-emerald-600" size={18} />
-                </div>
-              </div>
-              
-              <div className="space-y-3 sm:space-y-4">
-                {/* Price per KG */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Price per KG (₱)</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={price.price_per_kg}
-                      onChange={(e) => handlePriceChange(index, 'price_per_kg', parseFloat(e.target.value) || 0)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="0.00"
-                      step="0.01"
-                    />
-                  ) : (
-                    <div className="px-4 py-3 bg-emerald-50 rounded-xl">
-                      <span className="text-2xl font-bold text-emerald-700">₱{price.price_per_kg.toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Minimum Order */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Minimum Order (KG)</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={price.minimum_order}
-                      onChange={(e) => handlePriceChange(index, 'minimum_order', parseInt(e.target.value) || 0)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="0"
-                    />
-                  ) : (
-                    <div className="px-4 py-3 bg-gray-50 rounded-xl">
-                      <span className="text-gray-900 font-medium">{price.minimum_order} kg</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Availability */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Availability</label>
-                  {isEditing ? (
-                    <select
-                      value={price.availability}
-                      onChange={(e) => handlePriceChange(index, 'availability', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    >
-                      <option value="Available">Available</option>
-                      <option value="Limited">Limited</option>
-                      <option value="Not Buying">Not Buying</option>
-                    </select>
-                  ) : (
-                    <div className="px-4 py-3 bg-gray-50 rounded-xl">
-                      <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${
-                        price.availability === 'Available' ? 'bg-emerald-100 text-emerald-700' :
-                        price.availability === 'Limited' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {price.availability}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
-            <div>
-              <p className="text-blue-900 font-semibold mb-1">Important Note</p>
-              <p className="text-blue-800 text-sm">
-                Your pricing information will be visible to all farmers, associations, and MAO officers. 
-                Keep your prices updated to ensure accurate transactions and maintain trust in the marketplace.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
       </div>
     </div>
   );

@@ -65,31 +65,49 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       
-      // Use user data from localStorage as fallback
-      setBuyerInfo({
-        name: user.full_name || user.ownerName || user.username || 'Buyer',
-        email: user.email || '',
-        company: user.company_name || user.businessName || 'My Company',
-        contact: user.contact_number || user.phone || '',
-        profilePicture: user.profile_picture || null
-      });
-
-      // Try to fetch from API but don't fail if unavailable
+      // Try to fetch from API first
       try {
         const response = await apiGet('/api/buyers/profile');
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ Buyer profile loaded:', data);
+          const buyer = data.buyer;
+          console.log('✅ Buyer profile loaded from database:', buyer);
+          
+          // Map buyer data from buyers table
           setBuyerInfo({
-            name: data.buyer?.contact_person || data.buyer?.full_name || user.full_name || user.ownerName || 'Buyer',
-            email: data.buyer?.email || user.email || '',
-            company: data.buyer?.company_name || user.company_name || user.businessName || '',
-            contact: data.buyer?.phone || data.buyer?.contact_number || user.contact_number || '',
-            profilePicture: data.buyer?.profile_picture || user.profile_picture || null
+            name: buyer?.owner_name || buyer?.business_name || user.full_name || user.ownerName || 'Buyer',
+            email: buyer?.email || user.email || '',
+            company: buyer?.business_name || user.company_name || user.businessName || 'My Company',
+            contact: buyer?.contact_number || user.contact_number || user.phone || '',
+            profilePicture: buyer?.profile_photo || user.profile_photo || user.profile_picture || null
+          });
+          
+          // Update localStorage with fresh data
+          if (buyer?.profile_photo) {
+            const updatedUser = { ...user, profile_photo: buyer.profile_photo };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+        } else {
+          // Fallback to localStorage
+          console.log('Profile API unavailable, using cached data');
+          setBuyerInfo({
+            name: user.full_name || user.ownerName || user.username || 'Buyer',
+            email: user.email || '',
+            company: user.company_name || user.businessName || 'My Company',
+            contact: user.contact_number || user.phone || '',
+            profilePicture: user.profile_photo || user.profile_picture || null
           });
         }
       } catch (apiError) {
-        console.log('Profile API unavailable, using cached data');
+        console.log('Profile API error, using cached data:', apiError);
+        // Fallback to localStorage
+        setBuyerInfo({
+          name: user.full_name || user.ownerName || user.username || 'Buyer',
+          email: user.email || '',
+          company: user.company_name || user.businessName || 'My Company',
+          contact: user.contact_number || user.phone || '',
+          profilePicture: user.profile_photo || user.profile_picture || null
+        });
       }
     } catch (error) {
       console.error('Error fetching buyer profile:', error);
