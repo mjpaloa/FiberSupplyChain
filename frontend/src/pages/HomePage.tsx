@@ -1265,32 +1265,32 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
           </div>
         )}
 
-        {/* Modern Cookie Consent Banner */}
+        {/* Modern Cookie Consent Banner - Mobile Responsive */}
         {showCookieBanner && (
-          <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 bg-white rounded-2xl shadow-xl border border-emerald-100 z-50 max-w-md animate-in slide-in-from-bottom duration-300">
-            <div className="p-5">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 mt-1">
-                  <ShieldCheck className="h-6 w-6 text-emerald-600" />
+          <div className="fixed bottom-0 left-0 right-0 md:bottom-6 md:left-auto md:right-6 bg-white md:rounded-2xl rounded-t-2xl shadow-xl border-t md:border border-emerald-100 z-50 md:max-w-md w-full md:w-auto animate-in slide-in-from-bottom duration-300">
+            <div className="p-4 sm:p-5 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
                 </div>
-                <div className="ml-3 flex-1">
-                  <h3 className="text-base font-bold text-gray-900">Cookie Preferences</h3>
-                  <p className="mt-2 text-sm text-gray-600">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900">Cookie Preferences</h3>
+                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
                     We use cookies to improve your experience, analyze traffic, and for marketing purposes.
                     You can choose which cookies to accept or reject.
                   </p>
                 </div>
               </div>
-              <div className="mt-4 flex flex-col sm:flex-row gap-3">
+              <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <button
                   onClick={acceptEssentialCookies}
-                  className="px-4 py-2 bg-gray-100 text-gray-800 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                  className="w-full sm:flex-1 px-4 py-2.5 sm:py-2 bg-gray-100 text-gray-800 text-sm font-medium rounded-lg hover:bg-gray-200 active:bg-gray-300 transition-colors touch-manipulation"
                 >
                   Essential Only
                 </button>
                 <button
                   onClick={acceptAllCookies}
-                  className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-medium rounded-lg hover:shadow-lg transition-all duration-300"
+                  className="w-full sm:flex-1 px-4 py-2.5 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-medium rounded-lg hover:shadow-lg active:scale-95 transition-all duration-300 touch-manipulation"
                 >
                   Accept All
                 </button>
@@ -1298,7 +1298,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
               <div className="mt-3 text-center">
                 <button
                   onClick={() => setShowCookieModal(true)}
-                  className="text-xs text-emerald-600 hover:text-emerald-800 font-medium underline"
+                  className="text-xs text-emerald-600 hover:text-emerald-800 active:text-emerald-900 font-medium underline py-2 px-1 touch-manipulation"
                 >
                   Manage preferences & Privacy Policy
                 </button>
