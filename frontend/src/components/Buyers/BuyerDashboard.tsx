@@ -47,6 +47,13 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
     fetchNotifications();
   }, []);
 
+  // Refresh profile when returning to dashboard from profile page
+  useEffect(() => {
+    if (currentPage === 'dashboard') {
+      fetchBuyerProfile();
+    }
+  }, [currentPage]);
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
