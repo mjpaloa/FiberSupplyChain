@@ -13,15 +13,15 @@ export class BuyersController {
         return;
       }
 
-      // Get buyer info from buyers table
+      // Get buyer info from users table
       const { data: buyer, error: buyerError } = await supabase
-        .from('buyers')
+        .from('users')
         .select('*')
-        .eq('buyer_id', userId)
+        .eq('user_id', userId)
+        .eq('user_type', 'buyer')
         .single();
 
       if (buyerError || !buyer) {
-        console.error('Buyer not found:', buyerError);
         res.status(404).json({ error: 'Buyer not found' });
         return;
       }
@@ -53,20 +53,24 @@ export class BuyersController {
         return;
       }
 
-      // Update buyer info in buyers table
+      // Update buyer info in users table
       const { error: updateError } = await supabase
-        .from('buyers')
+        .from('users')
         .update({
-          business_name: buyerInfo.company_name || buyerInfo.business_name,
-          owner_name: buyerInfo.contact_person || buyerInfo.owner_name,
+          company_name: buyerInfo.company_name,
+          contact_person: buyerInfo.contact_person,
           email: buyerInfo.email,
-          contact_number: buyerInfo.phone || buyerInfo.contact_number,
-          business_address: buyerInfo.address || buyerInfo.business_address,
+          phone: buyerInfo.phone,
+          address: buyerInfo.address,
+          municipality: buyerInfo.municipality,
+          barangay: buyerInfo.barangay,
+          business_permit: buyerInfo.business_permit,
+          requirements: buyerInfo.requirements,
           payment_terms: buyerInfo.payment_terms,
-          profile_photo: buyerInfo.profile_picture || buyerInfo.profile_photo,
+          profile_picture: buyerInfo.profile_picture,
           updated_at: new Date().toISOString()
         })
-        .eq('buyer_id', userId);
+        .eq('user_id', userId);
 
       if (updateError) throw updateError;
 

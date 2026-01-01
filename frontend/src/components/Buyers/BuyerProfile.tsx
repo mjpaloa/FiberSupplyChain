@@ -25,18 +25,29 @@ import {
 
 interface BuyerInfo {
   buyer_id: string;
-  company_name: string;
-  contact_person: string;
+  business_name: string;
+  owner_name: string;
   email: string;
-  phone: string;
-  address: string;
-  municipality: string;
-  barangay: string;
-  business_permit: string;
-  requirements: string;
-  payment_terms: string;
+  contact_number: string;
+  business_address: string;
+  municipality?: string;
+  barangay?: string;
+  license_or_accreditation?: string;
+  buying_schedule?: string;
+  buying_location?: string;
+  warehouse_address?: string;
+  accepted_quality_grades?: string[];
+  price_range_min?: number;
+  price_range_max?: number;
+  payment_terms?: string;
+  partnered_associations?: string[];
+  profile_photo?: string;
+  business_permit_photo?: string;
+  valid_id_photo?: string;
+  verification_status?: string;
+  is_verified?: boolean;
+  remarks?: string;
   created_at: string;
-  profile_picture?: string;
 }
 
 interface PriceInfo {
@@ -47,7 +58,16 @@ interface PriceInfo {
 }
 
 const BuyerProfile: React.FC = () => {
-  const [buyerInfo, setBuyerInfo] = useState<BuyerInfo | null>(null);
+  const [buyerInfo, setBuyerInfo] = useState<BuyerInfo>({
+    buyer_id: '',
+    business_name: '',
+    owner_name: '',
+    email: '',
+    contact_number: '',
+    business_address: '',
+    created_at: new Date().toISOString()
+  });
+  const [error, setError] = useState<string | null>(null);
   const [prices, setPrices] = useState<PriceInfo[]>([
     { quality: 'Class A (Premium)', price_per_kg: 0, minimum_order: 0, availability: 'Available' },
     { quality: 'Class B (High Quality)', price_per_kg: 0, minimum_order: 0, availability: 'Available' },
@@ -77,32 +97,48 @@ const BuyerProfile: React.FC = () => {
   }, []);
 
   const fetchBuyerProfile = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      console.log('Fetching profile for user:', user);
+      console.log('📥 Fetching profile for user:', user);
       
-      // Use /api/buyers/profile without ID - backend uses req.user.userId from token
       const response = await apiGet('/api/buyers/profile');
       
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Profile data loaded:', data);
+        const buyer = data.buyer;
+        console.log('✅ Profile data loaded from buyers table:', buyer);
+        
+        // Map ALL fields from buyers table
         setBuyerInfo({
-          buyer_id: data.buyer.user_id || '',
-          company_name: data.buyer.company_name || '',
-          contact_person: data.buyer.contact_person || data.buyer.full_name || '',
-          email: data.buyer.email || '',
-          phone: data.buyer.phone || data.buyer.contact_number || '',
-          address: data.buyer.address || '',
-          municipality: data.buyer.municipality || '',
-          barangay: data.buyer.barangay || '',
-          business_permit: data.buyer.business_permit || '',
-          requirements: data.buyer.requirements || '',
-          payment_terms: data.buyer.payment_terms || '',
-          created_at: data.buyer.created_at || new Date().toISOString(),
-          profile_picture: data.buyer.profile_picture || ''
+          buyer_id: buyer.buyer_id || '',
+          business_name: buyer.business_name || '',
+          owner_name: buyer.owner_name || '',
+          email: buyer.email || '',
+          contact_number: buyer.contact_number || '',
+          business_address: buyer.business_address || '',
+          municipality: buyer.municipality,
+          barangay: buyer.barangay,
+          license_or_accreditation: buyer.license_or_accreditation,
+          buying_schedule: buyer.buying_schedule,
+          buying_location: buyer.buying_location,
+          warehouse_address: buyer.warehouse_address,
+          accepted_quality_grades: buyer.accepted_quality_grades || [],
+          price_range_min: buyer.price_range_min,
+          price_range_max: buyer.price_range_max,
+          payment_terms: buyer.payment_terms,
+          partnered_associations: buyer.partnered_associations || [],
+          profile_photo: buyer.profile_photo,
+          business_permit_photo: buyer.business_permit_photo,
+          valid_id_photo: buyer.valid_id_photo,
+          verification_status: buyer.verification_status,
+          is_verified: buyer.is_verified,
+          remarks: buyer.remarks,
+          created_at: buyer.created_at || new Date().toISOString()
         });
-        setProfilePicture(data.buyer.profile_picture || null);
+        setProfilePicture(buyer.profile_photo || null);
         
         // Load pricing data from buyer_prices table
         if (data.prices && data.prices.length > 0) {
@@ -140,40 +176,48 @@ const BuyerProfile: React.FC = () => {
             }
           ]);
         }
+        setError(null);
       } else {
-        console.warn('Failed to fetch profile from API, using localStorage data');
+        const errorMsg = 'Unable to load profile from server. Using cached data.';
+        setError(errorMsg);
+        console.warn('⚠️', errorMsg);
+        
+        // Graceful fallback to localStorage
         setBuyerInfo({
-          buyer_id: user.user_id || '',
-          company_name: user.businessName || user.company_name || '',
-          contact_person: user.ownerName || user.contact_person || user.full_name || '',
+          buyer_id: user.buyerId || user.buyer_id || '',
+          business_name: user.businessName || '',
+          owner_name: user.ownerName || '',
           email: user.email || '',
-          phone: user.phone || user.contactNumber || '',
-          address: user.address || '',
-          municipality: user.municipality || '',
-          barangay: user.barangay || '',
-          business_permit: user.businessPermit || user.business_permit || '',
-          requirements: user.requirements || '',
-          payment_terms: user.paymentTerms || user.payment_terms || '',
-          created_at: user.created_at || new Date().toISOString()
+          contact_number: user.contactNumber || '',
+          business_address: user.businessAddress || '',
+          payment_terms: user.paymentTerms,
+          partnered_associations: user.partneredAssociations || [],
+          profile_photo: user.profilePhoto,
+          created_at: user.createdAt || new Date().toISOString()
         });
+        setProfilePicture(user.profilePhoto || null);
       }
-    } catch (error) {
-      console.error('Error fetching buyer profile:', error);
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      setBuyerInfo({
-        buyer_id: user.user_id || '',
-        company_name: user.businessName || user.company_name || '',
-        contact_person: user.ownerName || user.contact_person || user.full_name || '',
-        email: user.email || '',
-        phone: user.phone || user.contactNumber || '',
-        address: user.address || '',
-        municipality: user.municipality || '',
-        barangay: user.barangay || '',
-        business_permit: user.businessPermit || user.business_permit || '',
-        requirements: user.requirements || '',
-        payment_terms: user.paymentTerms || user.payment_terms || '',
-        created_at: user.created_at || new Date().toISOString()
-      });
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Failed to load profile. Please try refreshing the page.';
+      setError(errorMsg);
+      console.error('❌ Error fetching buyer profile:', error);
+      
+      // Graceful fallback - don't crash the app
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        setBuyerInfo({
+          buyer_id: user.buyerId || user.buyer_id || '',
+          business_name: user.businessName || 'Not Available',
+          owner_name: user.ownerName || 'Not Available',
+          email: user.email || 'Not Available',
+          contact_number: user.contactNumber || 'Not Available',
+          business_address: user.businessAddress || 'Not Available',
+          created_at: user.createdAt || new Date().toISOString()
+        });
+      } catch (fallbackError) {
+        console.error('❌ Critical error: Unable to load any user data', fallbackError);
+        setError('Unable to load profile data. Please log in again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -410,13 +454,30 @@ const BuyerProfile: React.FC = () => {
 
         {showPasswordSection && (
           <div className="space-y-4">
-            {/* Password Message */}
-            {passwordMessage && (
-              <div className={`p-4 rounded-xl flex items-center gap-3 ${passwordMessage.type === 'success' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
-                {passwordMessage.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-                <span className="font-medium text-sm">{passwordMessage.text}</span>
-              </div>
-            )}
+            {/* Error Banner */}
+      {error && (
+        <div className="mb-4 sm:mb-6 p-4 rounded-xl flex items-start gap-3 bg-yellow-50 text-yellow-900 border-2 border-yellow-200">
+          <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold mb-1">⚠️ Loading Issue</p>
+            <p className="text-sm">{error}</p>
+          </div>
+          <button
+            onClick={() => setError(null)}
+            className="text-yellow-600 hover:text-yellow-800"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Success/Error Message */}
+      {message && (
+        <div className={`mb-4 sm:mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
+          {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+          <span className="font-medium text-sm sm:text-base">{message.text}</span>
+        </div>
+      )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* New Password */}
@@ -526,15 +587,15 @@ const BuyerProfile: React.FC = () => {
               {isEditing ? (
                 <input
                   type="text"
-                  value={buyerInfo?.company_name || ''}
-                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, company_name: e.target.value })}
+                  value={buyerInfo?.business_name || ''}
+                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, business_name: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter company name"
                 />
               ) : (
                 <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl">
                   <Building size={18} className="text-gray-500" />
-                  <span className="text-gray-900 font-medium">{buyerInfo?.company_name || 'Not set'}</span>
+                  <span className="text-gray-900 font-medium">{buyerInfo?.business_name || 'Not set'}</span>
                 </div>
               )}
             </div>
@@ -545,15 +606,15 @@ const BuyerProfile: React.FC = () => {
               {isEditing ? (
                 <input
                   type="text"
-                  value={buyerInfo?.contact_person || ''}
-                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, contact_person: e.target.value })}
+                  value={buyerInfo?.owner_name || ''}
+                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, owner_name: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter contact person"
                 />
               ) : (
                 <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl">
                   <User size={18} className="text-gray-500" />
-                  <span className="text-gray-900 font-medium">{buyerInfo?.contact_person || 'Not set'}</span>
+                  <span className="text-gray-900 font-medium">{buyerInfo?.owner_name || 'Not set'}</span>
                 </div>
               )}
             </div>
@@ -583,15 +644,15 @@ const BuyerProfile: React.FC = () => {
               {isEditing ? (
                 <input
                   type="tel"
-                  value={buyerInfo?.phone || ''}
-                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, phone: e.target.value })}
+                  value={buyerInfo?.contact_number || ''}
+                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, contact_number: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="+63 912 345 6789"
                 />
               ) : (
                 <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl">
                   <Phone size={18} className="text-gray-500" />
-                  <span className="text-gray-900 font-medium">{buyerInfo?.phone || 'Not set'}</span>
+                  <span className="text-gray-900 font-medium">{buyerInfo?.contact_number || 'Not set'}</span>
                 </div>
               )}
             </div>
@@ -601,8 +662,8 @@ const BuyerProfile: React.FC = () => {
               <label className="block text-sm font-semibold text-gray-700 mb-2">Complete Address</label>
               {isEditing ? (
                 <textarea
-                  value={buyerInfo?.address || ''}
-                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, address: e.target.value })}
+                  value={buyerInfo?.business_address || ''}
+                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, business_address: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={2}
                   placeholder="Enter complete address"
@@ -610,7 +671,7 @@ const BuyerProfile: React.FC = () => {
               ) : (
                 <div className="flex items-start gap-2 px-4 py-3 bg-gray-50 rounded-xl">
                   <MapPin size={18} className="text-gray-500 mt-1" />
-                  <span className="text-gray-900 font-medium">{buyerInfo?.address || 'Not set'}</span>
+                  <span className="text-gray-900 font-medium">{buyerInfo?.business_address || 'Not set'}</span>
                 </div>
               )}
             </div>
@@ -657,15 +718,15 @@ const BuyerProfile: React.FC = () => {
               {isEditing ? (
                 <input
                   type="text"
-                  value={buyerInfo?.business_permit || ''}
-                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, business_permit: e.target.value })}
+                  value={buyerInfo?.license_or_accreditation || ''}
+                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, license_or_accreditation: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter business permit number"
                 />
               ) : (
                 <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl">
                   <FileText size={18} className="text-gray-500" />
-                  <span className="text-gray-900 font-medium">{buyerInfo?.business_permit || 'Not set'}</span>
+                  <span className="text-gray-900 font-medium">{buyerInfo?.license_or_accreditation || 'Not set'}</span>
                 </div>
               )}
             </div>
@@ -696,20 +757,14 @@ const BuyerProfile: React.FC = () => {
 
             {/* Requirements */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Fiber Requirements & Specifications</label>
-              {isEditing ? (
-                <textarea
-                  value={buyerInfo?.requirements || ''}
-                  onChange={(e) => setBuyerInfo({ ...buyerInfo!, requirements: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="Enter your specific requirements for abaca fiber (e.g., moisture content, length, color, etc.)"
-                />
-              ) : (
-                <div className="px-4 py-3 bg-gray-50 rounded-xl">
-                  <p className="text-gray-900 font-medium whitespace-pre-wrap">{buyerInfo?.requirements || 'No specific requirements set'}</p>
-                </div>
-              )}
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Accepted Quality Grades</label>
+              <div className="px-4 py-3 bg-gray-50 rounded-xl">
+                <p className="text-gray-900 font-medium">
+                  {buyerInfo?.accepted_quality_grades && buyerInfo.accepted_quality_grades.length > 0 
+                    ? buyerInfo.accepted_quality_grades.join(', ')
+                    : 'All grades accepted'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
