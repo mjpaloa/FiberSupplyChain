@@ -13,15 +13,15 @@ export class BuyersController {
         return;
       }
 
-      // Get buyer info from users table
+      // Get buyer info from buyers table
       const { data: buyer, error: buyerError } = await supabase
-        .from('users')
+        .from('buyers')
         .select('*')
-        .eq('user_id', userId)
-        .eq('user_type', 'buyer')
+        .eq('buyer_id', userId)
         .single();
 
       if (buyerError || !buyer) {
+        console.error('Buyer not found:', buyerError);
         res.status(404).json({ error: 'Buyer not found' });
         return;
       }
@@ -53,24 +53,30 @@ export class BuyersController {
         return;
       }
 
-      // Update buyer info in users table
+      // Update buyer info in buyers table
       const { error: updateError } = await supabase
-        .from('users')
+        .from('buyers')
         .update({
-          company_name: buyerInfo.company_name,
-          contact_person: buyerInfo.contact_person,
+          business_name: buyerInfo.business_name,
+          owner_name: buyerInfo.owner_name,
           email: buyerInfo.email,
-          phone: buyerInfo.phone,
-          address: buyerInfo.address,
+          contact_number: buyerInfo.contact_number,
+          business_address: buyerInfo.business_address,
           municipality: buyerInfo.municipality,
           barangay: buyerInfo.barangay,
-          business_permit: buyerInfo.business_permit,
-          requirements: buyerInfo.requirements,
+          license_or_accreditation: buyerInfo.license_or_accreditation,
+          buying_schedule: buyerInfo.buying_schedule,
+          buying_location: buyerInfo.buying_location,
+          warehouse_address: buyerInfo.warehouse_address,
+          accepted_quality_grades: buyerInfo.accepted_quality_grades,
+          price_range_min: buyerInfo.price_range_min,
+          price_range_max: buyerInfo.price_range_max,
           payment_terms: buyerInfo.payment_terms,
-          profile_picture: buyerInfo.profile_picture,
+          partnered_associations: buyerInfo.partnered_associations,
+          profile_photo: buyerInfo.profile_photo || buyerInfo.profile_picture,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', userId);
+        .eq('buyer_id', userId);
 
       if (updateError) throw updateError;
 
