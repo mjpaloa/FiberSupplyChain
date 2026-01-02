@@ -275,14 +275,14 @@ const CUSAFAInventory: React.FC = () => {
           <table className="w-full">
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Farmer</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Variety</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Quantity (kg)</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Grade</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Harvest Date</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Location</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Farmer</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Variety</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Quantity (kg)</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Grade</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Harvest Date</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Status</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Location</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -318,7 +318,7 @@ const CUSAFAInventory: React.FC = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-semibold">
+                  <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-semibold whitespace-nowrap">
                     {item.abaca_variety}
                   </span>
                 </td>
@@ -326,7 +326,7 @@ const CUSAFAInventory: React.FC = () => {
                   <span className="text-lg font-bold text-gray-900">{parseFloat(item.dry_fiber_output_kg?.toString() || '0').toFixed(2)}</span>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold">
+                  <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold whitespace-nowrap">
                     {item.fiber_grade || 'N/A'}
                   </span>
                 </td>
@@ -337,7 +337,7 @@ const CUSAFAInventory: React.FC = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-semibold">
+                  <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-semibold whitespace-nowrap">
                     {item.status}
                   </span>
                 </td>
@@ -472,17 +472,17 @@ const CUSAFAInventory: React.FC = () => {
       </div>
 
       {showDeliveryModal && selectedHarvest && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
             {/* Header with Gradient */}
-            <div className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 p-8 flex justify-between items-center sticky top-0 z-10 rounded-t-3xl">
-              <div className="flex items-center gap-4">
-                <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm shadow-lg">
-                  <Truck className="text-white" size={32} />
+            <div className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-6 md:p-8 flex justify-between items-center sticky top-0 z-10 rounded-t-2xl sm:rounded-t-3xl">
+              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                <div className="p-2 sm:p-4 bg-white/20 rounded-xl sm:rounded-2xl backdrop-blur-sm shadow-lg flex-shrink-0">
+                  <Truck className="text-white" size={24} />
                 </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white">Create Fiber Delivery</h2>
-                  <p className="text-emerald-50 text-sm mt-1">Schedule delivery from inventory to buyer</p>
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-white truncate">Create Fiber Delivery</h2>
+                  <p className="text-emerald-50 text-xs sm:text-sm mt-1 truncate hidden sm:block">Schedule delivery from inventory to buyer</p>
                 </div>
               </div>
               <button 
@@ -490,59 +490,59 @@ const CUSAFAInventory: React.FC = () => {
                   setShowDeliveryModal(false);
                   setSelectedHarvest(null);
                 }}
-                className="p-3 hover:bg-white/20 rounded-xl transition-all text-white"
+                className="p-2 sm:p-3 hover:bg-white/20 rounded-xl transition-all text-white flex-shrink-0 ml-2"
               >
-                <X size={28} />
+                <X size={20} className="sm:w-7 sm:h-7" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8 space-y-8">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 md:space-y-8">
               {/* Harvest Details Card */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-6 border-2 border-blue-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="p-2 bg-blue-500 rounded-xl">
-                    <Package className="text-white" size={20} />
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-blue-200 shadow-sm">
+                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                  <div className="p-1.5 sm:p-2 bg-blue-500 rounded-lg sm:rounded-xl">
+                    <Package className="text-white" size={18} />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Harvest Details</h3>
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Harvest Details</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Farmer</p>
-                    <p className="font-bold text-gray-900 text-lg">{selectedHarvest.farmers?.full_name || selectedHarvest.farmer_name}</p>
+                    <p className="font-bold text-gray-900 text-sm sm:text-base md:text-lg">{selectedHarvest.farmers?.full_name || selectedHarvest.farmer_name}</p>
                   </div>
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Variety</p>
-                    <p className="font-bold text-emerald-600 text-lg">{selectedHarvest.abaca_variety}</p>
+                    <p className="font-bold text-emerald-600 text-sm sm:text-base md:text-lg">{selectedHarvest.abaca_variety}</p>
                   </div>
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Quantity</p>
-                    <p className="font-bold text-gray-900 text-lg">{selectedHarvest.dry_fiber_output_kg} <span className="text-base text-gray-600">kg</span></p>
+                    <p className="font-bold text-gray-900 text-sm sm:text-base md:text-lg">{selectedHarvest.dry_fiber_output_kg} <span className="text-sm sm:text-base text-gray-600">kg</span></p>
                   </div>
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Grade</p>
-                    <p className="font-bold text-blue-600 text-lg">{selectedHarvest.fiber_grade}</p>
+                    <p className="font-bold text-blue-600 text-sm sm:text-base md:text-lg">{selectedHarvest.fiber_grade}</p>
                   </div>
-                  <div className="bg-white rounded-xl p-4 shadow-sm md:col-span-2">
+                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm sm:col-span-2">
                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Location</p>
-                    <p className="font-bold text-gray-900 text-lg">{selectedHarvest.barangay}, {selectedHarvest.municipality}</p>
+                    <p className="font-bold text-gray-900 text-sm sm:text-base md:text-lg">{selectedHarvest.barangay}, {selectedHarvest.municipality}</p>
                   </div>
                 </div>
               </div>
 
               {/* Buyer Selection Card */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl p-6 border-2 border-purple-200 shadow-sm">
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-500 rounded-xl">
-                      <Building className="text-white" size={20} />
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-purple-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-5">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 bg-purple-500 rounded-lg sm:rounded-xl">
+                      <Building className="text-white" size={18} />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">Select Buyer</h3>
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Select Buyer</h3>
                   </div>
                   <button
                     type="button"
                     onClick={fetchBuyers}
                     disabled={loadingBuyers}
-                    className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-all disabled:opacity-50 flex items-center gap-2 font-semibold shadow-md"
+                    className="px-3 sm:px-4 py-2 bg-purple-500 text-white rounded-lg sm:rounded-xl hover:bg-purple-600 transition-all disabled:opacity-50 flex items-center gap-2 font-semibold shadow-md text-sm sm:text-base w-full sm:w-auto justify-center"
                   >
                     {loadingBuyers ? '⏳' : '🔄'} Reload
                   </button>
@@ -553,7 +553,7 @@ const CUSAFAInventory: React.FC = () => {
                   onChange={handleInputChange}
                   required
                   disabled={loadingBuyers}
-                  className="w-full px-5 py-4 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white hover:border-purple-300 disabled:bg-gray-100 font-medium text-gray-900"
+                  className="w-full px-3 sm:px-5 py-3 sm:py-4 border-2 border-purple-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white hover:border-purple-300 disabled:bg-gray-100 font-medium text-gray-900 text-sm sm:text-base"
                 >
                   <option value="">
                     {loadingBuyers ? '⏳ Loading buyers...' : buyers.length === 0 ? '❌ No buyers available' : 'Choose buyer...'}
@@ -579,17 +579,17 @@ const CUSAFAInventory: React.FC = () => {
               </div>
 
               {/* Delivery Information Card */}
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl p-6 border-2 border-emerald-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="p-2 bg-emerald-500 rounded-xl">
-                    <Calendar className="text-white" size={20} />
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-emerald-200 shadow-sm">
+                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                  <div className="p-1.5 sm:p-2 bg-emerald-500 rounded-lg sm:rounded-xl">
+                    <Calendar className="text-white" size={18} />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Delivery Information</h3>
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Delivery Information</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
-                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
-                      <Calendar size={14} className="text-emerald-500" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                      <Calendar size={12} className="text-emerald-500 sm:w-3.5 sm:h-3.5" />
                       Delivery Date <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -599,13 +599,13 @@ const CUSAFAInventory: React.FC = () => {
                       onChange={handleInputChange}
                       required
                       min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-emerald-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium text-sm sm:text-base"
                     />
                   </div>
 
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
-                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
-                      <Truck size={14} className="text-emerald-500" />
+                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                      <Truck size={12} className="text-emerald-500 sm:w-3.5 sm:h-3.5" />
                       Delivery Method <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -613,7 +613,7 @@ const CUSAFAInventory: React.FC = () => {
                       value={formData.delivery_method}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-emerald-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium text-sm sm:text-base"
                     >
                       <option value="CUSAFA Delivery">🚚 CUSAFA Delivery</option>
                       <option value="Buyer Pickup">🏢 Buyer Pickup</option>
@@ -621,9 +621,9 @@ const CUSAFAInventory: React.FC = () => {
                     </select>
                   </div>
 
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
-                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
-                      <Phone size={14} className="text-emerald-500" />
+                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                      <Phone size={12} className="text-emerald-500 sm:w-3.5 sm:h-3.5" />
                       Farmer Contact <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -631,9 +631,9 @@ const CUSAFAInventory: React.FC = () => {
                       name="farmer_contact"
                       value={formData.farmer_contact}
                       onChange={handleInputChange}
-                      placeholder="Enter farmer contact number"
+                      placeholder="09xxxxxxxxx"
                       required
-                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-emerald-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium text-sm sm:text-base"
                     />
                     {formData.farmer_contact && (
                       <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
@@ -643,9 +643,9 @@ const CUSAFAInventory: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="bg-white rounded-xl p-4 shadow-sm md:col-span-2">
-                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
-                      <MapPin size={14} className="text-emerald-500" />
+                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm sm:col-span-2">
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                      <MapPin size={12} className="text-emerald-500 sm:w-3.5 sm:h-3.5" />
                       Delivery Location <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -655,48 +655,48 @@ const CUSAFAInventory: React.FC = () => {
                       onChange={handleInputChange}
                       required
                       placeholder="Enter delivery address"
-                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-emerald-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium text-sm sm:text-base"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Notes Card */}
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-6 border-2 border-amber-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="p-2 bg-amber-500 rounded-xl">
-                    <FileText className="text-white" size={20} />
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-amber-200 shadow-sm">
+                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                  <div className="p-1.5 sm:p-2 bg-amber-500 rounded-lg sm:rounded-xl">
+                    <FileText className="text-white" size={18} />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Additional Notes</h3>
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Additional Notes</h3>
                 </div>
                 <textarea
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
-                  rows={4}
+                  rows={3}
                   placeholder="Any special instructions or notes..."
-                  className="w-full px-4 py-3 border-2 border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white hover:border-amber-300 resize-none font-medium"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-amber-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white hover:border-amber-300 resize-none font-medium text-sm sm:text-base"
                 />
               </div>
 
               {/* Submit Buttons */}
-              <div className="flex justify-end gap-4 pt-8 border-t-2 border-gray-200">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-6 sm:pt-8 border-t-2 border-gray-200">
                 <button
                   type="button"
                   onClick={() => {
                     setShowDeliveryModal(false);
                     setSelectedHarvest(null);
                   }}
-                  className="px-8 py-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-bold flex items-center gap-2 shadow-md hover:shadow-lg"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gray-100 text-gray-700 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-all font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg text-sm sm:text-base"
                 >
-                  <X size={20} />
+                  <X size={18} />
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:shadow-xl hover:scale-105 transition-all font-semibold flex items-center gap-2 shadow-lg"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg sm:rounded-xl hover:shadow-xl hover:scale-105 transition-all font-bold flex items-center justify-center gap-2 shadow-lg text-sm sm:text-base"
                 >
-                  <CheckCircle size={20} />
+                  <CheckCircle size={18} />
                   Create Delivery
                 </button>
               </div>

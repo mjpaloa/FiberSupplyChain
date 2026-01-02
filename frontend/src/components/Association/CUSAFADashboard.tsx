@@ -95,7 +95,24 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
     plantingRate: 0,
   });
   const [loadingStats, setLoadingStats] = useState(false);
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
+  const [loadingChart, setLoadingChart] = useState(false);
+  const [cachedDistributions, setCachedDistributions] = useState<any[]>([]);
+  const [cachedReceivedSeedlings, setCachedReceivedSeedlings] = useState<any[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([
+    // Initial test data to verify chart works
+    { period: 'Jan', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'Feb', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'Mar', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'Apr', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'May', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'Jun', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'Jul', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'Aug', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'Sep', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'Oct', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'Nov', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 },
+    { period: 'Dec', seedlings: 0, deliveries: 0, received: 0, fiberKg: 0 }
+  ]);
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [recentDistributions, setRecentDistributions] = useState<any[]>([]);
@@ -104,6 +121,15 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   const [totalSeedlingsDistributed, setTotalSeedlingsDistributed] = useState(0);
   const [totalDeliveries, setTotalDeliveries] = useState(0);
   const [totalFiberKg, setTotalFiberKg] = useState(0);
+  const [fiberDeliveryStats, setFiberDeliveryStats] = useState({
+    total: 0,
+    inTransit: 0,
+    delivered: 0,
+    completed: 0,
+    cancelled: 0,
+    totalKg: 0
+  });
+  const [fiberDeliveryChartData, setFiberDeliveryChartData] = useState<DeliveryStatusData[]>([]);
 
   const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
   const user = userStr ? JSON.parse(userStr) : null;
@@ -111,12 +137,20 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   useEffect(() => {
     loadDashboardStats();
     loadNotifications();
-    loadAnalyticsData();
+    loadFiberDeliveryStats();
   }, []);
 
+  // Load raw data only once on mount
   useEffect(() => {
-    loadAnalyticsData();
-  }, [viewMode, selectedYear]);
+    loadRawSeedlingData();
+  }, []);
+
+  // Transform cached data when view mode changes (instant)
+  useEffect(() => {
+    if (cachedDistributions.length > 0 || cachedReceivedSeedlings.length > 0) {
+      transformAnalyticsData();
+    }
+  }, [viewMode, selectedYear, cachedDistributions, cachedReceivedSeedlings]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -235,30 +269,112 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const loadAnalyticsData = async () => {
+  const loadFiberDeliveryStats = async () => {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      const [seedlingRes, receivedRes, fiberRes] = await Promise.all([
-        fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/farmer-distributions', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/received', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch('https://easyabaca-api.vercel.app/api/fiber-deliveries', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
+      const response = await fetch('https://easyabaca-api.vercel.app/api/fiber-deliveries/all', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      const seedlingData = seedlingRes.ok ? await seedlingRes.json() : [];
-      const receivedData = receivedRes.ok ? await receivedRes.json() : [];
-      const fiberData = fiberRes.ok ? await fiberRes.json() : [];
+      if (response.ok) {
+        const data = await response.json();
+        const deliveries = data.deliveries || [];
 
-      const distributions = Array.isArray(seedlingData) ? seedlingData : [];
-      const receivedSeedlings = Array.isArray(receivedData) ? receivedData : [];
-      const fiberDeliveries = Array.isArray(fiberData) ? fiberData : [];
+        // Calculate statistics
+        const stats = {
+          total: deliveries.length,
+          inTransit: deliveries.filter((d: any) => d.status === 'In Transit').length,
+          delivered: deliveries.filter((d: any) => d.status === 'Delivered').length,
+          completed: deliveries.filter((d: any) => d.status === 'Completed').length,
+          cancelled: deliveries.filter((d: any) => d.status === 'Cancelled').length,
+          totalKg: deliveries.reduce((sum: number, d: any) => sum + (parseFloat(d.quantity_kg) || 0), 0)
+        };
+
+        setFiberDeliveryStats(stats);
+
+        // Create chart data
+        const chartData: DeliveryStatusData[] = [];
+        if (stats.completed > 0) chartData.push({ name: 'Completed', value: stats.completed, fill: '#10b981' });
+        if (stats.delivered > 0) chartData.push({ name: 'Delivered', value: stats.delivered, fill: '#3b82f6' });
+        if (stats.inTransit > 0) chartData.push({ name: 'In Transit', value: stats.inTransit, fill: '#f59e0b' });
+        if (stats.cancelled > 0) chartData.push({ name: 'Cancelled', value: stats.cancelled, fill: '#ef4444' });
+        
+        if (chartData.length === 0) {
+          chartData.push({ name: 'No Deliveries', value: 1, fill: '#e5e7eb' });
+        }
+
+        setFiberDeliveryChartData(chartData);
+        console.log('📦 Fiber Delivery Stats:', stats);
+      }
+    } catch (error) {
+      console.error('Error loading fiber delivery stats:', error);
+    }
+  };
+
+  // Load raw data from API (called only once)
+  const loadRawSeedlingData = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+
+      setLoadingChart(true);
+      let seedlingData: any = [];
+      let receivedData: any = [];
+
+      try {
+        const seedlingRes = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/farmer-distributions', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (seedlingRes.ok) {
+          seedlingData = await seedlingRes.json();
+        }
+      } catch (err) {
+        console.warn('Failed to fetch farmer distributions:', err);
+      }
+
+      try {
+        const receivedRes = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/received', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (receivedRes.ok) {
+          receivedData = await receivedRes.json();
+        }
+      } catch (err) {
+        console.warn('Failed to fetch received seedlings:', err);
+      }
+
+      let distributions = Array.isArray(seedlingData) ? seedlingData : [];
+      let receivedSeedlings = Array.isArray(receivedData) ? receivedData : [];
+      
+      // Handle nested response structure
+      if (seedlingData && seedlingData.distributions) {
+        distributions = Array.isArray(seedlingData.distributions) ? seedlingData.distributions : [];
+      }
+      if (receivedData && receivedData.distributions) {
+        receivedSeedlings = Array.isArray(receivedData.distributions) ? receivedData.distributions : [];
+      }
+
+      console.log('📊 Raw API Data Loaded:', { 
+        distributions: distributions.length,
+        received: receivedSeedlings.length 
+      });
+
+      // Cache the raw data
+      setCachedDistributions(distributions);
+      setCachedReceivedSeedlings(receivedSeedlings);
+      setLoadingChart(false);
+    } catch (error) {
+      console.error('Error loading raw seedling data:', error);
+      setLoadingChart(false);
+    }
+  };
+
+  // Transform cached data based on view mode (instant - no API calls)
+  const transformAnalyticsData = () => {
+    const distributions = cachedDistributions;
+    const receivedSeedlings = cachedReceivedSeedlings;
 
       if (viewMode === 'monthly') {
         const monthlyData = Array.from({ length: 12 }, (_, i) => ({
@@ -286,15 +402,8 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
           }
         });
 
-        fiberDeliveries.forEach((fiber: any) => {
-          const date = new Date(fiber.delivery_date || fiber.date);
-          if (date.getFullYear() === selectedYear) {
-            const monthIndex = date.getMonth();
-            monthlyData[monthIndex].fiberKg += fiber.weight_kg || 0;
-            monthlyData[monthIndex].deliveries += 1;
-          }
-        });
 
+        console.log('📊 Monthly Analytics Data:', monthlyData.filter(d => d.seedlings > 0 || d.received > 0));
         setAnalyticsData(monthlyData);
       } else {
         const yearlyData: any = {};
@@ -320,44 +429,47 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
           }
         });
 
-        fiberDeliveries.forEach((fiber: any) => {
-          const year = new Date(fiber.delivery_date || fiber.date).getFullYear();
-          if (yearlyData[year]) {
-            yearlyData[year].fiberKg += fiber.weight_kg || 0;
-            yearlyData[year].deliveries += 1;
-          }
-        });
 
-        setAnalyticsData(Object.values(yearlyData));
+        const yearlyArray = Object.values(yearlyData) as AnalyticsData[];
+        console.log('📊 Yearly Analytics Data:', yearlyArray);
+        setAnalyticsData(yearlyArray);
       }
 
       setTotalDeliveries(distributions.length);
+      setTotalFiberKg(0);
 
-      // Calculate total fiber weight in kg
-      const totalFiber = fiberDeliveries.reduce((sum: number, fiber: any) => sum + (fiber.weight_kg || 0), 0);
-      setTotalFiberKg(totalFiber);
+      // Calculate Distribution Status for Pie Chart (from Seedling Distributions)
+      const totalReceived = stats.totalReceivedQuantity || receivedSeedlings.reduce((sum: number, r: any) => sum + (r.quantity_distributed || 0), 0);
+      const totalDistributed = stats.totalDistributedQuantity || distributions.reduce((sum: number, d: any) => sum + (d.quantity_distributed || 0), 0);
+      const totalAvailable = Math.max(totalReceived - totalDistributed, 0);
 
-      // Calculate Distribution Status for Pie Chart (Seedlings)
-      const totalReceived = stats.totalReceivedQuantity;
-      const totalDistributed = stats.totalDistributedQuantity;
-      const totalAvailable = stats.totalAvailableQuantity;
+      console.log('📊 Status Calculation:', { totalReceived, totalDistributed, totalAvailable });
 
-      const statusChartData: DeliveryStatusData[] = [
-        { name: 'Distributed', value: totalDistributed, fill: '#8b5cf6' },
-        { name: 'Available', value: totalAvailable, fill: '#10b981' },
-        { name: 'Received', value: totalReceived - totalDistributed - totalAvailable, fill: '#f59e0b' },
-      ].filter(item => item.value > 0);
+      const statusChartData: DeliveryStatusData[] = [];
+      
+      if (totalDistributed > 0) {
+        statusChartData.push({ name: 'Distributed', value: totalDistributed, fill: '#10b981' });
+      }
+      if (totalAvailable > 0) {
+        statusChartData.push({ name: 'Available', value: totalAvailable, fill: '#8b5cf6' });
+      }
+      
+      // Count planted seedlings
+      const plantedCount = distributions.filter((d: any) => 
+        d.status && d.status.toLowerCase().includes('plant')
+      ).reduce((sum: number, d: any) => sum + (d.quantity_distributed || 0), 0);
+      
+      if (plantedCount > 0) {
+        statusChartData.push({ name: 'Planted', value: plantedCount, fill: '#3b82f6' });
+      }
 
       // If no data, show placeholder
-      if (statusChartData.length === 0 || totalReceived === 0) {
+      if (statusChartData.length === 0) {
         statusChartData.push({ name: 'No Data', value: 1, fill: '#e2e8f0' });
       }
 
+      console.log('📊 Pie Chart Data:', statusChartData);
       setDeliveryStatusData(statusChartData);
-
-    } catch (error) {
-      console.error('Error loading analytics data:', error);
-    }
   };
 
   const navItems: { id: DashboardPage; label: string; icon: React.FC<any> }[] = [
@@ -556,24 +668,6 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
   const renderOverview = () => (
     <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 to-teal-500 rounded-3xl p-8 text-white shadow-xl">
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2 text-emerald-100 bg-white/10 w-fit px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm">
-              <Sprout className="w-3 h-3" />
-              <span>CUSAFA Dashboard</span>
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight">Welcome Back, {user?.fullName || 'Officer'}</h1>
-            <p className="mt-2 text-emerald-50 max-w-xl text-lg opacity-90">
-              Here's what's happening in your fiber supply chain today.
-            </p>
-          </div>
-        </div>
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 rounded-full bg-white/5 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-64 h-64 rounded-full bg-emerald-400/20 blur-3xl"></div>
-      </div>
 
       {/* KPI Cards - 4 Cards in Row with Gradient Design */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -583,10 +677,6 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
             <div className="p-3 bg-blue-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
               <Package className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xs font-semibold text-green-600 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
-              <TrendingUp className="w-3 h-3" />
-              +{stats.totalReceivedCount}
-            </span>
           </div>
           <p className="text-sm font-medium text-gray-600 mb-2">Seedlings Received</p>
           <p className="text-4xl font-bold text-gray-900 mb-1">{stats.totalReceivedQuantity.toLocaleString()}</p>
@@ -599,10 +689,6 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
             <div className="p-3 bg-emerald-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
               <Share2 className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xs font-semibold text-green-600 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
-              <TrendingUp className="w-3 h-3" />
-              +{stats.totalFarmerDistributions}
-            </span>
           </div>
           <p className="text-sm font-medium text-gray-600 mb-2">Seedlings Distributed</p>
           <p className="text-4xl font-bold text-gray-900 mb-1">{stats.totalDistributedQuantity.toLocaleString()}</p>
@@ -637,10 +723,6 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
             <div className="p-3 bg-teal-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
               <Sprout className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xs font-semibold text-green-600 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
-              <TrendingUp className="w-3 h-3" />
-              {stats.plantingRate.toFixed(0)}%
-            </span>
           </div>
           <p className="text-sm font-medium text-gray-600 mb-2">Planting Progress</p>
           <p className="text-4xl font-bold text-gray-900 mb-1">{stats.plantedQuantity.toLocaleString()}</p>
@@ -648,202 +730,294 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Seedling Distribution Chart */}
-        <div className="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Seedling Distributions</h3>
-              <p className="text-sm text-gray-500 mt-1">Monthly distribution trends to farmers</p>
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-4">
+        {/* Seedling Distributions Bar Chart - 2 columns */}
+        <div className="lg:col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300">
+        <div className="mb-4">
+          {/* Header with title and buttons */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+            <div className="flex-1">
+              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
+                <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
+                Seedling Distributions
+              </h2>
+              <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Monthly distribution trends to farmers</p>
             </div>
-            <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl">
-              <button
-                onClick={() => setViewMode('monthly')}
-                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${viewMode === 'monthly' ? 'text-white bg-emerald-600 shadow-md' : 'text-gray-600 hover:bg-white hover:shadow-sm'
-                  }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setViewMode('yearly')}
-                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${viewMode === 'yearly' ? 'text-white bg-emerald-600 shadow-md' : 'text-gray-600 hover:bg-white hover:shadow-sm'
-                  }`}
-              >
-                Yearly
-              </button>
+            
+            {/* Toggle buttons and icon */}
+            <div className="flex items-center gap-3 ml-5 sm:ml-0">
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setViewMode('monthly')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all duration-200 ${viewMode === 'monthly'
+                    ? 'bg-white text-emerald-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setViewMode('yearly')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all duration-200 ${viewMode === 'yearly'
+                    ? 'bg-white text-emerald-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  Yearly
+                </button>
+              </div>
+              <div className="hidden md:block p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl">
+                <Sprout className="text-emerald-600" size={28} />
+              </div>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <RechartsBarChart data={analyticsData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-              <XAxis
-                dataKey="period"
-                stroke="#9ca3af"
-                style={{ fontSize: '11px' }}
-                axisLine={false}
-                tickLine={false}
-                dy={10}
-              />
-              <YAxis
-                stroke="#9ca3af"
-                style={{ fontSize: '11px' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#fff',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                }}
-                cursor={{ fill: '#f9fafb' }}
-              />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              <Bar dataKey="received" fill="#3b82f6" name="Seedlings Received" radius={[6, 6, 0, 0]} barSize={20} />
-              <Bar dataKey="seedlings" fill="#10b981" name="Seedlings Distributed" radius={[6, 6, 0, 0]} barSize={20} />
-            </RechartsBarChart>
-          </ResponsiveContainer>
+
+          {/* Data Insights Badges */}
+          <div className="flex flex-wrap items-center gap-2 ml-5 md:ml-7">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg">
+              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+              <span className="text-xs font-semibold text-emerald-700">Distributed</span>
+              <span className="text-xs font-black text-emerald-900">
+                {analyticsData.reduce((sum, d) => sum + d.seedlings, 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
+              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span className="text-xs font-semibold text-blue-700">Received</span>
+              <span className="text-xs font-black text-blue-900">
+                {analyticsData.reduce((sum, d) => sum + d.received, 0).toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {loadingChart ? (
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
+            <p className="text-sm font-medium text-gray-600">Loading {viewMode} data...</p>
+          </div>
+        ) : analyticsData && analyticsData.length > 0 ? (
+          <div className="w-full">
+            <div className="overflow-x-auto">
+              <div style={{ minWidth: viewMode === 'monthly' ? '600px' : '100%', width: '100%' }}>
+              <ResponsiveContainer width="100%" height={380}>
+                <RechartsBarChart data={analyticsData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                  <XAxis
+                    dataKey="period"
+                    stroke="#374151"
+                    style={{ fontSize: '12px', fontWeight: 500 }}
+                    axisLine={false}
+                    tickLine={false}
+                    dy={5}
+                  />
+                  <YAxis
+                    stroke="#374151"
+                    style={{ fontSize: '12px', fontWeight: 500 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                    }}
+                    cursor={{ fill: '#f9fafb' }}
+                  />
+                  <Bar dataKey="received" fill="#3b82f6" name="Seedlings Received" radius={[6, 6, 0, 0]} barSize={viewMode === 'monthly' ? 35 : 45} />
+                  <Bar dataKey="seedlings" fill="#10b981" name="Seedlings Distributed" radius={[6, 6, 0, 0]} barSize={viewMode === 'monthly' ? 35 : 45} />
+                </RechartsBarChart>
+              </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+            <div className="p-6 bg-gray-100 rounded-full mb-4">
+              <Activity className="w-12 h-12 text-gray-300" />
+            </div>
+            <p className="font-semibold text-gray-500">No distribution data available</p>
+            <p className="text-sm text-gray-400 mt-2">Distribution data will appear when seedlings are distributed</p>
+          </div>
+        )}
         </div>
 
-        {/* Right Column - Distribution Status Pie Chart */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        {/* Fiber Delivery Statistics Donut Chart - 1 column */}
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300">
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-gray-900">Distribution Status</h3>
-            <p className="text-sm text-gray-500 mt-1">Seedling distribution breakdown</p>
+            <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
+              <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
+              Delivery Status
+            </h2>
+            <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Track delivery status and performance</p>
           </div>
 
-          {/* Pie Chart with Center Label */}
-          <div className="relative">
-            <ResponsiveContainer width="100%" height={240}>
-              <RechartsPieChart>
-                <Pie
-                  data={deliveryStatusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                  cornerRadius={8}
-                  strokeWidth={0}
-                >
-                  {deliveryStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: 'none',
-                    borderRadius: '12px',
-                    fontSize: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                    padding: '8px 12px'
-                  }}
-                />
-              </RechartsPieChart>
-            </ResponsiveContainer>
+          {fiberDeliveryChartData && fiberDeliveryChartData.length > 0 && fiberDeliveryChartData[0].name !== 'No Deliveries' ? (
+            <>
+              {/* Donut Chart */}
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={240}>
+                  <RechartsPieChart>
+                    <Pie
+                      data={fiberDeliveryChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                      cornerRadius={8}
+                      strokeWidth={0}
+                    >
+                      {fiberDeliveryChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#fff',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                        padding: '8px 12px'
+                      }}
+                      formatter={(value: number) => {
+                        const total = fiberDeliveryChartData.reduce((sum, item) => sum + item.value, 0);
+                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                        return [`${value} (${percentage}%)`, ''];
+                      }}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
 
-            {/* Center Label */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none" style={{ marginTop: '-20px' }}>
-              <div className="text-4xl font-bold text-purple-600">
-                {stats.totalReceivedQuantity.toLocaleString()}
-              </div>
-              <div className="text-sm text-gray-500 font-medium mt-1">Total Seedlings</div>
-            </div>
-          </div>
-
-          {/* Custom Legend */}
-          <div className="mt-6 space-y-3">
-            {deliveryStatusData.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-gray-50"
-                style={{ backgroundColor: `${item.fill}10` }}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: item.fill }}
-                  ></div>
-                  <span className="text-sm font-medium text-gray-700">{item.name}</span>
+                {/* Center Label */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none" style={{ marginTop: '-20px' }}>
+                  <div className="text-3xl font-bold text-blue-600">
+                    {fiberDeliveryStats.total}
+                  </div>
+                  <div className="text-xs text-gray-500 font-medium mt-1">Total Deliveries</div>
                 </div>
-                <span className="text-sm font-bold" style={{ color: item.fill }}>
-                  {item.value.toLocaleString()}
-                </span>
               </div>
-            ))}
-          </div>
+
+              {/* Statistics Grid */}
+              <div className="mt-6 space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-green-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-sm font-medium text-gray-700">Completed</span>
+                  </div>
+                  <span className="text-sm font-bold text-green-600">{fiberDeliveryStats.completed}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span className="text-sm font-medium text-gray-700">Delivered</span>
+                  </div>
+                  <span className="text-sm font-bold text-blue-600">{fiberDeliveryStats.delivered}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <span className="text-sm font-medium text-gray-700">In Transit</span>
+                  </div>
+                  <span className="text-sm font-bold text-amber-600">{fiberDeliveryStats.inTransit}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-red-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <span className="text-sm font-medium text-gray-700">Cancelled</span>
+                  </div>
+                  <span className="text-sm font-bold text-red-600">{fiberDeliveryStats.cancelled}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-purple-50 border-t-2 border-purple-200">
+                  <div className="flex items-center gap-3">
+                    <Package className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-semibold text-gray-900">Total Fiber</span>
+                  </div>
+                  <span className="text-sm font-black text-purple-600">{fiberDeliveryStats.totalKg.toFixed(2)} kg</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <div className="p-6 bg-gray-100 rounded-full mb-4">
+                <Truck className="w-12 h-12 text-gray-300" />
+              </div>
+              <p className="font-semibold text-gray-500">No delivery data available</p>
+              <p className="text-sm text-gray-400 mt-2">Fiber deliveries will appear here</p>
+            </div>
+          )}
         </div>
       </div>
 
-
-
       {/* Recent Activity Table */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-gradient-to-br from-white to-gray-50/30 rounded-3xl p-6 md:p-8 shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-300">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Recent Distributions</h3>
-            <p className="text-sm text-gray-500 mt-1">Latest activity logs</p>
+            <h3 className="text-xl md:text-2xl font-black text-gray-900 flex items-center gap-3">
+              <div className="w-1.5 h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
+              Recent Distributions
+            </h3>
+            <p className="text-sm text-gray-600 mt-2 ml-5 font-medium">Latest activity logs</p>
           </div>
-          <button className="px-4 py-2 text-sm font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition">
+          <button 
+            onClick={() => setCurrentPage('distribution')}
+            className="px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl transition-all hover:shadow-lg hover:scale-105 transform duration-200"
+          >
             View All
           </button>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-2">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left py-4 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wide">Farmer</th>
-                <th className="text-left py-4 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wide">Date</th>
-                <th className="text-left py-4 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wide">Variety</th>
-                <th className="text-right py-4 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wide">Quantity</th>
-                <th className="text-center py-4 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wide">Status</th>
+              <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b-2 border-gray-200">
+                <th className="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">Farmer</th>
+                <th className="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">Date</th>
+                <th className="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">Variety</th>
+                <th className="text-right py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">Quantity</th>
+                <th className="text-center py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody>
-              {recentDistributions.length > 0 ? (
-                recentDistributions.map((dist: any, idx) => (
-                  <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50 transition">
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs">
-                          {dist.farmer_name ? dist.farmer_name.charAt(0).toUpperCase() : 'F'}
-                        </div>
-                        <span className="text-sm font-medium text-gray-900">{dist.farmer_name || 'Unknown Farmer'}</span>
+              {recentDistributions.map((dist: any, idx) => (
+                <tr key={idx} className="border-b border-gray-100 hover:bg-emerald-50/30 transition-all duration-200 group">
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black text-sm shadow-md group-hover:scale-110 transition-transform">
+                        {dist.farmer_name ? dist.farmer_name.charAt(0).toUpperCase() : 'F'}
                       </div>
-                    </td>
-                    <td className="py-4 px-4 text-sm text-gray-600">
-                      {new Date(dist.distribution_date || dist.date_distributed).toLocaleDateString()}
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                        {dist.variety || 'Abaca'}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-sm text-gray-900 font-semibold text-right">
-                      {dist.quantity_distributed}
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${!dist.status || dist.status.includes('distributed')
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-gray-100 text-gray-600'
-                        }`}>
-                        {dist.status ? dist.status.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Distributed'}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
-                    No recent distributions found
+                      <span className="text-sm font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors">{dist.farmer_name || 'Unknown Farmer'}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-sm font-medium text-gray-700">
+                    {new Date(dist.distribution_date || dist.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200">
+                      {dist.variety || 'Abaca'}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 text-sm text-gray-900 font-black text-right">
+                    {dist.quantity_distributed?.toLocaleString()}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
+                      dist.status?.toLowerCase().includes('planted') 
+                        ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200'
+                        : !dist.status || dist.status.includes('distributed')
+                        ? 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border border-emerald-200'
+                        : 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border border-gray-200'
+                    }`}>
+                      {dist.status ? dist.status.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Distributed'}
+                    </span>
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
@@ -917,7 +1091,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
         {/* Logo */}
         <div className="p-4 md:p-6 flex items-center justify-between border-b border-slate-700">
           <div className={`transition-all duration-300 ease-in-out ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
-            <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">CUSAFA Center</h1>
+            <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">Association Center</h1>
             <p className="text-xs text-slate-400 whitespace-nowrap">Seedling Distribution</p>
           </div>
           <button
@@ -977,9 +1151,9 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
             >
               <Menu className="w-6 h-6 text-gray-600" />
             </button>
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">CUSAFA Dashboard</p>
-              <h2 className="text-2xl font-bold text-gray-900 mt-0.5">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold truncate">Association Dashboard</p>
+              <h2 className="text-lg md:text-2xl font-bold text-gray-900 mt-0.5 truncate">
                 {currentPage === 'overview'
                   ? 'Overview'
                   : currentPage === 'analytics'
@@ -1011,7 +1185,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
                   )}
                 </button>
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 max-h-[500px] overflow-y-auto">
+                  <div className="fixed sm:absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 max-h-[500px] overflow-y-auto">
                     <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50">
                       <h3 className="font-bold text-gray-900 text-lg">Notifications</h3>
                       <p className="text-xs text-gray-600">Recent activity updates</p>
@@ -1056,7 +1230,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
               <div className="relative">
                 <button
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all"
+                  className="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all"
                 >
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center font-bold text-sm shadow-lg">
                     {(user?.fullName || 'CU')
@@ -1065,16 +1239,16 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
                       .join('')
                       .slice(0, 2)}
                   </div>
-                  <div className="text-left">
-                    <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'CUSAFA Officer'}</p>
+                  <div className="text-left hidden sm:block">
+                    <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'Association Officer'}</p>
                     <p className="text-xs text-gray-500">{user?.associationName || 'Central Union'}</p>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                  <ChevronDown className="w-4 h-4 text-gray-500 hidden sm:block" />
                 </button>
                 {showProfileDropdown && (
                   <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
                     <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-200">
-                      <p className="text-sm font-bold text-gray-900">{user?.fullName || 'CUSAFA Officer'}</p>
+                      <p className="text-sm font-bold text-gray-900">{user?.fullName || 'Association Officer'}</p>
                       <p className="text-xs text-gray-600">{user?.associationName || 'Central Union'}</p>
                     </div>
                     <button
