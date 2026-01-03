@@ -216,7 +216,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
   };
 
   const renderStatusBadge = (status: string) => (
-    <span className={`px-4 py-2 rounded-full text-xs font-bold shadow-md ${STATUS_CLASSES[status] || 'bg-gray-500 text-white'}`}>
+    <span className={`inline-block px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${STATUS_CLASSES[status] || 'bg-gray-500 text-white'}`}>
       {STATUS_LABELS[status] || '? Unknown'}
     </span>
   );
@@ -238,224 +238,164 @@ const AssociationSeedlingDistribution: React.FC = () => {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-blue-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-              <Package className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Package size={24} />
             </div>
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-blue-700 mb-1">Total Distributions</p>
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900">{stats.total}</p>
-          <p className="text-[10px] sm:text-xs text-blue-600 mt-1 sm:mt-2">To farmers</p>
+          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">TOTAL DISTRIBUTIONS</p>
+          <p className="text-4xl font-black mb-3">{stats.total}</p>
+          <div className="flex items-center gap-2 text-sm opacity-80">
+            <Package size={16} />
+            <span>To farmers</span>
+          </div>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <CheckCircle size={24} />
             </div>
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-emerald-700 mb-1">Planted</p>
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-emerald-900">{stats.planted}</p>
-          <p className="text-[10px] sm:text-xs text-emerald-600 mt-1 sm:mt-2">Successfully planted</p>
+          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">PLANTED</p>
+          <p className="text-4xl font-black mb-3">{stats.planted}</p>
+          <div className="flex items-center gap-2 text-sm opacity-80">
+            <CheckCircle size={16} />
+            <span>Successfully planted</span>
+          </div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-              <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Sprout size={24} />
             </div>
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-purple-700 mb-1">Distributed</p>
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-900">{stats.distributed}</p>
-          <p className="text-[10px] sm:text-xs text-purple-600 mt-1 sm:mt-2">Pending planting</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-teal-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-              <Sprout className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
-            </div>
+          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">TOTAL SEEDLINGS</p>
+          <p className="text-4xl font-black mb-3">{stats.totalQuantity.toLocaleString()}</p>
+          <div className="flex items-center gap-2 text-sm opacity-80">
+            <Sprout size={16} />
+            <span>Distributed overall</span>
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-teal-700 mb-1">Total Seedlings</p>
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-teal-900">{stats.totalQuantity.toLocaleString()}</p>
-          <p className="text-[10px] sm:text-xs text-teal-600 mt-1 sm:mt-2">Total quantity distributed</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-lg">
-        <div className="p-3 sm:p-4 md:p-6">
-          <div className="bg-gradient-to-r from-emerald-50 via-blue-50 to-purple-50 border-2 border-emerald-200 rounded-3xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8 shadow-lg">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-emerald-500 w-4 h-4 sm:w-5 sm:h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search variety or farmer..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 bg-white border-2 border-emerald-200 rounded-xl sm:rounded-2xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all duration-200 placeholder:text-gray-500 text-sm sm:text-base text-gray-800 font-medium shadow-md"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <div className="relative flex-1 sm:flex-initial">
-                  <Filter className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-purple-500 w-4 h-4 sm:w-5 sm:h-5" />
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="appearance-none w-full pl-10 sm:pl-12 pr-8 sm:pr-10 py-3 sm:py-4 bg-white border-2 border-purple-200 rounded-xl sm:rounded-2xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all duration-200 text-sm sm:text-base text-gray-800 font-bold shadow-md cursor-pointer"
-                  >
-                    {STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="relative flex-1 sm:flex-initial">
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                    className="appearance-none w-full pl-3 sm:pl-4 pr-8 sm:pr-10 py-3 sm:py-4 bg-white border-2 border-blue-200 rounded-xl sm:rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-sm sm:text-base text-gray-800 font-bold shadow-md cursor-pointer"
-                  >
-                    <option value={10}>Show 10</option>
-                    <option value={20}>Show 20</option>
-                    <option value={50}>Show 50</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+      {/* Search and Filters */}
+      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 mb-6">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search variety or farmer..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm bg-gray-50 hover:bg-white"
+            />
           </div>
 
-          {loading ? (
-            <div className="bg-white rounded-3xl shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] p-12 text-center">
-              <div className="relative w-16 h-16 mx-auto mb-4">
-                <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
-                <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-              </div>
-              <p className="text-gray-600 font-medium">Loading farmer distributions...</p>
-            </div>
-          ) : filteredDistributions.length === 0 ? (
-            <div className="bg-white rounded-3xl shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] p-12 text-center">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff] flex items-center justify-center">
-                <Users className="w-10 h-10 text-gray-400" />
-              </div>
-              <p className="text-gray-700 font-semibold text-lg mb-2">No farmer distributions found</p>
-              <p className="text-sm text-gray-500">Use the inventory page to distribute seedlings to farmers.</p>
-            </div>
-          ) : (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] overflow-hidden">
-              <div className="p-3 sm:p-4 md:p-6 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-                  <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Show entries:</span>
-                    <div className="flex gap-1 sm:gap-2">
-                      {[10, 20, 50].map((size) => (
-                        <button
-                          key={size}
-                          onClick={() => handleItemsPerPageChange(size)}
-                          className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
-                              ? 'bg-indigo-500 text-white shadow-lg'
-                              : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                            }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredDistributions.length)} of {filteredDistributions.length} entries
-                  </div>
-                </div>
-              </div>
+          <div className="flex gap-4 w-full md:w-auto">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm bg-gray-50 hover:bg-white"
+            >
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
 
-              <div className="overflow-x-auto -mx-6 px-6">
-                <table className="w-full min-w-[800px]">
-                  <thead className="bg-gradient-to-r from-emerald-100 via-blue-100 to-purple-100">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 whitespace-nowrap">Show:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm bg-gray-50 hover:bg-white"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Container */}
+      <div className="bg-white rounded-2xl shadow-md p-7 border border-gray-100">
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="relative w-16 h-16 mx-auto mb-4">
+              <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+            </div>
+            <p className="text-gray-600 font-medium">Loading farmer distributions...</p>
+          </div>
+        ) : filteredDistributions.length === 0 ? (
+          <div className="p-12 text-center">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+              <Users className="w-10 h-10 text-gray-400" />
+            </div>
+            <p className="text-gray-700 font-semibold text-lg mb-2">No farmer distributions found</p>
+            <p className="text-sm text-gray-500">Use the inventory page to distribute seedlings to farmers.</p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                  <thead className="bg-gray-50 rounded-t-xl">
                     <tr>
-                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Variety</th>
-                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                          Date
-                        </div>
-                      </th>
-                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <Package className="w-3 h-3 sm:w-4 sm:h-4" />
-                          Qty
-                        </div>
-                      </th>
-                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-                          Farmer
-                        </div>
-                      </th>
-                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Location</th>
-                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Variety</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Farmer</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Location</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-indigo-100">
+                  <tbody className="bg-white">
                     {currentDistributions.map((distribution) => (
-                      <tr key={distribution.distribution_id} className="hover:bg-blue-50/50 transition-colors duration-150">
-                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
-                          <span className="px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 md:py-1.5 bg-emerald-100 text-emerald-700 rounded-md sm:rounded-lg text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap">
+                      <tr key={distribution.distribution_id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                        <td className="px-4 py-3 text-sm text-gray-900">
+                          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-lg text-xs font-semibold">
                             {distribution.variety}
                           </span>
                         </td>
-                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
-                          <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs md:text-sm text-gray-600">
-                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                            <span className="hidden sm:inline">{formatDate(distribution.date_distributed)}</span>
-                            <span className="sm:hidden">{new Date(distribution.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                          </div>
+                        <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900">
+                          {formatDate(distribution.date_distributed)}
                         </td>
-                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
-                          <span className="text-xs sm:text-sm md:text-lg font-bold text-gray-900">{distribution.quantity_distributed.toLocaleString()}</span>
+                        <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900 font-semibold">
+                          {distribution.quantity_distributed.toLocaleString()}
                         </td>
-                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
-                          <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
-                            <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-[10px] sm:text-xs md:text-lg shadow-md">
-                              {(distribution.farmers?.full_name || 'N/A').charAt(0).toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-semibold text-gray-900 text-[10px] sm:text-xs md:text-sm truncate">{distribution.farmers?.full_name || 'N/A'}</p>
-                              <p className="text-[9px] sm:text-[10px] md:text-xs text-gray-500 truncate hidden sm:block">{distribution.farmers?.email || 'No email'}</p>
-                            </div>
-                          </div>
+                        <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900">
+                          {distribution.farmers?.full_name || 'N/A'}
                         </td>
-                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
-                          <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs md:text-sm text-gray-600">
-                            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                            <span className="truncate">{distribution.farmers?.municipality || 'N/A'}</span>
-                          </div>
+                        <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900">
+                          {distribution.farmers?.municipality || 'N/A'}
                         </td>
-                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                        <td className="px-4 py-3 border-b border-gray-100">
                           {renderStatusBadge(distribution.status)}
                         </td>
-                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
-                          <div className="flex items-center gap-1 sm:gap-2">
+                        <td className="px-4 py-3 border-b border-gray-100">
+                          <div className="flex items-center gap-2">
                             <button
                               onClick={() => openViewModal(distribution)}
-                              className="p-1 sm:p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg sm:rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
+                              className="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-blue-100 text-blue-700 hover:bg-blue-200"
                               title="View Details"
                             >
-                              <Eye size={12} className="sm:w-4 sm:h-4" />
+                              <Eye size={16} />
                             </button>
                             <button
                               onClick={() => handleDeleteFarmerDistribution(distribution.distribution_id)}
-                              className="p-1 sm:p-1.5 md:p-2 bg-red-100 text-red-600 rounded-lg sm:rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
+                              className="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-red-100 text-red-700 hover:bg-red-200"
                               title="Delete"
                             >
-                              <Trash2 size={12} className="sm:w-4 sm:h-4" />
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </td>
@@ -463,65 +403,57 @@ const AssociationSeedlingDistribution: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
-              </div>
+            </div>
 
-              <div className="p-3 sm:p-4 md:p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
-                  <div className="text-xs sm:text-sm text-gray-600">
-                    Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredDistributions.length)} of {filteredDistributions.length} entries
-                  </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
+            {/* Pagination Footer */}
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+              <p className="text-sm text-gray-600">
+                Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredDistributions.length)} of {filteredDistributions.length} entries
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  Previous
+                </button>
+                {showPagination && Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
+                  let page;
+                  if (totalPages <= 5) {
+                    page = index + 1;
+                  } else if (currentPage <= 3) {
+                    page = index + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    page = totalPages - 4 + index;
+                  } else {
+                    page = currentPage - 2 + index;
+                  }
+                  return (
                     <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                        }`}
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium ${
+                        currentPage === page
+                          ? 'bg-emerald-500 text-white border-emerald-500'
+                          : 'border-gray-300 hover:bg-gray-50'
+                      }`}
                     >
-                      <span className="hidden sm:inline">Previous</span>
-                      <span className="sm:hidden">Prev</span>
+                      {page}
                     </button>
-                    {showPagination && Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
-                      let page;
-                      if (totalPages <= 5) {
-                        page = index + 1;
-                      } else if (currentPage <= 3) {
-                        page = index + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        page = totalPages - 4 + index;
-                      } else {
-                        page = currentPage - 2 + index;
-                      }
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => handlePageChange(page)}
-                          className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${currentPage === page
-                              ? 'bg-indigo-500 text-white shadow-lg'
-                              : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                            }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages || totalPages === 0}
-                      className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages || totalPages === 0
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                        }`}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
+                  );
+                })}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  Next
+                </button>
               </div>
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {showViewModal && selectedDistribution && (

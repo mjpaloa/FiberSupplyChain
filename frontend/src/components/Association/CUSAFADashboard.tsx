@@ -704,64 +704,78 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   const renderOverview = () => (
     <div className="space-y-6">
 
-      {/* KPI Cards - 4 Cards in Row with Gradient Design */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* KPI Cards - Match Buyers Design Exactly */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
         {/* Card 1: Seedlings Received */}
-        <div className="group bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-blue-200/50">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="p-2 sm:p-3 bg-blue-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
-              <Package className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+        <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                <Package size={24} />
+              </div>
+            </div>
+            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Seedlings Received</h3>
+            <p className="text-3xl md:text-4xl font-black mb-1">{stats.totalReceivedQuantity.toLocaleString()}</p>
+            <div className="flex items-center gap-1 text-xs opacity-80">
+              <Package size={14} />
+              <span>From MAO distributions</span>
             </div>
           </div>
-          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">Seedlings Received</p>
-          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-0.5 sm:mb-1">{stats.totalReceivedQuantity.toLocaleString()}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500">From MAO distributions</p>
         </div>
 
         {/* Card 2: Distributed */}
-        <div className="group bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-emerald-200/50">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="p-2 sm:p-3 bg-emerald-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
-              <Share2 className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+        <div className="group relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                <Share2 size={24} />
+              </div>
+            </div>
+            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Seedlings Distributed</h3>
+            <p className="text-3xl md:text-4xl font-black mb-1">{stats.totalDistributedQuantity.toLocaleString()}</p>
+            <div className="flex items-center gap-1 text-xs opacity-80">
+              <Users size={14} />
+              <span>To {stats.totalFarmerDistributions} farmers</span>
             </div>
           </div>
-          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">Seedlings Distributed</p>
-          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-0.5 sm:mb-1">{stats.totalDistributedQuantity.toLocaleString()}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500">To {stats.totalFarmerDistributions} farmers</p>
         </div>
 
         {/* Card 3: Inventory */}
-        <div className="group bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-purple-200/50">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="p-2 sm:p-3 bg-purple-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
-              <Layers className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+        <div className="group relative bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                <Layers size={24} />
+              </div>
             </div>
-            {stats.totalAvailableQuantity === 0 ? (
-              <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-                <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                Complete
-              </span>
-            ) : (
-              <span className="text-[10px] sm:text-xs font-semibold text-blue-600 flex items-center gap-1 bg-blue-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-                Available
-              </span>
-            )}
+            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Inventory Remaining</h3>
+            <p className="text-3xl md:text-4xl font-black mb-1">{stats.totalAvailableQuantity.toLocaleString()}</p>
+            <div className="flex items-center gap-2 text-xs opacity-80">
+              <Layers size={14} />
+              <span>{stats.totalAvailableQuantity === 0 ? 'Fully distributed' : 'Ready for distribution'}</span>
+            </div>
           </div>
-          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">Inventory Remaining</p>
-          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-0.5 sm:mb-1">{stats.totalAvailableQuantity.toLocaleString()}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500">{stats.totalAvailableQuantity === 0 ? 'Fully distributed' : 'Ready for distribution'}</p>
         </div>
 
         {/* Card 4: Planting Progress */}
-        <div className="group bg-gradient-to-br from-teal-50 to-teal-100/50 rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-teal-200/50">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="p-2 sm:p-3 bg-teal-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
-              <Sprout className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+        <div className="group relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                <Sprout size={24} />
+              </div>
+            </div>
+            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Planting Progress</h3>
+            <p className="text-3xl md:text-4xl font-black mb-1">{stats.plantedQuantity.toLocaleString()}</p>
+            <div className="flex items-center gap-2 text-xs opacity-80">
+              <TrendingUp size={14} />
+              <span>{stats.plantingRate.toFixed(1)}% planted</span>
             </div>
           </div>
-          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">Planting Progress</p>
-          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-0.5 sm:mb-1">{stats.plantedQuantity.toLocaleString()}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500">{stats.plantingRate.toFixed(1)}% planted</p>
         </div>
       </div>
 
@@ -1138,8 +1152,8 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
         {/* Logo */}
         <div className="p-4 md:p-6 flex items-center justify-between border-b border-slate-700">
           <div className={`transition-all duration-300 ease-in-out ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
-            <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">Association Center</h1>
-            <p className="text-xs text-slate-400 whitespace-nowrap">Seedling Distribution</p>
+            <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">Association</h1>
+            <p className="text-xs text-slate-400 whitespace-nowrap">Seedling Management</p>
           </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}

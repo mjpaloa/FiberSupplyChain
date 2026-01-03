@@ -12,7 +12,8 @@ import {
   Trash2,
   X,
   Camera,
-  Upload
+  Upload,
+  Users
 } from 'lucide-react';
 
 interface AssociationDistribution {
@@ -375,43 +376,52 @@ const AssociationInventory: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-blue-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-              <Package className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Package size={24} />
             </div>
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-blue-700 mb-1">Total Received</p>
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900">{totalReceived.toLocaleString()}</p>
-          <p className="text-[10px] sm:text-xs text-blue-600 mt-1 sm:mt-2">Seedlings from MAO</p>
+          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">TOTAL RECEIVED</p>
+          <p className="text-4xl font-black mb-3">{totalReceived.toLocaleString()}</p>
+          <div className="flex items-center gap-2 text-sm opacity-80">
+            <Package size={16} />
+            <span>Seedlings from MAO</span>
+          </div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-              <Share2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Users size={24} />
             </div>
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-purple-700 mb-1">Distributed to Farmers</p>
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-900">{totalDistributed.toLocaleString()}</p>
-          <p className="text-[10px] sm:text-xs text-purple-600 mt-1 sm:mt-2">Already distributed</p>
+          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">DISTRIBUTED TO FARMERS</p>
+          <p className="text-4xl font-black mb-3">{totalDistributed.toLocaleString()}</p>
+          <div className="flex items-center gap-2 text-sm opacity-80">
+            <Users size={16} />
+            <span>To {verifiedFarmers.length} farmers</span>
+          </div>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-              <Layers className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Layers size={24} />
             </div>
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-emerald-700 mb-1">Remaining Inventory</p>
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-emerald-900">{totalRemaining.toLocaleString()}</p>
-          <p className="text-[10px] sm:text-xs text-emerald-600 mt-1 sm:mt-2">Available for distribution</p>
+          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">REMAINING STOCK</p>
+          <p className="text-4xl font-black mb-3">{totalRemaining.toLocaleString()}</p>
+          <div className="flex items-center gap-2 text-sm opacity-80">
+            <Layers size={16} />
+            <span>Available for distribution</span>
+          </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
+      <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-white/60 p-4 md:p-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
@@ -420,7 +430,7 @@ const AssociationInventory: React.FC = () => {
               placeholder="Search by variety, supplier..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-gray-50"
+              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-3 md:py-4 text-sm border-2 border-gray-200 rounded-xl md:rounded-2xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 bg-gray-50 font-medium transition-all"
             />
           </div>
           <div className="w-full sm:w-56">
@@ -429,7 +439,7 @@ const AssociationInventory: React.FC = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-gray-50 appearance-none cursor-pointer"
+                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-3 md:py-4 text-sm border-2 border-gray-200 rounded-xl md:rounded-2xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 bg-gray-50 appearance-none cursor-pointer font-medium transition-all"
               >
                 <option value="all">All Status</option>
                 <option value="distributed_to_association">📦 Received</option>
@@ -442,7 +452,7 @@ const AssociationInventory: React.FC = () => {
       </div>
 
       {/* Inventory Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-2xl border border-white/60 overflow-hidden">
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
@@ -456,133 +466,103 @@ const AssociationInventory: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-emerald-50 to-teal-50">
+              <thead className="bg-gray-50 rounded-t-xl">
                 <tr>
-                  <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase">Photo</th>
-                  <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase">
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span className="hidden sm:inline">Date</span>
-                    </div>
-                  </th>
-                  <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase">
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <Sprout className="w-3 h-3 sm:w-4 sm:h-4" />
-                      Variety
-                    </div>
-                  </th>
-                  <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase">Received</th>
-                  <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase">Distributed</th>
-                  <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase">Remaining</th>
-                  <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase">Status</th>
-                  <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Photo</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Variety</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Received</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Distributed</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Remaining</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="bg-white">
                 {paginatedDistributions.map((dist) => {
                   const distributedQty = dist.distributed_to_farmers || 0;
                   // Use ?? instead of || to handle 0 correctly (0 is a valid remaining quantity)
                   const remainingQty = dist.remaining_quantity ?? (dist.quantity_distributed - distributedQty);
-                  const progressPercent = dist.quantity_distributed > 0 
-                    ? (distributedQty / dist.quantity_distributed) * 100 
-                    : 0;
 
                   return (
-                    <tr key={dist.distribution_id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 whitespace-nowrap">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-lg sm:rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
+                    <tr key={dist.distribution_id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                      <td className="px-4 py-3 border-b border-gray-100">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
                           {dist.seedling_photo ? (
                             <img src={dist.seedling_photo} alt="Seedling" className="w-full h-full object-cover" />
                           ) : (
-                            <Sprout className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-gray-400" />
+                            <Sprout className="w-6 h-6 text-gray-400" />
                           )}
                         </div>
                       </td>
-                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 whitespace-nowrap">
-                        <div className="text-[11px] sm:text-xs md:text-sm font-medium text-gray-900">
-                          {new Date(dist.date_distributed).toLocaleDateString()}
-                        </div>
+                      <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900">
+                        {new Date(dist.date_distributed).toLocaleDateString()}
                       </td>
-                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 whitespace-nowrap">
-                        <div className="font-bold text-gray-900 text-xs sm:text-sm md:text-base">{dist.variety}</div>
+                      <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900">
+                        <div className="font-semibold">{dist.variety}</div>
                         {dist.source_supplier && (
-                          <div className="text-[10px] sm:text-xs text-gray-500">{dist.source_supplier}</div>
+                          <div className="text-xs text-gray-500">{dist.source_supplier}</div>
                         )}
                       </td>
-                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <Package className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
-                          <span className="font-bold text-blue-600 text-xs sm:text-sm md:text-base">{dist.quantity_distributed.toLocaleString()}</span>
-                        </div>
+                      <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900 font-semibold">
+                        {dist.quantity_distributed.toLocaleString()}
                       </td>
-                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <Share2 className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500" />
-                          <span className="font-bold text-purple-600 text-xs sm:text-sm md:text-base">{distributedQty.toLocaleString()}</span>
-                        </div>
+                      <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900 font-semibold">
+                        {distributedQty.toLocaleString()}
                       </td>
-                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <Layers className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
-                          <span className="font-bold text-emerald-600 text-xs sm:text-sm md:text-base">{remainingQty.toLocaleString()}</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1 sm:h-1.5 mt-1">
-                          <div 
-                            className="bg-emerald-500 h-1 sm:h-1.5 rounded-full transition-all" 
-                            style={{ width: `${100 - progressPercent}%` }}
-                          ></div>
-                        </div>
+                      <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900 font-semibold">
+                        {remainingQty.toLocaleString()}
                       </td>
-                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${getStatusColor(dist.status)}`}>
+                      <td className="px-4 py-3 border-b border-gray-100">
+                        <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${getStatusColor(dist.status)}`}>
                           {dist.status === 'distributed_to_association' ? '📦 Received' :
                            dist.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
                            dist.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
                            '❌ Cancelled'}
                         </span>
                       </td>
-                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 sm:gap-2">
+                      <td className="px-4 py-3 border-b border-gray-100">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
                               setSelectedDistribution(dist);
                               setShowViewModal(true);
                             }}
-                            className="p-1 sm:p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-all"
+                            className="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-blue-100 text-blue-700 hover:bg-blue-200"
                             title="View Details"
                           >
-                            <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+                            <Eye size={16} />
                           </button>
                           <button
                             onClick={() => {
                               handleOpenEditModal(dist);
                             }}
-                            className="p-1 sm:p-1.5 md:p-2 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-all"
-                            title="Edit Distribution"
+                            className="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-amber-100 text-amber-700 hover:bg-amber-200"
+                            title="Edit"
                           >
-                            <Edit className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+                            <Edit size={16} />
                           </button>
                           <button
                             onClick={() => {
                               setSelectedDistribution(dist);
                               setShowDeleteModal(true);
                             }}
-                            className="p-1 sm:p-1.5 md:p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all"
-                            title="Delete Distribution"
+                            className="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-red-100 text-red-700 hover:bg-red-200"
+                            title="Delete"
                           >
-                            <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+                            <Trash2 size={16} />
                           </button>
                           <button
                             onClick={() => openDistributeModal(dist)}
                             disabled={remainingQty === 0}
-                            className={`p-1 sm:p-1.5 md:p-2 rounded-lg transition-all ${
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                               remainingQty > 0
-                                ? 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
+                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             }`}
                             title={remainingQty > 0 ? 'Distribute to Farmers' : 'No remaining seedlings'}
                           >
-                            <Share2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+                            <Share2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -596,60 +576,25 @@ const AssociationInventory: React.FC = () => {
         
         {/* Pagination Footer */}
         {filteredDistributions.length > 0 && (
-          <div className="p-3 sm:p-4 md:p-6 border-t border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <span className="text-xs sm:text-sm font-medium text-gray-700">Show entries:</span>
-                <div className="flex gap-1 sm:gap-2">
-                  {[10, 20, 30].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => {
-                        setItemsPerPage(size);
-                        setCurrentPage(1);
-                      }}
-                      className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
-                          ? 'bg-indigo-500 text-white shadow-lg'
-                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-                <span className="text-xs sm:text-sm text-gray-600">
-                  Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
-                </span>
-                <div className="flex gap-1 sm:gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                    }`}
-                  >
-                    <span className="hidden sm:inline">Previous</span>
-                    <span className="sm:hidden">Prev</span>
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === totalPages || totalPages === 0
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+            <p className="text-sm text-gray-600">
+              Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                Next
+              </button>
             </div>
           </div>
         )}

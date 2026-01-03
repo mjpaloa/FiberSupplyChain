@@ -101,22 +101,19 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
     switch (availability) {
       case 'Available':
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm font-semibold">
-            <CheckCircle size={14} />
+          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-800">
             Available
           </span>
         );
       case 'Limited':
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold">
-            <Clock size={14} />
+          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-yellow-100 text-yellow-800">
             Limited
           </span>
         );
       case 'Not Buying':
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
-            <XCircle size={14} />
+          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-100 text-red-800">
             Not Buying
           </span>
         );
@@ -185,181 +182,87 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
 
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Stats Cards - Compact Design */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {/* Total Listings Card */}
-        <div className="bg-blue-100 rounded-2xl p-5 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="p-2.5 bg-blue-200 rounded-xl">
-              <Building className="text-blue-700" size={20} />
-            </div>
-            <div>
-              <p className="text-blue-700 text-sm font-semibold">Active Listings</p>
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Building size={24} />
             </div>
           </div>
-          <div className="bg-blue-200/50 rounded-xl p-5">
-            <p className="text-blue-600 text-xs font-medium mb-2 uppercase tracking-wide">Total Count</p>
-            <p className="text-6xl font-black text-blue-800">{stats.total}</p>
-          </div>
+          <p className="text-3xl font-bold mb-1">{stats.total}</p>
+          <p className="text-sm opacity-90">Active Buyer Listings</p>
         </div>
 
-        {/* Top Class A Buyers */}
-        <div className="bg-emerald-100 rounded-2xl p-5 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2.5 bg-emerald-200 rounded-xl">
-                <Award className="text-emerald-700" size={20} />
-              </div>
-              <span className="text-emerald-800 font-bold text-base">Class A</span>
+        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <TrendingUp size={24} />
             </div>
-            <span className="text-xs font-semibold text-emerald-700 bg-emerald-200 px-3 py-1.5 rounded-full">Premium</span>
           </div>
-          <p className="text-emerald-700 text-xs font-semibold mb-3 uppercase tracking-wide">Top 3 Buyers</p>
-          <div className="space-y-2">
-            {topClassA.length > 0 ? topClassA.map((buyer) => (
-              <div key={buyer.rank} className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="flex-shrink-0 w-7 h-7 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">#{buyer.rank}</span>
-                    <span className="text-emerald-900 text-sm font-semibold truncate">{buyer.company}</span>
-                  </div>
-                  <span className="text-emerald-800 font-bold text-base ml-3">₱{buyer.price.toFixed(2)}</span>
-                </div>
-              </div>
-            )) : (
-              <div className="bg-white rounded-xl p-4 text-center">
-                <p className="text-emerald-400 text-xs">No Class A listings</p>
-              </div>
-            )}
-          </div>
+          <p className="text-3xl font-bold mb-1">₱{topClassA.length > 0 ? topClassA[0].price.toFixed(2) : '0.00'}</p>
+          <p className="text-sm opacity-90">Best Class A Price</p>
         </div>
 
-        {/* Top Class B Buyers */}
-        <div className="bg-blue-100 rounded-2xl p-5 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2.5 bg-blue-200 rounded-xl">
-                <TrendingUp className="text-blue-700" size={20} />
-              </div>
-              <span className="text-blue-800 font-bold text-base">Class B</span>
+        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <CheckCircle size={24} />
             </div>
-            <span className="text-xs font-semibold text-blue-700 bg-blue-200 px-3 py-1.5 rounded-full">Standard</span>
           </div>
-          <p className="text-blue-700 text-xs font-semibold mb-3 uppercase tracking-wide">Top 3 Buyers</p>
-          <div className="space-y-2">
-            {topClassB.length > 0 ? topClassB.map((buyer) => (
-              <div key={buyer.rank} className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="flex-shrink-0 w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">#{buyer.rank}</span>
-                    <span className="text-blue-900 text-sm font-semibold truncate">{buyer.company}</span>
-                  </div>
-                  <span className="text-blue-800 font-bold text-base ml-3">₱{buyer.price.toFixed(2)}</span>
-                </div>
-              </div>
-            )) : (
-              <div className="bg-white rounded-xl p-4 text-center">
-                <p className="text-blue-400 text-xs">No Class B listings</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Top Class C Buyers */}
-        <div className="bg-purple-100 rounded-2xl p-5 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2.5 bg-purple-200 rounded-xl">
-                <Activity className="text-purple-700" size={20} />
-              </div>
-              <span className="text-purple-800 font-bold text-base">Class C</span>
-            </div>
-            <span className="text-xs font-semibold text-purple-700 bg-purple-200 px-3 py-1.5 rounded-full">Basic</span>
-          </div>
-          <p className="text-purple-700 text-xs font-semibold mb-3 uppercase tracking-wide">Top 3 Buyers</p>
-          <div className="space-y-2">
-            {topClassC.length > 0 ? topClassC.map((buyer) => (
-              <div key={buyer.rank} className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="flex-shrink-0 w-7 h-7 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">#{buyer.rank}</span>
-                    <span className="text-purple-900 text-sm font-semibold truncate">{buyer.company}</span>
-                  </div>
-                  <span className="text-purple-800 font-bold text-base ml-3">₱{buyer.price.toFixed(2)}</span>
-                </div>
-              </div>
-            )) : (
-              <div className="bg-white rounded-xl p-4 text-center">
-                <p className="text-purple-400 text-xs">No Class C listings</p>
-              </div>
-            )}
-          </div>
+          <p className="text-3xl font-bold mb-1">{stats.available}</p>
+          <p className="text-sm opacity-90">Available Buyers</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl p-6 mb-8 shadow-lg">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 mb-6">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
               placeholder="Search company, municipality..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 placeholder-gray-400"
+              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm bg-gray-50 hover:bg-white"
             />
           </div>
 
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 font-medium"
-          >
-            <option value="all">All Types</option>
-            <option value="class_a">🏆 Class A</option>
-            <option value="class_b">⭐ Class B</option>
-            <option value="class_c">📦 Class C</option>
-          </select>
+          <div className="flex gap-4 w-full md:w-auto">
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm bg-gray-50 hover:bg-white"
+            >
+              <option value="all">All Types</option>
+              <option value="class_a">Class A</option>
+              <option value="class_b">Class B</option>
+              <option value="class_c">Class C</option>
+            </select>
 
-          <select
-            value={filterMunicipality}
-            onChange={(e) => setFilterMunicipality(e.target.value)}
-            className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 font-medium"
-          >
-            <option value="all">All Municipalities</option>
-            {municipalities.map(mun => (
-              <option key={mun} value={mun}>{mun}</option>
-            ))}
-          </select>
-
-          <select
-            value={filterAvailability}
-            onChange={(e) => setFilterAvailability(e.target.value)}
-            className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 font-medium"
-          >
-            <option value="all">All Status</option>
-            <option value="Available">✅ Available</option>
-            <option value="Limited">⚠️ Limited</option>
-            <option value="Not Buying">❌ Not Buying</option>
-          </select>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <p className="text-sm text-gray-600">
-            Showing <span className="font-bold text-gray-900">{filteredListings.length}</span> of <span className="font-bold text-gray-900">{listings.length}</span> listings
-          </p>
+            <select
+              value={filterAvailability}
+              onChange={(e) => setFilterAvailability(e.target.value)}
+              className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm bg-gray-50 hover:bg-white"
+            >
+              <option value="all">All Status</option>
+              <option value="Available">Available</option>
+              <option value="Limited">Limited</option>
+              <option value="Not Buying">Not Buying</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Listings Grid */}
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="flex justify-center items-center py-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
         </div>
       ) : filteredListings.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
           <Building className="mx-auto text-gray-400 mb-4" size={48} />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No Listings Found</h3>
           <p className="text-gray-600">No buyer price listings match your current filters.</p>
@@ -394,149 +297,86 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
             const currentPrice = rankedTypes.find(t => t.type === currentPriceType) || rankedTypes[0];
 
             return (
-              <div key={listing.listing_id} className="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-gray-200">
-                {/* Header with Gradient */}
-                <div className={`bg-gradient-to-br ${
-                  currentPrice?.color === 'emerald' ? 'from-emerald-400 to-emerald-600' :
-                  currentPrice?.color === 'blue' ? 'from-blue-400 to-blue-600' :
-                  'from-purple-400 to-pink-400'
-                } p-4 text-white relative`}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Building size={18} />
-                        <h3 className="text-lg font-bold">{listing.company_name}</h3>
-                      </div>
-                      <p className="text-white/90 text-xs">{listing.contact_person}</p>
-                    </div>
-                    {getAvailabilityBadge(listing.availability)}
+              <div key={listing.listing_id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-7 border border-gray-100">
+                {/* Card Header */}
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-sm">
+                    <Building className="text-white" size={24} />
                   </div>
-                  
-                  {/* Swipeable Price Display */}
-                  {availableTypes.length > 1 && (
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/20">
-                      <button
-                        onClick={() => handlePriceNavigation(listing.listing_id, 'prev')}
-                        className="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-200 active:scale-95"
-                      >
-                        <ChevronLeft size={20} />
-                      </button>
-                      
-                      <div className="text-center flex-1">
-                        <p className="text-lg font-bold mb-1 text-white">
-                          {currentPrice?.label}
-                        </p>
-                        <p className="text-sm font-medium text-white/90">{currentPrice?.quality}</p>
-                      </div>
-                      
-                      <button
-                        onClick={() => handlePriceNavigation(listing.listing_id, 'next')}
-                        className="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-200 active:scale-95"
-                      >
-                        <ChevronRight size={20} />
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-gray-900">{listing.company_name}</h2>
+                    <p className="text-sm text-gray-600">{listing.contact_person}</p>
+                  </div>
+                  {getAvailabilityBadge(listing.availability)}
                 </div>
 
-                {/* Card Body */}
-                <div className="p-4">
-                  {/* Fiber Image */}
-                  {currentPrice?.image && (
-                    <div 
-                      className="mb-4 rounded-xl overflow-hidden shadow-md bg-gray-100 cursor-pointer group relative"
-                      onClick={() => setImageModal({ isOpen: true, imageUrl: currentPrice.image || '', label: `${listing.company_name} - ${currentPrice.label}` })}
-                    >
-                      <img 
-                        src={currentPrice.image} 
-                        alt={`${currentPrice.label} fiber sample`}
-                        className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200"%3E%3Crect fill="%23f3f4f6" width="400" height="200"/%3E%3Ctext fill="%239ca3af" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3ENo Image Available%3C/text%3E%3C/svg%3E';
-                          target.onerror = null;
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                        <div className="transform scale-0 group-hover:scale-100 transition-transform duration-300">
-                          <ZoomIn className="text-white" size={32} />
-                        </div>
-                      </div>
+                {/* Card Content */}
+                <div className="space-y-4">
+                  {/* Price Tabs */}
+                  {availableTypes.length > 1 && (
+                    <div className="flex gap-2 mb-4">
+                      {availableTypes.map((type) => (
+                        <button
+                          key={type.type}
+                          onClick={() => setSelectedPriceType(prev => ({ ...prev, [listing.listing_id]: type.type }))}
+                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                            currentPriceType === type.type
+                              ? 'bg-indigo-100 text-indigo-700'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {type.label}
+                        </button>
+                      ))}
                     </div>
                   )}
 
                   {/* Price Display */}
-                  <div className={`bg-gradient-to-br ${
-                    currentPrice?.color === 'emerald' ? 'from-emerald-50 to-teal-50 border-emerald-200' :
-                    currentPrice?.color === 'blue' ? 'from-blue-50 to-indigo-50 border-blue-200' :
-                    'from-purple-50 to-pink-50 border-purple-200'
-                  } rounded-2xl p-5 mb-4 border-2 shadow-sm hover:shadow-md transition-all duration-200`}>
-                    <div className="text-center">
-                      <p className="text-xs text-gray-600 font-semibold mb-2 uppercase tracking-wide">Price per Kilogram</p>
-                      <p className={`text-4xl font-black mb-1 ${
-                        currentPrice?.color === 'emerald' ? 'text-emerald-600' :
-                        currentPrice?.color === 'blue' ? 'text-blue-600' :
-                        'text-purple-600'
-                      }`}>
-                        ₱{currentPrice?.price ? currentPrice.price.toFixed(2) : '0.00'}
-                      </p>
-                      <div className="mt-3 flex items-center justify-center gap-2">
-                        {rankedTypes.map((type, idx) => (
-                          <div
-                            key={idx}
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              type?.type === currentPriceType ? 'w-8 bg-gray-800' : 'w-2 bg-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl p-5 mb-4">
+                    <p className="text-sm text-gray-600 font-semibold mb-2">Price per Kilogram - {currentPrice?.label}</p>
+                    <p className="text-4xl font-bold text-indigo-600 mb-1">
+                      ₱{currentPrice?.price ? currentPrice.price.toFixed(2) : '0.00'}
+                    </p>
+                    <p className="text-sm text-gray-600">{currentPrice?.quality}</p>
                   </div>
 
-                  {/* Contact Info Grid */}
-                  <div className="grid grid-cols-1 gap-2 mb-3">
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                      <Phone size={14} className="text-gray-500" />
-                      <div className="flex-1">
-                        <p className="text-xs text-gray-900 font-semibold truncate">{listing.email}</p>
+                  {/* Contact Info */}
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <Phone size={16} className="text-gray-500 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Contact</p>
+                        <p className="text-sm text-gray-900 font-semibold">{listing.phone}</p>
+                        <p className="text-sm text-gray-600">{listing.email}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                      <MapPin size={14} className="text-gray-500" />
-                      <div className="flex-1">
-                        <p className="text-xs text-gray-900 font-semibold">{listing.barangay}, {listing.municipality}</p>
+                    <div className="flex items-start gap-2">
+                      <MapPin size={16} className="text-gray-500 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Location</p>
+                        <p className="text-sm text-gray-900 font-semibold">{listing.barangay}, {listing.municipality}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Payment & Validity */}
-                  <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div className="p-2 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <span className="text-xs font-bold text-gray-500">₱</span>
-                        <p className="text-xs text-gray-500 font-medium">Payment</p>
-                      </div>
-                      <p className="text-xs text-gray-900 font-semibold">{listing.payment_terms}</p>
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                    <div>
+                      <p className="text-xs text-gray-500 font-medium mb-1">Payment Terms</p>
+                      <p className="text-sm text-gray-900 font-semibold">{listing.payment_terms}</p>
                     </div>
-
-                    <div className="p-2 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <Calendar size={12} className="text-gray-500" />
-                        <p className="text-xs text-gray-500 font-medium">Valid Until</p>
-                      </div>
-                      <p className="text-xs text-gray-900 font-semibold">{new Date(listing.valid_until).toLocaleDateString()}</p>
+                    <div>
+                      <p className="text-xs text-gray-500 font-medium mb-1">Valid Until</p>
+                      <p className="text-sm text-gray-900 font-semibold">{new Date(listing.valid_until).toLocaleDateString()}</p>
                     </div>
                   </div>
 
                   {/* Requirements */}
                   {listing.requirements && (
-                    <div className="p-2 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-1 mb-1">
-                        <FileText size={12} className="text-gray-500" />
-                        <p className="text-xs font-bold text-gray-900">Requirements</p>
-                      </div>
-                      <p className="text-xs text-gray-700">{listing.requirements}</p>
+                    <div className="pt-4 border-t border-gray-100">
+                      <p className="text-xs text-gray-500 font-medium mb-2">Requirements</p>
+                      <p className="text-sm text-gray-700">{listing.requirements}</p>
                     </div>
                   )}
                 </div>
