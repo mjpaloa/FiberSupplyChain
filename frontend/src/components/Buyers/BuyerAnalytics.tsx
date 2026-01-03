@@ -18,6 +18,12 @@ interface AnalyticsData {
   totalSales: number;
   totalSalesAmount: number;
   totalQuantity: number;
+  allTimeTotalSpent: number;
+  allTimeTotalPurchases: number;
+  allTimeTotalSales: number;
+  allTimeTotalSalesAmount: number;
+  allTimeTotalQuantity: number;
+  allTimeYearlyProfit: number;
   monthlySpending: { month: string; amount: number }[];
   monthlySales: { month: string; amount: number; transactions: number }[];
   recentTransactions: any[];
@@ -36,6 +42,12 @@ const BuyerAnalytics: React.FC = () => {
     totalSales: 0,
     totalSalesAmount: 0,
     totalQuantity: 0,
+    allTimeTotalSpent: 0,
+    allTimeTotalPurchases: 0,
+    allTimeTotalSales: 0,
+    allTimeTotalSalesAmount: 0,
+    allTimeTotalQuantity: 0,
+    allTimeYearlyProfit: 0,
     monthlySpending: [],
     monthlySales: [],
     recentTransactions: [],
@@ -133,7 +145,15 @@ const BuyerAnalytics: React.FC = () => {
         count: yearlyTransactionsMap[year] || 0
       }));
 
-      // Filter data by selected year (for monthly view)
+      // Calculate ALL-TIME totals (across all years) for KPI cards
+      const allTimeTotalSpent = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.total_price || 0), 0);
+      const allTimeTotalPurchases = purchases.length;
+      const allTimeTotalQuantity = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.quantity || 0), 0);
+      const allTimeTotalSalesAmount = sales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+      const allTimeTotalSales = sales.length;
+      const allTimeYearlyProfit = allTimeTotalSalesAmount - allTimeTotalSpent;
+
+      // Filter data by selected year (for monthly view and charts)
       const filteredPurchases = purchases.filter((p: any) => {
         const date = new Date(p.created_at);
         return date.getFullYear() === selectedYear;
@@ -144,7 +164,7 @@ const BuyerAnalytics: React.FC = () => {
         return date.getFullYear() === selectedYear;
       });
 
-      // Calculate totals for selected year
+      // Calculate totals for selected year (for charts only)
       const totalSpent = filteredPurchases.reduce((sum: number, p: any) => sum + parseFloat(p.total_price || 0), 0);
       const totalPurchases = filteredPurchases.length;
       const totalQuantity = filteredPurchases.reduce((sum: number, p: any) => sum + parseFloat(p.quantity || 0), 0);
@@ -230,6 +250,12 @@ const BuyerAnalytics: React.FC = () => {
         totalSales: filteredSales.length,
         totalSalesAmount: yearlyFilteredSalesAmount,
         totalQuantity,
+        allTimeTotalSpent,
+        allTimeTotalPurchases,
+        allTimeTotalSales,
+        allTimeTotalSalesAmount,
+        allTimeTotalQuantity,
+        allTimeYearlyProfit,
         yearlyProfit,
         monthlySpending,
         monthlySales,
@@ -248,6 +274,12 @@ const BuyerAnalytics: React.FC = () => {
         totalSales: 0,
         totalSalesAmount: 0,
         totalQuantity: 0,
+        allTimeTotalSpent: 0,
+        allTimeTotalPurchases: 0,
+        allTimeTotalSales: 0,
+        allTimeTotalSalesAmount: 0,
+        allTimeTotalQuantity: 0,
+        allTimeYearlyProfit: 0,
         monthlySpending: [],
         monthlySales: [],
         recentTransactions: [],
@@ -508,7 +540,7 @@ const BuyerAnalytics: React.FC = () => {
             </div>
           </div>
           <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Spent</h3>
-          <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.totalSpent || 0).toLocaleString()}</p>
+          <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.allTimeTotalSpent || 0).toLocaleString()}</p>
           <div className="flex items-center gap-1 text-xs opacity-80">
             <span className="text-sm font-bold">₱</span>
             <span>Total Purchases</span>
@@ -526,8 +558,8 @@ const BuyerAnalytics: React.FC = () => {
             </div>
           </div>
           <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Sales</h3>
-          {analytics.totalSales > 0 || analytics.totalSalesAmount > 0 ? (
-            <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.totalSalesAmount || 0).toLocaleString()}</p>
+          {analytics.allTimeTotalSales > 0 || analytics.allTimeTotalSalesAmount > 0 ? (
+            <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.allTimeTotalSalesAmount || 0).toLocaleString()}</p>
           ) : (
             <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
           )}
@@ -548,7 +580,7 @@ const BuyerAnalytics: React.FC = () => {
             </div>
           </div>
           <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Quantity</h3>
-          <p className="text-3xl md:text-4xl font-black mb-1">{(analytics.totalQuantity || 0).toLocaleString()} <span className="text-xl md:text-2xl">kg</span></p>
+          <p className="text-3xl md:text-4xl font-black mb-1">{(analytics.allTimeTotalQuantity || 0).toLocaleString()} <span className="text-xl md:text-2xl">kg</span></p>
           <div className="flex items-center gap-2 text-xs opacity-80">
             <Package size={14} />
             <span>Fiber Volume</span>
@@ -566,8 +598,8 @@ const BuyerAnalytics: React.FC = () => {
             </div>
           </div>
           <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Net Profit</h3>
-          {analytics.totalSales > 0 || analytics.totalSalesAmount > 0 ? (
-            <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.yearlyProfit || 0).toLocaleString()}</p>
+          {analytics.allTimeTotalSales > 0 || analytics.allTimeTotalSalesAmount > 0 ? (
+            <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.allTimeYearlyProfit || 0).toLocaleString()}</p>
           ) : (
             <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
           )}
