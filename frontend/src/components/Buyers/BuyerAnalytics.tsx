@@ -599,7 +599,7 @@ const BuyerAnalytics: React.FC = () => {
           </div>
           <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Net Profit</h3>
           {analytics.allTimeTotalSales > 0 || analytics.allTimeTotalSalesAmount > 0 ? (
-            <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.allTimeYearlyProfit || 0).toLocaleString()}</p>
+            <p className="text-3xl md:text-4xl font-black mb-1">₱{Math.max(0, analytics.allTimeYearlyProfit || 0).toLocaleString()}</p>
           ) : (
             <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
           )}
