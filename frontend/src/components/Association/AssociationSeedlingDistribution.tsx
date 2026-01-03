@@ -9,7 +9,8 @@ import {
   Users,
   X,
   CheckCircle,
-  Sprout
+  Sprout,
+  MapPin
 } from 'lucide-react';
 
 interface FarmerInfo {
@@ -238,54 +239,54 @@ const AssociationSeedlingDistribution: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-              <Package className="w-6 h-6 text-white" />
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-blue-500 rounded-lg sm:rounded-xl flex items-center justify-center">
+              <Package className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm font-semibold text-blue-700 mb-1">Total Distributions</p>
-          <p className="text-3xl font-bold text-blue-900">{stats.total}</p>
-          <p className="text-xs text-blue-600 mt-2">To farmers</p>
+          <p className="text-xs sm:text-sm font-semibold text-blue-700 mb-1">Total Distributions</p>
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900">{stats.total}</p>
+          <p className="text-[10px] sm:text-xs text-blue-600 mt-1 sm:mt-2">To farmers</p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-white" />
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm font-semibold text-emerald-700 mb-1">Planted</p>
-          <p className="text-3xl font-bold text-emerald-900">{stats.planted}</p>
-          <p className="text-xs text-emerald-600 mt-2">Successfully planted</p>
+          <p className="text-xs sm:text-sm font-semibold text-emerald-700 mb-1">Planted</p>
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-emerald-900">{stats.planted}</p>
+          <p className="text-[10px] sm:text-xs text-emerald-600 mt-1 sm:mt-2">Successfully planted</p>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm font-semibold text-purple-700 mb-1">Distributed</p>
-          <p className="text-3xl font-bold text-purple-900">{stats.distributed}</p>
-          <p className="text-xs text-purple-600 mt-2">Pending planting</p>
+          <p className="text-xs sm:text-sm font-semibold text-purple-700 mb-1">Distributed</p>
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-900">{stats.distributed}</p>
+          <p className="text-[10px] sm:text-xs text-purple-600 mt-1 sm:mt-2">Pending planting</p>
         </div>
 
-        <div className="bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-200 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-teal-500 rounded-xl flex items-center justify-center">
-              <Sprout className="w-6 h-6 text-white" />
+        <div className="bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-teal-500 rounded-lg sm:rounded-xl flex items-center justify-center">
+              <Sprout className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm font-semibold text-teal-700 mb-1">Total Seedlings</p>
-          <p className="text-3xl font-bold text-teal-900">{stats.totalQuantity.toLocaleString()}</p>
-          <p className="text-xs text-teal-600 mt-2">Total quantity distributed</p>
+          <p className="text-xs sm:text-sm font-semibold text-teal-700 mb-1">Total Seedlings</p>
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-teal-900">{stats.totalQuantity.toLocaleString()}</p>
+          <p className="text-[10px] sm:text-xs text-teal-600 mt-1 sm:mt-2">Total quantity distributed</p>
         </div>
       </div>
 
       <div className="bg-white rounded-3xl shadow-lg">
-        <div className="p-6">
-          <div className="bg-gradient-to-r from-emerald-50 via-blue-50 to-purple-50 border-2 border-emerald-200 rounded-3xl p-6 mb-8 shadow-lg">
+        <div className="p-3 sm:p-4 md:p-6">
+          <div className="bg-gradient-to-r from-emerald-50 via-blue-50 to-purple-50 border-2 border-emerald-200 rounded-3xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8 shadow-lg">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex-1">
                 <div className="relative">
@@ -349,16 +350,16 @@ const AssociationSeedlingDistribution: React.FC = () => {
             </div>
           ) : (
             <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] overflow-hidden">
-              <div className="p-6 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium text-gray-700">Show entries:</span>
-                    <div className="flex gap-2">
+              <div className="p-3 sm:p-4 md:p-6 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Show entries:</span>
+                    <div className="flex gap-1 sm:gap-2">
                       {[10, 20, 50].map((size) => (
                         <button
                           key={size}
                           onClick={() => handleItemsPerPageChange(size)}
-                          className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
+                          className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
                               ? 'bg-indigo-500 text-white shadow-lg'
                               : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
                             }`}
@@ -374,82 +375,87 @@ const AssociationSeedlingDistribution: React.FC = () => {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="overflow-x-auto -mx-6 px-6">
+                <table className="w-full min-w-[800px]">
                   <thead className="bg-gradient-to-r from-emerald-100 via-blue-100 to-purple-100">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Variety</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Variety</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                           Date
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4" />
-                          Quantity
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Package className="w-3 h-3 sm:w-4 sm:h-4" />
+                          Qty
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4" />
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Users className="w-3 h-3 sm:w-4 sm:h-4" />
                           Farmer
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Municipality</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Location</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-indigo-100">
                     {currentDistributions.map((distribution) => (
-                      <tr key={distribution.distribution_id} className="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-blue-50 transition-all duration-200">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-bold text-gray-900 text-lg">{distribution.variety}</div>
+                      <tr key={distribution.distribution_id} className="hover:bg-blue-50/50 transition-colors duration-150">
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                          <span className="px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 md:py-1.5 bg-emerald-100 text-emerald-700 rounded-md sm:rounded-lg text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap">
+                            {distribution.variety}
+                          </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-semibold text-gray-900">{formatDate(distribution.date_distributed)}</div>
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                          <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs md:text-sm text-gray-600">
+                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                            <span className="hidden sm:inline">{formatDate(distribution.date_distributed)}</span>
+                            <span className="sm:hidden">{new Date(distribution.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-emerald-100 rounded-xl flex items-center justify-center">
-                              <Package className="w-4 h-4 text-emerald-600" />
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                          <span className="text-xs sm:text-sm md:text-lg font-bold text-gray-900">{distribution.quantity_distributed.toLocaleString()}</span>
+                        </td>
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                          <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-[10px] sm:text-xs md:text-lg shadow-md">
+                              {(distribution.farmers?.full_name || 'N/A').charAt(0).toUpperCase()}
                             </div>
-                            <span className="font-bold text-emerald-600 text-lg">
-                              {distribution.quantity_distributed.toLocaleString()}
-                            </span>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-gray-900 text-[10px] sm:text-xs md:text-sm truncate">{distribution.farmers?.full_name || 'N/A'}</p>
+                              <p className="text-[9px] sm:text-[10px] md:text-xs text-gray-500 truncate hidden sm:block">{distribution.farmers?.email || 'No email'}</p>
+                            </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
-                            <div className="font-semibold text-emerald-900">{distribution.farmers?.full_name || 'N/A'}</div>
-                            <div className="text-emerald-600 text-xs">{distribution.farmers?.email || 'No email'}</div>
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                          <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs md:text-sm text-gray-600">
+                            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                            <span className="truncate">{distribution.farmers?.municipality || 'N/A'}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="p-2 bg-blue-50 rounded-xl border border-blue-200 text-blue-800 font-medium text-sm">
-                            {distribution.farmers?.municipality || 'N/A'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
                           {renderStatusBadge(distribution.status)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <button
                               onClick={() => openViewModal(distribution)}
-                              className="p-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
+                              className="p-1 sm:p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg sm:rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
                               title="View Details"
                             >
-                              <Eye className="w-4 h-4" />
+                              <Eye size={12} className="sm:w-4 sm:h-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteFarmerDistribution(distribution.distribution_id)}
-                              className="p-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
+                              className="p-1 sm:p-1.5 md:p-2 bg-red-100 text-red-600 rounded-lg sm:rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
                               title="Delete"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 size={12} className="sm:w-4 sm:h-4" />
                             </button>
                           </div>
                         </td>
@@ -459,21 +465,22 @@ const AssociationSeedlingDistribution: React.FC = () => {
                 </table>
               </div>
 
-              <div className="p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                  <div className="text-sm text-gray-600">
+              <div className="p-3 sm:p-4 md:p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+                  <div className="text-xs sm:text-sm text-gray-600">
                     Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredDistributions.length)} of {filteredDistributions.length} entries
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
+                      className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                         }`}
                     >
-                      Previous
+                      <span className="hidden sm:inline">Previous</span>
+                      <span className="sm:hidden">Prev</span>
                     </button>
                     {showPagination && Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
                       let page;
@@ -490,7 +497,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
                         <button
                           key={page}
                           onClick={() => handlePageChange(page)}
-                          className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === page
+                          className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${currentPage === page
                               ? 'bg-indigo-500 text-white shadow-lg'
                               : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
                             }`}
@@ -502,7 +509,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages || totalPages === 0}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages || totalPages === 0
+                      className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages || totalPages === 0
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                         }`}

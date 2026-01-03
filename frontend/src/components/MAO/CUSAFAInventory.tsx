@@ -198,60 +198,60 @@ const CUSAFAInventory: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-              <Package className="w-6 h-6 text-white" />
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-blue-500 rounded-lg sm:rounded-xl flex items-center justify-center">
+              <Package className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
             </div>
-            <TrendingUp className="w-5 h-5 text-blue-600" />
+            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-blue-600" />
           </div>
-          <p className="text-sm font-medium text-gray-600 mb-1">Total Stock</p>
-          <p className="text-3xl font-bold text-gray-900">{stats.total.toFixed(2)} <span className="text-lg text-gray-600">kg</span></p>
-          <p className="text-xs text-gray-500 mt-2">All fiber in inventory</p>
+          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Stock</p>
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{stats.total.toFixed(2)} <span className="text-sm sm:text-base md:text-lg text-gray-600">kg</span></p>
+          <p className="text-[10px] sm:text-xs text-gray-500 mt-1 sm:mt-2">All fiber in inventory</p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
-              <Archive className="w-6 h-6 text-white" />
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center">
+              <Archive className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
             </div>
-            <TrendingUp className="w-5 h-5 text-emerald-600" />
+            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-emerald-600" />
           </div>
-          <p className="text-sm font-medium text-gray-600 mb-1">In Stock</p>
-          <p className="text-3xl font-bold text-gray-900">{stats.inStock.toFixed(2)} <span className="text-lg text-gray-600">kg</span></p>
-          <p className="text-xs text-gray-500 mt-2">Available for delivery</p>
+          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">In Stock</p>
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{stats.inStock.toFixed(2)} <span className="text-sm sm:text-base md:text-lg text-gray-600">kg</span></p>
+          <p className="text-[10px] sm:text-xs text-gray-500 mt-1 sm:mt-2">Available for delivery</p>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
-              <Package className="w-6 h-6 text-white" />
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center">
+              <Package className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
             </div>
-            <TrendingUp className="w-5 h-5 text-purple-600" />
+            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-purple-600" />
           </div>
-          <p className="text-sm font-medium text-gray-600 mb-1">Total Items</p>
-          <p className="text-3xl font-bold text-gray-900">{stats.items} <span className="text-lg text-gray-600">records</span></p>
-          <p className="text-xs text-gray-500 mt-2">Harvest entries</p>
+          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Items</p>
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{stats.items} <span className="text-sm sm:text-base md:text-lg text-gray-600">records</span></p>
+          <p className="text-[10px] sm:text-xs text-gray-500 mt-1 sm:mt-2">Harvest entries</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 md:p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
               placeholder="Search farmer or variety..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium text-gray-700"
+            className="px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium text-gray-700"
           >
             <option value="all">All Status</option>
             <option value="in_stock">In Stock</option>
@@ -261,7 +261,7 @@ const CUSAFAInventory: React.FC = () => {
           <select
             value={varietyFilter}
             onChange={(e) => setVarietyFilter(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium text-gray-700"
+            className="px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium text-gray-700"
           >
             <option value="all">All Varieties</option>
             {varieties.map(v => <option key={v} value={v}>{v}</option>)}
@@ -275,26 +275,26 @@ const CUSAFAInventory: React.FC = () => {
           <table className="w-full">
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Farmer</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Variety</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Quantity (kg)</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Grade</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Harvest Date</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Location</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Actions</th>
+                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Farmer</th>
+                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Variety</th>
+                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Qty (kg)</th>
+                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Grade</th>
+                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Date</th>
+                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Status</th>
+                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">Location</th>
+                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginatedInventory.map((item) => (
                 <tr key={item.harvest_id} className="hover:bg-blue-50/50 transition-colors duration-150">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
+                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                  <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
                     {item.farmers?.profile_picture ? (
                       <img 
                         src={item.farmers.profile_picture} 
                         alt={item.farmers?.full_name || item.farmer_name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-blue-200 shadow-sm"
+                        className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 rounded-full object-cover border border-blue-200 sm:border-2 shadow-sm"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                           const nextEl = e.currentTarget.nextElementSibling as HTMLElement;
@@ -303,51 +303,52 @@ const CUSAFAInventory: React.FC = () => {
                       />
                     ) : null}
                     <div 
-                      className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md"
+                      className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-[10px] sm:text-xs md:text-lg shadow-md"
                       style={{ display: item.farmers?.profile_picture ? 'none' : 'flex' }}
                     >
                       {(item.farmers?.full_name || item.farmer_name).charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">{item.farmers?.full_name || item.farmer_name}</p>
-                      <p className="text-xs text-gray-500 flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {item.barangay}, {item.municipality}
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 text-[10px] sm:text-xs md:text-sm truncate">{item.farmers?.full_name || item.farmer_name}</p>
+                      <p className="text-[9px] sm:text-[10px] md:text-xs text-gray-500 flex items-center gap-1 hidden sm:flex">
+                        <MapPin className="w-2 h-2 sm:w-3 sm:h-3" />
+                        <span className="truncate">{item.barangay}, {item.municipality}</span>
                       </p>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-semibold whitespace-nowrap">
+                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                  <span className="px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 md:py-1.5 bg-emerald-100 text-emerald-700 rounded-md sm:rounded-lg text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap">
                     {item.abaca_variety}
                   </span>
                 </td>
-                <td className="px-6 py-4">
-                  <span className="text-lg font-bold text-gray-900">{parseFloat(item.dry_fiber_output_kg?.toString() || '0').toFixed(2)}</span>
+                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                  <span className="text-xs sm:text-sm md:text-lg font-bold text-gray-900">{parseFloat(item.dry_fiber_output_kg?.toString() || '0').toFixed(2)}</span>
                 </td>
-                <td className="px-6 py-4">
-                  <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold whitespace-nowrap">
+                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                  <span className="px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 md:py-1.5 bg-blue-100 text-blue-700 rounded-md sm:rounded-lg text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap">
                     {item.fiber_grade || 'N/A'}
                   </span>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    {new Date(item.harvest_date).toLocaleDateString()}
+                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs md:text-sm text-gray-600">
+                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                    <span className="hidden sm:inline">{new Date(item.harvest_date).toLocaleDateString()}</span>
+                    <span className="sm:hidden">{new Date(item.harvest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-semibold whitespace-nowrap">
+                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+                  <span className="px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 md:py-1.5 bg-emerald-100 text-emerald-700 rounded-md sm:rounded-lg text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap">
                     {item.status}
                   </span>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    {item.municipality}
+                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 hidden sm:table-cell">
+                  <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                    <span className="truncate">{item.municipality}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
                   <button
                     onClick={async () => {
                       setSelectedHarvest(item);
@@ -389,10 +390,11 @@ const CUSAFAInventory: React.FC = () => {
                         }));
                       }
                     }}
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
+                    className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs md:text-sm bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg sm:rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 font-semibold whitespace-nowrap"
                   >
-                    <Truck size={16} />
-                    Create Delivery
+                    <Truck size={12} className="sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Create Delivery</span>
+                    <span className="sm:hidden">Deliver</span>
                   </button>
                 </td>
               </tr>
@@ -413,11 +415,11 @@ const CUSAFAInventory: React.FC = () => {
         
         {/* Pagination Footer */}
         {filteredInventory.length > 0 && (
-          <div className="p-6 border-t border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700">Show entries:</span>
-                <div className="flex gap-2">
+          <div className="p-3 sm:p-4 md:p-6 border-t border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="text-xs sm:text-sm font-medium text-gray-700">Show entries:</span>
+                <div className="flex gap-1 sm:gap-2">
                   {[10, 20, 50].map((size) => (
                     <button
                       key={size}
@@ -425,7 +427,7 @@ const CUSAFAInventory: React.FC = () => {
                         setItemsPerPage(size);
                         setCurrentPage(1);
                       }}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${
                         itemsPerPage === size
                           ? 'bg-indigo-500 text-white shadow-lg'
                           : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
@@ -437,26 +439,27 @@ const CUSAFAInventory: React.FC = () => {
                 </div>
               </div>
               
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">
+              <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+                <span className="text-xs sm:text-sm text-gray-600">
                   Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
                 </span>
-                <div className="flex gap-2">
+                <div className="flex gap-1 sm:gap-2">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                    className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${
                       currentPage === 1
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                     }`}
                   >
-                    Previous
+                    <span className="hidden sm:inline">Previous</span>
+                    <span className="sm:hidden">Prev</span>
                   </button>
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages || totalPages === 0}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                    className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold transition-all duration-200 ${
                       currentPage === totalPages || totalPages === 0
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'

@@ -472,13 +472,13 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       setDeliveryStatusData(statusChartData);
   };
 
-  const navItems: { id: DashboardPage; label: string; icon: React.FC<any> }[] = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'inventory', label: 'Seedling Inventory', icon: Sprout },
-    { id: 'distribution', label: 'Distribution', icon: Share2 },
-    { id: 'fiber-inventory', label: 'Fiber Inventory', icon: Package },
-    { id: 'fiber-deliveries', label: 'Fiber Deliveries', icon: Truck },
-    { id: 'buyer-prices', label: 'Buyer Prices', icon: TrendingUp },
+  const navItems: { id: DashboardPage; label: string; mobileLabel: string; icon: React.FC<any> }[] = [
+    { id: 'overview', label: 'Overview', mobileLabel: 'Overview', icon: LayoutDashboard },
+    { id: 'inventory', label: 'Seedling Inventory', mobileLabel: 'Seedlings', icon: Sprout },
+    { id: 'distribution', label: 'Distribution', mobileLabel: 'Distribution', icon: Share2 },
+    { id: 'fiber-inventory', label: 'Fiber Inventory', mobileLabel: 'Fiber Stock', icon: Package },
+    { id: 'fiber-deliveries', label: 'Fiber Deliveries', mobileLabel: 'Deliveries', icon: Truck },
+    { id: 'buyer-prices', label: 'Buyer Prices', mobileLabel: 'Prices', icon: TrendingUp },
   ];
 
   const renderAnalytics = () => (
@@ -672,61 +672,61 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       {/* KPI Cards - 4 Cards in Row with Gradient Design */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1: Seedlings Received */}
-        <div className="group bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-blue-200/50">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-3 bg-blue-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
-              <Package className="w-6 h-6 text-white" />
+        <div className="group bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-blue-200/50">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="p-2 sm:p-3 bg-blue-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
+              <Package className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm font-medium text-gray-600 mb-2">Seedlings Received</p>
-          <p className="text-4xl font-bold text-gray-900 mb-1">{stats.totalReceivedQuantity.toLocaleString()}</p>
-          <p className="text-xs text-gray-500">From MAO distributions</p>
+          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">Seedlings Received</p>
+          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-0.5 sm:mb-1">{stats.totalReceivedQuantity.toLocaleString()}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500">From MAO distributions</p>
         </div>
 
         {/* Card 2: Distributed */}
-        <div className="group bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-emerald-200/50">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-3 bg-emerald-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
-              <Share2 className="w-6 h-6 text-white" />
+        <div className="group bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-emerald-200/50">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="p-2 sm:p-3 bg-emerald-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
+              <Share2 className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm font-medium text-gray-600 mb-2">Seedlings Distributed</p>
-          <p className="text-4xl font-bold text-gray-900 mb-1">{stats.totalDistributedQuantity.toLocaleString()}</p>
-          <p className="text-xs text-gray-500">To {stats.totalFarmerDistributions} farmers</p>
+          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">Seedlings Distributed</p>
+          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-0.5 sm:mb-1">{stats.totalDistributedQuantity.toLocaleString()}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500">To {stats.totalFarmerDistributions} farmers</p>
         </div>
 
         {/* Card 3: Inventory */}
-        <div className="group bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-purple-200/50">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-3 bg-purple-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
-              <Layers className="w-6 h-6 text-white" />
+        <div className="group bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-purple-200/50">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="p-2 sm:p-3 bg-purple-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
+              <Layers className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
             </div>
             {stats.totalAvailableQuantity === 0 ? (
-              <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-full">
-                <CheckCircle className="w-3 h-3" />
+              <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+                <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 Complete
               </span>
             ) : (
-              <span className="text-xs font-semibold text-blue-600 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-full">
+              <span className="text-[10px] sm:text-xs font-semibold text-blue-600 flex items-center gap-1 bg-blue-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
                 Available
               </span>
             )}
           </div>
-          <p className="text-sm font-medium text-gray-600 mb-2">Inventory Remaining</p>
-          <p className="text-4xl font-bold text-gray-900 mb-1">{stats.totalAvailableQuantity.toLocaleString()}</p>
-          <p className="text-xs text-gray-500">{stats.totalAvailableQuantity === 0 ? 'Fully distributed' : 'Ready for distribution'}</p>
+          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">Inventory Remaining</p>
+          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-0.5 sm:mb-1">{stats.totalAvailableQuantity.toLocaleString()}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500">{stats.totalAvailableQuantity === 0 ? 'Fully distributed' : 'Ready for distribution'}</p>
         </div>
 
         {/* Card 4: Planting Progress */}
-        <div className="group bg-gradient-to-br from-teal-50 to-teal-100/50 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-teal-200/50">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-3 bg-teal-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
-              <Sprout className="w-6 h-6 text-white" />
+        <div className="group bg-gradient-to-br from-teal-50 to-teal-100/50 rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-teal-200/50">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="p-2 sm:p-3 bg-teal-500 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
+              <Sprout className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm font-medium text-gray-600 mb-2">Planting Progress</p>
-          <p className="text-4xl font-bold text-gray-900 mb-1">{stats.plantedQuantity.toLocaleString()}</p>
-          <p className="text-xs text-gray-500">{stats.plantingRate.toFixed(1)}% planted</p>
+          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">Planting Progress</p>
+          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-0.5 sm:mb-1">{stats.plantedQuantity.toLocaleString()}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500">{stats.plantingRate.toFixed(1)}% planted</p>
         </div>
       </div>
 
@@ -738,11 +738,11 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
           {/* Header with title and buttons */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
             <div className="flex-1">
-              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
-                <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
+              <h2 className="text-sm sm:text-base md:text-xl lg:text-2xl font-black text-gray-900 flex items-center gap-2">
+                <div className="w-1 h-5 sm:h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
                 Seedling Distributions
               </h2>
-              <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Monthly distribution trends to farmers</p>
+              <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 mt-1 sm:mt-2 ml-4 sm:ml-5 md:ml-7 font-medium">Monthly distribution trends to farmers</p>
             </div>
             
             {/* Toggle buttons and icon */}
@@ -849,11 +849,11 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
         {/* Fiber Delivery Statistics Donut Chart - 1 column */}
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300">
           <div className="mb-6">
-            <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
-              <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
+            <h2 className="text-sm sm:text-base md:text-xl lg:text-2xl font-black text-gray-900 flex items-center gap-2">
+              <div className="w-1 h-5 sm:h-6 md:h-8 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
               Delivery Status
             </h2>
-            <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Track delivery status and performance</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 mt-1 sm:mt-2 ml-4 sm:ml-5 md:ml-7 font-medium">Track delivery status and performance</p>
           </div>
 
           {fiberDeliveryChartData && fiberDeliveryChartData.length > 0 && fiberDeliveryChartData[0].name !== 'No Deliveries' ? (
@@ -957,17 +957,17 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
       {/* Recent Activity Table */}
       <div className="bg-gradient-to-br from-white to-gray-50/30 rounded-3xl p-6 md:p-8 shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-300">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div>
-            <h3 className="text-xl md:text-2xl font-black text-gray-900 flex items-center gap-3">
-              <div className="w-1.5 h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
+            <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-black text-gray-900 flex items-center gap-2">
+              <div className="w-1 h-5 sm:h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
               Recent Distributions
             </h3>
-            <p className="text-sm text-gray-600 mt-2 ml-5 font-medium">Latest activity logs</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 mt-1 sm:mt-2 ml-3 sm:ml-4 md:ml-5 font-medium">Latest activity logs</p>
           </div>
           <button 
             onClick={() => setCurrentPage('distribution')}
-            className="px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl transition-all hover:shadow-lg hover:scale-105 transform duration-200"
+            className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl transition-all hover:shadow-lg hover:scale-105 transform duration-200"
           >
             View All
           </button>
@@ -976,37 +976,37 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
           <table className="w-full">
             <thead>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b-2 border-gray-200">
-                <th className="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">Farmer</th>
-                <th className="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">Date</th>
-                <th className="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">Variety</th>
-                <th className="text-right py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">Quantity</th>
-                <th className="text-center py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                <th className="text-left py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Farmer</th>
+                <th className="text-left py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Date</th>
+                <th className="text-left py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Variety</th>
+                <th className="text-right py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Quantity</th>
+                <th className="text-center py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Status</th>
               </tr>
             </thead>
             <tbody>
               {recentDistributions.map((dist: any, idx) => (
                 <tr key={idx} className="border-b border-gray-100 hover:bg-emerald-50/30 transition-all duration-200 group">
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black text-sm shadow-md group-hover:scale-110 transition-transform">
+                  <td className="py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4">
+                    <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md group-hover:scale-110 transition-transform">
                         {dist.farmer_name ? dist.farmer_name.charAt(0).toUpperCase() : 'F'}
                       </div>
-                      <span className="text-sm font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors">{dist.farmer_name || 'Unknown Farmer'}</span>
+                      <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors truncate">{dist.farmer_name || 'Unknown Farmer'}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-4 text-sm font-medium text-gray-700">
+                  <td className="py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs md:text-sm font-medium text-gray-700 whitespace-nowrap">
                     {new Date(dist.distribution_date || dist.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
-                  <td className="py-4 px-4">
-                    <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200">
+                  <td className="py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4">
+                    <span className="px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
                       {dist.variety || 'Abaca'}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-sm text-gray-900 font-black text-right">
+                  <td className="py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[11px] sm:text-xs md:text-sm text-gray-900 font-black text-right whitespace-nowrap">
                     {dist.quantity_distributed?.toLocaleString()}
                   </td>
-                  <td className="py-4 px-4 text-center">
-                    <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
+                  <td className="py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-center">
+                    <span className={`inline-flex items-center px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm whitespace-nowrap ${
                       dist.status?.toLowerCase().includes('planted') 
                         ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200'
                         : !dist.status || dist.status.includes('distributed')
@@ -1123,7 +1123,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
                   } ${!sidebarOpen && 'justify-center'}`}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>{item.label}</span>
+                <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
+                  <span className="hidden sm:inline">{item.label}</span>
+                  <span className="sm:hidden">{item.mobileLabel}</span>
+                </span>
               </button>
             );
           })}
@@ -1152,23 +1155,42 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
               <Menu className="w-6 h-6 text-gray-600" />
             </button>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold truncate">Association Dashboard</p>
-              <h2 className="text-lg md:text-2xl font-bold text-gray-900 mt-0.5 truncate">
-                {currentPage === 'overview'
-                  ? 'Overview'
-                  : currentPage === 'analytics'
-                    ? 'Analytics Dashboard'
-                    : currentPage === 'inventory'
-                      ? 'Seedling Inventory'
-                      : currentPage === 'fiber-inventory'
-                        ? 'Fiber Inventory'
-                        : currentPage === 'fiber-deliveries'
-                          ? 'Fiber Deliveries'
-                          : currentPage === 'distribution'
-                            ? 'Farmer Distribution'
-                            : currentPage === 'buyer-prices'
-                              ? 'Buyer Price Listings'
-                              : 'Reports & Analytics'}
+              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide font-semibold truncate">Association Dashboard</p>
+              <h2 className="text-sm sm:text-lg md:text-2xl font-bold text-gray-900 mt-0.5 truncate">
+                <span className="hidden sm:inline">
+                  {currentPage === 'overview'
+                    ? 'Overview'
+                    : currentPage === 'analytics'
+                      ? 'Analytics Dashboard'
+                      : currentPage === 'inventory'
+                        ? 'Seedling Inventory'
+                        : currentPage === 'fiber-inventory'
+                          ? 'Fiber Inventory'
+                          : currentPage === 'fiber-deliveries'
+                            ? 'Fiber Deliveries'
+                            : currentPage === 'distribution'
+                              ? 'Farmer Distribution'
+                              : currentPage === 'buyer-prices'
+                                ? 'Buyer Price Listings'
+                                : 'Reports & Analytics'}
+                </span>
+                <span className="sm:hidden">
+                  {currentPage === 'overview'
+                    ? 'Overview'
+                    : currentPage === 'analytics'
+                      ? 'Analytics'
+                      : currentPage === 'inventory'
+                        ? 'Seedlings'
+                        : currentPage === 'fiber-inventory'
+                          ? 'Fiber Stock'
+                          : currentPage === 'fiber-deliveries'
+                            ? 'Deliveries'
+                            : currentPage === 'distribution'
+                              ? 'Distribution'
+                              : currentPage === 'buyer-prices'
+                                ? 'Prices'
+                                : 'Reports'}
+                </span>
               </h2>
             </div>
             <div className="flex items-center gap-3">
