@@ -14,6 +14,12 @@ const LAST_ACTIVITY_KEY = 'lastActivity';
 // Token will expire after 40 minutes of inactivity
 const INACTIVITY_TIMEOUT = 40 * 60 * 1000; // 40 minutes in milliseconds
 const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // Refresh if 5 minutes before expiry
+const REFRESH_COOLDOWN = 5 * 60 * 1000; // 5 minutes cooldown between refreshes
+
+// Rate limiting flags
+let isRefreshing = false;
+let lastRefreshTime = 0;
+let refreshRetryCount = 0;
 
 /**
  * Save authentication tokens to localStorage
@@ -259,12 +265,28 @@ export const isSessionInactive = (): boolean => {
  * Refresh access token using refresh token
  */
 export const refreshAccessToken = async (): Promise<boolean> => {
+  // Prevent multiple simultaneous refresh calls
+  if (isRefreshing) {
+    console.log('⏳ Token refresh already in progress, skipping...');
+    return false;
+  }
+
+  // Check cooldown period - don't refresh if we just refreshed recently
+  const timeSinceLastRefresh = Date.now() - lastRefreshTime;
+  if (timeSinceLastRefresh < REFRESH_COOLDOWN) {
+    const remainingTime = Math.ceil((REFRESH_COOLDOWN - timeSinceLastRefresh) / 1000);
+    console.log(`⏰ Refresh cooldown active. Wait ${remainingTime}s before next refresh.`);
+    return false;
+  }
+
   try {
+    isRefreshing = true;
     const refreshToken = getRefreshToken();
     const userType = getUserType();
     
     if (!refreshToken || !userType) {
       console.warn('⚠️ No refresh token or user type found');
+      isRefreshing = false;
       return false;
     }
 
@@ -277,7 +299,16 @@ export const refreshAccessToken = async (): Promise<boolean> => {
     });
 
     if (!response.ok) {
-      console.error('❌ Token refresh failed');
+      if (response.status === 429) {
+        // Handle 429 Too Many Requests with exponential backoff
+        refreshRetryCount++;
+        const backoffDelay = Math.min(1000 * Math.pow(2, refreshRetryCount), 60000); // Max 60 seconds
+        console.warn(`⚠️ 429 Too Many Requests. Backing off for ${backoffDelay}ms. Retry count: ${refreshRetryCount}`);
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+      } else {
+        console.error('❌ Token refresh failed with status:', response.status);
+      }
+      isRefreshing = false;
       return false;
     }
 
@@ -286,13 +317,18 @@ export const refreshAccessToken = async (): Promise<boolean> => {
     if (data.data?.tokens) {
       saveAuthTokens(data.data.tokens.accessToken, data.data.tokens.refreshToken);
       updateActivity();
+      lastRefreshTime = Date.now();
+      refreshRetryCount = 0; // Reset retry count on success
       console.log('✅ Token refreshed successfully');
+      isRefreshing = false;
       return true;
     }
     
+    isRefreshing = false;
     return false;
   } catch (error) {
     console.error('❌ Error refreshing token:', error);
+    isRefreshing = false;
     return false;
   }
 };
@@ -303,6 +339,11 @@ export const refreshAccessToken = async (): Promise<boolean> => {
  */
 export const checkAndRefreshToken = async (): Promise<boolean> => {
   try {
+    // Skip if already refreshing
+    if (isRefreshing) {
+      return false;
+    }
+
     // Check if session is inactive
     if (isSessionInactive()) {
       console.warn('⚠️ Session inactive for 40+ minutes, logging out...');
@@ -318,13 +359,19 @@ export const checkAndRefreshToken = async (): Promise<boolean> => {
     const token = getAuthToken();
     if (!token) return false;
 
+    // Skip refresh if we just refreshed recently (cooldown period)
+    const timeSinceLastRefresh = Date.now() - lastRefreshTime;
+    if (timeSinceLastRefresh < REFRESH_COOLDOWN) {
+      return true; // Token is still good, no need to refresh
+    }
+
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const expirationTime = payload.exp * 1000;
       const currentTime = Date.now();
       const timeUntilExpiry = expirationTime - currentTime;
 
-      // Refresh if token expires in less than 5 minutes
+      // Refresh if token expires in less than 5 minutes AND cooldown has passed
       if (timeUntilExpiry < TOKEN_REFRESH_THRESHOLD && timeUntilExpiry > 0) {
         console.log('⏰ Token expiring soon, refreshing...');
         return await refreshAccessToken();
@@ -345,13 +392,31 @@ export const checkAndRefreshToken = async (): Promise<boolean> => {
  * Call this once when app loads
  */
 export const initActivityTracking = () => {
-  // Update activity on any user interaction
+  // Debounce function to prevent excessive calls
+  let activityTimeout: NodeJS.Timeout | null = null;
+  const ACTIVITY_DEBOUNCE_DELAY = 30000; // 30 seconds between activity checks
+
+  const debouncedActivityCheck = () => {
+    if (activityTimeout) {
+      return; // Already scheduled, skip this call
+    }
+
+    activityTimeout = setTimeout(() => {
+      activityTimeout = null;
+      if (isAuthenticated()) {
+        checkAndRefreshToken();
+      }
+    }, ACTIVITY_DEBOUNCE_DELAY);
+  };
+
+  // Update activity on any user interaction (debounced)
   const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
   
   events.forEach(event => {
     document.addEventListener(event, () => {
       if (isAuthenticated()) {
-        checkAndRefreshToken();
+        updateActivity(); // Just update timestamp, don't check token on every event
+        debouncedActivityCheck(); // Check token only every 30 seconds
       }
     }, { passive: true });
   });
