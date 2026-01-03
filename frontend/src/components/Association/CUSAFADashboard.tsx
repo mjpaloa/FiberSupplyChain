@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Briefcase,
+  Building2,
+  Calendar,
+  Clock,
+  Users,
+  CheckCircle,
+  AlertCircle,
+  Edit,
+  ArrowLeft,
+  Shield,
+  KeyRound,
   Package,
   Share2,
   Menu,
@@ -12,8 +27,7 @@ import {
   TrendingUp,
   Truck,
   Bell,
-  Activity,
-  CheckCircle
+  Activity
 } from 'lucide-react';
 import {
   LineChart as RechartsLineChart,
@@ -37,8 +51,11 @@ import AssociationSeedlingDistribution from './AssociationSeedlingDistribution';
 import CUSAFAInventory from '../MAO/CUSAFAInventory';
 import BuyerPriceListingsViewer from '../Shared/BuyerPriceListingsViewer';
 import CUSAFAFiberDeliveries from './CUSAFAFiberDeliveries';
+import AssociationProfile from './AssociationProfile';
+import EditAssociationProfile from './EditAssociationProfile';
+import ChangePassword from './ChangePassword';
 
-type DashboardPage = 'overview' | 'inventory' | 'distribution' | 'fiber-inventory' | 'buyer-prices' | 'fiber-deliveries' | 'analytics';
+type DashboardPage = 'overview' | 'inventory' | 'distribution' | 'fiber-inventory' | 'buyer-prices' | 'fiber-deliveries' | 'analytics' | 'profile' | 'edit-profile' | 'change-password';
 
 interface DashboardStats {
   totalReceivedCount: number;
@@ -85,6 +102,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [officerProfile, setOfficerProfile] = useState<any>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalReceivedCount: 0,
     totalFarmerDistributions: 0,
@@ -136,6 +154,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
   useEffect(() => {
     loadDashboardStats();
+    fetchOfficerProfile();
     loadNotifications();
     loadFiberDeliveryStats();
   }, []);
@@ -151,6 +170,22 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       transformAnalyticsData();
     }
   }, [viewMode, selectedYear, cachedDistributions, cachedReceivedSeedlings]);
+
+  const fetchOfficerProfile = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('https://easyabaca-api.vercel.app/api/association/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setOfficerProfile(data.profile);
+      }
+    } catch (error) {
+      console.error('Error fetching officer profile:', error);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -1064,6 +1099,18 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       return <BuyerPriceListingsViewer userRole="cusafa" />;
     }
 
+    if (currentPage === 'profile') {
+      return <AssociationProfile onBack={() => setCurrentPage('overview')} onEditProfile={() => setCurrentPage('edit-profile')} />;
+    }
+
+    if (currentPage === 'edit-profile') {
+      return <EditAssociationProfile onBack={() => setCurrentPage('profile')} />;
+    }
+
+    if (currentPage === 'change-password') {
+      return <ChangePassword onBack={() => setCurrentPage('profile')} />;
+    }
+
     return (
       <div className="bg-white border border-dashed border-gray-200 rounded-3xl p-12 text-center text-gray-500">
         Reports & analytics coming soon.
@@ -1254,35 +1301,98 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                   className="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all"
                 >
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center font-bold text-sm shadow-lg">
-                    {(user?.fullName || 'CU')
-                      .split(' ')
-                      .map((part: string) => part[0])
-                      .join('')
-                      .slice(0, 2)}
-                  </div>
+                  {officerProfile?.profile_picture ? (
+                    <img
+                      src={officerProfile.profile_picture}
+                      alt={officerProfile.full_name}
+                      className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full object-cover border-2 border-emerald-200 shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-lg">
+                      {(officerProfile?.full_name || user?.fullName || 'CU')
+                        .split(' ')
+                        .map((part: string) => part[0])
+                        .join('')
+                        .slice(0, 2)
+                        .toUpperCase()}
+                    </div>
+                  )}
                   <div className="text-left hidden sm:block">
-                    <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'Association Officer'}</p>
-                    <p className="text-xs text-gray-500">{user?.associationName || 'Central Union'}</p>
+                    <p className="text-sm font-semibold text-gray-900">{officerProfile?.full_name || user?.fullName || 'Association Officer'}</p>
+                    <p className="text-xs text-gray-500">{officerProfile?.association_name || user?.associationName || 'Central Union'}</p>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-500 hidden sm:block" />
                 </button>
                 {showProfileDropdown && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                  <div className="fixed sm:absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-64 sm:w-72 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
                     <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-200">
-                      <p className="text-sm font-bold text-gray-900">{user?.fullName || 'Association Officer'}</p>
-                      <p className="text-xs text-gray-600">{user?.associationName || 'Central Union'}</p>
+                      <div className="flex items-center gap-3">
+                        {officerProfile?.profile_picture ? (
+                          <img
+                            src={officerProfile.profile_picture}
+                            alt={officerProfile.full_name}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-emerald-200"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center font-bold text-lg">
+                            {(officerProfile?.full_name || user?.fullName || 'CU')
+                              .split(' ')
+                              .map((part: string) => part[0])
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-900 truncate">{officerProfile?.full_name || user?.fullName || 'Association Officer'}</p>
+                          <p className="text-xs text-gray-600 truncate">{officerProfile?.position || 'Officer'}</p>
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        setShowProfileDropdown(false);
-                        onLogout();
-                      }}
-                      className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 font-medium transition-colors flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
+                    <div className="py-2">
+                      <button
+                        onClick={() => {
+                          setShowProfileDropdown(false);
+                          setCurrentPage('profile');
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-700 hover:bg-emerald-50 font-medium transition-colors flex items-center gap-3"
+                      >
+                        <User className="w-4 h-4 text-emerald-600" />
+                        View Profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowProfileDropdown(false);
+                          setCurrentPage('edit-profile');
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-700 hover:bg-emerald-50 font-medium transition-colors flex items-center gap-3"
+                      >
+                        <Edit className="w-4 h-4 text-blue-600" />
+                        Edit Profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowProfileDropdown(false);
+                          setCurrentPage('change-password');
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-700 hover:bg-emerald-50 font-medium transition-colors flex items-center gap-3"
+                      >
+                        <KeyRound className="w-4 h-4 text-purple-600" />
+                        Change Password
+                      </button>
+                    </div>
+                    <div className="border-t border-gray-200">
+                      <button
+                        onClick={() => {
+                          setShowProfileDropdown(false);
+                          onLogout();
+                        }}
+                        className="w-full text-left px-4 py-3 text-xs sm:text-sm text-red-600 hover:bg-red-50 font-medium transition-colors flex items-center gap-3"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

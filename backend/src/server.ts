@@ -22,6 +22,7 @@ import buyerPurchasesRoutes from './routes/buyerPurchasesRoutes';
 import buyerListingsRoutes from './routes/buyerListingsRoutes';
 import fiberDeliveryRoutes from './routes/fiberDeliveryRoutes';
 import activityLogsRoutes from './routes/activityLogsRoutes';
+import associationProfileRoutes from './routes/associationProfileRoutes';
 import { checkBlockedIp, checkBlockedMac } from './middleware/activityLogger';
 
 // Import config
@@ -74,6 +75,7 @@ app.use('/api/buyer-purchases', buyerPurchasesRoutes);
 app.use('/api/buyer-listings', buyerListingsRoutes);
 app.use('/api/fiber-deliveries', fiberDeliveryRoutes);
 app.use('/api/activity-logs', activityLogsRoutes);
+app.use('/api/association', associationProfileRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'MAO Culiram Abaca System API' });
