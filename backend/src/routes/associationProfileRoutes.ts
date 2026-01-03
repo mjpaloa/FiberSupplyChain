@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { AssociationProfileController } from '../controllers/AssociationProfileController';
 import multer from 'multer';
 import path from 'path';
@@ -35,18 +35,18 @@ const upload = multer({
 });
 
 // Get association officer profile
-router.get('/profile', authenticateToken, controller.getProfile);
+router.get('/profile', authenticate, controller.getProfile.bind(controller));
 
 // Update association officer profile
-router.put('/profile', authenticateToken, controller.updateProfile);
+router.put('/profile', authenticate, controller.updateProfile.bind(controller));
 
 // Upload profile picture
-router.post('/profile/upload-picture', authenticateToken, upload.single('profile_picture'), controller.uploadProfilePicture);
+router.post('/profile/upload-picture', authenticate, upload.single('profile_picture'), controller.uploadProfilePicture.bind(controller));
 
 // Upload valid ID photo
-router.post('/profile/upload-id', authenticateToken, upload.single('valid_id_photo'), controller.uploadIDPhoto);
+router.post('/profile/upload-id', authenticate, upload.single('valid_id_photo'), controller.uploadIDPhoto.bind(controller));
 
 // Change password
-router.put('/profile/change-password', authenticateToken, controller.changePassword);
+router.put('/profile/change-password', authenticate, controller.changePassword.bind(controller));
 
 export default router;
