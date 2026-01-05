@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  DollarSign,
   Phone,
   MapPin,
   FileText,
@@ -453,8 +452,8 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
         {/* Abaca Classes Pricing Card */}
         <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-7 border border-gray-100">
           <div className="flex items-start gap-3 mb-6 pb-4 border-b border-gray-100">
-            <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-sm">
-              <DollarSign className="text-white" size={24} />
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-sm flex items-center justify-center">
+              <span className="text-white text-3xl font-bold">₱</span>
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-1">Abaca Classes & Pricing</h2>

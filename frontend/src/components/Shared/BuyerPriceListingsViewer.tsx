@@ -161,6 +161,20 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
   const topClassB = getTopBuyersForClass('b');
   const topClassC = getTopBuyersForClass('c');
 
+  // Get ranking for a specific listing and class type
+  const getRankForListing = (listingId: string, classType: 'a' | 'b' | 'c'): number | null => {
+    const classKey = `class_${classType}` as const;
+    const enabledKey = `${classKey}_enabled` as const;
+    const priceKey = `${classKey}_price` as const;
+    
+    const rankedListings = filteredListings
+      .filter(l => l[enabledKey] && l[priceKey] && l[priceKey]! > 0)
+      .sort((a, b) => (b[priceKey] || 0) - (a[priceKey] || 0));
+    
+    const rank = rankedListings.findIndex(l => l.listing_id === listingId);
+    return rank >= 0 && rank < 3 ? rank + 1 : null;
+  };
+
   // Handle price type navigation
   const handlePriceNavigation = (listingId: string, direction: 'next' | 'prev') => {
     const current = selectedPriceType[listingId] || 'class_a';
@@ -268,115 +282,166 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
           <p className="text-gray-600">No buyer price listings match your current filters.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredListings.map((listing) => {
-            const currentPriceType = selectedPriceType[listing.listing_id] || 'class_a';
-            
-            type PriceType = {
-              type: 'class_a' | 'class_b' | 'class_c';
+            // Get all available class types with their prices
+            type ClassInfo = {
+              type: 'a' | 'b' | 'c';
+              typeKey: 'class_a' | 'class_b' | 'class_c';
+              label: string;
               price: number | null;
               image: string | null;
-              label: string;
               quality: string;
-              color: 'emerald' | 'blue' | 'purple';
-              emoji: string;
-              rank?: number;
+              bgColor: string;
+              textColor: string;
+              borderColor: string;
             };
             
-            const availableTypes: PriceType[] = [
-              listing.class_a_enabled ? { type: 'class_a', price: listing.class_a_price, image: listing.class_a_image, label: 'Class A', quality: 'Premium Quality', color: 'emerald', emoji: '🏆' } : null,
-              listing.class_b_enabled ? { type: 'class_b', price: listing.class_b_price, image: listing.class_b_image, label: 'Class B', quality: 'Standard Quality', color: 'blue', emoji: '⭐' } : null,
-              listing.class_c_enabled ? { type: 'class_c', price: listing.class_c_price, image: listing.class_c_image, label: 'Class C', quality: 'Basic Quality', color: 'purple', emoji: '📦' } : null
-            ].filter((item): item is PriceType => item !== null);
-
-            // Rank prices within this listing (highest = rank 1)
-            const rankedTypes = availableTypes
-              .sort((a, b) => (b.price || 0) - (a.price || 0))
-              .map((item, index) => ({ ...item, rank: index + 1 }));
-
-            const currentPrice = rankedTypes.find(t => t.type === currentPriceType) || rankedTypes[0];
+            const classesInfo: ClassInfo[] = [
+              listing.class_a_enabled ? { 
+                type: 'a', 
+                typeKey: 'class_a',
+                label: 'Class A', 
+                price: listing.class_a_price, 
+                image: listing.class_a_image,
+                quality: 'Premium Quality',
+                bgColor: 'bg-emerald-50',
+                textColor: 'text-emerald-700',
+                borderColor: 'border-emerald-300'
+              } : null,
+              listing.class_b_enabled ? { 
+                type: 'b',
+                typeKey: 'class_b', 
+                label: 'Class B', 
+                price: listing.class_b_price, 
+                image: listing.class_b_image,
+                quality: 'Standard Quality',
+                bgColor: 'bg-blue-50',
+                textColor: 'text-blue-700',
+                borderColor: 'border-blue-300'
+              } : null,
+              listing.class_c_enabled ? { 
+                type: 'c',
+                typeKey: 'class_c', 
+                label: 'Class C', 
+                price: listing.class_c_price, 
+                image: listing.class_c_image,
+                quality: 'Basic Quality',
+                bgColor: 'bg-amber-50',
+                textColor: 'text-amber-700',
+                borderColor: 'border-amber-300'
+              } : null
+            ].filter((item): item is ClassInfo => item !== null && item.price !== null && item.price > 0);
 
             return (
-              <div key={listing.listing_id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-7 border border-gray-100">
+              <div key={listing.listing_id} className="bg-white rounded-xl md:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200">
                 {/* Card Header */}
-                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-sm">
-                    <Building className="text-white" size={24} />
+                <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-4 md:p-5">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                      <div className="p-2 bg-white/20 rounded-lg flex-shrink-0">
+                        <Building className="text-white" size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-base md:text-lg font-bold text-white truncate">{listing.company_name}</h2>
+                        <p className="text-xs md:text-sm text-blue-100 truncate">{listing.contact_person}</p>
+                      </div>
+                    </div>
+                    {getAvailabilityBadge(listing.availability)}
                   </div>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-gray-900">{listing.company_name}</h2>
-                    <p className="text-sm text-gray-600">{listing.contact_person}</p>
-                  </div>
-                  {getAvailabilityBadge(listing.availability)}
                 </div>
 
                 {/* Card Content */}
-                <div className="space-y-4">
-                  {/* Price Tabs */}
-                  {availableTypes.length > 1 && (
-                    <div className="flex gap-2 mb-4">
-                      {availableTypes.map((type) => (
-                        <button
-                          key={type.type}
-                          onClick={() => setSelectedPriceType(prev => ({ ...prev, [listing.listing_id]: type.type }))}
-                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
-                            currentPriceType === type.type
-                              ? 'bg-indigo-100 text-indigo-700'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          {type.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Price Display */}
-                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl p-5 mb-4">
-                    <p className="text-sm text-gray-600 font-semibold mb-2">Price per Kilogram - {currentPrice?.label}</p>
-                    <p className="text-4xl font-bold text-indigo-600 mb-1">
-                      ₱{currentPrice?.price ? currentPrice.price.toFixed(2) : '0.00'}
-                    </p>
-                    <p className="text-sm text-gray-600">{currentPrice?.quality}</p>
+                <div className="p-4 md:p-5 space-y-4">
+                  {/* Classes with Rankings */}
+                  <div className="space-y-3">
+                    {classesInfo.map((classInfo) => {
+                      const rank = getRankForListing(listing.listing_id, classInfo.type);
+                      
+                      return (
+                        <div key={classInfo.typeKey} className={`relative ${classInfo.bgColor} ${classInfo.borderColor} border-2 rounded-xl p-3 md:p-4 transition-all hover:shadow-md`}>
+                          {/* Ranking Badge */}
+                          {rank && (
+                            <div className="absolute -top-2 -right-2 md:-top-3 md:-right-3 z-10">
+                              <div className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full font-black text-sm md:text-base shadow-lg ${
+                                rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white ring-4 ring-yellow-200' :
+                                rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white ring-4 ring-gray-200' :
+                                'bg-gradient-to-br from-orange-400 to-orange-600 text-white ring-4 ring-orange-200'
+                              }`}>
+                                {rank}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-bold ${classInfo.textColor} bg-white`}>
+                                  {classInfo.label}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-600 mb-1">{classInfo.quality}</p>
+                              <p className={`text-xl md:text-3xl font-black ${classInfo.textColor}`}>
+                                ₱{classInfo.price?.toFixed(2)}
+                              </p>
+                              <p className="text-xs text-gray-500">per kilogram</p>
+                            </div>
+                            
+                            {/* Image Thumbnail */}
+                            {classInfo.image && (
+                              <div 
+                                className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform flex-shrink-0"
+                                onClick={() => setImageModal({ isOpen: true, imageUrl: classInfo.image!, label: `${listing.company_name} - ${classInfo.label}` })}
+                              >
+                                <img 
+                                  src={classInfo.image} 
+                                  alt={classInfo.label}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Contact Info */}
-                  <div className="space-y-3">
+                  <div className="pt-3 border-t border-gray-200 space-y-2">
                     <div className="flex items-start gap-2">
-                      <Phone size={16} className="text-gray-500 mt-0.5" />
-                      <div>
+                      <Phone size={14} className="text-indigo-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-500 font-medium">Contact</p>
-                        <p className="text-sm text-gray-900 font-semibold">{listing.phone}</p>
-                        <p className="text-sm text-gray-600">{listing.email}</p>
+                        <p className="text-xs md:text-sm text-gray-900 font-semibold">{listing.phone}</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <MapPin size={16} className="text-gray-500 mt-0.5" />
-                      <div>
+                      <MapPin size={14} className="text-indigo-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-500 font-medium">Location</p>
-                        <p className="text-sm text-gray-900 font-semibold">{listing.barangay}, {listing.municipality}</p>
+                        <p className="text-xs md:text-sm text-gray-900 font-semibold">{listing.barangay}, {listing.municipality}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Payment & Validity */}
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                  {/* Payment & Terms */}
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
                     <div>
-                      <p className="text-xs text-gray-500 font-medium mb-1">Payment Terms</p>
-                      <p className="text-sm text-gray-900 font-semibold">{listing.payment_terms}</p>
+                      <p className="text-xs text-gray-500 font-medium mb-1">Payment</p>
+                      <p className="text-xs md:text-sm text-gray-900 font-semibold">{listing.payment_terms}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 font-medium mb-1">Valid Until</p>
-                      <p className="text-sm text-gray-900 font-semibold">{new Date(listing.valid_until).toLocaleDateString()}</p>
+                      <p className="text-xs md:text-sm text-gray-900 font-semibold">{new Date(listing.valid_until).toLocaleDateString()}</p>
                     </div>
                   </div>
 
                   {/* Requirements */}
                   {listing.requirements && (
-                    <div className="pt-4 border-t border-gray-100">
-                      <p className="text-xs text-gray-500 font-medium mb-2">Requirements</p>
-                      <p className="text-sm text-gray-700">{listing.requirements}</p>
+                    <div className="pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-500 font-medium mb-1">Requirements</p>
+                      <p className="text-xs md:text-sm text-gray-700 line-clamp-2">{listing.requirements}</p>
                     </div>
                   )}
                 </div>

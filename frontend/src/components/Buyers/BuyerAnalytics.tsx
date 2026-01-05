@@ -220,14 +220,14 @@ const BuyerAnalytics: React.FC = () => {
         count: monthlyTransactionsMap[month] || 0
       }));
 
-      // Calculate sales by fiber type
+      // Calculate sales by fiber type (ALL TIME - not filtered by year)
       const salesByTypeMap: { [key: string]: { quantity: number; sales: number } } = {
         'Class A': { quantity: 0, sales: 0 },
         'Class B': { quantity: 0, sales: 0 },
         'Class C': { quantity: 0, sales: 0 }
       };
 
-      filteredSales.forEach((s: any) => {
+      sales.forEach((s: any) => {
         const fiberClass = s.fiber_class || 'Class C';
         if (salesByTypeMap[fiberClass]) {
           salesByTypeMap[fiberClass].quantity += s.quantity_kg || 0;
