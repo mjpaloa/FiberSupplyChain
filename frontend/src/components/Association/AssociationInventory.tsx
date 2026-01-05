@@ -115,7 +115,6 @@ const AssociationInventory: React.FC = () => {
       if (Array.isArray(data)) {
         // Backend already provides distributed_to_farmers and remaining_quantity
         // No need to recalculate on frontend
-        console.log('📦 Received distributions:', data);
         setDistributions(data);
       } else {
         console.error('Invalid data format:', data);
@@ -468,14 +467,14 @@ const AssociationInventory: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50 rounded-t-xl">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Photo</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Variety</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Received</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Distributed</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Remaining</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Photo</th>
+                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Variety</th>
+                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Received</th>
+                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell">Distributed</th>
+                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell">Remaining</th>
+                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
@@ -486,42 +485,43 @@ const AssociationInventory: React.FC = () => {
 
                   return (
                     <tr key={dist.distribution_id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
-                      <td className="px-4 py-3 border-b border-gray-100">
-                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
                           {dist.seedling_photo ? (
                             <img src={dist.seedling_photo} alt="Seedling" className="w-full h-full object-cover" />
                           ) : (
-                            <Sprout className="w-6 h-6 text-gray-400" />
+                            <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900">
-                        {new Date(dist.date_distributed).toLocaleDateString()}
+                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100 text-xs sm:text-sm text-gray-900">
+                        <span className="hidden sm:inline">{new Date(dist.date_distributed).toLocaleDateString()}</span>
+                        <span className="sm:hidden">{new Date(dist.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                       </td>
-                      <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900">
+                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100 text-xs sm:text-sm text-gray-900">
                         <div className="font-semibold">{dist.variety}</div>
                         {dist.source_supplier && (
-                          <div className="text-xs text-gray-500">{dist.source_supplier}</div>
+                          <div className="text-xs text-gray-500 hidden sm:block">{dist.source_supplier}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900 font-semibold">
+                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100 text-xs sm:text-sm text-gray-900 font-semibold">
                         {dist.quantity_distributed.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900 font-semibold">
+                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100 text-xs sm:text-sm text-gray-900 font-semibold hidden sm:table-cell">
                         {distributedQty.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900 font-semibold">
+                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100 text-xs sm:text-sm text-gray-900 font-semibold hidden sm:table-cell">
                         {remainingQty.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 border-b border-gray-100">
-                        <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${getStatusColor(dist.status)}`}>
+                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100">
+                        <span className={`inline-block px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-normal sm:whitespace-nowrap ${getStatusColor(dist.status)}`}>
                           {dist.status === 'distributed_to_association' ? '📦 Received' :
                            dist.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
                            dist.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
                            '❌ Cancelled'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 border-b border-gray-100">
+                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
@@ -636,7 +636,7 @@ const AssociationInventory: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Distributed By</p>
                   <p className="font-semibold text-gray-900">
-                    {selectedDistribution.organization?.full_name || 'N/A'}
+                    {selectedDistribution.organization?.full_name || (selectedDistribution as any).distributed_by_name || (selectedDistribution as any).distributed_by_officer?.full_name || (selectedDistribution as any).distributed_by?.full_name || 'N/A'}
                   </p>
                 </div>
                 <div>

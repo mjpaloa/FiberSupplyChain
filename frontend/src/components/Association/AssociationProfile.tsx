@@ -51,25 +51,39 @@ const AssociationProfile: React.FC<AssociationProfileProps> = ({ onBack, onEditP
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      console.log('🔍 Fetching association profile with token:', token ? 'Present' : 'Missing');
+      const userType = localStorage.getItem('userType');
+      const userDataStr = localStorage.getItem('user');
+      const userData = userDataStr ? JSON.parse(userDataStr) : null;
+      
+      if (!token) {
+        alert('Authentication required. Please log in again.');
+        setLoading(false);
+        return;
+      }
       
       const response = await fetch('https://easyabaca-api.vercel.app/api/association/profile', {
+        method: 'GET',
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
       
-      console.log('📡 Profile API Response Status:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Profile data received:', data);
         setProfile(data.profile || data);
       } else {
         const errorText = await response.text();
         console.error('❌ Profile API Error:', response.status, errorText);
-        alert(`Failed to load profile: ${response.status} - ${errorText}`);
+        
+        // If 500 error, likely backend issue with token/user lookup
+        if (response.status === 500) {
+          alert(`Server error loading profile. Please ensure you're logged in as an Association Officer. Type: ${userType}`);
+        } else if (response.status === 401 || response.status === 403) {
+          alert('Authentication failed. Please log in again.');
+        } else {
+          alert(`Failed to load profile: ${response.status}`);
+        }
       }
     } catch (error) {
       console.error('❌ Network error fetching profile:', error);

@@ -230,7 +230,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Stats - Match Association Design */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-4 md:mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-4 md:mb-6">
         <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl shadow-lg p-4 md:p-5 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-white/20">
           <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
@@ -315,14 +315,14 @@ const CUSAFAFiberDeliveries: React.FC = () => {
 
       {/* Enhanced Filters & Search Section */}
       <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-4 md:mb-6">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          {/* Status Filter Buttons - Left Side */}
-          <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-col gap-4">
+          {/* Status Filter Buttons */}
+          <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
             {['all', 'In Transit', 'Delivered', 'Completed', 'Cancelled'].map(status => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-2 sm:px-3 md:px-5 py-2 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base rounded-xl sm:rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 ${statusFilter === status
+                className={`px-4 sm:px-5 md:px-6 py-3 sm:py-3 md:py-4 text-sm sm:text-sm md:text-base rounded-xl sm:rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 ${statusFilter === status
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105'
                   : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
                   }`}
@@ -332,54 +332,54 @@ const CUSAFAFiberDeliveries: React.FC = () => {
             ))}
           </div>
 
-          {/* Search & Export - Right Side */}
-          <div className="flex gap-3 w-full lg:w-auto">
-            <div className="relative flex-1 lg:w-80">
-              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-blue-500 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
+          {/* Search & Export */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 w-5 h-5 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search farmers, buyers, variety, location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 md:py-4 text-sm sm:text-base bg-white border-2 border-blue-200 rounded-xl sm:rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-medium shadow-md"
+                className="w-full pl-12 pr-4 py-3.5 sm:py-3 md:py-4 text-base sm:text-base bg-white border-2 border-blue-200 rounded-xl sm:rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-medium shadow-md"
               />
             </div>
 
             <button
               onClick={downloadCSV}
-              className="flex items-center px-6 py-4 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-2xl hover:from-blue-500 hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold border-2 border-blue-300 whitespace-nowrap"
+              className="flex items-center justify-center px-6 py-3.5 sm:py-4 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-xl sm:rounded-2xl hover:from-blue-500 hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold border-2 border-blue-300 whitespace-nowrap text-base"
             >
               <Download className="w-5 h-5 mr-2" />
-              Export CSV
+              <span>Export CSV</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Deliveries Table - Sales Management Style */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gradient-to-r from-blue-100 via-emerald-100 to-purple-100">
               <tr>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">
                   <div className="flex items-center gap-1 sm:gap-2">
-                    <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <User className="w-4 h-4 sm:w-4 sm:h-4" />
                     <span className="hidden sm:inline">Buyer/Farmer</span>
                     <span className="sm:hidden">Buyer</span>
                   </div>
                 </th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">Variety</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">Variety</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">
                   <div className="flex items-center gap-1 sm:gap-2">
-                    <Package className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <Package className="w-4 h-4 sm:w-4 sm:h-4" />
                     Qty
                   </div>
                 </th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">Date</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider hidden sm:table-cell">Progress</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">Date</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4 text-left text-xs sm:text-xs font-bold text-gray-700 uppercase tracking-wider hidden sm:table-cell">Progress</th>
+                <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4 text-left text-xs sm:text-sm md:text-base font-bold text-gray-700 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-indigo-100">
@@ -389,50 +389,49 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                   className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
                     }`}
                 >
-                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-5 whitespace-nowrap">
-                    <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xs sm:text-sm md:text-base shadow-lg border border-white sm:border-2">
+                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-5 whitespace-nowrap">
+                    <div className="flex items-center gap-2 sm:gap-2 md:gap-3">
+                      <div className="w-10 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm sm:text-sm md:text-base shadow-lg border-2 border-white">
                         {delivery.buyers?.business_name?.charAt(0) || 'B'}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-bold text-blue-900 text-xs sm:text-sm md:text-base truncate">{delivery.buyers?.business_name || 'Buyer'}</div>
+                        <div className="font-bold text-blue-900 text-sm sm:text-sm md:text-base truncate">{delivery.buyers?.business_name || 'Buyer'}</div>
                         {delivery.farmers && (
-                          <div className="text-emerald-600 text-[10px] sm:text-xs md:text-sm font-medium truncate hidden sm:block">👨‍🌾 {delivery.farmers.first_name} {delivery.farmers.last_name}</div>
+                          <div className="text-emerald-600 text-xs sm:text-xs md:text-sm font-medium truncate hidden sm:block">👨‍🌾 {delivery.farmers.first_name} {delivery.farmers.last_name}</div>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-5 whitespace-nowrap">
+                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-5 whitespace-nowrap">
                     <div>
-                      <div className="text-xs sm:text-sm md:text-base font-semibold text-gray-900">{delivery.variety}</div>
-                      <div className="text-[10px] sm:text-xs md:text-sm text-gray-500 flex items-center gap-1">
-                        <Award size={10} className="sm:w-3 sm:h-3 text-amber-500" />
+                      <div className="text-sm sm:text-sm md:text-base font-semibold text-gray-900">{delivery.variety}</div>
+                      <div className="text-xs sm:text-xs md:text-sm text-gray-500 flex items-center gap-1">
+                        <Award size={12} className="sm:w-3 sm:h-3 text-amber-500" />
                         {delivery.grade}
                       </div>
                     </div>
                   </td>
-                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-5 whitespace-nowrap">
-                    <div className="text-xs sm:text-sm md:text-base font-semibold text-gray-900">{delivery.quantity_kg} kg</div>
+                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-5 whitespace-nowrap">
+                    <div className="text-sm sm:text-sm md:text-base font-semibold text-gray-900">{delivery.quantity_kg} kg</div>
                   </td>
-                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-5 whitespace-nowrap">
-                    <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-gray-900">
+                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-5 whitespace-nowrap">
+                    <div className="text-xs sm:text-xs md:text-sm font-semibold text-gray-900">
                       <span className="hidden sm:inline">{new Date(delivery.delivery_date).toLocaleDateString()}</span>
                       <span className="sm:hidden">{new Date(delivery.delivery_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                     </div>
                   </td>
-                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-5 whitespace-nowrap">
+                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-5 whitespace-nowrap">
                     <div className="flex items-center gap-1 sm:gap-2">
-                      {delivery.status === 'In Transit' && <Truck className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500" />}
-                      {delivery.status === 'Delivered' && <Package className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />}
-                      {delivery.status === 'Completed' && <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />}
-                      {delivery.status === 'Cancelled' && <XCircle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />}
-                      <span className={`inline-flex px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs md:text-sm font-bold rounded-full shadow-md ${getStatusColor(delivery.status)}`}>
-                        <span className="hidden sm:inline">{delivery.status}</span>
-                        <span className="sm:hidden">{delivery.status.substring(0, 3)}</span>
+                      {delivery.status === 'In Transit' && <Truck className="w-4 h-4 sm:w-4 sm:h-4 text-purple-500" />}
+                      {delivery.status === 'Delivered' && <Package className="w-4 h-4 sm:w-4 sm:h-4 text-green-500" />}
+                      {delivery.status === 'Completed' && <CheckCircle className="w-4 h-4 sm:w-4 sm:h-4 text-emerald-500" />}
+                      {delivery.status === 'Cancelled' && <XCircle className="w-4 h-4 sm:w-4 sm:h-4 text-red-500" />}
+                      <span className={`inline-flex px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-1.5 text-xs sm:text-xs md:text-sm font-bold rounded-full shadow-md ${getStatusColor(delivery.status)}`}>
+                        {delivery.status}
                       </span>
                     </div>
                   </td>
-                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-5 whitespace-nowrap hidden sm:table-cell">
+                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-5 whitespace-nowrap hidden sm:table-cell">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 bg-gray-200 rounded-full h-1.5 sm:h-2 w-16 sm:w-20 overflow-hidden">
                         <div
@@ -448,14 +447,14 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                       <span className="text-xs sm:text-sm font-bold text-gray-700">{getStatusProgress(delivery.status)}%</span>
                     </div>
                   </td>
-                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-5 whitespace-nowrap">
-                    <div className="flex items-center gap-1 sm:gap-2">
+                  <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-3 md:py-5 whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <button
                         onClick={() => { setSelectedDelivery(delivery); setShowDetailsModal(true); }}
-                        className="p-1 sm:p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg sm:rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
+                        className="p-2 sm:p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg sm:rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
                         title="View Details"
                       >
-                        <Eye size={12} className="sm:w-4 sm:h-4" />
+                        <Eye size={16} className="sm:w-4 sm:h-4" />
                       </button>
                       {delivery.status !== 'Completed' && delivery.status !== 'Cancelled' && (
                         <button
@@ -464,10 +463,10 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                             setNewStatus(delivery.status);
                             setShowStatusModal(true);
                           }}
-                          className="p-1 sm:p-1.5 md:p-2 bg-emerald-100 text-emerald-600 rounded-lg sm:rounded-xl hover:bg-emerald-200 hover:shadow-md transition-all duration-200 hidden sm:inline-flex"
+                          className="p-2 sm:p-1.5 md:p-2 bg-emerald-100 text-emerald-600 rounded-lg sm:rounded-xl hover:bg-emerald-200 hover:shadow-md transition-all duration-200 hidden sm:inline-flex"
                           title="Update Status"
                         >
-                          <Edit size={12} className="sm:w-4 sm:h-4" />
+                          <Edit size={16} className="sm:w-4 sm:h-4" />
                         </button>
                       )}
                       <button
@@ -475,10 +474,10 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                           setSelectedDelivery(delivery);
                           setShowDeleteModal(true);
                         }}
-                        className="p-1 sm:p-1.5 md:p-2 bg-red-100 text-red-600 rounded-lg sm:rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
+                        className="p-2 sm:p-1.5 md:p-2 bg-red-100 text-red-600 rounded-lg sm:rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
                         title="Delete"
                       >
-                        <Trash2 size={12} className="sm:w-4 sm:h-4" />
+                        <Trash2 size={16} className="sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   </td>

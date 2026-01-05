@@ -197,36 +197,114 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Building size={24} />
+      {/* Top Buyers Ranking Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Class A Top Buyers */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
+                <TrendingUp className="text-white" size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-emerald-900">Class A</h3>
+                <p className="text-xs text-emerald-700 font-medium">Premium Fiber</p>
+              </div>
             </div>
           </div>
-          <p className="text-3xl font-bold mb-1">{stats.total}</p>
-          <p className="text-sm opacity-90">Active Buyer Listings</p>
+          <div className="p-5 space-y-3">
+            {topClassA.length > 0 ? (
+              topClassA.map((buyer) => (
+                <div key={buyer.rank} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-emerald-50 hover:border-emerald-300 transition-all">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${
+                    buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
+                    buyer.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
+                    'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                  }`}>
+                    {buyer.rank}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-900 truncate">{buyer.company}</p>
+                    <p className="text-xs text-emerald-600 font-semibold">₱{buyer.price.toFixed(2)}/kg</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-8">No buyers available</p>
+            )}
+          </div>
         </div>
 
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <TrendingUp size={24} />
+        {/* Class B Top Buyers */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+                <TrendingUp className="text-white" size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-blue-900">Class B</h3>
+                <p className="text-xs text-blue-700 font-medium">Standard Fiber</p>
+              </div>
             </div>
           </div>
-          <p className="text-3xl font-bold mb-1">₱{topClassA.length > 0 ? topClassA[0].price.toFixed(2) : '0.00'}</p>
-          <p className="text-sm opacity-90">Best Class A Price</p>
+          <div className="p-5 space-y-3">
+            {topClassB.length > 0 ? (
+              topClassB.map((buyer) => (
+                <div key={buyer.rank} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-all">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${
+                    buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
+                    buyer.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
+                    'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                  }`}>
+                    {buyer.rank}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-900 truncate">{buyer.company}</p>
+                    <p className="text-xs text-blue-600 font-semibold">₱{buyer.price.toFixed(2)}/kg</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-8">No buyers available</p>
+            )}
+          </div>
         </div>
 
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <CheckCircle size={24} />
+        {/* Class C Top Buyers */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-r from-amber-50 to-amber-100 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
+                <TrendingUp className="text-white" size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-amber-900">Class C</h3>
+                <p className="text-xs text-amber-700 font-medium">Basic Fiber</p>
+              </div>
             </div>
           </div>
-          <p className="text-3xl font-bold mb-1">{stats.available}</p>
-          <p className="text-sm opacity-90">Available Buyers</p>
+          <div className="p-5 space-y-3">
+            {topClassC.length > 0 ? (
+              topClassC.map((buyer) => (
+                <div key={buyer.rank} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-amber-50 hover:border-amber-300 transition-all">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${
+                    buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
+                    buyer.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
+                    'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                  }`}>
+                    {buyer.rank}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-900 truncate">{buyer.company}</p>
+                    <p className="text-xs text-amber-600 font-semibold">₱{buyer.price.toFixed(2)}/kg</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-8">No buyers available</p>
+            )}
+          </div>
         </div>
       </div>
 

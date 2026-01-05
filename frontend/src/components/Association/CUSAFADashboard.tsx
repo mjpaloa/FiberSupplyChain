@@ -258,7 +258,13 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
       // Set recent distributions (sort by date descending)
       if (Array.isArray(farmerData)) {
-        const sorted = [...farmerData].sort((a: any, b: any) =>
+        // Map farmer data to include farmer_name from nested farmers object
+        const mappedData = farmerData.map((dist: any) => ({
+          ...dist,
+          farmer_name: dist.farmers?.full_name || dist.farmer_name || null
+        }));
+        
+        const sorted = [...mappedData].sort((a: any, b: any) =>
           new Date(b.date_distributed || b.distribution_date).getTime() - new Date(a.date_distributed || a.distribution_date).getTime()
         );
         setRecentDistributions(sorted.slice(0, 5));
@@ -707,7 +713,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       {/* KPI Cards - Match Buyers Design Exactly */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
         {/* Card 1: Seedlings Received */}
-        <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+        <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white hover:scale-105 hover:-translate-y-2 transition-transform duration-300 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
@@ -717,7 +723,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
             </div>
             <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Seedlings Received</h3>
             <p className="text-3xl md:text-4xl font-black mb-1">{stats.totalReceivedQuantity.toLocaleString()}</p>
-            <div className="flex items-center gap-1 text-xs opacity-80">
+            <div className="flex items-center gap-2 text-xs opacity-80">
               <Package size={14} />
               <span>From MAO distributions</span>
             </div>
@@ -725,7 +731,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
         </div>
 
         {/* Card 2: Distributed */}
-        <div className="group relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+        <div className="group relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white hover:scale-105 hover:-translate-y-2 transition-transform duration-300 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
@@ -743,7 +749,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
         </div>
 
         {/* Card 3: Inventory */}
-        <div className="group relative bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+        <div className="group relative bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white hover:scale-105 hover:-translate-y-2 transition-transform duration-300 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
@@ -761,7 +767,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
         </div>
 
         {/* Card 4: Planting Progress */}
-        <div className="group relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+        <div className="group relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white hover:scale-105 hover:-translate-y-2 transition-transform duration-300 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
