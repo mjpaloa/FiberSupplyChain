@@ -1075,13 +1075,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         {/* Content */}
         <div className="p-4 md:p-6 lg:p-8">
           {currentPage === 'dashboard' && (
-            <>
-              {/* NEW DATA-DRIVEN DASHBOARD */}
-              <div className="space-y-6">
-
-
-              </div>
-
+            <div className="space-y-8">
               {/* Modern Agriculture Analytics Dashboard */}
               {(() => {
                 const distributionData = generateDistributionData();
@@ -1098,7 +1092,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                 });
 
                 return (
-                  <div className="space-y-8">
+                  <>
                     {/* Analytics Dashboard Header */}
                     <div className="mb-8">
                       <h1 className="text-3xl font-bold text-gray-900 mb-2">Abaca Farm Analytics Dashboard</h1>
@@ -1569,9 +1563,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         </ResponsiveContainer>
                       </div>
                     </div>
+                  </>
                 );
               })()}
-            </>
+            </div>
           )}
 
           {currentPage === 'seedlings' && (
@@ -2202,6 +2197,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             </div>
           )}
         </div>
+        {/* End content wrapper */}
       </main>
 
       {/* Planting Modal */}
