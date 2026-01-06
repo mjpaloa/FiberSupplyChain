@@ -97,6 +97,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [farmHealthData, setFarmHealthData] = useState<any[]>([]);
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [harvestStats, setHarvestStats] = useState({ totalFiberKg: 0, totalRevenue: 0 });
+  const [hoveredPieSegment, setHoveredPieSegment] = useState<number | null>(null);
+  const [farmStatusData] = useState([
+    { status: 'Healthy', percentage: 65, count: 13, color: { id: 'green', start: '#10b981', end: '#059669' } },
+    { status: 'Action Needed', percentage: 25, count: 5, color: { id: 'yellow', start: '#f59e0b', end: '#d97706' } },
+    { status: 'Needs Support', percentage: 10, count: 2, color: { id: 'red', start: '#ef4444', end: '#dc2626' } }
+  ]);
 
   // Get user info from localStorage
   const userStr = localStorage.getItem('user');
@@ -1174,59 +1180,61 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       </div>
                     </div>
 
-                    {/* 2. Seedling Distribution Trends */}
-                    <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                        <div>
-                          <h2 className="text-2xl font-bold text-gray-900 mb-2">Seedling Distribution Trends</h2>
-                          <p className="text-sm text-gray-600">Monthly comparison of distributed vs planted seedlings</p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          {/* Toggle */}
-                          <div className="inline-flex bg-gray-100 rounded-xl p-1">
-                            <button
-                              onClick={() => setViewMode('monthly')}
-                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'monthly'
-                                ? 'bg-white text-emerald-600 shadow-md'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                            >
-                              Monthly
-                            </button>
-                            <button
-                              onClick={() => setViewMode('yearly')}
-                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'yearly'
-                                ? 'bg-white text-emerald-600 shadow-md'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                            >
-                              Yearly
-                            </button>
+                    {/* Charts Section - 2x2 Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* 2. Seedling Distribution Trends */}
+                      <div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+                          <div>
+                            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1">Seedling Distribution Trends</h2>
+                            <p className="text-xs md:text-sm text-gray-600">Distributed vs planted seedlings</p>
                           </div>
-                          {viewMode === 'monthly' && (
-                            <select
-                              value={selectedYear}
-                              onChange={(e) => setSelectedYear(Number(e.target.value))}
-                              className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md focus:ring-2 focus:ring-emerald-500 transition-all"
-                            >
-                              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                                <option key={year} value={year}>{year}</option>
-                              ))}
-                            </select>
-                          )}
-                          <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                              <span className="text-gray-700 font-medium">Distributed</span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {/* Toggle */}
+                            <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                              <button
+                                onClick={() => setViewMode('monthly')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'monthly'
+                                  ? 'bg-white text-emerald-600 shadow-sm'
+                                  : 'text-gray-600 hover:text-gray-900'
+                                  }`}
+                              >
+                                Monthly
+                              </button>
+                              <button
+                                onClick={() => setViewMode('yearly')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'yearly'
+                                  ? 'bg-white text-emerald-600 shadow-sm'
+                                  : 'text-gray-600 hover:text-gray-900'
+                                  }`}
+                              >
+                                Yearly
+                              </button>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                              <span className="text-gray-700 font-medium">Planted</span>
-                            </div>
+                            {viewMode === 'monthly' && (
+                              <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 shadow-sm"
+                              >
+                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                  <option key={year} value={year}>{year}</option>
+                                ))}
+                              </select>
+                            )}
                           </div>
                         </div>
-                      </div>
-                      <ResponsiveContainer width="100%" height={400}>
+                        <div className="flex items-center gap-3 text-xs mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                            <span className="text-gray-700 font-medium">Distributed</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                            <span className="text-gray-700 font-medium">Planted</span>
+                          </div>
+                        </div>
+                        <ResponsiveContainer width="100%" height={300}>
                         <AreaChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                           <defs>
                             <linearGradient id="colorSeedlings" x1="0" y1="0" x2="0" y2="1">
@@ -1281,38 +1289,160 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             name="Planted"
                           />
                         </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
+                        </ResponsiveContainer>
+                      </div>
 
-                    {/* 3. Abaca Fiber Production Over Time */}
-                    <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                        <div>
-                          <h2 className="text-2xl font-bold text-gray-900 mb-2">Abaca Fiber Production Over Time</h2>
-                          <p className="text-sm text-gray-600">Track your fiber harvest trends</p>
+                      {/* Farm Status Donut Chart */}
+                      <div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-100">
+                        <div className="mb-6">
+                          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1">Farm Status Distribution</h2>
+                          <p className="text-xs md:text-sm text-gray-600">Health status of your farms</p>
                         </div>
-                        <div className="inline-flex bg-gray-100 rounded-xl p-1">
-                          <button
-                            onClick={() => setViewMode('monthly')}
-                            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'monthly'
-                              ? 'bg-white text-orange-600 shadow-md'
-                              : 'text-gray-600 hover:text-gray-900'
-                              }`}
-                          >
-                            Monthly
-                          </button>
-                          <button
-                            onClick={() => setViewMode('yearly')}
-                            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'yearly'
-                              ? 'bg-white text-orange-600 shadow-md'
-                              : 'text-gray-600 hover:text-gray-900'
-                              }`}
-                          >
-                            Yearly
-                          </button>
+                        
+                        {/* Donut Chart */}
+                        <div className="relative w-full h-64 flex items-center justify-center mb-6">
+                          <svg viewBox="0 0 240 240" className="w-56 h-56 drop-shadow-xl">
+                            <defs>
+                              {farmStatusData.map((item) => (
+                                <linearGradient key={item.color.id} id={item.color.id} x1="0%" y1="0%" x2="100%" y2="100%">
+                                  <stop offset="0%" stopColor={item.color.start} />
+                                  <stop offset="100%" stopColor={item.color.end} />
+                                </linearGradient>
+                              ))}
+                              <filter id="shadowFilter" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+                                <feOffset dx="0" dy="4" result="offsetblur" />
+                                <feComponentTransfer>
+                                  <feFuncA type="linear" slope="0.3" />
+                                </feComponentTransfer>
+                                <feMerge>
+                                  <feMergeNode />
+                                  <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                              </filter>
+                              <radialGradient id="gradient-center">
+                                <stop offset="0%" stopColor="#f9fafb" />
+                                <stop offset="100%" stopColor="#e5e7eb" />
+                              </radialGradient>
+                            </defs>
+                            {(() => {
+                              let currentAngle = -90;
+                              return farmStatusData.map((item, index) => {
+                                const angle = (item.percentage / 100) * 360;
+                                const startAngle = currentAngle;
+                                const endAngle = currentAngle + angle;
+                                const midAngle = (startAngle + endAngle) / 2;
+                                currentAngle = endAngle;
+
+                                const startRad = (startAngle * Math.PI) / 180;
+                                const endRad = (endAngle * Math.PI) / 180;
+                                const midRad = (midAngle * Math.PI) / 180;
+
+                                const radius = hoveredPieSegment === index ? 95 : 90;
+                                const x1 = 120 + radius * Math.cos(startRad);
+                                const y1 = 120 + radius * Math.sin(startRad);
+                                const x2 = 120 + radius * Math.cos(endRad);
+                                const y2 = 120 + radius * Math.sin(endRad);
+
+                                const labelRadius = 65;
+                                const labelX = 120 + labelRadius * Math.cos(midRad);
+                                const labelY = 120 + labelRadius * Math.sin(midRad);
+
+                                const largeArc = angle > 180 ? 1 : 0;
+
+                                return (
+                                  <g
+                                    key={index}
+                                    onMouseEnter={() => setHoveredPieSegment(index)}
+                                    onMouseLeave={() => setHoveredPieSegment(null)}
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <path
+                                      d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                      fill={`url(#${item.color.id})`}
+                                      filter="url(#shadowFilter)"
+                                      className="transition-all duration-300"
+                                      style={{
+                                        transform: hoveredPieSegment === index ? 'scale(1.05)' : 'scale(1)',
+                                        transformOrigin: '120px 120px',
+                                        opacity: hoveredPieSegment === null || hoveredPieSegment === index ? 1 : 0.6
+                                      }}
+                                    />
+                                    {item.percentage > 8 && (
+                                      <text
+                                        x={labelX}
+                                        y={labelY}
+                                        textAnchor="middle"
+                                        dominantBaseline="middle"
+                                        className="text-xs font-bold fill-white"
+                                        style={{ pointerEvents: 'none', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
+                                      >
+                                        {item.percentage.toFixed(0)}%
+                                      </text>
+                                    )}
+                                  </g>
+                                );
+                              });
+                            })()}
+                            <circle cx="120" cy="120" r="55" fill="white" />
+                            <circle cx="120" cy="120" r="52" fill="url(#gradient-center)" />
+                          </svg>
+                          
+                          {hoveredPieSegment !== null && farmStatusData[hoveredPieSegment] && (
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                              <p className="text-2xl font-bold text-gray-800">{farmStatusData[hoveredPieSegment].percentage.toFixed(1)}%</p>
+                              <p className="text-xs text-gray-600 font-semibold">{farmStatusData[hoveredPieSegment].status}</p>
+                              <p className="text-xs text-gray-500">{farmStatusData[hoveredPieSegment].count} farms</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Legend */}
+                        <div className="grid grid-cols-1 gap-3">
+                          {farmStatusData.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className="w-4 h-4 rounded-full" style={{ background: `linear-gradient(135deg, ${item.color.start}, ${item.color.end})` }}></div>
+                                <span className="text-sm font-semibold text-gray-700">{item.status}</span>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-gray-900">{item.percentage}%</p>
+                                <p className="text-xs text-gray-500">{item.count} farms</p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <ResponsiveContainer width="100%" height={400}>
+
+                      {/* 3. Abaca Fiber Production Over Time */}
+                      <div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+                          <div>
+                            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1">Abaca Fiber Production</h2>
+                            <p className="text-xs md:text-sm text-gray-600">Fiber harvest trends</p>
+                          </div>
+                          <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                            <button
+                              onClick={() => setViewMode('monthly')}
+                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'monthly'
+                                ? 'bg-white text-orange-600 shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                            >
+                              Monthly
+                            </button>
+                            <button
+                              onClick={() => setViewMode('yearly')}
+                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'yearly'
+                                ? 'bg-white text-orange-600 shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                            >
+                              Yearly
+                            </button>
+                          </div>
+                        </div>
+                        <ResponsiveContainer width="100%" height={300}>
                         <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                           <defs>
                             <linearGradient id="colorFiber" x1="0" y1="0" x2="0" y2="1">
@@ -1356,44 +1486,43 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             name="Fiber Production"
                           />
                         </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    {/* 4. Sales & Revenue Analytics */}
-                    <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                        <div>
-                          <h2 className="text-2xl font-bold text-gray-900 mb-2">Sales & Revenue Analytics</h2>
-                          <p className="text-sm text-gray-600">Track revenue performance and sales trends</p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="inline-flex bg-gray-100 rounded-xl p-1">
-                            <button
-                              onClick={() => setViewMode('monthly')}
-                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'monthly'
-                                ? 'bg-white text-purple-600 shadow-md'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                            >
-                              Monthly
-                            </button>
-                            <button
-                              onClick={() => setViewMode('yearly')}
-                              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'yearly'
-                                ? 'bg-white text-purple-600 shadow-md'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                            >
-                              Yearly
-                            </button>
-                          </div>
-                          <div className="px-4 py-2 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
-                            <p className="text-xs text-purple-700 font-semibold uppercase tracking-wide">Total Revenue</p>
-                            <p className="text-2xl font-bold text-purple-900">₱{(totalRevenue / 1000).toFixed(1)}K</p>
-                          </div>
-                        </div>
+                        </ResponsiveContainer>
                       </div>
-                      <ResponsiveContainer width="100%" height={400}>
+
+                      {/* 4. Sales & Revenue Analytics */}
+                      <div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+                          <div>
+                            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1">Sales & Revenue</h2>
+                            <p className="text-xs md:text-sm text-gray-600">Revenue performance</p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                              <button
+                                onClick={() => setViewMode('monthly')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'monthly'
+                                  ? 'bg-white text-purple-600 shadow-sm'
+                                  : 'text-gray-600 hover:text-gray-900'
+                                  }`}
+                              >
+                                Monthly
+                              </button>
+                              <button
+                                onClick={() => setViewMode('yearly')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'yearly'
+                                  ? 'bg-white text-purple-600 shadow-sm'
+                                  : 'text-gray-600 hover:text-gray-900'
+                                  }`}
+                              >
+                                Yearly
+                              </button>
+                            </div>
+                            <div className="px-3 py-1.5 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+                              <p className="text-xs text-purple-700 font-semibold">Total: ₱{(totalRevenue / 1000).toFixed(1)}K</p>
+                            </div>
+                          </div>
+                        </div>
+                        <ResponsiveContainer width="100%" height={300}>
                         <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                           <defs>
                             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -1437,9 +1566,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             name="Revenue"
                           />
                         </AreaChart>
-                      </ResponsiveContainer>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
-                  </div>
                 );
               })()}
             </>
