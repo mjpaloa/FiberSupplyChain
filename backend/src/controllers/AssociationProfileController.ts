@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { pool } from '../config/database';
+import { supabase } from '../config/supabase';
 import bcrypt from 'bcrypt';
 import { UserType } from '../types';
 
@@ -38,8 +38,9 @@ export class AssociationProfileController {
 
       console.log(`🔍 Fetching association profile for officer_id: ${userId}`);
 
-      const result = await pool.query(
-        `SELECT 
+      const { data: profile, error } = await supabase
+        .from('association_officers')
+        .select(`
           officer_id,
           full_name,
           email,
@@ -56,24 +57,23 @@ export class AssociationProfileController {
           is_active,
           is_verified,
           verification_status
-        FROM association_officers
-        WHERE officer_id = $1`,
-        [userId]
-      );
+        `)
+        .eq('officer_id', userId)
+        .single();
 
-      if (result.rows.length === 0) {
-        console.error(`❌ Profile not found for officer_id: ${userId}`);
+      if (error || !profile) {
+        console.error(`❌ Profile not found for officer_id: ${userId}`, error);
         return res.status(404).json({ 
           error: 'Profile not found',
           message: 'No association officer record exists for this account. Please contact support.'
         });
       }
 
-      console.log(`✅ Profile fetched successfully for: ${result.rows[0].full_name}`);
+      console.log(`✅ Profile fetched successfully for: ${profile.full_name}`);
 
       return res.status(200).json({
         success: true,
-        profile: result.rows[0]
+        profile: profile
       });
     } catch (error: any) {
       console.error('❌ Error fetching association profile:', {
@@ -106,17 +106,18 @@ export class AssociationProfileController {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      const result = await pool.query(
-        `UPDATE association_officers
-        SET 
-          full_name = $1,
-          contact_number = $2,
-          address = $3,
-          position = $4,
-          association_name = $5,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE officer_id = $6
-        RETURNING 
+      const { data: updatedProfile, error } = await supabase
+        .from('association_officers')
+        .update({
+          full_name,
+          contact_number,
+          address,
+          position,
+          association_name,
+          updated_at: new Date().toISOString()
+        })
+        .eq('officer_id', userId)
+        .select(`
           officer_id,
           full_name,
           email,
@@ -124,16 +125,13 @@ export class AssociationProfileController {
           association_name,
           contact_number,
           address,
-          profile_picture`,
-        [full_name, contact_number, address, position, association_name, userId]
-      );
+          profile_picture
+        `)
+        .single();
 
-      if (result.rows.length === 0) {
+      if (error || !updatedProfile) {
         return res.status(404).json({ error: 'Profile not found' });
       }
-
-      // Update localStorage user data
-      const updatedProfile = result.rows[0];
 
       return res.status(200).json({
         success: true,
@@ -165,23 +163,24 @@ export class AssociationProfileController {
       // Construct the file URL (adjust based on your server configuration)
       const fileUrl = `/uploads/profiles/${file.filename}`;
 
-      const result = await pool.query(
-        `UPDATE association_officers
-        SET profile_picture = $1,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE officer_id = $2
-        RETURNING profile_picture`,
-        [fileUrl, userId]
-      );
+      const { data: updatedProfile, error } = await supabase
+        .from('association_officers')
+        .update({
+          profile_picture: fileUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('officer_id', userId)
+        .select('profile_picture')
+        .single();
 
-      if (result.rows.length === 0) {
+      if (error || !updatedProfile) {
         return res.status(404).json({ error: 'Profile not found' });
       }
 
       return res.status(200).json({
         success: true,
         message: 'Profile picture uploaded successfully',
-        profile_picture_url: result.rows[0].profile_picture
+        profile_picture_url: updatedProfile.profile_picture
       });
     } catch (error) {
       console.error('Error uploading profile picture:', error);
@@ -208,23 +207,24 @@ export class AssociationProfileController {
       // Construct the file URL (adjust based on your server configuration)
       const fileUrl = `/uploads/profiles/${file.filename}`;
 
-      const result = await pool.query(
-        `UPDATE association_officers
-        SET valid_id_photo = $1,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE officer_id = $2
-        RETURNING valid_id_photo`,
-        [fileUrl, userId]
-      );
+      const { data: updatedProfile, error } = await supabase
+        .from('association_officers')
+        .update({
+          valid_id_photo: fileUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('officer_id', userId)
+        .select('valid_id_photo')
+        .single();
 
-      if (result.rows.length === 0) {
+      if (error || !updatedProfile) {
         return res.status(404).json({ error: 'Profile not found' });
       }
 
       return res.status(200).json({
         success: true,
         message: 'Valid ID photo uploaded successfully',
-        valid_id_photo_url: result.rows[0].valid_id_photo
+        valid_id_photo_url: updatedProfile.valid_id_photo
       });
     } catch (error) {
       console.error('Error uploading ID photo:', error);
@@ -255,16 +255,17 @@ export class AssociationProfileController {
       }
 
       // Get current password hash from database
-      const userResult = await pool.query(
-        'SELECT password_hash FROM association_officers WHERE officer_id = $1',
-        [userId]
-      );
+      const { data: user, error: fetchError } = await supabase
+        .from('association_officers')
+        .select('password_hash')
+        .eq('officer_id', userId)
+        .single();
 
-      if (userResult.rows.length === 0) {
+      if (fetchError || !user) {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      const currentPasswordHash = userResult.rows[0].password_hash;
+      const currentPasswordHash = user.password_hash;
 
       // Verify current password
       const isPasswordValid = await bcrypt.compare(currentPassword, currentPasswordHash);
@@ -277,13 +278,17 @@ export class AssociationProfileController {
       const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
       // Update password in database
-      await pool.query(
-        `UPDATE association_officers
-        SET password_hash = $1,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE officer_id = $2`,
-        [newPasswordHash, userId]
-      );
+      const { error: updateError } = await supabase
+        .from('association_officers')
+        .update({
+          password_hash: newPasswordHash,
+          updated_at: new Date().toISOString()
+        })
+        .eq('officer_id', userId);
+
+      if (updateError) {
+        throw updateError;
+      }
 
       return res.status(200).json({
         success: true,
