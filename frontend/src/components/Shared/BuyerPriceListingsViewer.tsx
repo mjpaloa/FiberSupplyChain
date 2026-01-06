@@ -484,8 +484,8 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                     })}
                   </div>
 
-                  {/* Contact Info */}
-                  <div className="pt-3 border-t border-gray-200 space-y-2">
+                  {/* Details Grid - 2 Column Layout */}
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="flex items-start gap-2">
                       <Phone size={14} className="text-indigo-600 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -501,27 +501,19 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                         <p className="text-xs md:text-sm text-gray-900 font-semibold">{listing.barangay}, {listing.municipality}</p>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Payment & Terms */}
-                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
                     <div>
                       <p className="text-xs text-gray-500 font-medium mb-1">Payment</p>
                       <p className="text-xs md:text-sm text-gray-900 font-semibold">{listing.payment_terms}</p>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 font-medium mb-1">Valid Until</p>
-                      <p className="text-xs md:text-sm text-gray-900 font-semibold">{new Date(listing.valid_until).toLocaleDateString()}</p>
-                    </div>
-                  </div>
 
-                  {/* Requirements */}
-                  {listing.requirements && (
-                    <div className="pt-3 border-t border-gray-200">
-                      <p className="text-xs text-gray-500 font-medium mb-1">Requirements</p>
-                      <p className="text-xs md:text-sm text-gray-700 line-clamp-2">{listing.requirements}</p>
-                    </div>
-                  )}
+                    {listing.requirements && (
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium mb-1">Requirements</p>
+                        <p className="text-xs md:text-sm text-gray-700 line-clamp-2">{listing.requirements}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );

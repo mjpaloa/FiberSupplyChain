@@ -247,10 +247,16 @@ export class AssociationSeedlingController {
       const associationId = req.user?.userId; // Get authenticated association officer
       const { limit = '50', offset = '0' } = req.query;
 
-      // Use association_seedling_distributions table (view is optional)
+      // Use association_seedling_distributions table with JOIN to get distributor name
       const { data, error } = await supabase
         .from('association_seedling_distributions')
-        .select('*')
+        .select(`
+          *,
+          organization:distributed_by (
+            officer_id,
+            full_name
+          )
+        `)
         .eq('recipient_association_id', associationId)
         .order('date_distributed', { ascending: false })
         .range(parseInt(offset as string), parseInt(offset as string) + parseInt(limit as string) - 1);
@@ -262,7 +268,13 @@ export class AssociationSeedlingController {
       if (resultError && resultError.code === 'PGRST205') {
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('association_seedling_distributions')
-          .select('*')
+          .select(`
+            *,
+            organization:distributed_by (
+              officer_id,
+              full_name
+            )
+          `)
           .eq('recipient_association_id', associationId)
           .order('date_distributed', { ascending: false })
           .range(parseInt(offset as string), parseInt(offset as string) + parseInt(limit as string) - 1);
