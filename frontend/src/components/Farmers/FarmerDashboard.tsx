@@ -653,7 +653,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const generateDealerStatusData = async () => {
+  const generateDealerStatusData = async (viewMode: 'monthly' | 'yearly' = 'monthly') => {
     try {
       const token = localStorage.getItem('accessToken');
 
