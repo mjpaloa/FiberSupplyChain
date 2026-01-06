@@ -233,43 +233,6 @@ const AssociationProfile: React.FC<AssociationProfileProps> = ({ onBack, onEditP
                 <p className="text-sm sm:text-base text-gray-900 font-semibold">{profile.position}</p>
               </div>
 
-              <div className="bg-gradient-to-br from-pink-50 to-pink-100 p-4 sm:p-5 md:p-6 rounded-xl border border-pink-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600" />
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase">Farmers</h3>
-                </div>
-                <p className="text-xl sm:text-2xl text-gray-900 font-bold">{profile.farmers_under_supervision}</p>
-                <p className="text-xs text-gray-600 mt-1">Under supervision</p>
-              </div>
-
-              {/* Term Information */}
-              <div className="bg-gradient-to-br from-teal-50 to-teal-100 p-4 sm:p-5 md:p-6 rounded-xl border border-teal-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-teal-600" />
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase">Term Start</h3>
-                </div>
-                <p className="text-sm sm:text-base text-gray-900 font-semibold">
-                  {new Date(profile.term_start_date).toLocaleDateString()}
-                </p>
-              </div>
-
-              <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 p-4 sm:p-5 md:p-6 rounded-xl border border-cyan-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-600" />
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase">Term End</h3>
-                </div>
-                <p className="text-sm sm:text-base text-gray-900 font-semibold">
-                  {new Date(profile.term_end_date).toLocaleDateString()}
-                </p>
-              </div>
-
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 sm:p-5 md:p-6 rounded-xl border border-yellow-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase">Duration</h3>
-                </div>
-                <p className="text-sm sm:text-base text-gray-900 font-semibold">{profile.term_duration}</p>
-              </div>
             </div>
 
             {/* Valid ID Photo */}
