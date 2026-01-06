@@ -91,17 +91,19 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Analytics state
-  const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly');
+  // Analytics state - separate view modes for each chart
+  const [distributionViewMode, setDistributionViewMode] = useState<'monthly' | 'yearly'>('monthly');
+  const [productionViewMode, setProductionViewMode] = useState<'monthly' | 'yearly'>('monthly');
+  const [revenueViewMode, setRevenueViewMode] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [farmHealthData, setFarmHealthData] = useState<any[]>([]);
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [harvestStats, setHarvestStats] = useState({ totalFiberKg: 0, totalRevenue: 0 });
   const [hoveredPieSegment, setHoveredPieSegment] = useState<number | null>(null);
-  const [farmStatusData] = useState([
-    { status: 'Healthy', percentage: 65, count: 13, color: { id: 'green', start: '#10b981', end: '#059669' } },
-    { status: 'Action Needed', percentage: 25, count: 5, color: { id: 'yellow', start: '#f59e0b', end: '#d97706' } },
-    { status: 'Needs Support', percentage: 10, count: 2, color: { id: 'red', start: '#ef4444', end: '#dc2626' } }
+  const [farmStatusData, setFarmStatusData] = useState([
+    { status: 'Healthy', percentage: 0, count: 0, color: { id: 'green', start: '#10b981', end: '#059669' } },
+    { status: 'Action Needed', percentage: 0, count: 0, color: { id: 'yellow', start: '#f59e0b', end: '#d97706' } },
+    { status: 'Needs Support', percentage: 0, count: 0, color: { id: 'red', start: '#ef4444', end: '#dc2626' } }
   ]);
 
   // Get user info from localStorage
@@ -206,15 +208,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
   // Generate analytics data on mount and when view mode changes
   useEffect(() => {
-    generateAnalyticsData();
-  }, [viewMode, selectedYear]);
+    if (currentPage === 'dashboard') {
+      generateAnalyticsData();
+      generateFarmStatusData();
+    }
+  }, [currentPage, distributionViewMode, productionViewMode, revenueViewMode, selectedYear]);
 
   // Also regenerate when seedlings change
   useEffect(() => {
-    if (seedlings.length > 0) {
+    if (seedlings.length > 0 && currentPage === 'dashboard') {
       generateAnalyticsData();
     }
-  }, [seedlings]);
+  }, [seedlings, currentPage]);
 
   // Filter seedlings based on search and status
   useEffect(() => {
@@ -286,13 +291,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
   const generateAnalyticsData = async () => {
     console.log('🔄 Generating analytics data...');
-    const healthData = generateFarmHealthData();
+    console.log('📦 Current seedlings count:', seedlings.length);
+    
+    const healthData = generateFarmHealthData(productionViewMode);
     setFarmHealthData(healthData);
 
     // Fetch direct stats
     await fetchHarvestStats();
 
-    const revenue = await generateRevenueData();
+    const revenue = await generateRevenueData(revenueViewMode);
     console.log('📊 Revenue data loaded:', revenue);
 
     // Calculate totals before setting state
@@ -369,7 +376,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const generateDistributionData = () => {
+  const generateDistributionData = (viewMode: 'monthly' | 'yearly' = distributionViewMode) => {
     if (viewMode === 'monthly') {
       const monthlyData = Array.from({ length: 12 }, (_, i) => ({
         month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
@@ -406,7 +413,82 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const generateFarmHealthData = () => {
+  // Fetch farm status data from monitoring records (farmer's own farms only)
+  const generateFarmStatusData = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.log('No token available for farm status');
+        return;
+      }
+
+      const response = await apiGet('https://easyabaca-api.vercel.app/api/farmers/monitoring');
+      
+      if (response.ok) {
+        const result = await response.json();
+        const records = result.records || [];
+        
+        console.log('📊 Farmer monitoring records:', records);
+
+        // Count farms by condition
+        let healthyCount = 0;
+        let actionNeededCount = 0;
+        let needsSupportCount = 0;
+
+        records.forEach((record: any) => {
+          const condition = record.farm_condition;
+          if (condition === 'Healthy') {
+            healthyCount++;
+          } else if (condition === 'Needs Support') {
+            actionNeededCount++;
+          } else if (condition === 'Damaged') {
+            needsSupportCount++;
+          }
+        });
+
+        const totalFarms = records.length;
+        
+        // Calculate percentages
+        const healthyPercentage = totalFarms > 0 ? (healthyCount / totalFarms) * 100 : 0;
+        const actionNeededPercentage = totalFarms > 0 ? (actionNeededCount / totalFarms) * 100 : 0;
+        const needsSupportPercentage = totalFarms > 0 ? (needsSupportCount / totalFarms) * 100 : 0;
+
+        setFarmStatusData([
+          { 
+            status: 'Healthy', 
+            percentage: Math.round(healthyPercentage), 
+            count: healthyCount, 
+            color: { id: 'green', start: '#10b981', end: '#059669' } 
+          },
+          { 
+            status: 'Action Needed', 
+            percentage: Math.round(actionNeededPercentage), 
+            count: actionNeededCount, 
+            color: { id: 'yellow', start: '#f59e0b', end: '#d97706' } 
+          },
+          { 
+            status: 'Needs Support', 
+            percentage: Math.round(needsSupportPercentage), 
+            count: needsSupportCount, 
+            color: { id: 'red', start: '#ef4444', end: '#dc2626' } 
+          }
+        ]);
+
+        console.log('✅ Farm status calculated:', {
+          total: totalFarms,
+          healthy: healthyCount,
+          actionNeeded: actionNeededCount,
+          needsSupport: needsSupportCount
+        });
+      } else {
+        console.error('Failed to fetch monitoring records:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching farm status:', error);
+    }
+  };
+
+  const generateFarmHealthData = (viewMode: 'monthly' | 'yearly' = productionViewMode) => {
     if (viewMode === 'monthly') {
       return Array.from({ length: 12 }, (_, i) => ({
         month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
@@ -425,7 +507,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const generateRevenueData = async () => {
+  const generateRevenueData = async (viewMode: 'monthly' | 'yearly' = revenueViewMode) => {
     try {
       const token = localStorage.getItem('accessToken');
       const userStr = localStorage.getItem('user');
@@ -1187,8 +1269,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             {/* Toggle */}
                             <div className="inline-flex bg-gray-100 rounded-lg p-1">
                               <button
-                                onClick={() => setViewMode('monthly')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'monthly'
+                                onClick={() => setDistributionViewMode('monthly')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${distributionViewMode === 'monthly'
                                   ? 'bg-white text-emerald-600 shadow-sm'
                                   : 'text-gray-600 hover:text-gray-900'
                                   }`}
@@ -1196,8 +1278,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                 Monthly
                               </button>
                               <button
-                                onClick={() => setViewMode('yearly')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'yearly'
+                                onClick={() => setDistributionViewMode('yearly')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${distributionViewMode === 'yearly'
                                   ? 'bg-white text-emerald-600 shadow-sm'
                                   : 'text-gray-600 hover:text-gray-900'
                                   }`}
@@ -1205,7 +1287,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                 Yearly
                               </button>
                             </div>
-                            {viewMode === 'monthly' && (
+                            {distributionViewMode === 'monthly' && (
                               <select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -1242,7 +1324,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                           <XAxis
-                            dataKey={viewMode === 'monthly' ? 'month' : 'year'}
+                            dataKey={distributionViewMode === 'monthly' ? 'month' : 'year'}
                             stroke="#6b7280"
                             style={{ fontSize: '13px', fontWeight: 600 }}
                             tickLine={false}
@@ -1417,8 +1499,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           </div>
                           <div className="inline-flex bg-gray-100 rounded-lg p-1">
                             <button
-                              onClick={() => setViewMode('monthly')}
-                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'monthly'
+                              onClick={() => setProductionViewMode('monthly')}
+                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${productionViewMode === 'monthly'
                                 ? 'bg-white text-orange-600 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
                                 }`}
@@ -1426,8 +1508,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               Monthly
                             </button>
                             <button
-                              onClick={() => setViewMode('yearly')}
-                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'yearly'
+                              onClick={() => setProductionViewMode('yearly')}
+                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${productionViewMode === 'yearly'
                                 ? 'bg-white text-orange-600 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
                                 }`}
@@ -1446,7 +1528,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                           <XAxis
-                            dataKey={viewMode === 'monthly' ? 'month' : 'year'}
+                            dataKey={productionViewMode === 'monthly' ? 'month' : 'year'}
                             stroke="#6b7280"
                             style={{ fontSize: '13px', fontWeight: 600 }}
                             tickLine={false}
@@ -1493,8 +1575,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <div className="flex flex-wrap items-center gap-2">
                             <div className="inline-flex bg-gray-100 rounded-lg p-1">
                               <button
-                                onClick={() => setViewMode('monthly')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'monthly'
+                                onClick={() => setRevenueViewMode('monthly')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${revenueViewMode === 'monthly'
                                   ? 'bg-white text-purple-600 shadow-sm'
                                   : 'text-gray-600 hover:text-gray-900'
                                   }`}
@@ -1502,8 +1584,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                 Monthly
                               </button>
                               <button
-                                onClick={() => setViewMode('yearly')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'yearly'
+                                onClick={() => setRevenueViewMode('yearly')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${revenueViewMode === 'yearly'
                                   ? 'bg-white text-purple-600 shadow-sm'
                                   : 'text-gray-600 hover:text-gray-900'
                                   }`}
@@ -1526,7 +1608,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                           <XAxis
-                            dataKey={viewMode === 'monthly' ? 'month' : 'year'}
+                            dataKey={revenueViewMode === 'monthly' ? 'month' : 'year'}
                             stroke="#6b7280"
                             style={{ fontSize: '13px', fontWeight: 600 }}
                             tickLine={false}
