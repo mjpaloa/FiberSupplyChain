@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import { pool } from '../config/database';
 import bcrypt from 'bcrypt';
+import { UserType } from '../types';
 
 interface AuthRequest extends Request {
   user?: {
     userId: string;
-    userType: string;
+    userType: UserType;
     email: string;
+    isSuperAdmin?: boolean;
   };
 }
 
