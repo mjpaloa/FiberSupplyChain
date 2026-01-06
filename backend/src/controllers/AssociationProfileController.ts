@@ -17,10 +17,24 @@ export class AssociationProfileController {
   async getProfile(req: AuthRequest, res: Response): Promise<Response> {
     try {
       const userId = req.user?.userId;
+      const userType = req.user?.userType;
 
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
+      // Validate authentication
+      if (!userId || !userType) {
+        console.error('❌ Profile fetch failed: Missing userId or userType in token');
+        return res.status(401).json({ error: 'Unauthorized - Invalid token' });
       }
+
+      // Validate user type
+      if (userType !== 'association_officer') {
+        console.error(`❌ Profile fetch failed: Wrong userType "${userType}" (expected "association_officer")`);
+        return res.status(403).json({ 
+          error: 'Forbidden - This endpoint is for association officers only',
+          userType: userType
+        });
+      }
+
+      console.log(`🔍 Fetching association profile for officer_id: ${userId}`);
 
       const result = await pool.query(
         `SELECT 
@@ -46,16 +60,30 @@ export class AssociationProfileController {
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Profile not found' });
+        console.error(`❌ Profile not found for officer_id: ${userId}`);
+        return res.status(404).json({ 
+          error: 'Profile not found',
+          message: 'No association officer record exists for this account. Please contact support.'
+        });
       }
+
+      console.log(`✅ Profile fetched successfully for: ${result.rows[0].full_name}`);
 
       return res.status(200).json({
         success: true,
         profile: result.rows[0]
       });
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      return res.status(500).json({ error: 'Failed to fetch profile' });
+    } catch (error: any) {
+      console.error('❌ Error fetching association profile:', {
+        message: error.message,
+        stack: error.stack,
+        userId: req.user?.userId,
+        userType: req.user?.userType
+      });
+      return res.status(500).json({ 
+        error: 'Failed to fetch profile',
+        message: 'An internal server error occurred. Please try again later.'
+      });
     }
   }
 
