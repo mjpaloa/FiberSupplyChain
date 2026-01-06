@@ -618,47 +618,41 @@ const AssociationInventory: React.FC = () => {
             </div>
 
             <div className="p-6">
-              <div className="grid grid-cols-2 gap-6 mb-6">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Variety</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1 font-medium">Variety</p>
                   <p className="font-semibold text-gray-900">{selectedDistribution.variety}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Source/Supplier</p>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1 font-medium">Source/Supplier</p>
                   <p className="font-semibold text-gray-900">{selectedDistribution.source_supplier || 'N/A'}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Date Distributed</p>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1 font-medium">Date Distributed</p>
                   <p className="font-semibold text-gray-900">
                     {new Date(selectedDistribution.date_distributed).toLocaleDateString()}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Distributed By</p>
-                  <p className="font-semibold text-gray-900">
-                    {selectedDistribution.organization?.full_name || (selectedDistribution as any).distributed_by_name || (selectedDistribution as any).distributed_by_officer?.full_name || (selectedDistribution as any).distributed_by?.full_name || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Total Received</p>
-                  <p className="font-semibold text-blue-600 text-lg">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <p className="text-xs sm:text-sm text-blue-700 mb-1 font-medium">Total Received</p>
+                  <p className="font-bold text-blue-600 text-lg sm:text-xl">
                     {selectedDistribution.quantity_distributed.toLocaleString()}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Distributed to Farmers</p>
-                  <p className="font-semibold text-purple-600 text-lg">
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <p className="text-xs sm:text-sm text-purple-700 mb-1 font-medium">Distributed to Farmers</p>
+                  <p className="font-bold text-purple-600 text-lg sm:text-xl">
                     {(selectedDistribution.distributed_to_farmers || 0).toLocaleString()}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Remaining Inventory</p>
-                  <p className="font-semibold text-emerald-600 text-lg">
+                <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
+                  <p className="text-xs sm:text-sm text-emerald-700 mb-1 font-medium">Remaining Inventory</p>
+                  <p className="font-bold text-emerald-600 text-lg sm:text-xl">
                     {(selectedDistribution.remaining_quantity ?? 0).toLocaleString()}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Status</p>
+                <div className="bg-gray-50 p-4 rounded-lg col-span-1 sm:col-span-2">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Status</p>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedDistribution.status)}`}>
                     {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
                      selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :

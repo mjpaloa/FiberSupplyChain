@@ -15,7 +15,9 @@ import {
   Activity,
   Award,
   X,
-  ZoomIn
+  ZoomIn,
+  Coins,
+  ClipboardList
 } from 'lucide-react';
 
 interface BuyerListing {
@@ -502,15 +504,21 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                       </div>
                     </div>
 
-                    <div>
-                      <p className="text-xs text-gray-500 font-medium mb-1">Payment</p>
-                      <p className="text-xs md:text-sm text-gray-900 font-semibold">{listing.payment_terms}</p>
+                    <div className="flex items-start gap-2">
+                      <Coins size={14} className="text-indigo-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-500 font-medium">Payment</p>
+                        <p className="text-xs md:text-sm text-gray-900 font-semibold">{listing.payment_terms}</p>
+                      </div>
                     </div>
 
                     {listing.requirements && (
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium mb-1">Requirements</p>
-                        <p className="text-xs md:text-sm text-gray-700 line-clamp-2">{listing.requirements}</p>
+                      <div className="flex items-start gap-2">
+                        <ClipboardList size={14} className="text-indigo-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-500 font-medium">Requirements</p>
+                          <p className="text-xs md:text-sm text-gray-700 line-clamp-2">{listing.requirements}</p>
+                        </div>
                       </div>
                     )}
                   </div>
