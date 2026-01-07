@@ -247,114 +247,117 @@ export default function FarmerHarvestView() {
     <div>
       {/* Modern Stats Cards - UserManagement Style */}
       {statistics && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-5 md:mb-6">
           {/* Total Harvests Card */}
-          <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
             <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <Package className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                  <Package className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Total</span>
               </div>
-              <p className="text-white/90 text-sm font-medium mb-1">Total Harvests</p>
-              <p className="text-4xl font-bold text-white">{statistics.total_harvests}</p>
+              <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Total Harvests</p>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{statistics.total_harvests}</p>
             </div>
           </div>
 
           {/* Total Fiber Card */}
-          <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
             <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <TrendingUp className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">KG</span>
               </div>
-              <p className="text-white/90 text-sm font-medium mb-1">Total Fiber</p>
-              <p className="text-4xl font-bold text-white">{statistics.total_fiber_kg?.toFixed(2)}</p>
+              <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Total Fiber</p>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{statistics.total_fiber_kg?.toFixed(2)}</p>
             </div>
           </div>
 
           {/* Pending Card */}
-          <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
             <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <Calendar className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Pending</span>
               </div>
-              <p className="text-white/90 text-sm font-medium mb-1">Awaiting Verification</p>
-              <p className="text-4xl font-bold text-white">{statistics.pending}</p>
+              <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Awaiting Verification</p>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{statistics.pending}</p>
             </div>
           </div>
 
           {/* Verified Card */}
-          <div className="group relative bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="group relative bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
             <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <Award className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                  <Award className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Verified</span>
               </div>
-              <p className="text-white/90 text-sm font-medium mb-1">Verified Harvests</p>
-              <p className="text-4xl font-bold text-white">{statistics.verified}</p>
+              <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Verified Harvests</p>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{statistics.verified}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Modern Filters with Glassmorphism - UserManagement Style */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-white/20 p-3 sm:p-4 md:p-6 mb-4 sm:mb-5 md:mb-6">
+        <div className="flex flex-col gap-3 sm:gap-4">
           {/* Search */}
           <div className="flex-1">
             <div className="relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
+              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 group-focus-within:text-emerald-500 transition-colors" />
               <input
                 type="text"
-                placeholder="Search by variety, grade, location, or status..."
+                placeholder="Search by variety, grade..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
               />
             </div>
           </div>
 
-          {/* Status Filter */}
-          <div className="w-full md:w-56">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer font-medium"
-            >
-              <option value="all">All Status</option>
-              <option value="Pending Verification">⏳ Pending Verification</option>
-              <option value="Verified">✓ Verified</option>
-              <option value="Rejected">✗ Rejected</option>
-              <option value="In Inventory">📦 In Inventory</option>
-            </select>
-          </div>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            {/* Status Filter */}
+            <div className="flex-1 sm:w-auto">
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer font-medium"
+              >
+                <option value="all">All Status</option>
+                <option value="Pending Verification">⏳ Pending Verification</option>
+                <option value="Verified">✓ Verified</option>
+                <option value="Rejected">✗ Rejected</option>
+                <option value="In Inventory">📦 In Inventory</option>
+              </select>
+            </div>
 
-          {/* Submit Button */}
-          <button
-            onClick={() => setShowSubmitForm(true)}
-            className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 font-semibold flex items-center justify-center gap-2 whitespace-nowrap"
-          >
-            <Package className="w-5 h-5" />
-            Submit New Harvest
-          </button>
+            {/* Submit Button */}
+            <button
+              onClick={() => setShowSubmitForm(true)}
+              className="px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg sm:rounded-xl hover:shadow-lg transition-all duration-200 font-semibold flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Submit New Harvest</span>
+              <span className="sm:hidden">Submit Harvest</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Enhanced Table - UserManagement Style */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+      <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl overflow-hidden border border-gray-100">
         {loading ? (
           <div className="p-12 text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
@@ -376,37 +379,37 @@ export default function FarmerHarvestView() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full">
+            <table className="min-w-[900px]">
               <thead>
                 <tr className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border-b-2 border-emerald-100">
-                  <th className="px-6 py-4 text-left">
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left">
                     <div className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <Calendar className="w-4 h-4" />
                       Date
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left">
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left">
                     <div className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <MapPin className="w-4 h-4" />
                       Location
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left">
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left">
                     <div className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <Sprout className="w-4 h-4" />
                       Variety
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Area (ha)</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Fiber (kg)</th>
-                  <th className="px-6 py-4 text-left">
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Area (ha)</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Fiber (kg)</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left">
                     <div className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <Award className="w-4 h-4" />
                       Grade
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -417,56 +420,56 @@ export default function FarmerHarvestView() {
                       index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                     }`}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 bg-emerald-100 rounded-lg">
-                          <Calendar className="w-4 h-4 text-emerald-600" />
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="p-1.5 sm:p-2 bg-emerald-100 rounded-lg">
+                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" />
                         </div>
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-xs sm:text-sm font-semibold text-gray-900">
                           {new Date(harvest.harvest_date).toLocaleDateString()}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-gray-400" />
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{harvest.municipality}</div>
+                          <div className="text-xs sm:text-sm font-medium text-gray-900">{harvest.municipality}</div>
                           <div className="text-xs text-gray-500">{harvest.barangay}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 bg-teal-100 rounded-lg">
-                          <Sprout className="w-4 h-4 text-teal-600" />
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="p-1.5 sm:p-2 bg-teal-100 rounded-lg">
+                          <Sprout className="w-3 h-3 sm:w-4 sm:h-4 text-teal-600" />
                         </div>
-                        <span className="text-sm font-semibold text-gray-900">{harvest.abaca_variety}</span>
+                        <span className="text-xs sm:text-sm font-semibold text-gray-900">{harvest.abaca_variety}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-semibold text-gray-900">{harvest.area_hectares} ha</span>
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <span className="text-xs sm:text-sm font-semibold text-gray-900">{harvest.area_hectares} ha</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <div className="flex items-center gap-1">
-                        <TrendingUp className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm font-bold text-blue-600">{harvest.dry_fiber_output_kg?.toFixed(2) || 'N/A'} kg</span>
+                        <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
+                        <span className="text-xs sm:text-sm font-bold text-blue-600">{harvest.dry_fiber_output_kg?.toFixed(2) || 'N/A'} kg</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Award className="w-4 h-4 text-amber-500" />
-                        <span className="text-sm font-semibold text-gray-900">{harvest.fiber_grade || 'N/A'}</span>
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Award className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500" />
+                        <span className="text-xs sm:text-sm font-semibold text-gray-900">{harvest.fiber_grade || 'N/A'}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
                       {getStatusBadge(harvest.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
                         <button
                           onClick={() => handleViewDetails(harvest)}
-                          className="p-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
+                          className="p-1.5 sm:p-2 bg-blue-100 text-blue-600 rounded-lg sm:rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
@@ -475,14 +478,14 @@ export default function FarmerHarvestView() {
                           <>
                             <button
                               onClick={() => handleEditClick(harvest)}
-                              className="p-2 bg-amber-100 text-amber-600 rounded-xl hover:bg-amber-200 hover:shadow-md transition-all duration-200"
+                              className="p-1.5 sm:p-2 bg-amber-100 text-amber-600 rounded-lg sm:rounded-xl hover:bg-amber-200 hover:shadow-md transition-all duration-200"
                               title="Edit Harvest"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteClick(harvest)}
-                              className="p-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
+                              className="p-1.5 sm:p-2 bg-red-100 text-red-600 rounded-lg sm:rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
                               title="Delete Harvest"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -492,7 +495,7 @@ export default function FarmerHarvestView() {
                         {harvest.status === 'Verified' && (
                           <button
                             onClick={() => handleAddToInventory(harvest)}
-                            className="p-2 bg-indigo-100 text-indigo-600 rounded-xl hover:bg-indigo-200 hover:shadow-md transition-all duration-200"
+                            className="p-1.5 sm:p-2 bg-indigo-100 text-indigo-600 rounded-lg sm:rounded-xl hover:bg-indigo-200 hover:shadow-md transition-all duration-200"
                             title="Add to CUSAFA Inventory"
                           >
                             <Package className="w-4 h-4" />
