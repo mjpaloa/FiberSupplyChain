@@ -23,7 +23,8 @@ import {
   Filter,
   Truck,
   DollarSign,
-  Activity
+  Activity,
+  Lock
 } from 'lucide-react';
 import {
   LineChart,
@@ -44,6 +45,9 @@ import FarmerHarvestView from './FarmerHarvestView';
 import SalesReportForm from './SalesReportForm';
 import SalesReportsList from './SalesReportsList';
 import FarmerDeliveryTracking from './FarmerDeliveryTracking';
+import FarmerProfile from './FarmerProfile';
+import EditFarmerProfile from './EditFarmerProfile';
+import FarmerChangePassword from './FarmerChangePassword';
 
 interface FarmerDashboardProps {
   onLogout: () => void;
@@ -92,6 +96,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Profile navigation states
+  const [showProfile, setShowProfile] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
   // Analytics state - separate view modes for each chart
   const [distributionViewMode, setDistributionViewMode] = useState<'monthly' | 'yearly'>('monthly');
@@ -949,7 +959,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 md:block hidden flex-shrink-0"
+            className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 md:block hidden flex-shrink-0 z-50 relative"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -1040,6 +1050,23 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             `}>Sales Reports</span>
           </button>
 
+          <button
+            onClick={() => {
+              setCurrentPage('profile');
+              setShowProfile(false);
+              setShowEditProfile(false);
+              setShowChangePassword(false);
+            }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'profile' ? 'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg' : 'hover:bg-slate-700'
+              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
+          >
+            <User className="w-5 h-5 flex-shrink-0" />
+            <span className={`
+              whitespace-nowrap transition-all duration-300 ease-in-out
+              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
+            `}>My Profile</span>
+          </button>
+
         </nav>
 
         {/* Logout */}
@@ -1079,7 +1106,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       currentPage === 'monitoring' ? 'Farm Monitoring' :
                         currentPage === 'sales-report' ? (showSalesForm ? 'Submit Sales Report' : 'Sales Reports') :
                           currentPage === 'track-deliveries' ? 'Track My Deliveries' :
-                            'My Profile'}
+                            currentPage === 'profile' ? 'My Profile' :
+                              'Farmer Dashboard'}
               </h2>
               <p className="text-xs md:text-sm text-gray-600 hidden sm:block">Welcome back, {user?.fullName || 'Farmer'}!</p>
             </div>
@@ -1088,9 +1116,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
               <div className="relative">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition relative hidden sm:block"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition relative"
                 >
-                  <Bell className="w-5 h-5 md:w-6 md:h-6 text-gray-600" />
+                  <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
                   {unreadCount > 0 && (
                     <>
                       <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -1103,9 +1131,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
                 {/* Notification Dropdown */}
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-96 overflow-hidden">
+                  <div className="fixed sm:absolute right-0 sm:right-0 left-0 sm:left-auto top-16 sm:top-auto sm:mt-2 w-full sm:w-80 md:w-96 sm:max-w-[calc(100vw-2rem)] bg-white rounded-none sm:rounded-xl shadow-2xl border-t sm:border border-gray-200 z-50 max-h-[calc(100vh-4rem)] sm:max-h-96 overflow-hidden">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 flex items-center justify-between">
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-2 sm:px-4 py-3 flex items-center justify-between">
                       <h3 className="text-white font-bold text-sm">Notifications</h3>
                       <button
                         onClick={() => setShowNotifications(false)}
@@ -1116,7 +1144,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     </div>
 
                     {/* Notifications List */}
-                    <div className="overflow-y-auto max-h-80">
+                    <div className="overflow-y-auto max-h-80 p-2 sm:p-0">
                       {notifications.length === 0 ? (
                         <div className="text-center py-8 px-4">
                           <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -1178,17 +1206,28 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   <p className="text-sm font-medium text-gray-800">{user?.fullName || 'Farmer'}</p>
                   <p className="text-xs text-gray-500">{user?.associationName || 'Independent Farmer'}</p>
                 </div>
-                {profilePhoto ? (
-                  <img
-                    src={profilePhoto}
-                    alt="Profile"
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-green-500 shadow-lg"
-                  />
-                ) : (
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base">
-                    {user?.fullName?.charAt(0) || 'F'}
-                  </div>
-                )}
+                <button
+                  onClick={() => {
+                    setCurrentPage('profile');
+                    setShowProfile(false);
+                    setShowEditProfile(false);
+                    setShowChangePassword(false);
+                  }}
+                  className="hover:opacity-80 transition-opacity cursor-pointer"
+                  title="View Profile"
+                >
+                  {profilePhoto ? (
+                    <img
+                      src={profilePhoto}
+                      alt="Profile"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-green-500 shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base">
+                      {user?.fullName?.charAt(0) || 'F'}
+                    </div>
+                  )}
+                </button>
               </div>
             </div>
           </div>
@@ -2209,281 +2248,16 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           )}
 
           {currentPage === 'profile' && (
-            <div className="bg-white rounded-xl shadow-lg">
-              {/* Profile Header */}
-              <div className="p-6 bg-gradient-to-r from-green-800 via-green-700 to-green-800 flex items-center justify-between rounded-t-xl">
-                <div className="flex items-center gap-4">
-                  <User className="w-6 h-6 text-white" />
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">{isEditMode ? 'Edit Profile' : 'My Profile'}</h2>
-                    <p className="text-green-100 text-sm">{isEditMode ? 'Update your information' : 'View your details'}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsEditMode(!isEditMode)}
-                  className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-all flex items-center gap-2 text-white font-medium border border-white/30"
-                >
-                  {isEditMode ? (
-                    <>
-                      <Eye className="w-4 h-4" />
-                      View Mode
-                    </>
-                  ) : (
-                    <>
-                      <Settings className="w-4 h-4" />
-                      Edit Mode
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {loadingProfile ? (
-                <div className="p-12 text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Loading profile...</p>
-                </div>
-              ) : (
-                <div className="p-6">
-                  {/* Profile Photo Section */}
-                  <div className="bg-gradient-to-br from-green-50 via-gray-50 to-green-50 rounded-2xl p-8 mb-6 relative overflow-hidden border-2 border-gray-200">
-                    <div className="flex items-center gap-6">
-                      <div className="relative group">
-                        {profilePhoto ? (
-                          <img
-                            src={profilePhoto}
-                            alt="Profile"
-                            className="w-28 h-28 rounded-full object-cover border-4 border-green-500 shadow-xl"
-                          />
-                        ) : (
-                          <div className="w-28 h-28 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-4xl font-bold border-4 border-white shadow-xl text-white">
-                            {farmerData?.full_name?.charAt(0) || 'F'}
-                          </div>
-                        )}
-                        {isEditMode && (
-                          <label className="absolute bottom-0 right-0 p-2.5 bg-green-600 rounded-full shadow-lg hover:bg-green-700 transition cursor-pointer group-hover:scale-110">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleProfilePhotoUpload}
-                              className="hidden"
-                              disabled={uploadingPhoto}
-                            />
-                            {uploadingPhoto ? (
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <Camera className="w-4 h-4 text-white" />
-                            )}
-                          </label>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="text-3xl font-bold text-gray-800">{farmerData?.full_name || user?.fullName}</h3>
-                        <p className="text-gray-600 font-semibold text-lg mt-1">{farmerData?.association_name || 'Independent Farmer'}</p>
-                        <p className="text-green-600 font-medium mt-2">{farmerData?.email}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Profile Information Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Personal Information */}
-                    <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all">
-                      <h4 className="font-bold text-gray-800 mb-5 flex items-center gap-3 pb-3 border-b-2 border-gray-100">
-                        <div className="p-2.5 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md">
-                          <User className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-lg">Personal Information</span>
-                      </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Full Name</label>
-                          {isEditMode ? (
-                            <input
-                              type="text"
-                              value={editFormData?.full_name || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
-                              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
-                            />
-                          ) : (
-                            <p className="font-semibold text-gray-800 px-4 py-3 bg-gray-50 rounded-xl">{farmerData?.full_name || 'Not provided'}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Sex</label>
-                          {isEditMode ? (
-                            <select
-                              value={editFormData?.sex || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, sex: e.target.value })}
-                              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
-                            >
-                              <option value="">Select</option>
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
-                            </select>
-                          ) : (
-                            <p className="font-semibold text-gray-800 px-4 py-3 bg-gray-50 rounded-xl">{farmerData?.sex || 'Not provided'}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Age</label>
-                          {isEditMode ? (
-                            <input
-                              type="number"
-                              value={editFormData?.age || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })}
-                              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
-                            />
-                          ) : (
-                            <p className="font-semibold text-gray-800 px-4 py-3 bg-gray-50 rounded-xl">{farmerData?.age || 'Not provided'}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Contact Information */}
-                    <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all">
-                      <h4 className="font-bold text-gray-800 mb-5 flex items-center gap-3 pb-3 border-b-2 border-gray-100">
-                        <div className="p-2.5 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md">
-                          <Mail className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-lg">Contact Information</span>
-                      </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Email</label>
-                          <p className="font-semibold text-gray-800 px-4 py-3 bg-gray-50 rounded-xl">{farmerData?.email || 'Not provided'}</p>
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Contact Number</label>
-                          {isEditMode ? (
-                            <input
-                              type="tel"
-                              value={editFormData?.contact_number || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, contact_number: e.target.value })}
-                              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
-                              placeholder="09171234567"
-                            />
-                          ) : (
-                            <p className="font-semibold text-gray-800 px-4 py-3 bg-gray-50 rounded-xl">{farmerData?.contact_number || 'Not provided'}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Address</label>
-                          {isEditMode ? (
-                            <textarea
-                              value={editFormData?.address || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
-                              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800 resize-none"
-                              rows={2}
-                              placeholder="Complete address"
-                            />
-                          ) : (
-                            <p className="font-semibold text-gray-800 px-4 py-3 bg-gray-50 rounded-xl">{farmerData?.address || 'Not provided'}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Location Information */}
-                    <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all">
-                      <h4 className="font-bold text-gray-800 mb-5 flex items-center gap-3 pb-3 border-b-2 border-gray-100">
-                        <div className="p-2.5 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md">
-                          <MapPin className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-lg">Location</span>
-                      </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Barangay</label>
-                          {isEditMode ? (
-                            <input
-                              type="text"
-                              value={editFormData?.barangay || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, barangay: e.target.value })}
-                              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
-                            />
-                          ) : (
-                            <p className="font-semibold text-gray-800 px-4 py-3 bg-gray-50 rounded-xl">{farmerData?.barangay || 'Not provided'}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Municipality</label>
-                          {isEditMode ? (
-                            <input
-                              type="text"
-                              value={editFormData?.municipality || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, municipality: e.target.value })}
-                              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
-                            />
-                          ) : (
-                            <p className="font-semibold text-gray-800 px-4 py-3 bg-gray-50 rounded-xl">{farmerData?.municipality || 'Not provided'}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Association Information */}
-                    <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all">
-                      <h4 className="font-bold text-gray-800 mb-5 flex items-center gap-3 pb-3 border-b-2 border-gray-100">
-                        <div className="p-2.5 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md">
-                          <UsersIcon className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-lg">Association</span>
-                      </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Association Name</label>
-                          {isEditMode ? (
-                            <input
-                              type="text"
-                              value={editFormData?.association_name || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, association_name: e.target.value })}
-                              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium text-gray-800"
-                            />
-                          ) : (
-                            <p className="font-semibold text-gray-800 px-4 py-3 bg-gray-50 rounded-xl">{farmerData?.association_name || 'Not provided'}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="mt-6 flex justify-end items-center gap-3">
-                    {isEditMode && (
-                      <>
-                        <button
-                          onClick={() => {
-                            setEditFormData(farmerData);
-                            setIsEditMode(false);
-                          }}
-                          className="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleSaveFarmerProfile}
-                          disabled={savingProfile}
-                          className="px-8 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                          {savingProfile ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              Saving...
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="w-5 h-5" />
-                              Save Changes
-                            </>
-                          )}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            showChangePassword ? (
+              <FarmerChangePassword onBack={() => setShowChangePassword(false)} />
+            ) : showEditProfile ? (
+              <EditFarmerProfile onBack={() => setShowEditProfile(false)} />
+            ) : (
+              <FarmerProfile 
+                onBack={() => setCurrentPage('dashboard')}
+                onEditProfile={() => setShowEditProfile(true)}
+              />
+            )
           )}
         </div>
         {/* End content wrapper */}
