@@ -1216,94 +1216,94 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                 return (
                   <>
                     {/* Analytics Dashboard Header */}
-                    <div className="mb-8">
-                      <h1 className="text-3xl font-bold text-gray-900 mb-2">Abaca Farm Analytics Dashboard</h1>
-                      <p className="text-gray-600">Comprehensive insights into your farm performance and productivity</p>
+                    <div className="mb-6 sm:mb-8">
+                      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Abaca Farm Analytics Dashboard</h1>
+                      <p className="text-sm sm:text-base text-gray-600">Comprehensive insights into your farm performance and productivity</p>
                     </div>
 
                     {/* 1. KPI Cards Section */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                       {/* Seedlings Received */}
-                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-5">
-                          <div className="p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <Package className="w-7 h-7 text-emerald-600" />
+                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
+                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <Package className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-emerald-600" />
                           </div>
                         </div>
-                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Seedlings Received</p>
-                        <h3 className="text-4xl font-bold text-gray-900 mb-2">{totalDistributed.toLocaleString()}</h3>
-                        <p className="text-sm text-gray-600">Total distributed to you</p>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Seedlings Received</p>
+                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{totalDistributed.toLocaleString()}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600">Total distributed to you</p>
                       </div>
 
                       {/* Seedlings Planted */}
-                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-5">
-                          <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <Leaf className="w-7 h-7 text-blue-600" />
+                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
+                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <Leaf className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-blue-600" />
                           </div>
                         </div>
-                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Seedlings Planted</p>
-                        <h3 className="text-4xl font-bold text-gray-900 mb-2">{totalPlanted.toLocaleString()}</h3>
-                        <p className="text-sm text-gray-600">Total seedlings planted</p>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Seedlings Planted</p>
+                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{totalPlanted.toLocaleString()}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600">Total seedlings planted</p>
                       </div>
 
                       {/* Fiber Harvested */}
-                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-5">
-                          <div className="p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <Activity className="w-7 h-7 text-orange-600" />
+                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
+                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <Activity className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-orange-600" />
                           </div>
                         </div>
-                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Fiber Harvested</p>
-                        <h3 className="text-4xl font-bold text-gray-900 mb-2">{totalFiberKg.toLocaleString()} <span className="text-2xl">kg</span></h3>
-                        <p className="text-sm text-gray-600">Total fiber production</p>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Fiber Harvested</p>
+                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{totalFiberKg.toLocaleString()} <span className="text-base sm:text-lg md:text-2xl">kg</span></h3>
+                        <p className="text-xs sm:text-sm text-gray-600">Total fiber production</p>
                       </div>
 
                       {/* Total Revenue */}
-                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-5">
-                          <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <span className="text-3xl font-bold text-purple-600">₱</span>
+                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
+                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <span className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-600">₱</span>
                           </div>
                         </div>
-                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Total Revenue</p>
-                        <h3 className="text-4xl font-bold text-gray-900 mb-2">₱{totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'K' : totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
-                        <p className="text-sm text-gray-600">Total earnings from sales</p>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Total Revenue</p>
+                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">₱{totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'K' : totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600">Total earnings from sales</p>
                       </div>
 
                       {/* Farm Status */}
-                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-5">
-                          <div className="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <CheckCircle className="w-7 h-7 text-green-600" />
+                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
+                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-green-600" />
                           </div>
                         </div>
-                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Farm Status</p>
-                        <h3 className="text-4xl font-bold text-green-600 mb-2">Healthy</h3>
-                        <p className="text-sm text-gray-600">Latest monitoring result</p>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Farm Status</p>
+                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-600 mb-1 sm:mb-2">Healthy</h3>
+                        <p className="text-xs sm:text-sm text-gray-600">Latest monitoring result</p>
                       </div>
 
                       {/* Delivery Status */}
-                      <div className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-5">
-                          <div className="p-3 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <Truck className="w-7 h-7 text-cyan-600" />
+                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
+                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
+                            <Truck className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-cyan-600" />
                           </div>
                         </div>
-                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Delivery Status</p>
-                        <h3 className="text-4xl font-bold text-cyan-600 mb-2">Active</h3>
-                        <p className="text-sm text-gray-600">Ongoing deliveries</p>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Delivery Status</p>
+                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-cyan-600 mb-1 sm:mb-2">Active</h3>
+                        <p className="text-xs sm:text-sm text-gray-600">Ongoing deliveries</p>
                       </div>
                     </div>
 
                     {/* Charts Section - 2x2 Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
                       {/* 2. Seedling Distribution Trends */}
-                      <div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-100">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+                      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-5 md:mb-6 gap-3">
                           <div>
-                            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1">Seedling Distribution Trends</h2>
-                            <p className="text-xs md:text-sm text-gray-600">Distributed vs planted seedlings</p>
+                            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Seedling Distribution Trends</h2>
+                            <p className="text-xs sm:text-sm text-gray-600">Distributed vs planted seedlings</p>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
                             {/* Toggle */}
@@ -1340,18 +1340,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 text-xs mb-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                            <span className="text-gray-700 font-medium">Distributed</span>
+                        <div className="flex items-center gap-2 sm:gap-3 text-xs mb-3 sm:mb-4">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500"></div>
+                            <span className="text-gray-700 font-medium text-xs sm:text-sm">Distributed</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                            <span className="text-gray-700 font-medium">Planted</span>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-500"></div>
+                            <span className="text-gray-700 font-medium text-xs sm:text-sm">Planted</span>
                           </div>
                         </div>
                         <div className={distributionViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
-                          <ResponsiveContainer width={distributionViewMode === 'yearly' ? distributionData.length * 120 : '100%'} height={300}>
+                          <ResponsiveContainer width={distributionViewMode === 'yearly' ? distributionData.length * 120 : '100%'} height={window.innerWidth < 640 ? 250 : 300}>
                           {distributionViewMode === 'monthly' ? (
                             <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35}>
                           <defs>
@@ -1436,15 +1436,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       </div>
 
                       {/* Farm Status Donut Chart */}
-                      <div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-100">
-                        <div className="mb-6">
-                          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1">Farm Status Distribution</h2>
-                          <p className="text-xs md:text-sm text-gray-600">Health status of your farms</p>
+                      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
+                        <div className="mb-4 sm:mb-5 md:mb-6">
+                          <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Farm Status Distribution</h2>
+                          <p className="text-xs sm:text-sm text-gray-600">Health status of your farms</p>
                         </div>
                         
                         {/* Donut Chart */}
-                        <div className="relative w-full h-64 flex items-center justify-center mb-6">
-                          <svg viewBox="0 0 240 240" className="w-56 h-56 drop-shadow-xl">
+                        <div className="relative w-full h-48 sm:h-56 md:h-64 flex items-center justify-center mb-4 sm:mb-5 md:mb-6">
+                          <svg viewBox="0 0 240 240" className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 drop-shadow-xl">
                             <defs>
                               {farmStatusData.map((item) => (
                                 <linearGradient key={item.color.id} id={item.color.id} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1606,11 +1606,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       </div>
 
                       {/* 3. Abaca Fiber Production Over Time */}
-                      <div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-100">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+                      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-5 md:mb-6 gap-3">
                           <div>
-                            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1">Abaca Fiber Production</h2>
-                            <p className="text-xs md:text-sm text-gray-600">Fiber harvest trends</p>
+                            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Abaca Fiber Production</h2>
+                            <p className="text-xs sm:text-sm text-gray-600">Fiber harvest trends</p>
                           </div>
                           <div className="inline-flex bg-gray-100 rounded-lg p-1">
                             <button
@@ -1634,12 +1634,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           </div>
                         </div>
                         {loadingCharts ? (
-                          <div className="flex items-center justify-center h-64">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+                          <div className="flex items-center justify-center h-48 sm:h-56 md:h-64">
+                            <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-orange-600"></div>
                           </div>
                         ) : (
                         <div className={productionViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
-                          <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : '100%'} height={300}>
+                          <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : '100%'} height={window.innerWidth < 640 ? 250 : 300}>
                           {productionViewMode === 'monthly' ? (
                             <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                               <defs>
@@ -1727,11 +1727,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       </div>
 
                       {/* 4. Sales & Revenue Analytics */}
-                      <div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-100">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+                      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-5 md:mb-6 gap-3">
                           <div>
-                            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1">Sales & Revenue</h2>
-                            <p className="text-xs md:text-sm text-gray-600">Revenue performance</p>
+                            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Sales & Revenue</h2>
+                            <p className="text-xs sm:text-sm text-gray-600">Revenue performance</p>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
                             <div className="inline-flex bg-gray-100 rounded-lg p-1">
@@ -1760,12 +1760,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           </div>
                         </div>
                         {loadingCharts ? (
-                          <div className="flex items-center justify-center h-64">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                          <div className="flex items-center justify-center h-48 sm:h-56 md:h-64">
+                            <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-purple-600"></div>
                           </div>
                         ) : (
                         <div className={revenueViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
-                          <ResponsiveContainer width={revenueViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : '100%'} height={300}>
+                          <ResponsiveContainer width={revenueViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : '100%'} height={window.innerWidth < 640 ? 250 : 300}>
                           {revenueViewMode === 'monthly' ? (
                             <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                               <defs>
