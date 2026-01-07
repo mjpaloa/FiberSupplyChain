@@ -345,61 +345,62 @@ const FiberDeliveryManager: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-4 md:p-6">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex justify-between items-start mb-4">
+      <div className="mb-4 sm:mb-5 md:mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Fiber Deliveries</h1>
-            <p className="text-gray-600">Monitor your fiber deliveries managed by CUSAFA</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">My Fiber Deliveries</h1>
+            <p className="text-sm sm:text-base text-gray-600">Monitor your fiber deliveries managed by CUSAFA</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold flex items-center gap-2"
+            className="w-full sm:w-auto px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg sm:rounded-xl hover:shadow-lg transition-all font-semibold flex items-center justify-center gap-2"
           >
-            <Package size={20} />
-            Create Delivery
+            <Package size={18} />
+            <span className="hidden sm:inline">Create Delivery</span>
+            <span className="sm:hidden">Create</span>
           </button>
         </div>
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
+        <div className="p-2.5 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-xs sm:text-sm text-blue-800">
             <strong>Note:</strong> CUSAFA handles all delivery logistics and status updates. You can monitor your deliveries here.
           </p>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500">
-          <p className="text-sm text-gray-600 mb-1">Total Deliveries</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-5 md:mb-6">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 border-l-4 border-blue-500">
+          <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Deliveries</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-purple-500">
-          <p className="text-sm text-gray-600 mb-1">In Transit</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.in_transit}</p>
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 border-l-4 border-purple-500">
+          <p className="text-xs sm:text-sm text-gray-600 mb-1">In Transit</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.in_transit}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500">
-          <p className="text-sm text-gray-600 mb-1">Delivered</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.delivered}</p>
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 border-l-4 border-blue-500">
+          <p className="text-xs sm:text-sm text-gray-600 mb-1">Delivered</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.delivered}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500">
-          <p className="text-sm text-gray-600 mb-1">Completed</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 border-l-4 border-green-500">
+          <p className="text-xs sm:text-sm text-gray-600 mb-1">Completed</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.completed}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-emerald-500">
-          <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-          <p className="text-2xl font-bold text-emerald-600">₱{stats.total_revenue.toFixed(2)}</p>
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 border-l-4 border-emerald-500">
+          <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Revenue</p>
+          <p className="text-xl sm:text-2xl font-bold text-emerald-600">₱{stats.total_revenue.toFixed(2)}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-        <div className="flex gap-2 flex-wrap">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 mb-4 sm:mb-5 md:mb-6">
+        <div className="flex gap-1.5 sm:gap-2 flex-wrap">
           {['all', 'In Transit', 'Delivered', 'Completed', 'Cancelled'].map(status => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg font-medium transition-colors ${
                 statusFilter === status
                   ? 'bg-emerald-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -412,63 +413,63 @@ const FiberDeliveryManager: React.FC = () => {
       </div>
 
       {/* Deliveries List */}
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4">
         {deliveries.map(delivery => (
-          <div key={delivery.delivery_id} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-emerald-100 rounded-xl">
-                  <Truck className="text-emerald-600" size={24} />
+          <div key={delivery.delivery_id} className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-5 md:p-6 hover:shadow-md transition-shadow">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3 sm:mb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 sm:p-2.5 md:p-3 bg-emerald-100 rounded-lg sm:rounded-xl">
+                  <Truck className="text-emerald-600" size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">{delivery.buyers?.business_name}</h3>
-                  <p className="text-sm text-gray-600">{delivery.variety} - {delivery.grade}</p>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">{delivery.buyers?.business_name}</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">{delivery.variety} - {delivery.grade}</p>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(delivery.status)}`}>
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+                <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(delivery.status)}`}>
                   {delivery.status}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(delivery.payment_status)}`}>
+                <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(delivery.payment_status)}`}>
                   {delivery.payment_status}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="text-gray-400" size={16} />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-3 sm:mb-4">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                <Calendar className="text-gray-400" size={14} />
                 <span className="text-gray-700">{new Date(delivery.delivery_date).toLocaleDateString()}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Package className="text-gray-400" size={16} />
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                <Package className="text-gray-400" size={14} />
                 <span className="text-gray-700">{delivery.quantity_kg} kg</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <DollarSign className="text-gray-400" size={16} />
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                <DollarSign className="text-gray-400" size={14} />
                 <span className="text-gray-700">₱{delivery.price_per_kg}/kg</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <TrendingUp className="text-gray-400" size={16} />
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                <TrendingUp className="text-gray-400" size={14} />
                 <span className="font-bold text-emerald-600">₱{delivery.total_amount.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <MapPin size={16} />
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 sm:pt-4 border-t">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                <MapPin size={14} />
                 <span>{delivery.delivery_method}</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                 {/* View Button - Always visible */}
                 <button
                   onClick={() => {
                     setSelectedDelivery(delivery);
                     setShowDetailsModal(true);
                   }}
-                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5 sm:gap-2"
                 >
-                  <Eye size={16} />
+                  <Eye size={14} />
                   View
                 </button>
 
@@ -476,9 +477,9 @@ const FiberDeliveryManager: React.FC = () => {
                 {delivery.status === 'In Transit' && (
                   <button
                     onClick={() => handleEdit(delivery)}
-                    className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
+                    className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-1.5 sm:gap-2"
                   >
-                    <Edit size={16} />
+                    <Edit size={14} />
                     Edit
                   </button>
                 )}
@@ -490,23 +491,23 @@ const FiberDeliveryManager: React.FC = () => {
                       setSelectedDelivery(delivery);
                       setShowCancelModal(true);
                     }}
-                    className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-2"
+                    className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-1.5 sm:gap-2"
                   >
-                    <XCircle size={16} />
+                    <XCircle size={14} />
                     Cancel
                   </button>
                 )}
 
-                {/* Delete Button - Only for In Transit */}
-                {delivery.status === 'In Transit' && (
+                {/* Delete Button - Only for Cancelled */}
+                {delivery.status === 'Cancelled' && (
                   <button
                     onClick={() => {
                       setSelectedDelivery(delivery);
                       setShowDeleteModal(true);
                     }}
-                    className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-2"
+                    className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-1.5 sm:gap-2"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                     Delete
                   </button>
                 )}
