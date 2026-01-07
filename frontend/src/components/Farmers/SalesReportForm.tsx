@@ -200,16 +200,16 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 bg-white rounded-xl shadow-sm">
-      <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-1">Monthly Sales Report</h2>
-        <p className="text-sm text-gray-600">Submit your abaca fiber sales data to MAO</p>
+    <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 bg-white rounded-lg sm:rounded-xl shadow-sm">
+      <div className="mb-3 sm:mb-4">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-1">Monthly Sales Report</h2>
+        <p className="text-xs sm:text-sm text-gray-600">Submit your abaca fiber sales data to MAO</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         {/* Report Period */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-2.5 sm:p-3 rounded-lg border border-blue-200">
+          <div className="grid grid-cols-1 gap-2 sm:gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
                 Report Month *
@@ -218,7 +218,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
                 type="month"
                 value={reportData.reportMonth}
                 onChange={(e) => setReportData({ ...reportData, reportMonth: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
@@ -226,25 +226,25 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
         </div>
 
         {/* 1. Basic Transaction Info */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-          <div className="flex items-center mb-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-2">
-              <FileText className="w-4 h-4 text-white" />
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-2.5 sm:p-3 md:p-4 rounded-lg border border-blue-200">
+          <div className="flex items-center mb-2 sm:mb-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 rounded-full flex items-center justify-center mr-2">
+              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-800">Transaction Info</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-800">Transaction Info</h3>
               <p className="text-xs text-gray-600">Basic transaction details</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Date of Sale</label>
               <input
                 type="date"
                 value={reportData.dateOfSale}
                 onChange={(e) => setReportData({ ...reportData, dateOfSale: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <div>
@@ -254,7 +254,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
                 value={reportData.buyerCompanyName}
                 onChange={(e) => setReportData({ ...reportData, buyerCompanyName: e.target.value })}
                 onFocus={(e) => e.target.select()}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Buyer name or company"
               />
             </div>
@@ -262,18 +262,18 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
         </div>
 
         {/* 2. Product Details */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-          <div className="flex items-center mb-3">
-            <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-2">
-              <Package className="w-4 h-4 text-white" />
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-2.5 sm:p-3 md:p-4 rounded-lg border border-green-200">
+          <div className="flex items-center mb-2 sm:mb-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-green-600 rounded-full flex items-center justify-center mr-2">
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-800">Product Details</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-800">Product Details</h3>
               <p className="text-xs text-gray-600">Abaca type, quantity, and pricing</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Abaca Type/Grade *</label>
               <input
@@ -281,7 +281,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
                 value={reportData.abacaType}
                 onChange={(e) => setReportData({ ...reportData, abacaType: e.target.value })}
                 onFocus={(e) => e.target.select()}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 placeholder="e.g., Tuxy, Superior, Medium, Low Grade"
                 required
               />
@@ -300,7 +300,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
                     setReportData(prev => ({ ...prev, quantitySold: quantity, totalAmount: quantity * prev.unitPrice }));
                   }
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 placeholder="0.0"
               />
             </div>
@@ -318,7 +318,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
                     setReportData(prev => ({ ...prev, unitPrice: price, totalAmount: prev.quantitySold * price }));
                   }
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 placeholder="0.00"
               />
             </div>
@@ -339,24 +339,24 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
 
 
         {/* 3. Payment & Logistics */}
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-200">
-          <div className="flex items-center mb-3">
-            <div className="w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center mr-2">
-              <Send className="w-4 h-4 text-white" />
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-2.5 sm:p-3 md:p-4 rounded-lg border border-yellow-200">
+          <div className="flex items-center mb-2 sm:mb-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-yellow-600 rounded-full flex items-center justify-center mr-2">
+              <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-800">Payment & Logistics</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-800">Payment & Logistics</h3>
               <p className="text-xs text-gray-600">Payment and delivery details</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Payment Method</label>
               <select
                 value={reportData.paymentMethod}
                 onChange={(e) => setReportData({ ...reportData, paymentMethod: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
               >
                 <option value="cash">Cash</option>
                 <option value="bank_transfer">Bank Transfer</option>
@@ -369,7 +369,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
               <select
                 value={reportData.paymentStatus}
                 onChange={(e) => setReportData({ ...reportData, paymentStatus: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
               >
                 <option value="paid">Paid</option>
                 <option value="pending">Pending</option>
@@ -382,7 +382,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
                 type="text"
                 value={reportData.deliveryLocation}
                 onChange={(e) => setReportData({ ...reportData, deliveryLocation: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                 placeholder="Delivery address"
               />
             </div>
@@ -390,24 +390,24 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
         </div>
 
         {/* 4. Additional Notes */}
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
-          <div className="flex items-center mb-3">
-            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center mr-2">
-              <FileText className="w-4 h-4 text-white" />
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-2.5 sm:p-3 md:p-4 rounded-lg border border-purple-200">
+          <div className="flex items-center mb-2 sm:mb-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-purple-600 rounded-full flex items-center justify-center mr-2">
+              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-800">Additional Notes</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-800">Additional Notes</h3>
               <p className="text-xs text-gray-600">Quality notes and comments</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-2 sm:gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Quality Notes</label>
               <textarea
                 value={reportData.qualityNotes}
                 onChange={(e) => setReportData({ ...reportData, qualityNotes: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 rows={2}
                 placeholder="Quality observations, grade details, etc."
               />
@@ -417,7 +417,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
               <textarea
                 value={reportData.otherComments}
                 onChange={(e) => setReportData({ ...reportData, otherComments: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 rows={2}
                 placeholder="Additional comments or remarks"
               />
@@ -426,17 +426,17 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
         </div>
 
         {/* Submit Buttons */}
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-gray-200">
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm flex items-center space-x-2"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm flex items-center justify-center gap-2"
           >
             <Send className="w-4 h-4" />
             <span>Submit Report</span>
