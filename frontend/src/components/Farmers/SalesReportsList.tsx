@@ -213,7 +213,7 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
                 Revenue
               </span>
             </div>
-            <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Total Revenue</p>
+            <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Total Revenue</p>
             <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white break-all">₱{stats.totalRevenue.toLocaleString()}</p>
           </div>
         </div>
@@ -230,7 +230,7 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
                 Sold
               </span>
             </div>
-            <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Total Abaca Sold</p>
+            <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Total Abaca Sold</p>
             <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white break-all">{stats.totalSold.toLocaleString()}kg</p>
             <p className="text-white/70 text-xs mt-2">From {stats.total} report{stats.total !== 1 ? 's' : ''}</p>
           </div>
@@ -248,7 +248,7 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
                 Pending
               </span>
             </div>
-            <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Pending Review</p>
+            <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Pending Review</p>
             <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white">{stats.pending}</p>
           </div>
         </div>
@@ -265,7 +265,7 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
                 Approved
               </span>
             </div>
-            <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Approved Reports</p>
+            <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Approved Reports</p>
             <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white">{stats.approved}</p>
           </div>
         </div>

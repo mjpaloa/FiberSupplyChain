@@ -258,7 +258,7 @@ export default function FarmerHarvestView() {
                 </div>
                 <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Total</span>
               </div>
-              <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Total Harvests</p>
+              <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Total Harvests</p>
               <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{statistics.total_harvests}</p>
             </div>
           </div>
@@ -273,7 +273,7 @@ export default function FarmerHarvestView() {
                 </div>
                 <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">KG</span>
               </div>
-              <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Total Fiber</p>
+              <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Total Fiber</p>
               <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{statistics.total_fiber_kg?.toFixed(2)}</p>
             </div>
           </div>
@@ -288,7 +288,7 @@ export default function FarmerHarvestView() {
                 </div>
                 <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Pending</span>
               </div>
-              <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Awaiting Verification</p>
+              <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Awaiting Verification</p>
               <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{statistics.pending}</p>
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function FarmerHarvestView() {
                 </div>
                 <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Verified</span>
               </div>
-              <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Verified Harvests</p>
+              <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Verified Harvests</p>
               <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{statistics.verified}</p>
             </div>
           </div>
