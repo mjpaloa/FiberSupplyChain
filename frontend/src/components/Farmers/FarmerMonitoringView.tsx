@@ -226,160 +226,165 @@ const FarmerMonitoringView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Statistics Cards - Match MAO Dashboard Style */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-6 md:mb-8">
         {/* Total Monitoring Card */}
-        <div className="relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-2xl p-6 shadow-lg overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div className="relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Activity className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <TrendingUp className="w-5 h-5 text-white/60" />
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white/60" />
             </div>
-            <p className="text-white/80 text-sm font-medium mb-1">Total Monitoring</p>
-            <p className="text-4xl font-bold text-white">{records.length}</p>
+            <p className="text-white/80 text-xs sm:text-sm font-medium mb-1">Total Monitoring</p>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{records.length}</p>
           </div>
         </div>
 
         {/* Healthy Farms Card */}
-        <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-102 sm:hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Leaf className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                <Leaf className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
+              <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
                 Active
               </span>
             </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Healthy Farms</p>
-            <p className="text-4xl font-bold text-white">{stats.healthyFarms}</p>
+            <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Healthy Farms</p>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{stats.healthyFarms}</p>
           </div>
         </div>
 
         {/* Needs Support Card */}
-        <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-102 sm:hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <AlertCircle className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
+              <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
                 Action Needed
               </span>
             </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Needs Support</p>
-            <p className="text-4xl font-bold text-white">{stats.needsSupport}</p>
+            <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Needs Support</p>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{stats.needsSupport}</p>
           </div>
         </div>
 
         {/* Upcoming Visits Card */}
-        <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-102 sm:hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Calendar className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <TrendingUp className="w-5 h-5 text-white/60" />
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white/60" />
             </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Upcoming Visits</p>
-            <p className="text-4xl font-bold text-white">{stats.upcoming}</p>
+            <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Upcoming Visits</p>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{stats.upcoming}</p>
           </div>
         </div>
       </div>
 
       {/* Tab Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2 sm:gap-3">
         <button
           onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${
             activeTab === 'all'
               ? 'bg-gradient-to-r from-slate-500 to-slate-700 text-white shadow-xl shadow-slate-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
           }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
+          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${
             activeTab === 'all' ? 'bg-white/20' : 'bg-slate-50 group-hover:bg-slate-100'
           }`}>
-            <Activity className="w-5 h-5" />
+            <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span>All Records ({records.length})</span>
+          <span className="hidden sm:inline">All Records ({records.length})</span>
+          <span className="sm:hidden">All ({records.length})</span>
           {activeTab === 'all' && (
             <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
           )}
         </button>
         <button
           onClick={() => { setActiveTab('upcoming'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${
             activeTab === 'upcoming'
               ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
           }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
+          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${
             activeTab === 'upcoming' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
           }`}>
-            <Calendar className="w-5 h-5" />
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span>Upcoming ({stats.upcoming})</span>
+          <span className="hidden sm:inline">Upcoming ({stats.upcoming})</span>
+          <span className="sm:hidden">Up ({stats.upcoming})</span>
           {activeTab === 'upcoming' && (
             <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
           )}
         </button>
         <button
           onClick={() => { setActiveTab('overdue'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${
             activeTab === 'overdue'
               ? 'bg-gradient-to-r from-amber-400 to-orange-600 text-white shadow-xl shadow-amber-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
           }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
+          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${
             activeTab === 'overdue' ? 'bg-white/20' : 'bg-amber-50 group-hover:bg-amber-100'
           }`}>
-            <AlertCircle className="w-5 h-5" />
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span>Overdue ({stats.overdue})</span>
+          <span className="hidden sm:inline">Overdue ({stats.overdue})</span>
+          <span className="sm:hidden">Over ({stats.overdue})</span>
           {activeTab === 'overdue' && (
             <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
           )}
         </button>
         <button
           onClick={() => { setActiveTab('done'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${
             activeTab === 'done'
               ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl shadow-green-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
           }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
+          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${
             activeTab === 'done' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
           }`}>
-            <CheckCircle className="w-5 h-5" />
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span>Done ({stats.doneMonitor})</span>
+          <span className="hidden sm:inline">Done ({stats.doneMonitor})</span>
+          <span className="sm:hidden">Done ({stats.doneMonitor})</span>
           {activeTab === 'done' && (
             <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
           )}
         </button>
         <button
           onClick={() => { setActiveTab('completed'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${
             activeTab === 'completed'
               ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
           }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
+          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${
             activeTab === 'completed' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
           }`}>
-            <CheckCircle className="w-5 h-5" />
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span>Complete ({stats.completed})</span>
+          <span className="hidden sm:inline">Complete ({stats.completed})</span>
+          <span className="sm:hidden">Done ({stats.completed})</span>
           {activeTab === 'completed' && (
             <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
           )}
@@ -387,39 +392,39 @@ const FarmerMonitoringView: React.FC = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white rounded-xl shadow-md p-4">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-3 sm:p-4">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
           <input
             type="text"
-            placeholder="Search by officer, monitoring ID, or condition..."
+            placeholder="Search by officer, ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
           />
         </div>
       </div>
 
       {/* Table */}
       {filteredRecords.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-lg p-20 text-center">
-          <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-800 mb-2">No records found</h3>
-          <p className="text-gray-500">Try adjusting your filters or search query</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-8 sm:p-12 md:p-20 text-center">
+          <Calendar className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">No records found</h3>
+          <p className="text-sm sm:text-base text-gray-500">Try adjusting your filters or search query</p>
         </div>
       ) : (
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-lg overflow-hidden">
           {/* Pagination Top */}
-          <div className="p-6 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">Show entries:</span>
-                <div className="flex gap-2">
+          <div className="p-3 sm:p-4 md:p-6 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+                <span className="text-xs sm:text-sm font-medium text-gray-700">Show entries:</span>
+                <div className="flex gap-1 sm:gap-2">
                   {[10, 20, 30].map((size) => (
                     <button
                       key={size}
                       onClick={() => { setItemsPerPage(size); setCurrentPage(1); }}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
                         itemsPerPage === size
                           ? 'bg-emerald-500 text-white shadow-lg'
                           : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50'
@@ -430,51 +435,51 @@ const FarmerMonitoringView: React.FC = () => {
                   ))}
                 </div>
               </div>
-              <div className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredRecords.length)} of {filteredRecords.length} entries
+              <div className="text-xs sm:text-sm text-gray-600">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredRecords.length)} of {filteredRecords.length}
               </div>
             </div>
           </div>
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[1000px]">
               <thead className="bg-gradient-to-r from-emerald-100 to-teal-100">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Farmer</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Visit Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Officer</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Condition</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Growth Stage</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Next Visit</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Actions</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Farmer</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Visit Date</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Officer</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Condition</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Growth Stage</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Status</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Next Visit</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {currentRecords.map((record, index) => (
                     <tr key={record.monitoringId} className={`hover:bg-emerald-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-gray-400" />
                           <div className="text-sm font-mono text-gray-500">{record.monitoringId}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-gray-900">{formatDate(record.dateOfVisit)}</div>
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <div className="text-xs sm:text-sm font-semibold text-gray-900">{formatDate(record.dateOfVisit)}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{record.monitoredBy}</div>
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <div className="text-xs sm:text-sm font-medium text-gray-900">{record.monitoredBy}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getConditionColor(record.farmCondition)}`}>
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-bold ${getConditionColor(record.farmCondition)}`}>
                           {record.farmCondition}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{record.growthStage}</div>
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <div className="text-xs sm:text-sm font-medium text-gray-900">{record.growthStage}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
                         {(record as any).status === 'Completed' ? (
                           <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
                             ✓ Completed
@@ -514,7 +519,7 @@ const FarmerMonitoringView: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => setSelectedRecord(record)}
-                          className="p-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition-all"
+                          className="p-1.5 sm:p-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition-all"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
