@@ -346,7 +346,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       // Fetch sales for revenue using correct endpoint
       const userStr = localStorage.getItem('user');
       const currentUser = userStr ? JSON.parse(userStr) : null;
-      const farmerId = currentUser?.userId;
+      // Check multiple possible farmer ID fields (same as SalesReportsList)
+      const farmerId = currentUser?.farmer_id || currentUser?.id || currentUser?.user_id || currentUser?.farmerId;
 
       let totalRevenue = 0;
       if (farmerId) {
@@ -521,10 +522,17 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
       const userStr = localStorage.getItem('user');
       const currentUser = userStr ? JSON.parse(userStr) : null;
-      const farmerId = currentUser?.userId;
+      // Check multiple possible farmer ID fields (same as SalesReportsList)
+      const farmerId = currentUser?.farmer_id || currentUser?.id || currentUser?.user_id || currentUser?.farmerId;
 
       if (!farmerId) {
-        console.log('No farmer ID available');
+        console.log('⚠️ No farmer ID available. User data:', currentUser);
+        console.log('⚠️ Checked fields:', {
+          farmer_id: currentUser?.farmer_id,
+          id: currentUser?.id,
+          user_id: currentUser?.user_id,
+          farmerId: currentUser?.farmerId
+        });
         return viewMode === 'monthly'
           ? Array.from({ length: 12 }, (_, i) => ({
             month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
