@@ -1861,18 +1861,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           {currentPage === 'seedlings' && (
             <>
               {/* Modern Filters with Glassmorphism - UserManagement Style */}
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
-                <div className="flex flex-col md:flex-row gap-4">
+              <div className="bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-white/20 p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
+                <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
                   {/* Search */}
                   <div className="flex-1">
                     <div className="relative group">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
+                      <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 group-focus-within:text-emerald-500 transition-colors" />
                       <input
                         type="text"
-                        placeholder="Search by variety, source, or remarks..."
+                        placeholder="Search by variety, source..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
+                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
                       />
                     </div>
                   </div>
@@ -1880,11 +1880,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   {/* Status Filter */}
                   <div className="w-full md:w-56">
                     <div className="relative">
-                      <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                      <Filter className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
                       <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as any)}
-                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer font-medium"
+                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer font-medium"
                       >
                         <option value="all">All Status</option>
                         <option value="distributed">📦 Distributed</option>
@@ -1920,12 +1920,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   )}
                 </div>
               ) : (
-                <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full min-w-[1000px]">
                       <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                         <tr>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                          <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                             <div className="flex items-center gap-2">
                               <Camera className="w-4 h-4" />
                               Photo
@@ -2034,18 +2034,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               </td>
 
                               {/* Variety & Date */}
-                              <td className="px-6 py-4">
-                                <div className="font-semibold text-gray-900">{seedling.variety}</div>
+                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+                                <div className="font-semibold text-xs sm:text-sm text-gray-900">{seedling.variety}</div>
                                 <div className="text-xs text-gray-500">{new Date(seedling.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
                               </td>
 
                               {/* Quantity */}
-                              <td className="px-6 py-4 text-sm text-gray-600">
+                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600">
                                 <div className="font-medium text-gray-900">{seedling.quantity_distributed} seedlings</div>
                               </td>
 
                               {/* Source */}
-                              <td className="px-6 py-4 text-sm">
+                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm">
                                 <div className="font-medium text-gray-900">
                                   {seedling.association_seedling_distributions?.source_supplier ||
                                     seedling.source_supplier ||
@@ -2055,19 +2055,19 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               </td>
 
                               {/* Batch ID */}
-                              <td className="px-6 py-4 text-sm">
-                                <div className="font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded inline-block">
+                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm">
+                                <div className="font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded inline-block text-xs">
                                   #{seedling.distribution_id?.slice(0, 8).toUpperCase() || 'N/A'}
                                 </div>
                               </td>
 
                               {/* Remarks */}
-                              <td className="px-6 py-4 text-sm text-gray-600">
+                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600">
                                 {seedling.remarks || '-'}
                               </td>
 
                               {/* Status */}
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${seedling.status === 'planted' ? 'bg-emerald-100 text-emerald-700' :
                                   seedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
                                     seedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
@@ -2078,21 +2078,21 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               </td>
 
                               {/* Actions */}
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center gap-1.5">
+                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-1 sm:gap-1.5">
                                   <button
                                     onClick={() => {
                                       setSelectedSeedling(seedling);
                                       setShowViewModal(true);
                                     }}
-                                    className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md group-hover:bg-blue-50"
+                                    className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md group-hover:bg-blue-50"
                                     title="View Details"
                                   >
                                     <Eye className="w-4 h-4" />
                                   </button>
 
                                   {seedling.status === 'planted' ? (
-                                    <div className="p-2 text-emerald-600" title="Already Planted">
+                                    <div className="p-1.5 sm:p-2 text-emerald-600" title="Already Planted">
                                       <CheckCircle className="w-4 h-4" />
                                     </div>
                                   ) : (
@@ -2116,12 +2116,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   </div>
 
                   {/* Pagination Controls - UserManagement Style */}
-                  <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-6 py-4">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
                       {/* Items per page */}
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-gray-700">Show entries:</span>
-                        <div className="flex gap-2">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <span className="text-xs sm:text-sm font-medium text-gray-700">Show entries:</span>
+                        <div className="flex gap-1 sm:gap-2">
                           {[10, 20, 50].map((size) => (
                             <button
                               key={size}
@@ -2129,7 +2129,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                 setItemsPerPage(size);
                                 setCurrentPageNum(1);
                               }}
-                              className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
+                              className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${itemsPerPage === size
                                 ? 'bg-emerald-500 text-white shadow-lg'
                                 : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
                                 }`}
@@ -2141,15 +2141,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       </div>
 
                       {/* Page info and navigation */}
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-600">
-                          Showing {((currentPageNum - 1) * itemsPerPage) + 1} to {Math.min(currentPageNum * itemsPerPage, filteredSeedlings.length)} of {filteredSeedlings.length} entries
+                      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+                        <span className="text-xs sm:text-sm text-gray-600">
+                          Showing {((currentPageNum - 1) * itemsPerPage) + 1} to {Math.min(currentPageNum * itemsPerPage, filteredSeedlings.length)} of {filteredSeedlings.length}
                         </span>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 sm:gap-2">
                           <button
                             onClick={() => setCurrentPageNum(prev => Math.max(1, prev - 1))}
                             disabled={currentPageNum === 1}
-                            className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPageNum === 1
+                            className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${currentPageNum === 1
                               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                               : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                               }`}
@@ -2159,7 +2159,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <button
                             onClick={() => setCurrentPageNum(prev => Math.min(Math.ceil(filteredSeedlings.length / itemsPerPage), prev + 1))}
                             disabled={currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)}
-                            className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)
+                            className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)
                               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                               : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                               }`}
