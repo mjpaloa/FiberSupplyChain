@@ -377,6 +377,7 @@ router.get('/farmer-reports/:farmerId', async (req: Request, res: Response) => {
       .select(`
         report_id,
         report_month,
+        sale_date,
         buyer_company_name,
         abaca_type,
         quantity_sold,
@@ -394,7 +395,7 @@ router.get('/farmer-reports/:farmerId', async (req: Request, res: Response) => {
         rejection_reason
       `)
       .eq('farmer_id', farmerId)
-      .order('report_month', { ascending: false })
+      .order('sale_date', { ascending: false })
       .order('submitted_at', { ascending: false });
     
     if (error) {

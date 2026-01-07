@@ -716,136 +716,168 @@ const AssociationInventory: React.FC = () => {
 
       {/* Distribute Modal */}
       {showDistributeModal && selectedDistribution && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between rounded-t-2xl">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                  <Share2 className="w-6 h-6 text-emerald-600" />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl w-full max-w-full sm:max-w-lg lg:max-w-3xl shadow-2xl max-h-[95vh] flex flex-col">
+            {/* Fixed Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-teal-500 p-4 sm:p-6 flex items-center justify-between rounded-t-xl sm:rounded-t-2xl flex-shrink-0">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Distribute to Farmer</h2>
-                  <p className="text-sm text-gray-500">{selectedDistribution.variety}</p>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">Distribute to Farmer</h2>
+                  <p className="text-xs sm:text-sm text-emerald-50">{selectedDistribution.variety}</p>
                 </div>
               </div>
-              <button onClick={closeDistributeModal} className="p-2 hover:bg-gray-100 rounded-lg transition">
-                <X className="w-6 h-6 text-gray-600" />
+              <button onClick={closeDistributeModal} className="p-2 hover:bg-white/20 rounded-lg transition">
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </button>
             </div>
 
-            <form onSubmit={handleDistributeSubmit} className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Total Received</p>
-                  <p className="font-semibold text-blue-700">{selectedDistribution.quantity_distributed.toLocaleString()} seedlings</p>
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto flex-1">
+              <form onSubmit={handleDistributeSubmit} className="p-4 sm:p-6 space-y-5 sm:space-y-6">
+                {/* Summary Cards Section */}
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 sm:p-5 border border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Package className="w-4 h-4 text-emerald-600" />
+                    Distribution Summary
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="bg-white rounded-lg p-3 sm:p-4 border-l-4 border-blue-500 shadow-sm">
+                      <p className="text-xs text-gray-600 mb-1">Total Received</p>
+                      <p className="text-lg sm:text-xl font-bold text-blue-700">{selectedDistribution.quantity_distributed.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500">seedlings</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 sm:p-4 border-l-4 border-purple-500 shadow-sm">
+                      <p className="text-xs text-gray-600 mb-1">Distributed so far</p>
+                      <p className="text-lg sm:text-xl font-bold text-purple-700">{(selectedDistribution.distributed_to_farmers || 0).toLocaleString()}</p>
+                      <p className="text-xs text-gray-500">seedlings</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 sm:p-4 border-l-4 border-emerald-500 shadow-sm">
+                      <p className="text-xs text-gray-600 mb-1">Available Stock</p>
+                      <p className="text-lg sm:text-xl font-bold text-emerald-700">{getAvailableQuantity(selectedDistribution).toLocaleString()}</p>
+                      <p className="text-xs text-gray-500">seedlings remaining</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 sm:p-4 border-l-4 border-gray-400 shadow-sm">
+                      <p className="text-xs text-gray-600 mb-1">Current Status</p>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium mt-1 ${getStatusColor(selectedDistribution.status)}`}>
+                        {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
+                         selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Partial' :
+                         selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
+                         '❌ Cancelled'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Distributed so far</p>
-                  <p className="font-semibold text-purple-700">{(selectedDistribution.distributed_to_farmers || 0).toLocaleString()} seedlings</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Available</p>
-                  <p className="font-semibold text-emerald-700">{getAvailableQuantity(selectedDistribution).toLocaleString()} seedlings</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Status</p>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedDistribution.status)}`}>
-                    {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
-                     selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Partial' :
-                     selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
-                     '❌ Cancelled'}
-                  </span>
-                </div>
-              </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Select Farmer *</label>
-                  {loadingFarmers ? (
-                    <div className="flex items-center gap-2 px-4 py-3 border border-gray-200 rounded-lg">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500"></div>
-                      <span className="text-gray-600 text-sm">Loading farmers...</span>
-                    </div>
-                  ) : verifiedFarmers.length === 0 ? (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
-                      No verified farmers available. <button type="button" className="font-semibold underline" onClick={fetchFarmers}>Refresh list</button>
-                    </div>
-                  ) : (
-                    <select
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      value={distributeForm.farmer_id}
-                      onChange={(e) => setDistributeForm(prev => ({ ...prev, farmer_id: e.target.value }))}
+                {/* Distribution Details Section */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 pb-2 border-b border-gray-200">
+                    <Users className="w-4 h-4 text-emerald-600" />
+                    Distribution Details
+                  </h3>
+
+                  {/* Farmer Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Farmer <span className="text-red-500">*</span>
+                    </label>
+                    {loadingFarmers ? (
+                      <div className="flex items-center gap-2 px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500"></div>
+                        <span className="text-gray-600 text-sm">Loading farmers...</span>
+                      </div>
+                    ) : verifiedFarmers.length === 0 ? (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                        ⚠️ No verified farmers available. <button type="button" className="font-semibold underline hover:text-yellow-900" onClick={fetchFarmers}>Refresh list</button>
+                      </div>
+                    ) : (
+                      <select
+                        className="w-full border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm sm:text-base"
+                        value={distributeForm.farmer_id}
+                        onChange={(e) => setDistributeForm(prev => ({ ...prev, farmer_id: e.target.value }))}
+                        required
+                      >
+                        <option value="">-- Select Farmer --</option>
+                        {verifiedFarmers.map(farmer => (
+                          <option key={farmer.farmer_id} value={farmer.farmer_id}>
+                            {farmer.full_name} {farmer.municipality ? `- ${farmer.municipality}` : ''} {farmer.barangay ? `(${farmer.barangay})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      {verifiedFarmers.length} verified & active farmers
+                    </p>
+                  </div>
+
+                  {/* Quantity Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Quantity <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={getAvailableQuantity(selectedDistribution)}
+                      value={distributeForm.quantity_distributed || ''}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                        setDistributeForm(prev => ({ ...prev, quantity_distributed: value }));
+                      }}
+                      className="w-full border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm sm:text-base"
+                      placeholder="Enter quantity"
                       required
-                    >
-                      <option value="">-- Select Farmer --</option>
-                      {verifiedFarmers.map(farmer => (
-                        <option key={farmer.farmer_id} value={farmer.farmer_id}>
-                          {farmer.full_name} {farmer.municipality ? `- ${farmer.municipality}` : ''} {farmer.barangay ? `(${farmer.barangay})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">{verifiedFarmers.length} verified & active farmers</p>
-                </div>
+                    />
+                    <p className="text-xs text-gray-500 mt-2">Maximum available: <span className="font-semibold text-emerald-600">{getAvailableQuantity(selectedDistribution).toLocaleString()} seedlings</span></p>
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={getAvailableQuantity(selectedDistribution)}
-                    value={distributeForm.quantity_distributed || ''}
-                    onChange={(e) => {
-                      const value = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                      setDistributeForm(prev => ({ ...prev, quantity_distributed: value }));
-                    }}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Max {getAvailableQuantity(selectedDistribution).toLocaleString()} seedlings</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-                  <textarea
-                    rows={3}
-                    value={distributeForm.remarks}
-                    onChange={(e) => setDistributeForm(prev => ({ ...prev, remarks: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    placeholder="Additional notes (optional)"
-                  />
+                  {/* Remarks */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                    <textarea
+                      rows={3}
+                      value={distributeForm.remarks}
+                      onChange={(e) => setDistributeForm(prev => ({ ...prev, remarks: e.target.value }))}
+                      className="w-full border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm sm:text-base resize-none"
+                      placeholder="Additional notes (optional)"
+                    />
+                  </div>
                 </div>
 
                 {/* Photo Upload Section */}
-                <div className="border-t border-gray-200 pt-4">
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 sm:p-5 border border-gray-200">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Camera className="w-4 h-4 text-emerald-600" />
-                    Seedling Photos (Optional)
+                    Seedling Photos <span className="text-gray-500 font-normal text-xs">(Optional)</span>
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-4">
                     {/* Seedling Photo */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-2">Seedling Photo</label>
+                    <div className="bg-white rounded-lg p-3 sm:p-4">
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">📸 Seedling Photo</label>
                       <div className="relative">
                         {distributeForm.seedling_photo ? (
                           <div className="relative group">
                             <img 
                               src={distributeForm.seedling_photo} 
                               alt="Seedling" 
-                              className="w-full h-32 object-cover rounded-lg border-2 border-emerald-200"
+                              className="w-full h-40 sm:h-48 object-cover rounded-lg border-2 border-emerald-300"
                             />
                             <button
                               type="button"
                               onClick={() => setDistributeForm(prev => ({ ...prev, seedling_photo: '' }))}
-                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
                             >
                               <X className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
-                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-all">
-                            <Upload className="w-6 h-6 text-gray-400 mb-1" />
-                            <span className="text-xs text-gray-500">Upload Photo</span>
+                          <label className="flex flex-col items-center justify-center w-full h-32 sm:h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
+                            <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-2" />
+                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Click to Upload</span>
+                            <span className="text-xs text-gray-500 mt-1">JPG, PNG (Max 5MB)</span>
                             <input 
                               type="file" 
                               accept="image/*" 
@@ -858,28 +890,29 @@ const AssociationInventory: React.FC = () => {
                     </div>
 
                     {/* Distribution Photo */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-2">Distribution Photo</label>
+                    <div className="bg-white rounded-lg p-3 sm:p-4">
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">📦 Distribution Photo</label>
                       <div className="relative">
                         {distributeForm.packaging_photo ? (
                           <div className="relative group">
                             <img 
                               src={distributeForm.packaging_photo} 
                               alt="Packaging" 
-                              className="w-full h-32 object-cover rounded-lg border-2 border-emerald-200"
+                              className="w-full h-40 sm:h-48 object-cover rounded-lg border-2 border-emerald-300"
                             />
                             <button
                               type="button"
                               onClick={() => setDistributeForm(prev => ({ ...prev, packaging_photo: '' }))}
-                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
                             >
                               <X className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
-                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-all">
-                            <Upload className="w-6 h-6 text-gray-400 mb-1" />
-                            <span className="text-xs text-gray-500">Upload Photo</span>
+                          <label className="flex flex-col items-center justify-center w-full h-32 sm:h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
+                            <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-2" />
+                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Click to Upload</span>
+                            <span className="text-xs text-gray-500 mt-1">JPG, PNG (Max 5MB)</span>
                             <input 
                               type="file" 
                               accept="image/*" 
@@ -892,28 +925,29 @@ const AssociationInventory: React.FC = () => {
                     </div>
 
                     {/* Quality Photo */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-2">Quality Photo</label>
+                    <div className="bg-white rounded-lg p-3 sm:p-4">
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">✨ Quality Photo</label>
                       <div className="relative">
                         {distributeForm.quality_photo ? (
                           <div className="relative group">
                             <img 
                               src={distributeForm.quality_photo} 
                               alt="Quality" 
-                              className="w-full h-32 object-cover rounded-lg border-2 border-emerald-200"
+                              className="w-full h-40 sm:h-48 object-cover rounded-lg border-2 border-emerald-300"
                             />
                             <button
                               type="button"
                               onClick={() => setDistributeForm(prev => ({ ...prev, quality_photo: '' }))}
-                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
                             >
                               <X className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
-                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-all">
-                            <Upload className="w-6 h-6 text-gray-400 mb-1" />
-                            <span className="text-xs text-gray-500">Upload Photo</span>
+                          <label className="flex flex-col items-center justify-center w-full h-32 sm:h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
+                            <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-2" />
+                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Click to Upload</span>
+                            <span className="text-xs text-gray-500 mt-1">JPG, PNG (Max 5MB)</span>
                             <input 
                               type="file" 
                               accept="image/*" 
@@ -925,23 +959,43 @@ const AssociationInventory: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">💡 Tip: Upload photos to help farmers identify the seedlings</p>
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-800 flex items-start gap-2">
+                      <span>💡</span>
+                      <span>Tip: Upload clear photos to help farmers identify the seedlings and verify quality.</span>
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </form>
+            </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                <button type="button" onClick={closeDistributeModal} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+            {/* Fixed Footer */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6 rounded-b-xl sm:rounded-b-2xl flex-shrink-0">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+                <button 
+                  type="button" 
+                  onClick={closeDistributeModal} 
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm sm:text-base"
+                >
                   Cancel
                 </button>
                 <button
                   type="submit"
+                  onClick={handleDistributeSubmit}
                   disabled={distributeSubmitting || verifiedFarmers.length === 0}
-                  className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed shadow-lg disabled:shadow-none"
                 >
-                  {distributeSubmitting ? 'Distributing...' : 'Confirm Distribution'}
+                  {distributeSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Distributing...
+                    </span>
+                  ) : (
+                    'Confirm Distribution'
+                  )}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
