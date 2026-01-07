@@ -198,15 +198,15 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Modern Stats Cards with Gradients - UserManagement Style */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 xl:gap-6 mb-4 sm:mb-6 md:mb-8">
         {/* Total Revenue Card */}
-        <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-5 sm:p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2.5 sm:p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
                 <Banknote className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
@@ -214,16 +214,16 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
               </span>
             </div>
             <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Total Revenue</p>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white break-all">₱{stats.totalRevenue.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white break-all">₱{stats.totalRevenue.toLocaleString()}</p>
           </div>
         </div>
 
         {/* Total Abaca Sold Card */}
-        <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 sm:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2.5 sm:p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
                 <Package className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
@@ -231,17 +231,17 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
               </span>
             </div>
             <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Total Abaca Sold</p>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white break-all">{stats.totalSold.toLocaleString()}kg</p>
+            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white break-all">{stats.totalSold.toLocaleString()}kg</p>
             <p className="text-white/70 text-xs mt-2">From {stats.total} report{stats.total !== 1 ? 's' : ''}</p>
           </div>
         </div>
 
         {/* Pending Card */}
-        <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl p-5 sm:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2.5 sm:p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
                 <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
@@ -249,16 +249,16 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
               </span>
             </div>
             <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Pending Review</p>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{stats.pending}</p>
+            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white">{stats.pending}</p>
           </div>
         </div>
 
         {/* Approved Card */}
-        <div className="group relative bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-5 sm:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div className="group relative bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2.5 sm:p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
                 <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
@@ -266,58 +266,61 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
               </span>
             </div>
             <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Approved Reports</p>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{stats.approved}</p>
+            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white">{stats.approved}</p>
           </div>
         </div>
       </div>
 
       {/* Modern Filters with Glassmorphism - UserManagement Style */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-white/20 p-3 sm:p-4 md:p-6 mb-4 sm:mb-5 md:mb-6">
+        <div className="flex flex-col gap-3 sm:gap-4">
           {/* Search */}
           <div className="flex-1">
             <div className="relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
+              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 group-focus-within:text-emerald-500 transition-colors" />
               <input
                 type="text"
-                placeholder="Search by buyer, product type, or status..."
+                placeholder="Search by buyer, type..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
               />
             </div>
           </div>
 
-          {/* Status Filter */}
-          <div className="w-full md:w-56">
-            <div className="relative">
-              <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer font-medium"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">⏳ Pending</option>
-                <option value="approved">✓ Approved</option>
-                <option value="rejected">✗ Rejected</option>
-              </select>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            {/* Status Filter */}
+            <div className="flex-1 sm:w-auto">
+              <div className="relative">
+                <Filter className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                  className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer font-medium"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">⏳ Pending</option>
+                  <option value="approved">✓ Approved</option>
+                  <option value="rejected">✗ Rejected</option>
+                </select>
+              </div>
             </div>
-          </div>
 
-          {/* Add Button */}
-          <button
-            onClick={handleAddNew}
-            className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold whitespace-nowrap group"
-          >
-            <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
-            <span>Add Sales Report</span>
-          </button>
+            {/* Add Button */}
+            <button
+              onClick={handleAddNew}
+              className="px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg sm:rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 font-semibold whitespace-nowrap group"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-200" />
+              <span className="hidden sm:inline">Add Sales Report</span>
+              <span className="sm:hidden">Add Report</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Modern Table with Enhanced Design - UserManagement Style */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+      <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
         {filteredReports.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -337,52 +340,52 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="min-w-[900px]">
                 <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         Report Period
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <Package className="w-4 h-4" />
                         Abaca Type/Grade
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <Package className="w-4 h-4" />
                         Quantity (kg)
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <Banknote className="w-4 h-4" />
                         Unit Price
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <Banknote className="w-4 h-4" />
                         Total Amount
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4" />
                         Buyer
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" />
                         Status
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -393,44 +396,44 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
                     .map((report) => (
                     <tr key={report.report_id} className="hover:bg-gradient-to-r hover:from-emerald-50/50 hover:to-teal-50/50 transition-all duration-200 group">
                       {/* Report Period */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <div>
-                            <div className="font-semibold text-gray-900">{report.report_month}</div>
+                            <div className="font-semibold text-xs sm:text-sm text-gray-900">{report.report_month}</div>
                             <div className="text-xs text-gray-500">Sale: {new Date(report.sale_date).toLocaleDateString()}</div>
                           </div>
                         </div>
                       </td>
                       
                       {/* Abaca Type/Grade */}
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm">
                         <div className="font-medium text-gray-900">{report.abaca_type}</div>
                       </td>
                       
                       {/* Quantity */}
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm">
                         <div className="font-semibold text-gray-900">{report.quantity_sold.toLocaleString()}kg</div>
                       </td>
                       
                       {/* Unit Price */}
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm">
                         <div className="font-semibold text-blue-600">₱{report.unit_price.toLocaleString()}/kg</div>
                       </td>
                       
                       {/* Total Amount */}
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-emerald-600 text-lg">₱{report.total_amount?.toLocaleString() || '0'}</div>
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+                        <div className="font-bold text-emerald-600 text-base sm:text-lg">₱{report.total_amount?.toLocaleString() || '0'}</div>
                       </td>
                       
                       {/* Buyer */}
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm">
                         <div className="font-medium text-gray-900">{report.buyer_company_name}</div>
                         <div className="text-xs text-gray-500">{report.delivery_location || 'No location'}</div>
                       </td>
                       
                       {/* Status */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
                           report.status === 'approved' 
                             ? 'bg-emerald-100 text-emerald-700'
                             : report.status === 'pending'
@@ -442,11 +445,11 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
                       </td>
                       
                       {/* Actions */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => handleView(report)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md group-hover:bg-blue-50"
+                            className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md group-hover:bg-blue-50"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
@@ -455,14 +458,14 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
                             <>
                               <button
                                 onClick={() => handleEdit(report)}
-                                className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                className="p-1.5 sm:p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
                                 title="Edit"
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDelete(report.report_id)}
-                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                className="p-1.5 sm:p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
                                 title="Delete"
                               >
                                 <Trash2 className="w-4 h-4" />
