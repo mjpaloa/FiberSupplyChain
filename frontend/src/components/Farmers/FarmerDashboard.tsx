@@ -107,6 +107,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     { status: 'Action Needed', percentage: 0, count: 0, color: { id: 'yellow', start: '#f59e0b', end: '#d97706' } },
     { status: 'Needs Support', percentage: 0, count: 0, color: { id: 'red', start: '#ef4444', end: '#dc2626' } }
   ]);
+  const [loadingCharts, setLoadingCharts] = useState(false);
 
   // Get user info from localStorage
   const userStr = localStorage.getItem('user');
@@ -292,25 +293,35 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   };
 
   const generateAnalyticsData = async () => {
-    console.log('🔄 Generating analytics data...');
-    console.log('📦 Current seedlings count:', seedlings.length);
-    
-    const healthData = generateFarmHealthData(productionViewMode);
-    setFarmHealthData(healthData);
+    setLoadingCharts(true);
+    try {
+      console.log('🔄 Starting analytics generation...');
+      console.log('📦 Current seedlings count:', seedlings.length);
+      
+      const healthData = generateFarmHealthData(productionViewMode);
+      setFarmHealthData(healthData);
 
-    // Fetch direct stats
-    await fetchHarvestStats();
+      // Fetch harvest stats first and WAIT for it
+      await fetchHarvestStats();
+      
+      // Small delay to ensure state updates
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-    const revenue = await generateRevenueData(revenueViewMode);
-    console.log('📊 Revenue data loaded:', revenue);
+      const revenue = await generateRevenueData(revenueViewMode);
+      console.log('📊 Revenue data loaded:', revenue);
 
-    // Calculate totals before setting state
-    const totalRev = revenue.reduce((sum: number, item: any) => sum + (item.revenue || 0), 0);
-    const totalFiber = revenue.reduce((sum: number, item: any) => sum + (item.fiberKg || 0), 0);
-    console.log('💰 Totals calculated - Revenue:', totalRev, 'Fiber:', totalFiber, 'kg');
+      // Calculate totals before setting state
+      const totalRev = revenue.reduce((sum: number, item: any) => sum + (item.revenue || 0), 0);
+      const totalFiber = revenue.reduce((sum: number, item: any) => sum + (item.fiberKg || 0), 0);
+      console.log('💰 Totals calculated - Revenue:', totalRev, 'Fiber:', totalFiber, 'kg');
 
-    setRevenueData(revenue);
-    console.log('✅ Revenue data set in state');
+      setRevenueData(revenue);
+      console.log('✅ Analytics data generation completed');
+    } catch (error) {
+      console.error('❌ Error generating analytics:', error);
+    } finally {
+      setLoadingCharts(false);
+    }
   };
 
   const fetchHarvestStats = async () => {
@@ -371,9 +382,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         console.log('⚠️ No farmer ID available for sales fetch');
       }
 
-      console.log('💎 FINAL STATS - Fiber:', totalFiberKg, 'kg, Revenue: ₱', totalRevenue);
-
-      setHarvestStats({ totalFiberKg, totalRevenue });
+      const stats = { totalFiberKg, totalRevenue };
+      console.log('💎 Setting harvest stats:', stats);
+      setHarvestStats(stats);
+      
+      // Small delay to ensure state updates
+      await new Promise(resolve => setTimeout(resolve, 50));
     } catch (error) {
       console.error('❌ Error fetching harvest stats:', error);
     }
@@ -1458,6 +1472,43 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               let currentAngle = -90;
                               const visibleData = farmStatusData.filter(item => item.percentage > 0);
                               
+                              // CRITICAL FIX: If only one item, show full circle with correct color
+                              if (visibleData.length === 1) {
+                                const singleItem = visibleData[0];
+                                const radius = 90;
+                                
+                                return (
+                                  <g>
+                                    <circle
+                                      cx="120"
+                                      cy="120"
+                                      r={radius}
+                                      fill={`url(#${singleItem.color.id})`}
+                                      filter="url(#shadowFilter)"
+                                    />
+                                    <circle cx="120" cy="120" r="55" fill="white" />
+                                    <circle cx="120" cy="120" r="52" fill="url(#gradient-center)" />
+                                    <text
+                                      x="120"
+                                      y="110"
+                                      textAnchor="middle"
+                                      className="text-3xl font-bold"
+                                      fill={singleItem.color.start}
+                                    >
+                                      {singleItem.percentage.toFixed(1)}%
+                                    </text>
+                                    <text
+                                      x="120"
+                                      y="130"
+                                      textAnchor="middle"
+                                      className="text-sm font-semibold fill-gray-600"
+                                    >
+                                      {singleItem.status}
+                                    </text>
+                                  </g>
+                                );
+                              }
+                              
                               return visibleData.map((item, index) => {
                                 const angle = (item.percentage / 100) * 360;
                                 const startAngle = currentAngle;
@@ -1582,6 +1633,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             </button>
                           </div>
                         </div>
+                        {loadingCharts ? (
+                          <div className="flex items-center justify-center h-64">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+                          </div>
+                        ) : (
                         <div className={productionViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
                           <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : '100%'} height={300}>
                           {productionViewMode === 'monthly' ? (
@@ -1629,7 +1685,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               />
                             </AreaChart>
                           ) : (
-                            <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={50}>
+                            <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
                               <defs>
                                 <linearGradient id="colorFiberYear" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
@@ -1667,6 +1723,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           )}
                           </ResponsiveContainer>
                         </div>
+                        )}
                       </div>
 
                       {/* 4. Sales & Revenue Analytics */}
@@ -1702,6 +1759,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             </div>
                           </div>
                         </div>
+                        {loadingCharts ? (
+                          <div className="flex items-center justify-center h-64">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                          </div>
+                        ) : (
                         <div className={revenueViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
                           <ResponsiveContainer width={revenueViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : '100%'} height={300}>
                           {revenueViewMode === 'monthly' ? (
@@ -1749,7 +1811,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               />
                             </AreaChart>
                           ) : (
-                            <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={50}>
+                            <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
                               <defs>
                                 <linearGradient id="colorRevenueYear" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
@@ -1787,6 +1849,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           )}
                           </ResponsiveContainer>
                         </div>
+                        )}
                       </div>
                     </div>
                   </>
