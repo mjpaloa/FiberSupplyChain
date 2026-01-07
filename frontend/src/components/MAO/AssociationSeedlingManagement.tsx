@@ -90,6 +90,7 @@ const AssociationSeedlingManagement: React.FC = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDistribution, setSelectedDistribution] = useState<AssociationDistribution | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     totalQuantity: 0,
@@ -321,6 +322,11 @@ const AssociationSeedlingManagement: React.FC = () => {
   // Override handleSubmit to handle photo uploads
   const handleSubmitWithPhotos = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (submitting) return;
+    
+    setSubmitting(true);
     try {
       const token = localStorage.getItem('accessToken');
       const data = await prepareFormDataForSubmission();
@@ -335,17 +341,19 @@ const AssociationSeedlingManagement: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('Seedlings distributed to association successfully!');
+        alert('✅ Seedlings distributed to association successfully!');
         setShowAddModal(false);
         resetForm();
         fetchDistributions();
       } else {
         const errorData = await response.json();
-        alert(`Failed to distribute seedlings: ${errorData.error || 'Unknown error'}`);
+        alert(`❌ Failed to distribute seedlings: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error creating distribution:', error);
-      alert('Failed to distribute seedlings');
+      alert('❌ Failed to distribute seedlings. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -353,7 +361,11 @@ const AssociationSeedlingManagement: React.FC = () => {
   const handleUpdateWithPhotos = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDistribution) return;
-
+    
+    // Prevent double submission
+    if (submitting) return;
+    
+    setSubmitting(true);
     try {
       const token = localStorage.getItem('accessToken');
       const data = await prepareFormDataForSubmission();
@@ -368,16 +380,19 @@ const AssociationSeedlingManagement: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('Distribution updated successfully!');
+        alert('✅ Distribution updated successfully!');
         setShowEditModal(false);
+        resetForm();
         fetchDistributions();
       } else {
         const errorData = await response.json();
-        alert(`Failed to update distribution: ${errorData.error || 'Unknown error'}`);
+        alert(`❌ Failed to update distribution: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error updating distribution:', error);
-      alert('Failed to update distribution');
+      alert('❌ Failed to update distribution. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -1027,9 +1042,17 @@ const AssociationSeedlingManagement: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-8 py-3 bg-emerald-500 text-white rounded-2xl shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff] hover:shadow-[6px_6px_12px_#d1d5db,-6px_-6px_12px_#ffffff] hover:bg-emerald-600 active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-200 font-semibold"
+                  disabled={submitting}
+                  className="px-8 py-3 bg-emerald-500 text-white rounded-2xl shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff] hover:shadow-[6px_6px_12px_#d1d5db,-6px_-6px_12px_#ffffff] hover:bg-emerald-600 active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 flex items-center justify-center gap-2"
                 >
-                  {showAddModal ? '✅ Distribute' : '💾 Save Changes'}
+                  {submitting ? (
+                    <>
+                      <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>{showAddModal ? 'Distributing...' : 'Saving...'}</span>
+                    </>
+                  ) : (
+                    <>{showAddModal ? '✅ Distribute' : '💾 Save Changes'}</>
+                  )}
                 </button>
               </div>
             </form>
