@@ -547,7 +547,16 @@ export class AuthService {
           userAgent,
           'Account is inactive'
         );
-        throw new Error('Account is inactive');
+        
+        // If account has rejection reason, show it to the user
+        if (user.rejection_reason) {
+          throw new Error(
+            `Your account application was rejected. Reason: ${user.rejection_reason}\n\n` +
+            `Please contact support@mao.gov.ph for assistance.`
+          );
+        } else {
+          throw new Error('Your account is inactive. Please contact support@mao.gov.ph for assistance.');
+        }
       }
 
       // Check if user is verified (farmers, buyers, and officers need verification)
