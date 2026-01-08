@@ -379,7 +379,7 @@ export default function FarmerHarvestView() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-[900px]">
+            <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border-b-2 border-emerald-100">
                   <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left">
