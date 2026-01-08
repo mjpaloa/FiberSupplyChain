@@ -104,6 +104,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   // Analytics state - separate view modes for each chart
   const [distributionViewMode, setDistributionViewMode] = useState<'monthly' | 'yearly'>('monthly');
@@ -1122,23 +1123,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             `}>Sales Reports</span>
           </button>
 
-          <button
-            onClick={() => {
-              setCurrentPage('profile');
-              setShowProfile(false);
-              setShowEditProfile(false);
-              setShowChangePassword(false);
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'profile' ? 'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
-          >
-            <User className="w-5 h-5 flex-shrink-0" />
-            <span className={`
-              whitespace-nowrap transition-all duration-300 ease-in-out
-              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
-            `}>My Profile</span>
-          </button>
-
         </nav>
 
         {/* Logout */}
@@ -1273,33 +1257,111 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="text-right hidden lg:block">
-                  <p className="text-sm font-medium text-gray-800">{user?.fullName || 'Farmer'}</p>
-                  <p className="text-xs text-gray-500">{user?.associationName || 'Independent Farmer'}</p>
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="text-right hidden lg:block">
+                    <p className="text-sm font-medium text-gray-800">{user?.fullName || 'Farmer'}</p>
+                    <p className="text-xs text-gray-500">{user?.associationName || 'Independent Farmer'}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                    className="hover:opacity-80 transition-opacity cursor-pointer"
+                    title="Profile Menu"
+                  >
+                    {profilePhoto ? (
+                      <img
+                        src={profilePhoto}
+                        alt="Profile"
+                        className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-green-500 shadow-lg"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base">
+                        {user?.fullName?.charAt(0) || 'F'}
+                      </div>
+                    )}
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    setCurrentPage('profile');
-                    setShowProfile(false);
-                    setShowEditProfile(false);
-                    setShowChangePassword(false);
-                  }}
-                  className="hover:opacity-80 transition-opacity cursor-pointer"
-                  title="View Profile"
-                >
-                  {profilePhoto ? (
-                    <img
-                      src={profilePhoto}
-                      alt="Profile"
-                      className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-green-500 shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base">
-                      {user?.fullName?.charAt(0) || 'F'}
+
+                {/* Profile Dropdown Menu */}
+                {showProfileDropdown && (
+                  <div className="fixed sm:absolute right-0 sm:right-0 left-0 sm:left-auto top-16 sm:top-auto sm:mt-2 w-full sm:w-64 bg-white rounded-none sm:rounded-xl shadow-2xl border-t sm:border border-gray-200 z-50 overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {profilePhoto ? (
+                          <img
+                            src={profilePhoto}
+                            alt="Profile"
+                            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-lg"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-green-600 font-bold text-lg">
+                            {user?.fullName?.charAt(0) || 'F'}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-semibold text-sm truncate">{user?.fullName || 'Farmer'}</p>
+                          <p className="text-green-100 text-xs truncate">{user?.associationName || 'Independent Farmer'}</p>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </button>
+
+                    {/* Menu Items */}
+                    <div className="py-2">
+                      <button
+                        onClick={() => {
+                          setCurrentPage('profile');
+                          setShowProfile(false);
+                          setShowEditProfile(false);
+                          setShowChangePassword(false);
+                          setShowProfileDropdown(false);
+                        }}
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition text-left"
+                      >
+                        <User className="w-5 h-5 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-700">View Profile</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCurrentPage('profile');
+                          setShowEditProfile(true);
+                          setShowProfile(false);
+                          setShowChangePassword(false);
+                          setShowProfileDropdown(false);
+                        }}
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition text-left"
+                      >
+                        <Settings className="w-5 h-5 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-700">Edit Profile</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCurrentPage('profile');
+                          setShowChangePassword(true);
+                          setShowProfile(false);
+                          setShowEditProfile(false);
+                          setShowProfileDropdown(false);
+                        }}
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition text-left"
+                      >
+                        <Lock className="w-5 h-5 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-700">Change Password</span>
+                      </button>
+                      <div className="border-t border-gray-200 my-1"></div>
+                      <button
+                        onClick={() => {
+                          setShowProfileDropdown(false);
+                          onLogout();
+                        }}
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition text-left"
+                      >
+                        <LogOut className="w-5 h-5 text-red-600" />
+                        <span className="text-sm font-medium text-red-600">Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
