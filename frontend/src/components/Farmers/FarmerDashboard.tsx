@@ -110,7 +110,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [productionViewMode, setProductionViewMode] = useState<'monthly' | 'yearly'>('monthly');
   const [revenueViewMode, setRevenueViewMode] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [productionSelectedYear, setProductionSelectedYear] = useState(new Date().getFullYear());
+  const [revenueSelectedYear, setRevenueSelectedYear] = useState(new Date().getFullYear());
   const [farmHealthData, setFarmHealthData] = useState<any[]>([]);
+  const [productionData, setProductionData] = useState<any[]>([]);
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [harvestStats, setHarvestStats] = useState({ totalFiberKg: 0, totalRevenue: 0 });
   const [hoveredPieSegment, setHoveredPieSegment] = useState<number | null>(null);
@@ -236,14 +239,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     if (currentPage === 'dashboard') {
       regenerateProductionData();
     }
-  }, [productionViewMode]);
+  }, [productionViewMode, productionSelectedYear]);
 
   // Separate effect for Sales Revenue chart
   useEffect(() => {
     if (currentPage === 'dashboard') {
       regenerateRevenueData();
     }
-  }, [revenueViewMode]);
+  }, [revenueViewMode, revenueSelectedYear]);
 
   // Also regenerate when seedlings change
   useEffect(() => {
@@ -358,7 +361,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       // Small delay to ensure state updates
       await new Promise(resolve => setTimeout(resolve, 100));
 
+      // Generate data for both Fiber Production and Sales Revenue charts
+      const production = await generateRevenueData(productionViewMode);
       const revenue = await generateRevenueData(revenueViewMode);
+      console.log('📊 Production data loaded:', production);
       console.log('📊 Revenue data loaded:', revenue);
 
       // Calculate totals before setting state
@@ -366,6 +372,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       const totalFiber = revenue.reduce((sum: number, item: any) => sum + (item.fiberKg || 0), 0);
       console.log('💰 Totals calculated - Revenue:', totalRev, 'Fiber:', totalFiber, 'kg');
 
+      setProductionData(production);
       setRevenueData(revenue);
       console.log('✅ Analytics data generation completed');
     } catch (error) {
@@ -582,7 +589,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const generateRevenueData = async (viewMode: 'monthly' | 'yearly' = revenueViewMode) => {
+  const generateRevenueData = async (viewMode: 'monthly' | 'yearly' = revenueViewMode, yearToUse: number = selectedYear) => {
     try {
       const token = localStorage.getItem('accessToken');
       const userStr = localStorage.getItem('user');
@@ -600,7 +607,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         });
         return viewMode === 'monthly'
           ? Array.from({ length: 12 }, (_, i) => ({
-            month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
+            month: new Date(yearToUse, i).toLocaleString('default', { month: 'short' }),
             revenue: 0,
             profit: 0,
             fiberKg: 0
@@ -620,7 +627,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         console.log('No harvest data available');
         return viewMode === 'monthly'
           ? Array.from({ length: 12 }, (_, i) => ({
-            month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
+            month: new Date(yearToUse, i).toLocaleString('default', { month: 'short' }),
             revenue: 0,
             profit: 0,
             fiberKg: 0
@@ -652,7 +659,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
       if (viewMode === 'monthly') {
         const monthlyData = Array.from({ length: 12 }, (_, i) => ({
-          month: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
+          month: new Date(yearToUse, i).toLocaleString('default', { month: 'short' }),
           revenue: 0,
           profit: 0,
           fiberKg: 0
@@ -662,19 +669,19 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         let totalFiber = 0;
         verifiedHarvests.forEach((harvest: any) => {
           const harvestDate = new Date(harvest.harvest_date);
-          if (harvestDate.getFullYear() === selectedYear) {
+          if (harvestDate.getFullYear() === yearToUse) {
             const monthIndex = harvestDate.getMonth();
             const fiberKg = parseFloat(harvest.dry_fiber_output_kg) || 0;
             monthlyData[monthIndex].fiberKg += fiberKg;
             totalFiber += fiberKg;
           }
         });
-        console.log(`📈 Monthly fiber data for ${selectedYear}:`, totalFiber, 'kg total');
+        console.log(`📈 Monthly fiber data for ${yearToUse}:`, totalFiber, 'kg total');
 
         // Add sales data for revenue
         salesData.forEach((sale: any) => {
           const saleDate = new Date(sale.sale_date);
-          if (saleDate.getFullYear() === selectedYear) {
+          if (saleDate.getFullYear() === yearToUse) {
             const monthIndex = saleDate.getMonth();
             const amount = parseFloat(sale.total_amount) || 0;
             monthlyData[monthIndex].revenue += amount;
@@ -682,7 +689,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           }
         });
         
-        console.log(`📈 Monthly revenue data for ${selectedYear}:`, monthlyData);
+        console.log(`📈 Monthly revenue data for ${yearToUse}:`, monthlyData);
 
         return monthlyData;
       } else {
@@ -747,8 +754,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const regenerateProductionData = async () => {
     setLoadingProductionChart(true);
     try {
-      const healthData = generateFarmHealthData(productionViewMode);
-      setFarmHealthData(healthData);
+      const production = await generateRevenueData(productionViewMode, productionSelectedYear);
+      setProductionData(production);
     } catch (error) {
       console.error('Error regenerating production data:', error);
     } finally {
@@ -759,7 +766,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const regenerateRevenueData = async () => {
     setLoadingRevenueChart(true);
     try {
-      const revenue = await generateRevenueData(revenueViewMode);
+      const revenue = await generateRevenueData(revenueViewMode, revenueSelectedYear);
       setRevenueData(revenue);
     } catch (error) {
       console.error('Error regenerating revenue data:', error);
@@ -1716,25 +1723,38 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Abaca Fiber Production</h2>
                             <p className="text-xs sm:text-sm text-gray-600">Fiber harvest trends</p>
                           </div>
-                          <div className="inline-flex bg-gray-100 rounded-lg p-1">
-                            <button
-                              onClick={() => setProductionViewMode('monthly')}
-                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${productionViewMode === 'monthly'
-                                ? 'bg-white text-orange-600 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                            >
-                              Monthly
-                            </button>
-                            <button
-                              onClick={() => setProductionViewMode('yearly')}
-                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${productionViewMode === 'yearly'
-                                ? 'bg-white text-orange-600 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                            >
-                              Yearly
-                            </button>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                              <button
+                                onClick={() => setProductionViewMode('monthly')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${productionViewMode === 'monthly'
+                                  ? 'bg-white text-orange-600 shadow-sm'
+                                  : 'text-gray-600 hover:text-gray-900'
+                                  }`}
+                              >
+                                Monthly
+                              </button>
+                              <button
+                                onClick={() => setProductionViewMode('yearly')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${productionViewMode === 'yearly'
+                                  ? 'bg-white text-orange-600 shadow-sm'
+                                  : 'text-gray-600 hover:text-gray-900'
+                                  }`}
+                              >
+                                Yearly
+                              </button>
+                            </div>
+                            {productionViewMode === 'monthly' && (
+                              <select
+                                value={productionSelectedYear}
+                                onChange={(e) => setProductionSelectedYear(Number(e.target.value))}
+                                className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 shadow-sm"
+                              >
+                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                  <option key={year} value={year}>{year}</option>
+                                ))}
+                              </select>
+                            )}
                           </div>
                         </div>
                         {loadingProductionChart ? (
@@ -1743,9 +1763,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           </div>
                         ) : (
                         <div className={productionViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
-                          <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(farmHealthData.length * 120, 500) : '100%'} height={window.innerWidth < 640 ? 250 : 300}>
+                          <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(productionData.length * 120, 500) : '100%'} height={window.innerWidth < 640 ? 250 : 300}>
                           {productionViewMode === 'monthly' ? (
-                            <AreaChart data={farmHealthData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                            <AreaChart data={productionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                               <defs>
                                 <linearGradient id="colorFiberMonth" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor="#f97316" stopOpacity={0.6} />
@@ -1788,7 +1808,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               />
                             </AreaChart>
                           ) : (
-                            <BarChart data={farmHealthData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
+                            <BarChart data={productionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
                               <defs>
                                 <linearGradient id="colorFiberYear" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
@@ -1856,6 +1876,17 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                 Yearly
                               </button>
                             </div>
+                            {revenueViewMode === 'monthly' && (
+                              <select
+                                value={revenueSelectedYear}
+                                onChange={(e) => setRevenueSelectedYear(Number(e.target.value))}
+                                className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 shadow-sm"
+                              >
+                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                  <option key={year} value={year}>{year}</option>
+                                ))}
+                              </select>
+                            )}
                             <div className="px-3 py-1.5 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
                               <p className="text-xs text-purple-700 font-semibold">Total: ₱{(totalRevenue / 1000).toFixed(1)}K</p>
                             </div>
