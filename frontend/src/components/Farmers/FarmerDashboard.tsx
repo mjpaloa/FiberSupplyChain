@@ -120,6 +120,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     { status: 'Needs Support', percentage: 0, count: 0, color: { id: 'red', start: '#ef4444', end: '#dc2626' } }
   ]);
   const [loadingCharts, setLoadingCharts] = useState(false);
+  const [loadingProductionChart, setLoadingProductionChart] = useState(false);
+  const [loadingRevenueChart, setLoadingRevenueChart] = useState(false);
 
   // Get user info from localStorage
   const userStr = localStorage.getItem('user');
@@ -227,7 +229,21 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       generateAnalyticsData();
       generateFarmStatusData();
     }
-  }, [currentPage, distributionViewMode, productionViewMode, revenueViewMode, selectedYear]);
+  }, [currentPage, distributionViewMode, selectedYear]);
+
+  // Separate effect for Fiber Production chart
+  useEffect(() => {
+    if (currentPage === 'dashboard') {
+      regenerateProductionData();
+    }
+  }, [productionViewMode]);
+
+  // Separate effect for Sales Revenue chart
+  useEffect(() => {
+    if (currentPage === 'dashboard') {
+      regenerateRevenueData();
+    }
+  }, [revenueViewMode]);
 
   // Also regenerate when seedlings change
   useEffect(() => {
@@ -725,6 +741,30 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           profit: 0,
           fiberKg: 0
         }));
+    }
+  };
+
+  const regenerateProductionData = async () => {
+    setLoadingProductionChart(true);
+    try {
+      const healthData = generateFarmHealthData(productionViewMode);
+      setFarmHealthData(healthData);
+    } catch (error) {
+      console.error('Error regenerating production data:', error);
+    } finally {
+      setLoadingProductionChart(false);
+    }
+  };
+
+  const regenerateRevenueData = async () => {
+    setLoadingRevenueChart(true);
+    try {
+      const revenue = await generateRevenueData(revenueViewMode);
+      setRevenueData(revenue);
+    } catch (error) {
+      console.error('Error regenerating revenue data:', error);
+    } finally {
+      setLoadingRevenueChart(false);
     }
   };
 
@@ -1415,7 +1455,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           </div>
                         </div>
                         <div className={distributionViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
-                          <ResponsiveContainer width={distributionViewMode === 'yearly' ? distributionData.length * 120 : '100%'} height={window.innerWidth < 640 ? 250 : 300}>
+                          <ResponsiveContainer width={distributionViewMode === 'yearly' ? distributionData.length * 120 : '100%'} height={window.innerWidth < 640 ? 350 : 450}>
                           {distributionViewMode === 'monthly' ? (
                             <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35}>
                           <defs>
@@ -1697,15 +1737,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             </button>
                           </div>
                         </div>
-                        {loadingCharts ? (
+                        {loadingProductionChart ? (
                           <div className="flex items-center justify-center h-48 sm:h-56 md:h-64">
                             <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-orange-600"></div>
                           </div>
                         ) : (
                         <div className={productionViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
-                          <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : '100%'} height={window.innerWidth < 640 ? 250 : 300}>
+                          <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(farmHealthData.length * 120, 500) : '100%'} height={window.innerWidth < 640 ? 250 : 300}>
                           {productionViewMode === 'monthly' ? (
-                            <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                            <AreaChart data={farmHealthData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                               <defs>
                                 <linearGradient id="colorFiberMonth" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor="#f97316" stopOpacity={0.6} />
@@ -1722,7 +1762,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               <YAxis
                                 stroke="#6b7280"
                                 style={{ fontSize: '13px', fontWeight: 600 }}
-                                label={{ value: 'Fiber (kg)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontWeight: 700 } }}
                                 tickFormatter={(value) => value.toLocaleString()}
                                 tickLine={false}
                               />
@@ -1749,7 +1788,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               />
                             </AreaChart>
                           ) : (
-                            <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
+                            <BarChart data={farmHealthData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
                               <defs>
                                 <linearGradient id="colorFiberYear" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
@@ -1766,7 +1805,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               <YAxis
                                 stroke="#6b7280"
                                 style={{ fontSize: '13px', fontWeight: 600 }}
-                                label={{ value: 'Fiber (kg)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontWeight: 700 } }}
                                 tickFormatter={(value) => value.toLocaleString()}
                                 tickLine={false}
                               />
@@ -1823,7 +1861,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             </div>
                           </div>
                         </div>
-                        {loadingCharts ? (
+                        {loadingRevenueChart ? (
                           <div className="flex items-center justify-center h-48 sm:h-56 md:h-64">
                             <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-purple-600"></div>
                           </div>
@@ -1848,7 +1886,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               <YAxis
                                 stroke="#6b7280"
                                 style={{ fontSize: '13px', fontWeight: 600 }}
-                                label={{ value: 'Revenue (₱)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontWeight: 700 } }}
                                 tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}K`}
                                 tickLine={false}
                               />
@@ -1892,7 +1929,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               <YAxis
                                 stroke="#6b7280"
                                 style={{ fontSize: '13px', fontWeight: 600 }}
-                                label={{ value: 'Revenue (₱)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontWeight: 700 } }}
                                 tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}K`}
                                 tickLine={false}
                               />
