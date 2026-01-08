@@ -63,6 +63,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [showPlantingModal, setShowPlantingModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedSeedling, setSelectedSeedling] = useState<any>(null);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string>('');
   const [plantingData, setPlantingData] = useState({
     planting_date: new Date().toISOString().split('T')[0],
     planting_quantity: 0,
@@ -2649,7 +2651,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         <img
                           src={selectedSeedling.planting_photo_1}
                           alt="Planting 1"
-                          className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
+                          className="w-full h-48 object-cover rounded-lg border-2 border-green-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            setSelectedPhoto(selectedSeedling.planting_photo_1);
+                            setShowPhotoModal(true);
+                          }}
                         />
                       </div>
                     )}
@@ -2659,7 +2665,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         <img
                           src={selectedSeedling.planting_photo_2}
                           alt="Planting 2"
-                          className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
+                          className="w-full h-48 object-cover rounded-lg border-2 border-green-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            setSelectedPhoto(selectedSeedling.planting_photo_2);
+                            setShowPhotoModal(true);
+                          }}
                         />
                       </div>
                     )}
@@ -2669,7 +2679,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         <img
                           src={selectedSeedling.planting_photo_3}
                           alt="Planting 3"
-                          className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
+                          className="w-full h-48 object-cover rounded-lg border-2 border-green-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            setSelectedPhoto(selectedSeedling.planting_photo_3);
+                            setShowPhotoModal(true);
+                          }}
                         />
                       </div>
                     )}
@@ -2678,6 +2692,27 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Full Screen Photo Modal */}
+      {showPhotoModal && selectedPhoto && (
+        <div 
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4"
+          onClick={() => setShowPhotoModal(false)}
+        >
+          <button
+            onClick={() => setShowPhotoModal(false)}
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-200 z-10"
+          >
+            <X className="w-6 h-6 text-white" />
+          </button>
+          <img
+            src={selectedPhoto}
+            alt="Full screen view"
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
