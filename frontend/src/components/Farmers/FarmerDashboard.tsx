@@ -126,6 +126,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [loadingCharts, setLoadingCharts] = useState(false);
   const [loadingProductionChart, setLoadingProductionChart] = useState(false);
   const [loadingRevenueChart, setLoadingRevenueChart] = useState(false);
+  const [latestFarmStatus, setLatestFarmStatus] = useState<{ condition: string; date: string } | null>(null);
+  const [latestDeliveryStatus, setLatestDeliveryStatus] = useState<{ status: string; count: number } | null>(null);
 
   // Get user info from localStorage
   const userStr = localStorage.getItem('user');
@@ -157,6 +159,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   useEffect(() => {
     fetchFarmerProfile();
     fetchNotifications();
+    fetchLatestFarmStatus();
+    fetchLatestDeliveryStatus();
   }, []);
 
   // Fetch notifications for farmer
@@ -497,6 +501,52 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   };
 
   // Fetch farm status data from monitoring records (farmer's own farms only)
+  const fetchLatestFarmStatus = async () => {
+    try {
+      const response = await apiGet('https://easyabaca-api.vercel.app/api/farmers/monitoring');
+      
+      if (response.ok) {
+        const result = await response.json();
+        const records = result.records || [];
+        
+        if (records.length > 0) {
+          const sortedRecords = records.sort((a: any, b: any) => 
+            new Date(b.dateOfVisit).getTime() - new Date(a.dateOfVisit).getTime()
+          );
+          const latest = sortedRecords[0];
+          setLatestFarmStatus({
+            condition: latest.farm_condition || 'Unknown',
+            date: latest.dateOfVisit
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching latest farm status:', error);
+    }
+  };
+
+  const fetchLatestDeliveryStatus = async () => {
+    try {
+      const response = await apiGet('https://easyabaca-api.vercel.app/api/fiber-deliveries/farmer/my-deliveries');
+      
+      if (response.ok) {
+        const result = await response.json();
+        const deliveries = result.deliveries || [];
+        
+        const activeDeliveries = deliveries.filter((d: any) => 
+          d.status === 'In Transit' || d.status === 'Pending'
+        );
+        
+        setLatestDeliveryStatus({
+          status: activeDeliveries.length > 0 ? 'Active' : deliveries.length > 0 ? 'Completed' : 'No Deliveries',
+          count: activeDeliveries.length
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching delivery status:', error);
+    }
+  };
+
   const generateFarmStatusData = async () => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -1388,16 +1438,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
                 return (
                   <>
-                    {/* Analytics Dashboard Header */}
-                    <div className="mb-6 sm:mb-8">
-                      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Abaca Farm Analytics Dashboard</h1>
-                      <p className="text-sm sm:text-base text-gray-600">Comprehensive insights into your farm performance and productivity</p>
-                    </div>
 
                     {/* 1. KPI Cards Section */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                       {/* Seedlings Received */}
-                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      <div className="group bg-gradient-to-br from-emerald-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-emerald-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
                           <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
                             <Package className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-emerald-600" />
@@ -1405,11 +1450,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         </div>
                         <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Seedlings Received</p>
                         <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{totalDistributed.toLocaleString()}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600">Total distributed to you</p>
                       </div>
 
                       {/* Seedlings Planted */}
-                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      <div className="group bg-gradient-to-br from-blue-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-blue-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
                           <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
                             <Leaf className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-blue-600" />
@@ -1417,11 +1461,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         </div>
                         <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Seedlings Planted</p>
                         <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{totalPlanted.toLocaleString()}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600">Total seedlings planted</p>
                       </div>
 
                       {/* Fiber Harvested */}
-                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      <div className="group bg-gradient-to-br from-orange-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-orange-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
                           <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
                             <Activity className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-orange-600" />
@@ -1429,11 +1472,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         </div>
                         <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Fiber Harvested</p>
                         <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{totalFiberKg.toLocaleString()} <span className="text-base sm:text-lg md:text-2xl">kg</span></h3>
-                        <p className="text-xs sm:text-sm text-gray-600">Total fiber production</p>
                       </div>
 
                       {/* Total Revenue */}
-                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      <div className="group bg-gradient-to-br from-purple-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-purple-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
                           <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
                             <span className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-600">₱</span>
@@ -1441,32 +1483,56 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         </div>
                         <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Total Revenue</p>
                         <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">₱{totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'K' : totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600">Total earnings from sales</p>
                       </div>
 
                       {/* Farm Status */}
-                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-green-600" />
+                      {(() => {
+                        const condition = latestFarmStatus?.condition || 'No Data';
+                        const getStatusColor = (status: string) => {
+                          if (status === 'Healthy') return { bg: 'from-green-50 to-white', text: 'text-green-600', icon: 'text-green-600', border: 'border-green-100', iconBg: 'from-green-50 to-green-100' };
+                          if (status === 'Needs Support') return { bg: 'from-yellow-50 to-white', text: 'text-yellow-600', icon: 'text-yellow-600', border: 'border-yellow-100', iconBg: 'from-yellow-50 to-yellow-100' };
+                          if (status === 'Damaged') return { bg: 'from-red-50 to-white', text: 'text-red-600', icon: 'text-red-600', border: 'border-red-100', iconBg: 'from-red-50 to-red-100' };
+                          return { bg: 'from-gray-50 to-white', text: 'text-gray-600', icon: 'text-gray-600', border: 'border-gray-100', iconBg: 'from-gray-50 to-gray-100' };
+                        };
+                        const colors = getStatusColor(condition);
+                        return (
+                          <div className={`group bg-gradient-to-br ${colors.bg} rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border ${colors.border} shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}>
+                            <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
+                              <div className={`p-2 sm:p-2.5 md:p-3 bg-gradient-to-br ${colors.iconBg} rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300`}>
+                                <CheckCircle className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 ${colors.icon}`} />
+                              </div>
+                            </div>
+                            <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Farm Status</p>
+                            <h3 className={`text-2xl sm:text-3xl md:text-4xl font-bold ${colors.text} mb-1 sm:mb-2`}>{condition}</h3>
                           </div>
-                        </div>
-                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Farm Status</p>
-                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-600 mb-1 sm:mb-2">Healthy</h3>
-                        <p className="text-xs sm:text-sm text-gray-600">Latest monitoring result</p>
-                      </div>
+                        );
+                      })()}
 
                       {/* Delivery Status */}
-                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <Truck className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-cyan-600" />
+                      {(() => {
+                        const status = latestDeliveryStatus?.status || 'No Data';
+                        const count = latestDeliveryStatus?.count || 0;
+                        const getDeliveryColor = (status: string) => {
+                          if (status === 'Active') return { bg: 'from-cyan-50 to-white', text: 'text-cyan-600', icon: 'text-cyan-600', border: 'border-cyan-100', iconBg: 'from-cyan-50 to-cyan-100' };
+                          if (status === 'Completed') return { bg: 'from-green-50 to-white', text: 'text-green-600', icon: 'text-green-600', border: 'border-green-100', iconBg: 'from-green-50 to-green-100' };
+                          if (status === 'No Deliveries') return { bg: 'from-gray-50 to-white', text: 'text-gray-600', icon: 'text-gray-600', border: 'border-gray-100', iconBg: 'from-gray-50 to-gray-100' };
+                          return { bg: 'from-blue-50 to-white', text: 'text-blue-600', icon: 'text-blue-600', border: 'border-blue-100', iconBg: 'from-blue-50 to-blue-100' };
+                        };
+                        const colors = getDeliveryColor(status);
+                        return (
+                          <div className={`group bg-gradient-to-br ${colors.bg} rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border ${colors.border} shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}>
+                            <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
+                              <div className={`p-2 sm:p-2.5 md:p-3 bg-gradient-to-br ${colors.iconBg} rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300`}>
+                                <Truck className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 ${colors.icon}`} />
+                              </div>
+                            </div>
+                            <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Delivery Status</p>
+                            <h3 className={`text-2xl sm:text-3xl md:text-4xl font-bold ${colors.text} mb-1 sm:mb-2`}>
+                              {status} {status === 'Active' && count > 0 && <span className="text-base sm:text-lg md:text-2xl">({count})</span>}
+                            </h3>
                           </div>
-                        </div>
-                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Delivery Status</p>
-                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-cyan-600 mb-1 sm:mb-2">Active</h3>
-                        <p className="text-xs sm:text-sm text-gray-600">Ongoing deliveries</p>
-                      </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Charts Section - 2x2 Grid */}
@@ -1523,8 +1589,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <span className="text-gray-700 font-medium text-xs sm:text-sm">Planted</span>
                           </div>
                         </div>
-                        <div className={distributionViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
-                          <ResponsiveContainer width={distributionViewMode === 'yearly' ? distributionData.length * 120 : '100%'} height={window.innerWidth < 640 ? 350 : 450}>
+                        <div className="overflow-x-auto">
+                          <ResponsiveContainer width={distributionViewMode === 'yearly' ? distributionData.length * 120 : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 300 : 450}>
                           {distributionViewMode === 'monthly' ? (
                             <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35}>
                           <defs>
@@ -1541,8 +1607,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <XAxis
                             dataKey="month"
                             stroke="#6b7280"
-                            style={{ fontSize: '13px', fontWeight: 600 }}
+                            style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
                             tickLine={false}
+                            angle={window.innerWidth < 640 ? -45 : 0}
+                            textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
+                            height={window.innerWidth < 640 ? 60 : 30}
                           />
                           <YAxis
                             stroke="#6b7280"
@@ -1824,8 +1893,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-orange-600"></div>
                           </div>
                         ) : (
-                        <div className={productionViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
-                          <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(productionData.length * 120, 500) : '100%'} height={window.innerWidth < 640 ? 250 : 300}>
+                        <div className="overflow-x-auto">
+                          <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(productionData.length * 120, 500) : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 250 : 300}>
                           {productionViewMode === 'monthly' ? (
                             <AreaChart data={productionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                               <defs>
@@ -1838,8 +1907,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               <XAxis
                                 dataKey="month"
                                 stroke="#6b7280"
-                                style={{ fontSize: '13px', fontWeight: 600 }}
+                                style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
                                 tickLine={false}
+                                angle={window.innerWidth < 640 ? -45 : 0}
+                                textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
+                                height={window.innerWidth < 640 ? 60 : 30}
                               />
                               <YAxis
                                 stroke="#6b7280"
@@ -1959,8 +2031,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-purple-600"></div>
                           </div>
                         ) : (
-                        <div className={revenueViewMode === 'yearly' ? 'overflow-x-auto' : ''}>
-                          <ResponsiveContainer width={revenueViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : '100%'} height={window.innerWidth < 640 ? 250 : 300}>
+                        <div className="overflow-x-auto">
+                          <ResponsiveContainer width={revenueViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 250 : 300}>
                           {revenueViewMode === 'monthly' ? (
                             <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                               <defs>
@@ -1973,8 +2045,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               <XAxis
                                 dataKey="month"
                                 stroke="#6b7280"
-                                style={{ fontSize: '13px', fontWeight: 600 }}
+                                style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
                                 tickLine={false}
+                                angle={window.innerWidth < 640 ? -45 : 0}
+                                textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
+                                height={window.innerWidth < 640 ? 60 : 30}
                               />
                               <YAxis
                                 stroke="#6b7280"
