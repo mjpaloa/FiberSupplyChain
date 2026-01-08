@@ -234,6 +234,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     }
   }, [seedlings, currentPage]);
 
+  // Calculate seedling statistics
+  const seedlingStats = useMemo(() => {
+    const total = seedlings.length;
+    const distributed = seedlings.filter(s => s.status === 'distributed').length;
+    const planted = seedlings.filter(s => s.status === 'planted').length;
+    const damaged = seedlings.filter(s => s.status === 'damaged').length;
+    const complete = seedlings.filter(s => s.status === 'Complete').length;
+    const totalQuantity = seedlings.reduce((sum, s) => sum + (s.quantity_distributed || 0), 0);
+
+    return { total, distributed, planted, damaged, complete, totalQuantity };
+  }, [seedlings]);
+
   // Filter seedlings based on search and status
   useEffect(() => {
     let filtered = seedlings;
@@ -1899,6 +1911,69 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
           {currentPage === 'seedlings' && (
             <>
+              {/* Seedlings Stats Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-5 md:mb-6">
+                {/* Total Seedlings Card */}
+                <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                        <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Total</span>
+                    </div>
+                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Total Seedlings</p>
+                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.total}</p>
+                  </div>
+                </div>
+
+                {/* Total Quantity Card */}
+                <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                        <Package className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Units</span>
+                    </div>
+                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Total Quantity</p>
+                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.totalQuantity}</p>
+                  </div>
+                </div>
+
+                {/* Planted Card */}
+                <div className="group relative bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Planted</span>
+                    </div>
+                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Planted</p>
+                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.planted}</p>
+                  </div>
+                </div>
+
+                {/* Distributed Card */}
+                <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+                        <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Active</span>
+                    </div>
+                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Distributed</p>
+                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.distributed}</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Modern Filters with Glassmorphism - UserManagement Style */}
               <div className="bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-white/20 p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
                 <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
