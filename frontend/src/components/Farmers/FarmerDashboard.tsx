@@ -24,7 +24,8 @@ import {
   Truck,
   DollarSign,
   Activity,
-  Lock
+  Lock,
+  ChevronDown
 } from 'lucide-react';
 import {
   LineChart,
@@ -1237,10 +1238,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
                 {/* Notification Dropdown */}
                 {showNotifications && (
-                  <div className="fixed sm:absolute right-0 sm:right-0 left-0 sm:left-auto top-16 sm:top-auto sm:mt-2 w-full sm:w-80 md:w-96 sm:max-w-[calc(100vw-2rem)] bg-white rounded-none sm:rounded-xl shadow-2xl border-t sm:border border-gray-200 z-50 max-h-[calc(100vh-4rem)] sm:max-h-96 overflow-hidden">
+                  <div className="fixed md:absolute right-4 md:right-0 left-4 md:left-auto mt-2 md:w-80 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-2 sm:px-4 py-3 flex items-center justify-between">
-                      <h3 className="text-white font-bold text-sm">Notifications</h3>
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-3 md:p-4 border-b border-gray-100 flex items-center justify-between">
+                      <h3 className="text-white font-semibold text-sm md:text-base">Notifications</h3>
                       <button
                         onClick={() => setShowNotifications(false)}
                         className="text-white hover:bg-white/20 rounded-lg p-1 transition"
@@ -1250,7 +1251,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     </div>
 
                     {/* Notifications List */}
-                    <div className="overflow-y-auto max-h-80 p-2 sm:p-0">
+                    <div className="max-h-64 md:max-h-96 overflow-y-auto">
                       {notifications.length === 0 ? (
                         <div className="text-center py-8 px-4">
                           <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -1292,15 +1293,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
                     {/* Footer */}
                     {notifications.length > 0 && (
-                      <div className="border-t border-gray-200 px-4 py-2 bg-gray-50">
+                      <div className="p-3 border-t border-gray-100 bg-gray-50">
                         <button
                           onClick={() => {
                             setUnreadCount(0);
                             setShowNotifications(false);
                           }}
-                          className="text-xs text-green-600 hover:text-green-700 font-semibold"
+                          className="w-full text-center text-sm text-green-600 hover:text-green-700 font-medium"
                         >
-                          Mark all as read
+                          View all notifications
                         </button>
                       </div>
                     )}
@@ -1309,107 +1310,99 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
               </div>
               {/* Profile Dropdown */}
               <div className="relative">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <div className="text-right hidden lg:block">
-                    <p className="text-sm font-medium text-gray-800">{user?.fullName || 'Farmer'}</p>
-                    <p className="text-xs text-gray-500">{user?.associationName || 'Independent Farmer'}</p>
-                  </div>
-                  <button
-                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                    className="hover:opacity-80 transition-opacity cursor-pointer"
-                    title="Profile Menu"
-                  >
+                <button
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <div className="w-9 h-9 rounded-full overflow-hidden bg-green-600 flex items-center justify-center text-white font-semibold border-2 border-green-200">
                     {profilePhoto ? (
                       <img
                         src={profilePhoto}
-                        alt="Profile"
-                        className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-green-500 shadow-lg"
+                        alt={user?.fullName || 'Farmer'}
+                        className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base">
-                        {user?.fullName?.charAt(0) || 'F'}
-                      </div>
+                      <span>{user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'F'}</span>
                     )}
-                  </button>
-                </div>
+                  </div>
+                  <span className="font-medium text-sm text-gray-800 hidden sm:block">{user?.fullName || 'Farmer'}</span>
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                </button>
 
                 {/* Profile Dropdown Menu */}
                 {showProfileDropdown && (
-                  <div className="fixed sm:absolute right-0 sm:right-0 left-0 sm:left-auto top-16 sm:top-auto sm:mt-2 w-full sm:w-64 bg-white rounded-none sm:rounded-xl shadow-2xl border-t sm:border border-gray-200 z-50 overflow-hidden">
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {profilePhoto ? (
-                          <img
-                            src={profilePhoto}
-                            alt="Profile"
-                            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-lg"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-green-600 font-bold text-lg">
-                            {user?.fullName?.charAt(0) || 'F'}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white font-semibold text-sm truncate">{user?.fullName || 'Farmer'}</p>
-                          <p className="text-green-100 text-xs truncate">{user?.associationName || 'Independent Farmer'}</p>
+                  <div className="fixed sm:absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-64 sm:w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-green-600 flex items-center justify-center text-white font-semibold border-2 border-green-200">
+                          {profilePhoto ? (
+                            <img
+                              src={profilePhoto}
+                              alt={user?.fullName || 'Farmer'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-lg">{user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'F'}</span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">{user?.fullName || 'Farmer'}</p>
+                          <p className="text-xs text-gray-500">{user?.associationName || 'Independent Farmer'}</p>
                         </div>
                       </div>
+                      <p className="text-sm text-gray-600">{user?.email || ''}</p>
+                      <p className="text-xs text-gray-400 mt-1">{user?.phone || ''}</p>
                     </div>
 
-                    {/* Menu Items */}
-                    <div className="py-2">
-                      <button
-                        onClick={() => {
-                          setCurrentPage('profile');
-                          setShowProfile(false);
-                          setShowEditProfile(false);
-                          setShowChangePassword(false);
-                          setShowProfileDropdown(false);
-                        }}
-                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition text-left"
-                      >
-                        <User className="w-5 h-5 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700">View Profile</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setCurrentPage('profile');
-                          setShowEditProfile(true);
-                          setShowProfile(false);
-                          setShowChangePassword(false);
-                          setShowProfileDropdown(false);
-                        }}
-                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition text-left"
-                      >
-                        <Settings className="w-5 h-5 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700">Edit Profile</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setCurrentPage('profile');
-                          setShowChangePassword(true);
-                          setShowProfile(false);
-                          setShowEditProfile(false);
-                          setShowProfileDropdown(false);
-                        }}
-                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition text-left"
-                      >
-                        <Lock className="w-5 h-5 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700">Change Password</span>
-                      </button>
-                      <div className="border-t border-gray-200 my-1"></div>
-                      <button
-                        onClick={() => {
-                          setShowProfileDropdown(false);
-                          onLogout();
-                        }}
-                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition text-left"
-                      >
-                        <LogOut className="w-5 h-5 text-red-600" />
-                        <span className="text-sm font-medium text-red-600">Logout</span>
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => {
+                        setCurrentPage('profile');
+                        setShowProfile(false);
+                        setShowEditProfile(false);
+                        setShowChangePassword(false);
+                        setShowProfileDropdown(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <User size={16} />
+                      <span className="font-medium">View Profile</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentPage('profile');
+                        setShowEditProfile(true);
+                        setShowProfile(false);
+                        setShowChangePassword(false);
+                        setShowProfileDropdown(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Settings size={16} />
+                      <span className="font-medium">Edit Profile</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentPage('profile');
+                        setShowChangePassword(true);
+                        setShowProfile(false);
+                        setShowEditProfile(false);
+                        setShowProfileDropdown(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Lock size={16} />
+                      <span className="font-medium">Change Password</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowProfileDropdown(false);
+                        onLogout();
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                    >
+                      <LogOut size={16} />
+                      <span className="font-medium">Logout</span>
+                    </button>
                   </div>
                 )}
               </div>
