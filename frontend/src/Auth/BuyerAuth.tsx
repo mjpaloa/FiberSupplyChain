@@ -534,6 +534,9 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
                       <div>
                         <h4 className="font-semibold text-green-900 text-sm">Verification Documents Required</h4>
                         <p className="text-xs text-green-700">Upload owner's photo, ID, and business permit</p>
+                        <div className="mt-2 bg-yellow-100 border border-yellow-300 rounded px-2 py-1">
+                          <p className="text-xs text-yellow-800 font-medium">⚠️ Important: Each file must be less than 5MB</p>
+                        </div>
                       </div>
                     </div>
 
@@ -667,7 +670,7 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Min. 8 characters"
+                        placeholder="••••••••"
                       />
                     </div>
                     <div>
@@ -682,7 +685,16 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
                       />
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500">Must contain uppercase, lowercase, number, and special character</p>
+                  <div className="mt-2 text-xs text-gray-600">
+                    <p className="font-medium mb-1">Password must contain:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>At least 4 characters</li>
+                      <li>One uppercase letter (A-Z)</li>
+                      <li>One lowercase letter (a-z)</li>
+                      <li>One number (0-9)</li>
+                      <li>One special character (@$!%*?&)</li>
+                    </ul>
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Remarks / Notes</label>

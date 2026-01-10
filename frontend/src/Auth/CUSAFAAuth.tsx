@@ -439,6 +439,16 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
+                    <div className="mt-2 text-xs text-gray-600">
+                      <p className="font-medium mb-1">Password must contain:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>At least 4 characters</li>
+                        <li>One uppercase letter (A-Z)</li>
+                        <li>One lowercase letter (a-z)</li>
+                        <li>One number (0-9)</li>
+                        <li>One special character (@$!%*?&)</li>
+                      </ul>
+                    </div>
                   </div>
 
                   <div>
