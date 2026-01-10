@@ -175,6 +175,11 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle validation errors array
+        if (data.errors && Array.isArray(data.errors)) {
+          const errorMessages = data.errors.map((err: any) => err.msg || err.message).join(', ');
+          throw new Error(`Validation failed: ${errorMessages}`);
+        }
         const errorMessage = data.error || data.message || 'Registration failed';
         const errorDetails = data.details ? `\nDetails: ${JSON.stringify(data.details)}` : '';
         throw new Error(`${errorMessage}${errorDetails}`);

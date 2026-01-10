@@ -51,18 +51,9 @@ const farmerRegistrationValidation = [
     .withMessage('Age must be between 18 and 100'),
   
   body('contactNumber')
-    .optional()
-    .custom((value) => {
-      // Allow empty values
-      if (!value) return true;
-      // In development, be more lenient
-      if (process.env.NODE_ENV === 'development') return true;
-      // In production, validate Philippine numbers
-      if (!/^(\+63|0)?[0-9]{10}$/.test(value)) {
-        throw new Error('Invalid Philippine contact number');
-      }
-      return true;
-    }),
+    .optional({ checkFalsy: true })
+    .matches(/^(\+639\d{9}|09\d{9}|9\d{9})$/)
+    .withMessage('Invalid Philippine contact number (format: 09XXXXXXXXX or +639XXXXXXXXX)'),
   
   emailValidation,
   passwordValidation,
@@ -182,9 +173,9 @@ const buyerRegistrationValidation = [
     .withMessage('Owner name must be between 2 and 255 characters'),
   
   body('contactNumber')
-    .optional()
-    .matches(/^(\+63|0)?[0-9]{10}$/)
-    .withMessage('Invalid Philippine contact number'),
+    .optional({ checkFalsy: true })
+    .matches(/^(\+639\d{9}|09\d{9}|9\d{9})$/)
+    .withMessage('Invalid Philippine contact number (format: 09XXXXXXXXX or +639XXXXXXXXX)'),
   
   emailValidation,
   passwordValidation,
@@ -234,9 +225,9 @@ const officerRegistrationValidation = [
     .withMessage('Association name must be between 2 and 255 characters'),
   
   body('contactNumber')
-    .optional()
-    .matches(/^(\+63|0)?[0-9]{10}$/)
-    .withMessage('Invalid Philippine contact number'),
+    .optional({ checkFalsy: true })
+    .matches(/^(\+639\d{9}|09\d{9}|9\d{9})$/)
+    .withMessage('Invalid Philippine contact number (format: 09XXXXXXXXX or +639XXXXXXXXX)'),
   
   emailValidation,
   passwordValidation,
