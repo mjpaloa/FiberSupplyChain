@@ -114,21 +114,47 @@ export class AuthService {
       // Check if email already exists
       const { data: existing } = await supabase
         .from('farmers')
-        .select('farmer_id')
+        .select('farmer_id, verification_status, is_verified')
         .eq('email', data.email)
         .single();
 
       if (existing) {
-        await this.logAuthEvent(
-          null,
-          'farmer',
-          'register',
-          false,
-          ipAddress,
-          userAgent,
-          'Email already exists'
-        );
-        throw new Error('Email already registered');
+        // If user was rejected, delete the old record to allow re-registration
+        if (existing.verification_status === 'rejected' || existing.is_verified === false) {
+          console.log(`🔄 Allowing re-registration for rejected farmer: ${data.email}`);
+          
+          const { error: deleteError } = await supabase
+            .from('farmers')
+            .delete()
+            .eq('farmer_id', existing.farmer_id);
+
+          if (deleteError) {
+            console.error('❌ Error deleting rejected farmer record:', deleteError);
+            throw new Error('Failed to process re-registration');
+          }
+
+          await this.logAuthEvent(
+            null,
+            'farmer',
+            'register',
+            true,
+            ipAddress,
+            userAgent,
+            'Deleted rejected farmer record for re-registration'
+          );
+        } else {
+          // User exists and is not rejected
+          await this.logAuthEvent(
+            null,
+            'farmer',
+            'register',
+            false,
+            ipAddress,
+            userAgent,
+            'Email already exists'
+          );
+          throw new Error('Email already registered');
+        }
       }
 
       // Hash password
@@ -200,21 +226,47 @@ export class AuthService {
       // Check if email already exists
       const { data: existing } = await supabase
         .from('buyers')
-        .select('buyer_id')
+        .select('buyer_id, verification_status, is_verified')
         .eq('email', data.email)
         .single();
 
       if (existing) {
-        await this.logAuthEvent(
-          null,
-          'buyer',
-          'register',
-          false,
-          ipAddress,
-          userAgent,
-          'Email already exists'
-        );
-        throw new Error('Email already registered');
+        // If user was rejected, delete the old record to allow re-registration
+        if (existing.verification_status === 'rejected' || existing.is_verified === false) {
+          console.log(`🔄 Allowing re-registration for rejected buyer: ${data.email}`);
+          
+          const { error: deleteError } = await supabase
+            .from('buyers')
+            .delete()
+            .eq('buyer_id', existing.buyer_id);
+
+          if (deleteError) {
+            console.error('❌ Error deleting rejected buyer record:', deleteError);
+            throw new Error('Failed to process re-registration');
+          }
+
+          await this.logAuthEvent(
+            null,
+            'buyer',
+            'register',
+            true,
+            ipAddress,
+            userAgent,
+            'Deleted rejected buyer record for re-registration'
+          );
+        } else {
+          // User exists and is not rejected
+          await this.logAuthEvent(
+            null,
+            'buyer',
+            'register',
+            false,
+            ipAddress,
+            userAgent,
+            'Email already exists'
+          );
+          throw new Error('Email already registered');
+        }
       }
 
       // Hash password
@@ -279,21 +331,47 @@ export class AuthService {
       // Check if email already exists in association_officers table
       const { data: existingAssoc } = await supabase
         .from('association_officers')
-        .select('officer_id')
+        .select('officer_id, verification_status, is_verified')
         .eq('email', data.email)
         .single();
 
       if (existingAssoc) {
-        await this.logAuthEvent(
-          null,
-          'association_officer',
-          'register',
-          false,
-          ipAddress,
-          userAgent,
-          'Email already exists in association officers'
-        );
-        throw new Error('Email already registered as association officer');
+        // If user was rejected, delete the old record to allow re-registration
+        if (existingAssoc.verification_status === 'rejected' || existingAssoc.is_verified === false) {
+          console.log(`🔄 Allowing re-registration for rejected officer: ${data.email}`);
+          
+          const { error: deleteError } = await supabase
+            .from('association_officers')
+            .delete()
+            .eq('officer_id', existingAssoc.officer_id);
+
+          if (deleteError) {
+            console.error('❌ Error deleting rejected officer record:', deleteError);
+            throw new Error('Failed to process re-registration');
+          }
+
+          await this.logAuthEvent(
+            null,
+            'association_officer',
+            'register',
+            true,
+            ipAddress,
+            userAgent,
+            'Deleted rejected officer record for re-registration'
+          );
+        } else {
+          // User exists and is not rejected
+          await this.logAuthEvent(
+            null,
+            'association_officer',
+            'register',
+            false,
+            ipAddress,
+            userAgent,
+            'Email already exists in association officers'
+          );
+          throw new Error('Email already registered as association officer');
+        }
       }
 
       // Also check organization table to prevent conflicts
