@@ -1091,12 +1091,12 @@ const UserManagement: React.FC = () => {
                     {/* Profile Photo */}
                     <div className="bg-white p-3 rounded-lg shadow-sm">
                       <p className="text-sm font-semibold text-gray-700 mb-2">Profile Photo</p>
-                      {selectedUserDetails.profile_photo ? (
+                      {(selectedUserDetails.profile_photo || selectedUserDetails.profile_picture) ? (
                         <img
-                          src={selectedUserDetails.profile_photo}
+                          src={selectedUserDetails.profile_photo || selectedUserDetails.profile_picture}
                           alt="Profile"
                           className="w-full h-48 object-cover rounded-lg border-2 border-gray-200 hover:scale-105 transition-transform cursor-pointer"
-                          onClick={() => setFullscreenImage(selectedUserDetails.profile_photo)}
+                          onClick={() => setFullscreenImage(selectedUserDetails.profile_photo || selectedUserDetails.profile_picture)}
                         />
                       ) : (
                         <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
