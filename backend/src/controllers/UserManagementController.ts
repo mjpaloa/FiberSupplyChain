@@ -199,8 +199,73 @@ export class UserManagementController {
     }
   }
 
-  // Delete farmer
-  static async deleteFarmer(req: Request, res: Response) {
+  // Deactivate farmer (soft delete with 3-day grace period)
+  static async deactivateFarmer(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const officerId = req.user?.userId;
+
+      // Set deactivation timestamp
+      const deactivatedAt = new Date().toISOString();
+      
+      const { data, error } = await supabase
+        .from('farmers')
+        .update({
+          is_active: false,
+          deactivated_at: deactivatedAt,
+          deactivated_by: officerId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('farmer_id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.status(200).json({ 
+        message: 'Farmer deactivated successfully. Account will be permanently deleted after 3 days if not reactivated.',
+        farmer: data 
+      });
+    } catch (error) {
+      console.error('Error deactivating farmer:', error);
+      res.status(500).json({ error: 'Failed to deactivate farmer' });
+    }
+  }
+
+  // Reactivate farmer
+  static async reactivateFarmer(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const officerId = req.user?.userId;
+
+      const { data, error } = await supabase
+        .from('farmers')
+        .update({
+          is_active: true,
+          deactivated_at: null,
+          deactivated_by: null,
+          reactivated_at: new Date().toISOString(),
+          reactivated_by: officerId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('farmer_id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.status(200).json({ 
+        message: 'Farmer reactivated successfully.',
+        farmer: data 
+      });
+    } catch (error) {
+      console.error('Error reactivating farmer:', error);
+      res.status(500).json({ error: 'Failed to reactivate farmer' });
+    }
+  }
+
+  // Permanently delete farmer (used by cleanup job)
+  static async permanentlyDeleteFarmer(req: Request, res: Response) {
     try {
       const { id } = req.params;
 
@@ -211,10 +276,10 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ message: 'Farmer deleted successfully' });
+      res.status(200).json({ message: 'Farmer permanently deleted' });
     } catch (error) {
-      console.error('Error deleting farmer:', error);
-      res.status(500).json({ error: 'Failed to delete farmer' });
+      console.error('Error permanently deleting farmer:', error);
+      res.status(500).json({ error: 'Failed to permanently delete farmer' });
     }
   }
 
@@ -315,8 +380,73 @@ export class UserManagementController {
     }
   }
 
-  // Delete buyer
-  static async deleteBuyer(req: Request, res: Response) {
+  // Deactivate buyer (soft delete with 3-day grace period)
+  static async deactivateBuyer(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const officerId = req.user?.userId;
+
+      // Set deactivation timestamp
+      const deactivatedAt = new Date().toISOString();
+      
+      const { data, error } = await supabase
+        .from('buyers')
+        .update({
+          is_active: false,
+          deactivated_at: deactivatedAt,
+          deactivated_by: officerId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('buyer_id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.status(200).json({ 
+        message: 'Buyer deactivated successfully. Account will be permanently deleted after 3 days if not reactivated.',
+        buyer: data 
+      });
+    } catch (error) {
+      console.error('Error deactivating buyer:', error);
+      res.status(500).json({ error: 'Failed to deactivate buyer' });
+    }
+  }
+
+  // Reactivate buyer
+  static async reactivateBuyer(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const officerId = req.user?.userId;
+
+      const { data, error } = await supabase
+        .from('buyers')
+        .update({
+          is_active: true,
+          deactivated_at: null,
+          deactivated_by: null,
+          reactivated_at: new Date().toISOString(),
+          reactivated_by: officerId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('buyer_id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.status(200).json({ 
+        message: 'Buyer reactivated successfully.',
+        buyer: data 
+      });
+    } catch (error) {
+      console.error('Error reactivating buyer:', error);
+      res.status(500).json({ error: 'Failed to reactivate buyer' });
+    }
+  }
+
+  // Permanently delete buyer (used by cleanup job)
+  static async permanentlyDeleteBuyer(req: Request, res: Response) {
     try {
       const { id } = req.params;
 
@@ -327,10 +457,10 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ message: 'Buyer deleted successfully' });
+      res.status(200).json({ message: 'Buyer permanently deleted' });
     } catch (error) {
-      console.error('Error deleting buyer:', error);
-      res.status(500).json({ error: 'Failed to delete buyer' });
+      console.error('Error permanently deleting buyer:', error);
+      res.status(500).json({ error: 'Failed to permanently delete buyer' });
     }
   }
 
@@ -501,8 +631,73 @@ export class UserManagementController {
     }
   }
 
-  // Delete officer
-  static async deleteOfficer(req: Request, res: Response) {
+  // Deactivate officer (soft delete with 3-day grace period)
+  static async deactivateOfficer(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const officerId = req.user?.userId;
+
+      // Set deactivation timestamp
+      const deactivatedAt = new Date().toISOString();
+      
+      const { data, error } = await supabase
+        .from('association_officers')
+        .update({
+          is_active: false,
+          deactivated_at: deactivatedAt,
+          deactivated_by: officerId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('officer_id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.status(200).json({ 
+        message: 'Association officer deactivated successfully. Account will be permanently deleted after 3 days if not reactivated.',
+        officer: data 
+      });
+    } catch (error) {
+      console.error('Error deactivating association officer:', error);
+      res.status(500).json({ error: 'Failed to deactivate association officer' });
+    }
+  }
+
+  // Reactivate officer
+  static async reactivateOfficer(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const officerId = req.user?.userId;
+
+      const { data, error } = await supabase
+        .from('association_officers')
+        .update({
+          is_active: true,
+          deactivated_at: null,
+          deactivated_by: null,
+          reactivated_at: new Date().toISOString(),
+          reactivated_by: officerId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('officer_id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.status(200).json({ 
+        message: 'Association officer reactivated successfully.',
+        officer: data 
+      });
+    } catch (error) {
+      console.error('Error reactivating association officer:', error);
+      res.status(500).json({ error: 'Failed to reactivate association officer' });
+    }
+  }
+
+  // Permanently delete officer (used by cleanup job)
+  static async permanentlyDeleteOfficer(req: Request, res: Response) {
     try {
       const { id } = req.params;
 
@@ -513,10 +708,10 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ message: 'Association officer deleted successfully' });
+      res.status(200).json({ message: 'Association officer permanently deleted' });
     } catch (error) {
-      console.error('Error deleting association officer:', error);
-      res.status(500).json({ error: 'Failed to delete association officer' });
+      console.error('Error permanently deleting association officer:', error);
+      res.status(500).json({ error: 'Failed to permanently delete association officer' });
     }
   }
 }

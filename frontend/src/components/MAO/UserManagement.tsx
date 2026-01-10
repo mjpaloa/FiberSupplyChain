@@ -17,7 +17,9 @@ import {
   Building2,
   FileText,
   AlertCircle,
-  TrendingUp
+  TrendingUp,
+  UserX,
+  RotateCcw
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -28,13 +30,14 @@ interface User {
   name: string;
   email: string;
   type: 'farmer' | 'buyer' | 'officer' | 'association_officer';
-  status: 'pending' | 'verified' | 'rejected';
+  status: 'pending' | 'verified' | 'rejected' | 'deactivated';
   association?: string;
   municipality?: string;
   businessName?: string;
   contactNumber?: string;
   position?: string;
   createdAt: string;
+  deactivatedAt?: string;
 }
 
 const UserManagement: React.FC = () => {
@@ -42,7 +45,7 @@ const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'verified' | 'rejected'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'verified' | 'rejected' | 'deactivated'>('all');
   const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedUserDetails, setSelectedUserDetails] = useState<any>(null);
@@ -195,29 +198,61 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleDelete = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+  const handleDeactivate = async (userId: string) => {
+    if (!confirm('Are you sure you want to deactivate this user? They will have 3 days to be reactivated before permanent deletion.')) return;
 
     try {
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `/api/mao/farmers/${userId}`;
+        endpoint = `/api/mao/farmers/${userId}/deactivate`;
       } else if (activeTab === 'buyers') {
-        endpoint = `/api/mao/buyers/${userId}`;
+        endpoint = `/api/mao/buyers/${userId}/deactivate`;
       } else if (activeTab === 'associations') {
-        endpoint = `/api/mao/association-officers/${userId}`;
+        endpoint = `/api/mao/association-officers/${userId}/deactivate`;
       }
 
       const response = await apiPost(endpoint);
 
       if (response.ok) {
-        alert('User deleted successfully!');
+        alert('User deactivated successfully! They have 3 days before permanent deletion.');
         fetchUsers();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to deactivate user: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error deleting user:', error);
-      alert('Failed to delete user');
+      console.error('Error deactivating user:', error);
+      alert('Failed to deactivate user');
+    }
+  };
+
+  const handleReactivate = async (userId: string) => {
+    if (!confirm('Are you sure you want to reactivate this user?')) return;
+
+    try {
+      let endpoint = '';
+      
+      if (activeTab === 'farmers') {
+        endpoint = `/api/mao/farmers/${userId}/reactivate`;
+      } else if (activeTab === 'buyers') {
+        endpoint = `/api/mao/buyers/${userId}/reactivate`;
+      } else if (activeTab === 'associations') {
+        endpoint = `/api/mao/association-officers/${userId}/reactivate`;
+      }
+
+      const response = await apiPost(endpoint);
+
+      if (response.ok) {
+        alert('User reactivated successfully!');
+        fetchUsers();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to reactivate user: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error reactivating user:', error);
+      alert('Failed to reactivate user');
     }
   };
 
@@ -255,6 +290,7 @@ const UserManagement: React.FC = () => {
     pending: users.filter(u => u.status === 'pending').length,
     verified: users.filter(u => u.status === 'verified').length,
     rejected: users.filter(u => u.status === 'rejected').length,
+    deactivated: users.filter(u => u.status === 'deactivated').length,
   };
 
   const handleExportCSV = async () => {
@@ -709,6 +745,7 @@ const UserManagement: React.FC = () => {
                 <option value="pending">⏳ Pending</option>
                 <option value="verified">✓ Verified</option>
                 <option value="rejected">✗ Rejected</option>
+                <option value="deactivated">🚫 Deactivated</option>
               </select>
             </div>
           </div>
@@ -827,9 +864,11 @@ const UserManagement: React.FC = () => {
                           ? 'bg-emerald-100 text-emerald-700'
                           : user.status === 'pending'
                           ? 'bg-amber-100 text-amber-700'
+                          : user.status === 'deactivated'
+                          ? 'bg-orange-100 text-orange-700'
                           : 'bg-red-100 text-red-700'
                       }`}>
-                        {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                        {user.status === 'deactivated' ? 'Deactivated' : user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
@@ -883,13 +922,24 @@ const UserManagement: React.FC = () => {
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDelete(user.id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {user.status === 'verified' && (
+                          <button
+                            onClick={() => handleDeactivate(user.id)}
+                            className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                            title="Deactivate"
+                          >
+                            <UserX className="w-4 h-4" />
+                          </button>
+                        )}
+                        {user.status === 'deactivated' && (
+                          <button
+                            onClick={() => handleReactivate(user.id)}
+                            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                            title="Reactivate"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                       </td>
                     </tr>

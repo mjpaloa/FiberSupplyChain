@@ -2,8 +2,9 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import { MAOController } from '../controllers/MAOController';
-import { AuthController } from '../controllers/AuthController';
 import { UserManagementController } from '../controllers/UserManagementController';
+import { CleanupController } from '../controllers/CleanupController';
+import { AuthController } from '../controllers/AuthController';
 import { authenticate, authorizeMAO } from '../middleware/auth';
 
 const router = Router();
@@ -29,7 +30,9 @@ router.get('/farmers/:id', UserManagementController.getFarmer);
 router.put('/farmers/:id', UserManagementController.updateFarmer);
 router.post('/farmers/:id/verify', UserManagementController.verifyFarmer);
 router.post('/farmers/:id/reject', UserManagementController.rejectFarmer);
-router.delete('/farmers/:id', UserManagementController.deleteFarmer);
+router.post('/farmers/:id/deactivate', UserManagementController.deactivateFarmer);
+router.post('/farmers/:id/reactivate', UserManagementController.reactivateFarmer);
+router.delete('/farmers/:id/permanent', UserManagementController.permanentlyDeleteFarmer);
 
 // User Management Routes - Buyers
 router.get('/buyers-list', UserManagementController.getBuyers);
@@ -37,7 +40,9 @@ router.get('/buyers/:id', UserManagementController.getBuyer);
 router.put('/buyers/:id', UserManagementController.updateBuyer);
 router.post('/buyers/:id/verify', UserManagementController.verifyBuyer);
 router.post('/buyers/:id/reject', UserManagementController.rejectBuyer);
-router.delete('/buyers/:id', UserManagementController.deleteBuyer);
+router.post('/buyers/:id/deactivate', UserManagementController.deactivateBuyer);
+router.post('/buyers/:id/reactivate', UserManagementController.reactivateBuyer);
+router.delete('/buyers/:id/permanent', UserManagementController.permanentlyDeleteBuyer);
 
 // User Management Routes - Association Officers
 router.get('/association-officers', UserManagementController.getOfficers);
@@ -45,7 +50,9 @@ router.get('/association-officers/:id', UserManagementController.getOfficer);
 router.put('/association-officers/:id', UserManagementController.updateOfficer);
 router.post('/association-officers/:id/verify', UserManagementController.verifyOfficer);
 router.post('/association-officers/:id/reject', UserManagementController.rejectOfficer);
-router.delete('/association-officers/:id', UserManagementController.deleteOfficer);
+router.post('/association-officers/:id/deactivate', UserManagementController.deactivateOfficer);
+router.post('/association-officers/:id/reactivate', UserManagementController.reactivateOfficer);
+router.delete('/association-officers/:id/permanent', UserManagementController.permanentlyDeleteOfficer);
 
 // Officer Management Routes (All officers including admin-created)
 router.get('/officers', MAOController.getOfficers);
@@ -79,5 +86,10 @@ router.post(
   ],
   AuthController.createOfficerAccount
 );
+
+// Cleanup Management Routes
+router.post('/cleanup/run', CleanupController.runCleanup);
+router.get('/cleanup/stats', CleanupController.getStats);
+router.get('/cleanup/pending', CleanupController.getPendingDeletion);
 
 export default router;
