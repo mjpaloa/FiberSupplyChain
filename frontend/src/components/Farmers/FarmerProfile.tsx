@@ -11,8 +11,27 @@ import {
   ArrowLeft,
   Shield,
   Tractor,
-  DollarSign
+  X
 } from 'lucide-react';
+
+const PhilippinePeso = ({ className, size = 24 }: { className?: string; size?: number | string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M20 11H4" />
+    <path d="M20 7H4" />
+    <path d="M7 21V4a1 1 0 0 1 1-1h4a1 1 0 0 1 0 12H7" />
+  </svg>
+);
 
 interface FarmerProfile {
   farmer_id: string;
@@ -51,6 +70,7 @@ interface FarmerProfileProps {
 const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) => {
   const [profile, setProfile] = useState<FarmerProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isIdModalOpen, setIsIdModalOpen] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -59,28 +79,28 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      
+
       if (!token) {
         alert('Authentication required. Please log in again.');
         setLoading(false);
         return;
       }
-      
+
       const response = await fetch('https://easyabaca-api.vercel.app/api/auth/me', {
         method: 'GET',
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setProfile(data.profile || data);
       } else {
         const errorText = await response.text();
         console.error('❌ Profile API Error:', response.status, errorText);
-        
+
         if (response.status === 500) {
           alert('Server error loading profile. Please ensure you\'re logged in as a Farmer.');
         } else if (response.status === 401 || response.status === 403) {
@@ -127,9 +147,9 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
     }
     return (
       <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-xs sm:text-sm font-semibold">
-          <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-          {profile.verification_status || 'Pending'}
-        </span>
+        <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+        {profile.verification_status || 'Pending'}
+      </span>
     );
   };
 
@@ -173,9 +193,8 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
                 <p className="text-sm sm:text-base text-emerald-100 mb-3">Abaca Farmer</p>
                 <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
                   {getVerificationBadge()}
-                  <span className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold ${
-                    profile.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                  }`}>
+                  <span className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold ${profile.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                    }`}>
                     {profile.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </div>
@@ -275,7 +294,7 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
               {/* Sales Information */}
               <div className="bg-gradient-to-br from-amber-50 to-orange-100 p-4 sm:p-5 md:p-6 rounded-xl border border-amber-200 col-span-1 sm:col-span-2 md:col-span-3">
                 <div className="flex items-center gap-2 mb-4">
-                  <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
+                  <PhilippinePeso className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
                   <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase">Sales Information</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
@@ -308,11 +327,12 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
                   <Shield className="w-5 h-5 text-gray-700" />
                   <h3 className="text-sm sm:text-base font-bold text-gray-700 uppercase">Valid ID</h3>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 flex justify-center">
                   <img
                     src={profile.valid_id_photo}
                     alt="Valid ID"
-                    className="max-w-full h-auto rounded-lg shadow-md"
+                    className="max-w-full h-auto rounded-lg shadow-md cursor-pointer hover:opacity-95 transition-opacity"
+                    onClick={() => setIsIdModalOpen(true)}
                   />
                 </div>
               </div>
@@ -320,6 +340,26 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
           </div>
         </div>
       </div>
+
+      {isIdModalOpen && profile.valid_id_photo && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setIsIdModalOpen(false)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors bg-white/10 p-2 rounded-full"
+            onClick={() => setIsIdModalOpen(false)}
+          >
+            <X size={32} />
+          </button>
+          <img
+            src={profile.valid_id_photo}
+            alt="Valid ID Fullscreen"
+            className="max-w-full max-h-screen object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };

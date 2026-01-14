@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Shield
 } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api';
 
 interface ChangePasswordProps {
   onBack: () => void;
@@ -84,7 +85,14 @@ const FarmerChangePassword: React.FC<ChangePasswordProps> = ({ onBack }) => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/farmers/profile/change-password', {
+
+      if (!token) {
+        showMessage('error', 'Authentication required. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/farmers/profile/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +115,11 @@ const FarmerChangePassword: React.FC<ChangePasswordProps> = ({ onBack }) => {
         });
         setTimeout(() => onBack(), 2000);
       } else {
-        showMessage('error', data.message || 'Failed to change password');
+        if (response.status === 401) {
+          showMessage('error', 'Session expired. Please log in again.');
+        } else {
+          showMessage('error', data.message || 'Failed to change password');
+        }
       }
     } catch (error) {
       console.error('Error changing password:', error);
@@ -148,9 +160,8 @@ const FarmerChangePassword: React.FC<ChangePasswordProps> = ({ onBack }) => {
 
         {/* Success/Error Message */}
         {message && (
-          <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl flex items-center gap-3 ${
-            message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
+          <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl flex items-center gap-3 ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
             {message.type === 'success' ? (
               <CheckCircle className="w-5 h-5 flex-shrink-0" />
             ) : (
@@ -253,10 +264,9 @@ const FarmerChangePassword: React.FC<ChangePasswordProps> = ({ onBack }) => {
                   <div className="mt-3">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-gray-600">Password Strength:</span>
-                      <span className={`text-xs font-semibold ${
-                        passwordStrength.label === 'Weak' ? 'text-red-600' :
+                      <span className={`text-xs font-semibold ${passwordStrength.label === 'Weak' ? 'text-red-600' :
                         passwordStrength.label === 'Medium' ? 'text-yellow-600' : 'text-green-600'
-                      }`}>
+                        }`}>
                         {passwordStrength.label}
                       </span>
                     </div>

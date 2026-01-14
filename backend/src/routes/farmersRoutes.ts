@@ -12,6 +12,7 @@ router.use(authenticate);
 router.get('/profile', FarmersController.getFarmerProfile);
 router.get('/listings', FarmersController.getFarmerListings);
 router.put('/profile', FarmersController.updateProfile);
+router.put('/profile/change-password', FarmersController.changePassword);
 router.get('/monitoring', FarmersController.getMyMonitoringRecords);
 router.get('/:farmerId', FarmersController.getFarmerById); // Get specific farmer by ID
 

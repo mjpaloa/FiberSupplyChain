@@ -1,7 +1,9 @@
 // FarmersController.ts - Farmers controller
 import { Request, Response } from 'express';
 import { FarmersService } from '../services/FarmersService';
+import { AuthService } from '../services/AuthService';
 import { supabase } from '../config/supabase';
+import bcrypt from 'bcrypt';
 
 export class FarmersController {
   // Get farmer profile
@@ -150,7 +152,7 @@ export class FarmersController {
   static async getFarmerById(req: Request, res: Response) {
     try {
       const { farmerId } = req.params;
-      
+
       if (!farmerId) {
         res.status(400).json({ error: 'Farmer ID is required' });
         return;
@@ -173,6 +175,63 @@ export class FarmersController {
     } catch (error) {
       console.error('Error in getFarmerById:', error);
       res.status(500).json({ error: 'Failed to fetch farmer details' });
+    }
+  }
+  // Change password
+  static async changePassword(req: Request, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      if (!currentPassword || !newPassword) {
+        res.status(400).json({ error: 'Current and new password are required' });
+        return;
+      }
+
+      // Get current password hash
+      const { data: farmer, error } = await supabase
+        .from('farmers')
+        .select('password_hash')
+        .eq('farmer_id', userId)
+        .single();
+
+      if (error || !farmer) {
+        res.status(404).json({ error: 'Farmer not found' });
+        return;
+      }
+
+      // Verify current password
+      const isValid = await bcrypt.compare(currentPassword, farmer.password_hash);
+      if (!isValid) {
+        res.status(400).json({ error: 'Incorrect current password' });
+        return;
+      }
+
+      // Hash new password
+      const newPasswordHash = await AuthService.hashPasswordPublic(newPassword);
+
+      // Update password
+      const { error: updateError } = await supabase
+        .from('farmers')
+        .update({
+          password_hash: newPasswordHash,
+          updated_at: new Date().toISOString()
+        })
+        .eq('farmer_id', userId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      res.status(200).json({ message: 'Password changed successfully' });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      res.status(500).json({ error: 'Failed to change password' });
     }
   }
 }
