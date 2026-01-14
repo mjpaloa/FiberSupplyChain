@@ -41,6 +41,30 @@ import {
   BarChart,
   Bar
 } from 'recharts';
+
+const PhilippinePeso = ({ className, size = 24 }: { className?: string; size?: number | string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+  >
+    <text
+      x="12"
+      y="12"
+      dy="1"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize="20"
+      fontWeight="bold"
+      fill="currentColor"
+    >
+      ₱
+    </text>
+  </svg>
+);
 import FarmerMonitoringView from './FarmerMonitoringView';
 import FarmerHarvestView from './FarmerHarvestView';
 import SalesReportForm from './SalesReportForm';
@@ -265,11 +289,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const seedlingStats = useMemo(() => {
     const totalBatches = seedlings.length;
     const totalUnits = seedlings.reduce((sum, s) => sum + (s.quantity_distributed || 0), 0);
-    
+
     const plantedSeedlings = seedlings.filter(s => s.status === 'planted');
     const plantedBatches = plantedSeedlings.length;
     const plantedUnits = plantedSeedlings.reduce((sum, s) => sum + (s.quantity_distributed || 0), 0);
-    
+
     const notPlantedSeedlings = seedlings.filter(s => s.status !== 'planted');
     const notPlantedBatches = notPlantedSeedlings.length;
     const notPlantedUnits = notPlantedSeedlings.reduce((sum, s) => sum + (s.quantity_distributed || 0), 0);
@@ -357,13 +381,13 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     try {
       console.log('🔄 Starting analytics generation...');
       console.log('📦 Current seedlings count:', seedlings.length);
-      
+
       const healthData = generateFarmHealthData(productionViewMode);
       setFarmHealthData(healthData);
 
       // Fetch harvest stats first and WAIT for it
       await fetchHarvestStats();
-      
+
       // Small delay to ensure state updates
       await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -449,7 +473,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       const stats = { totalFiberKg, totalRevenue };
       console.log('💎 Setting harvest stats:', stats);
       setHarvestStats(stats);
-      
+
       // Small delay to ensure state updates
       await new Promise(resolve => setTimeout(resolve, 50));
     } catch (error) {
@@ -480,13 +504,13 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     } else {
       const yearlyData: any = {};
       const currentYear = new Date().getFullYear();
-      
+
       // Initialize years - from 5 years ago to 3 years in future
       for (let i = -4; i <= 3; i++) {
         const year = currentYear + i;
         yearlyData[year] = { year, seedlings: 0, planted: 0 };
       }
-      
+
       seedlings.forEach(seedling => {
         const year = new Date(seedling.date_distributed).getFullYear();
         if (yearlyData[year]) {
@@ -505,13 +529,13 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const fetchLatestFarmStatus = async () => {
     try {
       const response = await apiGet('https://easyabaca-api.vercel.app/api/farmers/monitoring');
-      
+
       if (response.ok) {
         const result = await response.json();
         const records = result.records || [];
-        
+
         if (records.length > 0) {
-          const sortedRecords = records.sort((a: any, b: any) => 
+          const sortedRecords = records.sort((a: any, b: any) =>
             new Date(b.dateOfVisit).getTime() - new Date(a.dateOfVisit).getTime()
           );
           const latest = sortedRecords[0];
@@ -529,15 +553,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const fetchLatestDeliveryStatus = async () => {
     try {
       const response = await apiGet('https://easyabaca-api.vercel.app/api/fiber-deliveries/farmer/my-deliveries');
-      
+
       if (response.ok) {
         const result = await response.json();
         const deliveries = result.deliveries || [];
-        
-        const activeDeliveries = deliveries.filter((d: any) => 
+
+        const activeDeliveries = deliveries.filter((d: any) =>
           d.status === 'In Transit' || d.status === 'Pending'
         );
-        
+
         setLatestDeliveryStatus({
           status: activeDeliveries.length > 0 ? 'Active' : deliveries.length > 0 ? 'Completed' : 'No Deliveries',
           count: activeDeliveries.length
@@ -557,11 +581,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       }
 
       const response = await apiGet('https://easyabaca-api.vercel.app/api/farmers/monitoring');
-      
+
       if (response.ok) {
         const result = await response.json();
         const records = result.records || [];
-        
+
         console.log('📊 Farmer monitoring records:', records);
 
         // Count farms by condition
@@ -581,30 +605,30 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         });
 
         const totalFarms = records.length;
-        
+
         // Calculate percentages
         const healthyPercentage = totalFarms > 0 ? (healthyCount / totalFarms) * 100 : 0;
         const actionNeededPercentage = totalFarms > 0 ? (actionNeededCount / totalFarms) * 100 : 0;
         const needsSupportPercentage = totalFarms > 0 ? (needsSupportCount / totalFarms) * 100 : 0;
 
         setFarmStatusData([
-          { 
-            status: 'Healthy', 
-            percentage: Math.round(healthyPercentage), 
-            count: healthyCount, 
-            color: { id: 'green', start: '#10b981', end: '#059669' } 
+          {
+            status: 'Healthy',
+            percentage: Math.round(healthyPercentage),
+            count: healthyCount,
+            color: { id: 'green', start: '#10b981', end: '#059669' }
           },
-          { 
-            status: 'Action Needed', 
-            percentage: Math.round(actionNeededPercentage), 
-            count: actionNeededCount, 
-            color: { id: 'yellow', start: '#f59e0b', end: '#d97706' } 
+          {
+            status: 'Action Needed',
+            percentage: Math.round(actionNeededPercentage),
+            count: actionNeededCount,
+            color: { id: 'yellow', start: '#f59e0b', end: '#d97706' }
           },
-          { 
-            status: 'Needs Support', 
-            percentage: Math.round(needsSupportPercentage), 
-            count: needsSupportCount, 
-            color: { id: 'red', start: '#ef4444', end: '#dc2626' } 
+          {
+            status: 'Needs Support',
+            percentage: Math.round(needsSupportPercentage),
+            count: needsSupportCount,
+            color: { id: 'red', start: '#ef4444', end: '#dc2626' }
           }
         ]);
 
@@ -740,7 +764,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             monthlyData[monthIndex].profit += amount * 0.7;
           }
         });
-        
+
         console.log(`📈 Monthly revenue data for ${yearToUse}:`, monthlyData);
 
         return monthlyData;
@@ -1435,10 +1459,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     {/* 1. KPI Cards Section */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                       {/* Seedlings Received */}
-                      <div className="group bg-gradient-to-br from-emerald-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-emerald-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <Package className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-emerald-600" />
+                          <div className="p-2 sm:p-2.5 md:p-3 bg-emerald-500 rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300">
+                            <Package className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                           </div>
                         </div>
                         <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Seedlings Received</p>
@@ -1446,10 +1470,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       </div>
 
                       {/* Seedlings Planted */}
-                      <div className="group bg-gradient-to-br from-blue-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-blue-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <Leaf className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-blue-600" />
+                          <div className="p-2 sm:p-2.5 md:p-3 bg-blue-500 rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300">
+                            <Leaf className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                           </div>
                         </div>
                         <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Seedlings Planted</p>
@@ -1457,10 +1481,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       </div>
 
                       {/* Fiber Harvested */}
-                      <div className="group bg-gradient-to-br from-orange-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-orange-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <Activity className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-orange-600" />
+                          <div className="p-2 sm:p-2.5 md:p-3 bg-orange-500 rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300">
+                            <Activity className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                           </div>
                         </div>
                         <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Fiber Harvested</p>
@@ -1468,10 +1492,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       </div>
 
                       {/* Total Revenue */}
-                      <div className="group bg-gradient-to-br from-purple-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-purple-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                          <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <span className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-600">₱</span>
+                          <div className="p-2 sm:p-2.5 md:p-3 bg-purple-500 rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300">
+                            <PhilippinePeso className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                           </div>
                         </div>
                         <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Total Revenue</p>
@@ -1482,17 +1506,17 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       {(() => {
                         const condition = latestFarmStatus?.condition || 'No Data';
                         const getStatusColor = (status: string) => {
-                          if (status === 'Healthy') return { bg: 'from-green-50 to-white', text: 'text-green-600', icon: 'text-green-600', border: 'border-green-100', iconBg: 'from-green-50 to-green-100' };
-                          if (status === 'Needs Support') return { bg: 'from-yellow-50 to-white', text: 'text-yellow-600', icon: 'text-yellow-600', border: 'border-yellow-100', iconBg: 'from-yellow-50 to-yellow-100' };
-                          if (status === 'Damaged') return { bg: 'from-red-50 to-white', text: 'text-red-600', icon: 'text-red-600', border: 'border-red-100', iconBg: 'from-red-50 to-red-100' };
-                          return { bg: 'from-gray-50 to-white', text: 'text-gray-600', icon: 'text-gray-600', border: 'border-gray-100', iconBg: 'from-gray-50 to-gray-100' };
+                          if (status === 'Healthy') return { bg: 'bg-green-500', text: 'text-green-600', border: 'border-green-100' };
+                          if (status === 'Needs Support') return { bg: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-100' };
+                          if (status === 'Damaged') return { bg: 'bg-red-500', text: 'text-red-600', border: 'border-red-100' };
+                          return { bg: 'bg-indigo-500', text: 'text-indigo-600', border: 'border-indigo-100' };
                         };
                         const colors = getStatusColor(condition);
                         return (
-                          <div className={`group bg-gradient-to-br ${colors.bg} rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border ${colors.border} shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}>
+                          <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                             <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                              <div className={`p-2 sm:p-2.5 md:p-3 bg-gradient-to-br ${colors.iconBg} rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300`}>
-                                <CheckCircle className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 ${colors.icon}`} />
+                              <div className={`p-2 sm:p-2.5 md:p-3 ${colors.bg} rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300`}>
+                                <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                               </div>
                             </div>
                             <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Farm Status</p>
@@ -1506,22 +1530,22 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         const status = latestDeliveryStatus?.status || 'No Data';
                         const count = latestDeliveryStatus?.count || 0;
                         const getDeliveryColor = (status: string) => {
-                          if (status === 'Active') return { bg: 'from-cyan-50 to-white', text: 'text-cyan-600', icon: 'text-cyan-600', border: 'border-cyan-100', iconBg: 'from-cyan-50 to-cyan-100' };
-                          if (status === 'Completed') return { bg: 'from-green-50 to-white', text: 'text-green-600', icon: 'text-green-600', border: 'border-green-100', iconBg: 'from-green-50 to-green-100' };
-                          if (status === 'No Deliveries') return { bg: 'from-gray-50 to-white', text: 'text-gray-600', icon: 'text-gray-600', border: 'border-gray-100', iconBg: 'from-gray-50 to-gray-100' };
-                          return { bg: 'from-blue-50 to-white', text: 'text-blue-600', icon: 'text-blue-600', border: 'border-blue-100', iconBg: 'from-blue-50 to-blue-100' };
+                          if (status === 'Active') return { bg: 'bg-cyan-500', text: 'text-cyan-600', border: 'border-cyan-100' };
+                          if (status === 'Completed') return { bg: 'bg-emerald-500', text: 'text-emerald-600', border: 'border-emerald-100' };
+                          if (status === 'No Deliveries') return { bg: 'bg-rose-500', text: 'text-rose-600', border: 'border-rose-100' };
+                          return { bg: 'bg-blue-500', text: 'text-blue-600', border: 'border-blue-100' };
                         };
                         const colors = getDeliveryColor(status);
                         return (
-                          <div className={`group bg-gradient-to-br ${colors.bg} rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border ${colors.border} shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}>
+                          <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                             <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                              <div className={`p-2 sm:p-2.5 md:p-3 bg-gradient-to-br ${colors.iconBg} rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform duration-300`}>
-                                <Truck className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 ${colors.icon}`} />
+                              <div className={`p-2 sm:p-2.5 md:p-3 ${colors.bg} rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300`}>
+                                <Truck className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                               </div>
                             </div>
                             <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Delivery Status</p>
                             <h3 className={`text-2xl sm:text-3xl md:text-4xl font-bold ${colors.text} mb-1 sm:mb-2`}>
-                              {status} {status === 'Active' && count > 0 && <span className="text-base sm:text-lg md:text-2xl">({count})</span>}
+                              {status === 'No Deliveries' ? 'None' : status} {status === 'Active' && count > 0 && <span className="text-base sm:text-lg md:text-2xl">({count})</span>}
                             </h3>
                           </div>
                         );
@@ -1584,88 +1608,88 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         </div>
                         <div className="overflow-x-auto">
                           <ResponsiveContainer width={distributionViewMode === 'yearly' ? distributionData.length * 120 : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 300 : 450}>
-                          {distributionViewMode === 'monthly' ? (
-                            <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35}>
-                          <defs>
-                            <linearGradient id="colorSeedlingsMonth" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#10b981" stopOpacity={0.6} />
-                            </linearGradient>
-                            <linearGradient id="colorPlantedMonth" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.6} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                          <XAxis
-                            dataKey="month"
-                            stroke="#6b7280"
-                            style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
-                            tickLine={false}
-                            angle={window.innerWidth < 640 ? -45 : 0}
-                            textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
-                            height={window.innerWidth < 640 ? 60 : 30}
-                          />
-                          <YAxis
-                            stroke="#6b7280"
-                            style={{ fontSize: '13px', fontWeight: 600 }}
-                            tickFormatter={(value) => value.toLocaleString()}
-                            tickLine={false}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: '#fff',
-                              border: 'none',
-                              borderRadius: '16px',
-                              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                              padding: '16px 20px'
-                            }}
-                            labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                            itemStyle={{ padding: '6px 0', fontSize: '13px', fontWeight: 600 }}
-                          />
-                              <Bar dataKey="seedlings" fill="url(#colorSeedlingsMonth)" name="Distributed" radius={[8, 8, 0, 0]} />
-                              <Bar dataKey="planted" fill="url(#colorPlantedMonth)" name="Planted" radius={[8, 8, 0, 0]} />
-                            </BarChart>
-                          ) : (
-                            <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={40}>
-                              <defs>
-                                <linearGradient id="colorSeedlings" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.6} />
-                                </linearGradient>
-                                <linearGradient id="colorPlanted" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.6} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                              <XAxis
-                                dataKey="year"
-                                stroke="#6b7280"
-                                style={{ fontSize: '13px', fontWeight: 600 }}
-                                tickLine={false}
-                              />
-                              <YAxis
-                                stroke="#6b7280"
-                                style={{ fontSize: '13px', fontWeight: 600 }}
-                                tickFormatter={(value) => value.toLocaleString()}
-                                tickLine={false}
-                              />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#fff',
-                                  border: 'none',
-                                  borderRadius: '16px',
-                                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                  padding: '16px 20px'
-                                }}
-                                labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                itemStyle={{ padding: '6px 0', fontSize: '13px', fontWeight: 600 }}
-                              />
-                              <Bar dataKey="seedlings" fill="url(#colorSeedlings)" name="Distributed" radius={[8, 8, 0, 0]} />
-                              <Bar dataKey="planted" fill="url(#colorPlanted)" name="Planted" radius={[8, 8, 0, 0]} />
-                            </BarChart>
-                          )}
+                            {distributionViewMode === 'monthly' ? (
+                              <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35}>
+                                <defs>
+                                  <linearGradient id="colorSeedlingsMonth" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.6} />
+                                  </linearGradient>
+                                  <linearGradient id="colorPlantedMonth" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.6} />
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                <XAxis
+                                  dataKey="month"
+                                  stroke="#6b7280"
+                                  style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
+                                  tickLine={false}
+                                  angle={window.innerWidth < 640 ? -45 : 0}
+                                  textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
+                                  height={window.innerWidth < 640 ? 60 : 30}
+                                />
+                                <YAxis
+                                  stroke="#6b7280"
+                                  style={{ fontSize: '13px', fontWeight: 600 }}
+                                  tickFormatter={(value) => value.toLocaleString()}
+                                  tickLine={false}
+                                />
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: '#fff',
+                                    border: 'none',
+                                    borderRadius: '16px',
+                                    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+                                    padding: '16px 20px'
+                                  }}
+                                  labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
+                                  itemStyle={{ padding: '6px 0', fontSize: '13px', fontWeight: 600 }}
+                                />
+                                <Bar dataKey="seedlings" fill="url(#colorSeedlingsMonth)" name="Distributed" radius={[8, 8, 0, 0]} />
+                                <Bar dataKey="planted" fill="url(#colorPlantedMonth)" name="Planted" radius={[8, 8, 0, 0]} />
+                              </BarChart>
+                            ) : (
+                              <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={40}>
+                                <defs>
+                                  <linearGradient id="colorSeedlings" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.6} />
+                                  </linearGradient>
+                                  <linearGradient id="colorPlanted" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.6} />
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                <XAxis
+                                  dataKey="year"
+                                  stroke="#6b7280"
+                                  style={{ fontSize: '13px', fontWeight: 600 }}
+                                  tickLine={false}
+                                />
+                                <YAxis
+                                  stroke="#6b7280"
+                                  style={{ fontSize: '13px', fontWeight: 600 }}
+                                  tickFormatter={(value) => value.toLocaleString()}
+                                  tickLine={false}
+                                />
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: '#fff',
+                                    border: 'none',
+                                    borderRadius: '16px',
+                                    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+                                    padding: '16px 20px'
+                                  }}
+                                  labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
+                                  itemStyle={{ padding: '6px 0', fontSize: '13px', fontWeight: 600 }}
+                                />
+                                <Bar dataKey="seedlings" fill="url(#colorSeedlings)" name="Distributed" radius={[8, 8, 0, 0]} />
+                                <Bar dataKey="planted" fill="url(#colorPlanted)" name="Planted" radius={[8, 8, 0, 0]} />
+                              </BarChart>
+                            )}
                           </ResponsiveContainer>
                         </div>
                       </div>
@@ -1676,7 +1700,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Farm Status Distribution</h2>
                           <p className="text-xs sm:text-sm text-gray-600">Health status of your farms</p>
                         </div>
-                        
+
                         {/* Donut Chart */}
                         <div className="relative w-full h-48 sm:h-56 md:h-64 flex items-center justify-center mb-4 sm:mb-5 md:mb-6">
                           <svg viewBox="0 0 240 240" className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 drop-shadow-xl">
@@ -1706,12 +1730,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             {(() => {
                               let currentAngle = -90;
                               const visibleData = farmStatusData.filter(item => item.percentage > 0);
-                              
+
                               // CRITICAL FIX: If only one item, show full circle with correct color
                               if (visibleData.length === 1) {
                                 const singleItem = visibleData[0];
                                 const radius = 90;
-                                
+
                                 return (
                                   <g>
                                     <circle
@@ -1743,7 +1767,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                   </g>
                                 );
                               }
-                              
+
                               return visibleData.map((item, index) => {
                                 const angle = (item.percentage / 100) * 360;
                                 const startAngle = currentAngle;
@@ -1804,15 +1828,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <circle cx="120" cy="120" r="55" fill="white" />
                             <circle cx="120" cy="120" r="52" fill="url(#gradient-center)" />
                           </svg>
-                          
+
                           {(() => {
                             const visibleData = farmStatusData.filter(item => item.percentage > 0);
-                            const displayData = hoveredPieSegment !== null && visibleData[hoveredPieSegment] 
-                              ? visibleData[hoveredPieSegment] 
-                              : visibleData.length === 1 
-                              ? visibleData[0] 
-                              : null;
-                            
+                            const displayData = hoveredPieSegment !== null && visibleData[hoveredPieSegment]
+                              ? visibleData[hoveredPieSegment]
+                              : visibleData.length === 1
+                                ? visibleData[0]
+                                : null;
+
                             return displayData && (
                               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
                                 <p className="text-2xl font-bold text-gray-800">{displayData.percentage.toFixed(1)}%</p>
@@ -1886,92 +1910,92 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-orange-600"></div>
                           </div>
                         ) : (
-                        <div className="overflow-x-auto">
-                          <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(productionData.length * 120, 500) : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 250 : 300}>
-                          {productionViewMode === 'monthly' ? (
-                            <AreaChart data={productionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-                              <defs>
-                                <linearGradient id="colorFiberMonth" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.6} />
-                                  <stop offset="95%" stopColor="#f97316" stopOpacity={0.1} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                              <XAxis
-                                dataKey="month"
-                                stroke="#6b7280"
-                                style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
-                                tickLine={false}
-                                angle={window.innerWidth < 640 ? -45 : 0}
-                                textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
-                                height={window.innerWidth < 640 ? 60 : 30}
-                              />
-                              <YAxis
-                                stroke="#6b7280"
-                                style={{ fontSize: '13px', fontWeight: 600 }}
-                                tickFormatter={(value) => value.toLocaleString()}
-                                tickLine={false}
-                              />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#fff',
-                                  border: 'none',
-                                  borderRadius: '16px',
-                                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                  padding: '16px 20px'
-                                }}
-                                labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Fiber Production']}
-                                itemStyle={{ fontSize: '13px', fontWeight: 600 }}
-                              />
-                              <Area
-                                type="monotone"
-                                dataKey="fiberKg"
-                                stroke="#f97316"
-                                strokeWidth={4}
-                                fillOpacity={1}
-                                fill="url(#colorFiberMonth)"
-                                name="Fiber Production"
-                              />
-                            </AreaChart>
-                          ) : (
-                            <BarChart data={productionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
-                              <defs>
-                                <linearGradient id="colorFiberYear" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
-                                  <stop offset="95%" stopColor="#f97316" stopOpacity={0.6} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                              <XAxis
-                                dataKey="year"
-                                stroke="#6b7280"
-                                style={{ fontSize: '13px', fontWeight: 600 }}
-                                tickLine={false}
-                              />
-                              <YAxis
-                                stroke="#6b7280"
-                                style={{ fontSize: '13px', fontWeight: 600 }}
-                                tickFormatter={(value) => value.toLocaleString()}
-                                tickLine={false}
-                              />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#fff',
-                                  border: 'none',
-                                  borderRadius: '16px',
-                                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                  padding: '16px 20px'
-                                }}
-                                labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Fiber Production']}
-                                itemStyle={{ fontSize: '13px', fontWeight: 600 }}
-                              />
-                              <Bar dataKey="fiberKg" fill="url(#colorFiberYear)" name="Fiber Production" radius={[8, 8, 0, 0]} />
-                            </BarChart>
-                          )}
-                          </ResponsiveContainer>
-                        </div>
+                          <div className="overflow-x-auto">
+                            <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(productionData.length * 120, 500) : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 250 : 300}>
+                              {productionViewMode === 'monthly' ? (
+                                <AreaChart data={productionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                                  <defs>
+                                    <linearGradient id="colorFiberMonth" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.6} />
+                                      <stop offset="95%" stopColor="#f97316" stopOpacity={0.1} />
+                                    </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                  <XAxis
+                                    dataKey="month"
+                                    stroke="#6b7280"
+                                    style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
+                                    tickLine={false}
+                                    angle={window.innerWidth < 640 ? -45 : 0}
+                                    textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
+                                    height={window.innerWidth < 640 ? 60 : 30}
+                                  />
+                                  <YAxis
+                                    stroke="#6b7280"
+                                    style={{ fontSize: '13px', fontWeight: 600 }}
+                                    tickFormatter={(value) => value.toLocaleString()}
+                                    tickLine={false}
+                                  />
+                                  <Tooltip
+                                    contentStyle={{
+                                      backgroundColor: '#fff',
+                                      border: 'none',
+                                      borderRadius: '16px',
+                                      boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+                                      padding: '16px 20px'
+                                    }}
+                                    labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
+                                    formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Fiber Production']}
+                                    itemStyle={{ fontSize: '13px', fontWeight: 600 }}
+                                  />
+                                  <Area
+                                    type="monotone"
+                                    dataKey="fiberKg"
+                                    stroke="#f97316"
+                                    strokeWidth={4}
+                                    fillOpacity={1}
+                                    fill="url(#colorFiberMonth)"
+                                    name="Fiber Production"
+                                  />
+                                </AreaChart>
+                              ) : (
+                                <BarChart data={productionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
+                                  <defs>
+                                    <linearGradient id="colorFiberYear" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
+                                      <stop offset="95%" stopColor="#f97316" stopOpacity={0.6} />
+                                    </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                  <XAxis
+                                    dataKey="year"
+                                    stroke="#6b7280"
+                                    style={{ fontSize: '13px', fontWeight: 600 }}
+                                    tickLine={false}
+                                  />
+                                  <YAxis
+                                    stroke="#6b7280"
+                                    style={{ fontSize: '13px', fontWeight: 600 }}
+                                    tickFormatter={(value) => value.toLocaleString()}
+                                    tickLine={false}
+                                  />
+                                  <Tooltip
+                                    contentStyle={{
+                                      backgroundColor: '#fff',
+                                      border: 'none',
+                                      borderRadius: '16px',
+                                      boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+                                      padding: '16px 20px'
+                                    }}
+                                    labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
+                                    formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Fiber Production']}
+                                    itemStyle={{ fontSize: '13px', fontWeight: 600 }}
+                                  />
+                                  <Bar dataKey="fiberKg" fill="url(#colorFiberYear)" name="Fiber Production" radius={[8, 8, 0, 0]} />
+                                </BarChart>
+                              )}
+                            </ResponsiveContainer>
+                          </div>
                         )}
                       </div>
 
@@ -2024,92 +2048,92 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-purple-600"></div>
                           </div>
                         ) : (
-                        <div className="overflow-x-auto">
-                          <ResponsiveContainer width={revenueViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 250 : 300}>
-                          {revenueViewMode === 'monthly' ? (
-                            <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-                              <defs>
-                                <linearGradient id="colorRevenueMonth" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.6} />
-                                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                              <XAxis
-                                dataKey="month"
-                                stroke="#6b7280"
-                                style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
-                                tickLine={false}
-                                angle={window.innerWidth < 640 ? -45 : 0}
-                                textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
-                                height={window.innerWidth < 640 ? 60 : 30}
-                              />
-                              <YAxis
-                                stroke="#6b7280"
-                                style={{ fontSize: '13px', fontWeight: 600 }}
-                                tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}K`}
-                                tickLine={false}
-                              />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#fff',
-                                  border: 'none',
-                                  borderRadius: '16px',
-                                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                  padding: '16px 20px'
-                                }}
-                                labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Revenue']}
-                                itemStyle={{ fontSize: '13px', fontWeight: 600 }}
-                              />
-                              <Area
-                                type="monotone"
-                                dataKey="revenue"
-                                stroke="#a855f7"
-                                strokeWidth={4}
-                                fillOpacity={1}
-                                fill="url(#colorRevenueMonth)"
-                                name="Revenue"
-                              />
-                            </AreaChart>
-                          ) : (
-                            <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
-                              <defs>
-                                <linearGradient id="colorRevenueYear" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
-                                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0.6} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                              <XAxis
-                                dataKey="year"
-                                stroke="#6b7280"
-                                style={{ fontSize: '13px', fontWeight: 600 }}
-                                tickLine={false}
-                              />
-                              <YAxis
-                                stroke="#6b7280"
-                                style={{ fontSize: '13px', fontWeight: 600 }}
-                                tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}K`}
-                                tickLine={false}
-                              />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#fff',
-                                  border: 'none',
-                                  borderRadius: '16px',
-                                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                  padding: '16px 20px'
-                                }}
-                                labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Revenue']}
-                                itemStyle={{ fontSize: '13px', fontWeight: 600 }}
-                              />
-                              <Bar dataKey="revenue" fill="url(#colorRevenueYear)" name="Revenue" radius={[8, 8, 0, 0]} />
-                            </BarChart>
-                          )}
-                          </ResponsiveContainer>
-                        </div>
+                          <div className="overflow-x-auto">
+                            <ResponsiveContainer width={revenueViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 250 : 300}>
+                              {revenueViewMode === 'monthly' ? (
+                                <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                                  <defs>
+                                    <linearGradient id="colorRevenueMonth" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="5%" stopColor="#a855f7" stopOpacity={0.6} />
+                                      <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1} />
+                                    </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                  <XAxis
+                                    dataKey="month"
+                                    stroke="#6b7280"
+                                    style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
+                                    tickLine={false}
+                                    angle={window.innerWidth < 640 ? -45 : 0}
+                                    textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
+                                    height={window.innerWidth < 640 ? 60 : 30}
+                                  />
+                                  <YAxis
+                                    stroke="#6b7280"
+                                    style={{ fontSize: '13px', fontWeight: 600 }}
+                                    tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}K`}
+                                    tickLine={false}
+                                  />
+                                  <Tooltip
+                                    contentStyle={{
+                                      backgroundColor: '#fff',
+                                      border: 'none',
+                                      borderRadius: '16px',
+                                      boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+                                      padding: '16px 20px'
+                                    }}
+                                    labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
+                                    formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Revenue']}
+                                    itemStyle={{ fontSize: '13px', fontWeight: 600 }}
+                                  />
+                                  <Area
+                                    type="monotone"
+                                    dataKey="revenue"
+                                    stroke="#a855f7"
+                                    strokeWidth={4}
+                                    fillOpacity={1}
+                                    fill="url(#colorRevenueMonth)"
+                                    name="Revenue"
+                                  />
+                                </AreaChart>
+                              ) : (
+                                <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
+                                  <defs>
+                                    <linearGradient id="colorRevenueYear" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
+                                      <stop offset="95%" stopColor="#a855f7" stopOpacity={0.6} />
+                                    </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                  <XAxis
+                                    dataKey="year"
+                                    stroke="#6b7280"
+                                    style={{ fontSize: '13px', fontWeight: 600 }}
+                                    tickLine={false}
+                                  />
+                                  <YAxis
+                                    stroke="#6b7280"
+                                    style={{ fontSize: '13px', fontWeight: 600 }}
+                                    tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}K`}
+                                    tickLine={false}
+                                  />
+                                  <Tooltip
+                                    contentStyle={{
+                                      backgroundColor: '#fff',
+                                      border: 'none',
+                                      borderRadius: '16px',
+                                      boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+                                      padding: '16px 20px'
+                                    }}
+                                    labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
+                                    formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Revenue']}
+                                    itemStyle={{ fontSize: '13px', fontWeight: 600 }}
+                                  />
+                                  <Bar dataKey="revenue" fill="url(#colorRevenueYear)" name="Revenue" radius={[8, 8, 0, 0]} />
+                                </BarChart>
+                              )}
+                            </ResponsiveContainer>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -2540,7 +2564,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             ) : showEditProfile ? (
               <EditFarmerProfile onBack={() => setShowEditProfile(false)} />
             ) : (
-              <FarmerProfile 
+              <FarmerProfile
                 onBack={() => setCurrentPage('dashboard')}
                 onEditProfile={() => setShowEditProfile(true)}
               />
@@ -2894,7 +2918,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
       {/* Full Screen Photo Modal */}
       {showPhotoModal && selectedPhoto && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4"
           onClick={() => setShowPhotoModal(false)}
         >
