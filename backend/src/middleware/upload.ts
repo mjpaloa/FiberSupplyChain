@@ -3,15 +3,30 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '../../uploads/profiles');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+import os from 'os';
+
+// Ensure uploads directory exists - use /tmp for Vercel compatibility
+const uploadDir = path.join(os.tmpdir(), 'uploads/profiles');
+
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (error) {
+  console.warn('Failed to create upload directory:', error);
 }
 
 // Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    // Ensure dir exists right before usage just in case
+    if (!fs.existsSync(uploadDir)) {
+      try {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      } catch (e) {
+        return cb(e as Error, '');
+      }
+    }
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
