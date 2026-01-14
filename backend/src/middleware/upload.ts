@@ -5,38 +5,8 @@ import fs from 'fs';
 
 import os from 'os';
 
-// Ensure uploads directory exists - use /tmp for Vercel compatibility
-const uploadDir = path.join(os.tmpdir(), 'uploads/profiles');
-
-try {
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-} catch (error) {
-  console.warn('Failed to create upload directory:', error);
-}
-
 // Configure storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Ensure dir exists right before usage just in case
-    if (!fs.existsSync(uploadDir)) {
-      try {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      } catch (e) {
-        return cb(e as Error, '');
-      }
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename: timestamp-randomstring-originalname
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    const nameWithoutExt = path.basename(file.originalname, ext);
-    cb(null, `${nameWithoutExt}-${uniqueSuffix}${ext}`);
-  }
-});
+const storage = multer.memoryStorage();
 
 // File filter - only allow images
 const fileFilter = (req: any, file: any, cb: any) => {

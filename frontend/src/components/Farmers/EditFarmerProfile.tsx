@@ -42,6 +42,7 @@ const EditFarmerProfile: React.FC<EditFarmerProfileProps> = ({ onBack }) => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
   const [idPhotoPreview, setIdPhotoPreview] = useState<string | null>(null);
+  const [isIdModalOpen, setIdModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     full_name: '', sex: '', age: 0, contact_number: '', address: '', barangay: '', municipality: '',
@@ -365,16 +366,21 @@ const EditFarmerProfile: React.FC<EditFarmerProfileProps> = ({ onBack }) => {
             </div>
 
             {/* Valid ID Upload */}
-            <div className="p-4 sm:p-6 bg-gray-50 rounded-xl border border-gray-200">
-              <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="p-4 sm:p-6 bg-gray-50 rounded-xl border border-gray-200 text-center">
+              <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
                 <Shield className="w-4 h-4 sm:w-5 sm:h-5" /> Valid ID Photo
               </h3>
               {idPhotoPreview && (
-                <div className="mb-4">
-                  <img src={idPhotoPreview} alt="Valid ID" className="max-w-full h-auto rounded-lg shadow-md" />
+                <div className="mb-4 flex justify-center">
+                  <img
+                    src={idPhotoPreview}
+                    alt="Valid ID"
+                    className="max-w-full h-48 object-contain rounded-lg shadow-md cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setIdModalOpen(true)}
+                  />
                 </div>
               )}
-              <label className="cursor-pointer">
+              <label className="cursor-pointer inline-block">
                 <input type="file" accept="image/*" onChange={handleIDPhotoUpload} className="hidden" disabled={uploadingID} />
                 <div className="px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all text-xs sm:text-sm font-semibold flex items-center gap-2 justify-center">
                   {uploadingID ? (<><Loader className="w-4 h-4 animate-spin" /> Uploading...</>) : (<><Upload className="w-4 h-4" /> {idPhotoPreview ? 'Change ID Photo' : 'Upload ID Photo'}</>)}
@@ -397,6 +403,24 @@ const EditFarmerProfile: React.FC<EditFarmerProfileProps> = ({ onBack }) => {
           </form>
         </div>
       </div>
+
+      {/* ID Modal */}
+      {isIdModalOpen && idPhotoPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 p-4" onClick={() => setIdModalOpen(false)}>
+          <button
+            onClick={() => setIdModalOpen(false)}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+          >
+            <X className="w-8 h-8" />
+          </button>
+          <img
+            src={idPhotoPreview}
+            alt="Valid ID Fullscreen"
+            className="max-w-full max-h-[90vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };

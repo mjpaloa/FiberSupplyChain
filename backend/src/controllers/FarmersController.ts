@@ -20,18 +20,15 @@ export class FarmersController {
         return;
       }
 
-      // In a real production app (Vercel), you would upload this file to Supabase Storage here.
-      // Since we are using local multer storage for now (which is ephemeral on Vercel),
-      // we will construct a local URL. 
-      // TODO: Implement Supabase Storage upload for production persistence.
-
-      const fileUrl = `/uploads/profiles/${req.file.filename}`;
+      // Convert file buffer to Base64 for database storage (Vercel has no persistent fs)
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
       // Update farmer profile in database
       const { error } = await supabase
         .from('farmers')
         .update({
-          profile_photo: fileUrl,
+          profile_photo: dataURI,
           updated_at: new Date().toISOString()
         })
         .eq('farmer_id', userId);
@@ -44,7 +41,7 @@ export class FarmersController {
 
       res.status(200).json({
         message: 'Profile picture uploaded successfully',
-        profile_picture_url: fileUrl
+        profile_picture_url: dataURI
       });
     } catch (error) {
       console.error('Error uploading profile picture:', error);
@@ -66,13 +63,15 @@ export class FarmersController {
         return;
       }
 
-      const fileUrl = `/uploads/profiles/${req.file.filename}`;
+      // Convert file buffer to Base64
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
       // Update farmer profile in database
       const { error } = await supabase
         .from('farmers')
         .update({
-          valid_id_photo: fileUrl,
+          valid_id_photo: dataURI,
           updated_at: new Date().toISOString()
         })
         .eq('farmer_id', userId);
@@ -85,7 +84,7 @@ export class FarmersController {
 
       res.status(200).json({
         message: 'Valid ID uploaded successfully',
-        valid_id_photo_url: fileUrl
+        valid_id_photo_url: dataURI
       });
     } catch (error) {
       console.error('Error uploading valid ID:', error);
