@@ -21,15 +21,21 @@ const PhilippinePeso = ({ className, size = 24 }: { className?: string; size?: n
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
     className={className}
+    style={{ minWidth: size, minHeight: size }}
   >
-    <path d="M20 11H4" />
-    <path d="M20 7H4" />
-    <path d="M7 21V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v12a1 1 0 0 1 1 1h2a1 1 0 0 1 1-1V9" />
+    <text
+      x="12"
+      y="12"
+      dy="1"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize="20"
+      fontWeight="bold"
+      fill="currentColor"
+    >
+      ₱
+    </text>
   </svg>
 );
 
