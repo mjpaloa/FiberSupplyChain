@@ -1,8 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, User, Mail, Phone, MapPin, Building2, Upload, Camera, Save, X,
-  Loader, Shield, CheckCircle, Tractor, DollarSign
+  Loader, Shield, CheckCircle, Tractor
 } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api';
+
+const PhilippinePeso = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M20 11H4" />
+    <path d="M20 7H4" />
+    <path d="M7 21V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v12a1 1 0 0 1 1 1h2a1 1 0 0 1 1-1V9" />
+  </svg>
+);
 
 interface FarmerProfile {
   farmer_id: string; full_name: string; email: string; sex: string; age: number;
@@ -37,7 +55,7 @@ const EditFarmerProfile: React.FC<EditFarmerProfileProps> = ({ onBack }) => {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/auth/me', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
@@ -85,7 +103,7 @@ const EditFarmerProfile: React.FC<EditFarmerProfileProps> = ({ onBack }) => {
     formData.append('profile_picture', file);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/farmers/profile/upload-picture', {
+      const response = await fetch(`${API_BASE_URL}/api/farmers/profile/upload-picture`, {
         method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData
       });
       if (response.ok) {
@@ -108,7 +126,7 @@ const EditFarmerProfile: React.FC<EditFarmerProfileProps> = ({ onBack }) => {
     formData.append('valid_id_photo', file);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/farmers/profile/upload-id', {
+      const response = await fetch(`${API_BASE_URL}/api/farmers/profile/upload-id`, {
         method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData
       });
       if (response.ok) {
@@ -127,7 +145,7 @@ const EditFarmerProfile: React.FC<EditFarmerProfileProps> = ({ onBack }) => {
     setSaving(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/farmers/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/farmers/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData)
@@ -160,9 +178,8 @@ const EditFarmerProfile: React.FC<EditFarmerProfileProps> = ({ onBack }) => {
         </div>
 
         {message && (
-          <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl flex items-center gap-3 ${
-            message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
+          <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl flex items-center gap-3 ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
             {message.type === 'success' ? <CheckCircle className="w-5 h-5 flex-shrink-0" /> : <X className="w-5 h-5 flex-shrink-0" />}
             <p className="text-xs sm:text-sm font-medium">{message.text}</p>
           </div>
@@ -321,7 +338,7 @@ const EditFarmerProfile: React.FC<EditFarmerProfileProps> = ({ onBack }) => {
             {/* Sales Information */}
             <div className="p-4 sm:p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200">
               <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" /> Sales Information
+                <PhilippinePeso className="w-4 h-4 sm:w-5 sm:h-5" /> Sales Information
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>

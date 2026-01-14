@@ -6,6 +6,93 @@ import { supabase } from '../config/supabase';
 import bcrypt from 'bcrypt';
 
 export class FarmersController {
+  // Upload profile picture
+  static async uploadProfilePicture(req: Request, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      if (!req.file) {
+        res.status(400).json({ error: 'No file uploaded' });
+        return;
+      }
+
+      // In a real production app (Vercel), you would upload this file to Supabase Storage here.
+      // Since we are using local multer storage for now (which is ephemeral on Vercel),
+      // we will construct a local URL. 
+      // TODO: Implement Supabase Storage upload for production persistence.
+
+      const fileUrl = `/uploads/profiles/${req.file.filename}`;
+
+      // Update farmer profile in database
+      const { error } = await supabase
+        .from('farmers')
+        .update({
+          profile_photo: fileUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('farmer_id', userId);
+
+      if (error) {
+        console.error('Error updating profile photo in DB:', error);
+        res.status(500).json({ error: 'Failed to update profile picture' });
+        return;
+      }
+
+      res.status(200).json({
+        message: 'Profile picture uploaded successfully',
+        profile_picture_url: fileUrl
+      });
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      res.status(500).json({ error: 'Failed to upload profile picture' });
+    }
+  }
+
+  // Upload valid ID
+  static async uploadValidId(req: Request, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      if (!req.file) {
+        res.status(400).json({ error: 'No file uploaded' });
+        return;
+      }
+
+      const fileUrl = `/uploads/profiles/${req.file.filename}`;
+
+      // Update farmer profile in database
+      const { error } = await supabase
+        .from('farmers')
+        .update({
+          valid_id_photo: fileUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('farmer_id', userId);
+
+      if (error) {
+        console.error('Error updating valid ID photo in DB:', error);
+        res.status(500).json({ error: 'Failed to update valid ID photo' });
+        return;
+      }
+
+      res.status(200).json({
+        message: 'Valid ID uploaded successfully',
+        valid_id_photo_url: fileUrl
+      });
+    } catch (error) {
+      console.error('Error uploading valid ID:', error);
+      res.status(500).json({ error: 'Failed to upload valid ID' });
+    }
+  }
+
   // Get farmer profile
   static async getFarmerProfile(req: Request, res: Response) {
     try {
