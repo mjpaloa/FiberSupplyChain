@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Phone, 
-  MapPin, 
-  FileText, 
+import {
+  Phone,
+  MapPin,
+  FileText,
   Calendar,
   Building,
   Search,
@@ -58,7 +58,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
   const [filterType, setFilterType] = useState('all');
   const [filterMunicipality, setFilterMunicipality] = useState('all');
   const [filterAvailability, setFilterAvailability] = useState('all');
-  const [selectedPriceType, setSelectedPriceType] = useState<{[key: string]: 'class_a' | 'class_b' | 'class_c'}>({});
+  const [selectedPriceType, setSelectedPriceType] = useState<{ [key: string]: 'class_a' | 'class_b' | 'class_c' }>({});
   const [imageModal, setImageModal] = useState<{ isOpen: boolean; imageUrl: string; label: string }>({ isOpen: false, imageUrl: '', label: '' });
 
   useEffect(() => {
@@ -69,7 +69,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      
+
       const params = new URLSearchParams();
       if (filterType !== 'all') params.append('type', filterType);
       if (filterMunicipality !== 'all') params.append('municipality', filterMunicipality);
@@ -126,11 +126,11 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
 
 
   const filteredListings = listings.filter(listing => {
-    const matchesSearch = 
+    const matchesSearch =
       listing.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       listing.municipality.toLowerCase().includes(searchTerm.toLowerCase()) ||
       listing.barangay.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     return matchesSearch;
   });
 
@@ -146,7 +146,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
     const classKey = `class_${classType}` as const;
     const enabledKey = `${classKey}_enabled` as const;
     const priceKey = `${classKey}_price` as const;
-    
+
     return filteredListings
       .filter(l => l[enabledKey] && l[priceKey] && l[priceKey]! > 0)
       .sort((a, b) => (b[priceKey] || 0) - (a[priceKey] || 0))
@@ -168,11 +168,11 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
     const classKey = `class_${classType}` as const;
     const enabledKey = `${classKey}_enabled` as const;
     const priceKey = `${classKey}_price` as const;
-    
+
     const rankedListings = filteredListings
       .filter(l => l[enabledKey] && l[priceKey] && l[priceKey]! > 0)
       .sort((a, b) => (b[priceKey] || 0) - (a[priceKey] || 0));
-    
+
     const rank = rankedListings.findIndex(l => l.listing_id === listingId);
     return rank >= 0 && rank < 3 ? rank + 1 : null;
   };
@@ -182,14 +182,14 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
     const current = selectedPriceType[listingId] || 'class_a';
     const types: ('class_a' | 'class_b' | 'class_c')[] = ['class_a', 'class_b', 'class_c'];
     const currentIndex = types.indexOf(current);
-    
+
     let newIndex;
     if (direction === 'next') {
       newIndex = (currentIndex + 1) % types.length;
     } else {
       newIndex = (currentIndex - 1 + types.length) % types.length;
     }
-    
+
     setSelectedPriceType(prev => ({
       ...prev,
       [listingId]: types[newIndex]
@@ -198,12 +198,12 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-6">
       {/* Top Buyers Ranking Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Class A Top Buyers */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-          <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 px-6 py-4">
+          <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 px-6 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
                 <TrendingUp className="text-white" size={20} />
@@ -214,15 +214,14 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
               </div>
             </div>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-6 space-y-3">
             {topClassA.length > 0 ? (
               topClassA.map((buyer) => (
-                <div key={buyer.rank} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-emerald-50 hover:border-emerald-300 transition-all">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${
-                    buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
+                <div key={buyer.rank} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-emerald-50 hover:border-emerald-300 transition-all">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
                     buyer.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
-                    'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
-                  }`}>
+                      'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                    }`}>
                     {buyer.rank}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -239,7 +238,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
 
         {/* Class B Top Buyers */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
                 <TrendingUp className="text-white" size={20} />
@@ -250,15 +249,14 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
               </div>
             </div>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-6 space-y-3">
             {topClassB.length > 0 ? (
               topClassB.map((buyer) => (
-                <div key={buyer.rank} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-all">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${
-                    buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
+                <div key={buyer.rank} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-all">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
                     buyer.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
-                    'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
-                  }`}>
+                      'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                    }`}>
                     {buyer.rank}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -275,7 +273,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
 
         {/* Class C Top Buyers */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-          <div className="bg-gradient-to-r from-amber-50 to-amber-100 px-6 py-4">
+          <div className="bg-gradient-to-r from-amber-50 to-amber-100 px-6 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
                 <TrendingUp className="text-white" size={20} />
@@ -286,15 +284,14 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
               </div>
             </div>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-6 space-y-3">
             {topClassC.length > 0 ? (
               topClassC.map((buyer) => (
-                <div key={buyer.rank} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-amber-50 hover:border-amber-300 transition-all">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${
-                    buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
+                <div key={buyer.rank} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-amber-50 hover:border-amber-300 transition-all">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
                     buyer.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
-                    'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
-                  }`}>
+                      'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
+                    }`}>
                     {buyer.rank}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -311,7 +308,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 mb-6">
+      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200 mb-8">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -362,7 +359,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
           <p className="text-gray-600">No buyer price listings match your current filters.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {filteredListings.map((listing) => {
             // Get all available class types with their prices
             type ClassInfo = {
@@ -376,35 +373,35 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
               textColor: string;
               borderColor: string;
             };
-            
+
             const classesInfo: ClassInfo[] = [
-              listing.class_a_enabled ? { 
-                type: 'a', 
+              listing.class_a_enabled ? {
+                type: 'a',
                 typeKey: 'class_a',
-                label: 'Class A', 
-                price: listing.class_a_price, 
+                label: 'Class A',
+                price: listing.class_a_price,
                 image: listing.class_a_image,
                 quality: 'Premium Quality',
                 bgColor: 'bg-emerald-50',
                 textColor: 'text-emerald-700',
                 borderColor: 'border-emerald-300'
               } : null,
-              listing.class_b_enabled ? { 
+              listing.class_b_enabled ? {
                 type: 'b',
-                typeKey: 'class_b', 
-                label: 'Class B', 
-                price: listing.class_b_price, 
+                typeKey: 'class_b',
+                label: 'Class B',
+                price: listing.class_b_price,
                 image: listing.class_b_image,
                 quality: 'Standard Quality',
                 bgColor: 'bg-blue-50',
                 textColor: 'text-blue-700',
                 borderColor: 'border-blue-300'
               } : null,
-              listing.class_c_enabled ? { 
+              listing.class_c_enabled ? {
                 type: 'c',
-                typeKey: 'class_c', 
-                label: 'Class C', 
-                price: listing.class_c_price, 
+                typeKey: 'class_c',
+                label: 'Class C',
+                price: listing.class_c_price,
                 image: listing.class_c_image,
                 quality: 'Basic Quality',
                 bgColor: 'bg-amber-50',
@@ -437,22 +434,21 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                   <div className="space-y-3">
                     {classesInfo.map((classInfo) => {
                       const rank = getRankForListing(listing.listing_id, classInfo.type);
-                      
+
                       return (
                         <div key={classInfo.typeKey} className={`relative ${classInfo.bgColor} ${classInfo.borderColor} border-2 rounded-xl p-3 md:p-4 transition-all hover:shadow-md`}>
                           {/* Ranking Badge */}
                           {rank && (
                             <div className="absolute -top-2 -right-2 md:-top-3 md:-right-3 z-10">
-                              <div className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full font-black text-sm md:text-base shadow-lg ${
-                                rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white ring-4 ring-yellow-200' :
+                              <div className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full font-black text-sm md:text-base shadow-lg ${rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white ring-4 ring-yellow-200' :
                                 rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white ring-4 ring-gray-200' :
-                                'bg-gradient-to-br from-orange-400 to-orange-600 text-white ring-4 ring-orange-200'
-                              }`}>
+                                  'bg-gradient-to-br from-orange-400 to-orange-600 text-white ring-4 ring-orange-200'
+                                }`}>
                                 {rank}
                               </div>
                             </div>
                           )}
-                          
+
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
@@ -466,15 +462,15 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                               </p>
                               <p className="text-xs text-gray-500">per kilogram</p>
                             </div>
-                            
+
                             {/* Image Thumbnail */}
                             {classInfo.image && (
-                              <div 
+                              <div
                                 className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform flex-shrink-0"
                                 onClick={() => setImageModal({ isOpen: true, imageUrl: classInfo.image!, label: `${listing.company_name} - ${classInfo.label}` })}
                               >
-                                <img 
-                                  src={classInfo.image} 
+                                <img
+                                  src={classInfo.image}
                                   alt={classInfo.label}
                                   className="w-full h-full object-cover"
                                 />
@@ -531,7 +527,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
 
       {/* Image Modal */}
       {imageModal.isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 animate-fadeIn"
           onClick={() => setImageModal({ isOpen: false, imageUrl: '', label: '' })}
         >
@@ -545,8 +541,8 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
             <div className="bg-white rounded-t-2xl p-4">
               <h3 className="text-lg font-bold text-gray-900">{imageModal.label}</h3>
             </div>
-            <img 
-              src={imageModal.imageUrl} 
+            <img
+              src={imageModal.imageUrl}
               alt={imageModal.label}
               className="w-full h-auto max-h-[80vh] object-contain bg-gray-100"
             />

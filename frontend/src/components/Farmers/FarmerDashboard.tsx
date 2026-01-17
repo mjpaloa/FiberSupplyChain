@@ -1044,8 +1044,13 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
     try {
       const response = await apiPut(`/api/association-seedlings/farmer/${selectedSeedling.distribution_id}/mark-planted`, {
-        planted_date: plantingData.planting_date,
-        planted_quantity: plantingData.planting_quantity
+        planting_date: plantingData.planting_date,
+        planted_quantity: plantingData.planting_quantity,
+        planting_location: plantingData.planting_location,
+        planting_notes: plantingData.planting_notes,
+        planting_photo_1: plantingData.planting_photo_1,
+        planting_photo_2: plantingData.planting_photo_2,
+        planting_photo_3: plantingData.planting_photo_3
       });
 
       if (response.ok) {
@@ -2832,7 +2837,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
               )}
 
               {/* Planting Information (if planted) */}
-              {selectedSeedling.status === 'planted' && selectedSeedling.planting_date && (
+              {selectedSeedling.status === 'planted' && (
                 <div className="mb-6">
                   <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-green-600" />
@@ -2840,10 +2845,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   </h3>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-green-700">Planting Date</p>
-                        <p className="font-medium text-green-900">{new Date(selectedSeedling.planting_date).toLocaleDateString()}</p>
-                      </div>
+                      {selectedSeedling.planting_date && (
+                        <div>
+                          <p className="text-sm text-green-700">Planting Date</p>
+                          <p className="font-medium text-green-900">{new Date(selectedSeedling.planting_date).toLocaleDateString()}</p>
+                        </div>
+                      )}
                       {selectedSeedling.planting_location && (
                         <div>
                           <p className="text-sm text-green-700">Location</p>
@@ -2854,6 +2861,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         <div className="col-span-2">
                           <p className="text-sm text-green-700">Planting Method</p>
                           <p className="font-medium text-green-900">{selectedSeedling.planting_notes}</p>
+                        </div>
+                      )}
+                      {!selectedSeedling.planting_date && !selectedSeedling.planting_location && !selectedSeedling.planting_notes && (
+                        <div className="col-span-2 text-center py-4">
+                          <p className="text-sm text-green-700">Seedlings marked as planted</p>
+                          <p className="text-xs text-gray-500 mt-1">Detailed planting information not yet recorded</p>
                         </div>
                       )}
                     </div>

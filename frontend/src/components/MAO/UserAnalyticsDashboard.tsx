@@ -6,6 +6,18 @@ import {
   Building2,
   RefreshCw
 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell
+} from 'recharts';
+
+import RegistrationTrendsChart from './RegistrationTrendsChart';
 
 // Add CSS animations for charts
 const chartAnimations = `
@@ -84,23 +96,23 @@ const UserAnalyticsDashboard: React.FC = () => {
       const response = await fetch('https://easyabaca-api.vercel.app/api/admin/users-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setStats(data);
-        
+
         // Use monthly trends data from backend
         if (data.monthlyTrends && Array.isArray(data.monthlyTrends)) {
           console.log('📊 Monthly trends data received:', data.monthlyTrends);
           const trendsData = data.monthlyTrends as MonthlyData[];
           setAllMonthlyData(trendsData);
-          
+
           // Extract unique years and sort
           const yearValues = trendsData.map(d => d.year);
           const uniqueYears = new Set<number>(yearValues);
           const years = Array.from(uniqueYears).sort((a, b) => b - a);
           setAvailableYears(years);
-          
+
           // Filter by selected year
           const filteredData = trendsData.filter(d => d.year === selectedYear);
           setMonthlyData(filteredData);
@@ -130,7 +142,7 @@ const UserAnalyticsDashboard: React.FC = () => {
   // Aggregate data by year for yearly view
   const yearlyData = React.useMemo(() => {
     const yearlyAgg: { [key: number]: { year: number; farmers: number; buyers: number; cusafa: number; mao: number } } = {};
-    
+
     allMonthlyData.forEach(d => {
       if (!yearlyAgg[d.year]) {
         yearlyAgg[d.year] = { year: d.year, farmers: 0, buyers: 0, cusafa: 0, mao: 0 };
@@ -140,17 +152,14 @@ const UserAnalyticsDashboard: React.FC = () => {
       yearlyAgg[d.year].cusafa += d.cusafa;
       yearlyAgg[d.year].mao += d.mao;
     });
-    
+
     return Object.values(yearlyAgg).sort((a, b) => a.year - b.year);
   }, [allMonthlyData]);
 
   // Get the appropriate data based on view mode
   const displayData = viewMode === 'yearly' ? yearlyData : monthlyData;
 
-  // Calculate max value for chart scaling (use 1 as minimum to avoid division by zero)
-  const maxValue = Math.max(1, ...displayData.map(d => d.farmers + d.buyers + d.cusafa + d.mao));
-
-  // Calculate percentages for pie chart
+  // Calculate percentages for the pie chart
   const totalUsersForPie = (stats?.totalFarmers || 0) + (stats?.totalBuyers || 0) + (stats?.totalCusafa || 0) + (stats?.totalMao || 0);
   const farmersPercentage = totalUsersForPie > 0 ? Math.round(((stats?.totalFarmers || 0) / totalUsersForPie) * 100) : 0;
   const buyersPercentage = totalUsersForPie > 0 ? Math.round(((stats?.totalBuyers || 0) / totalUsersForPie) * 100) : 0;
@@ -255,308 +264,47 @@ const UserAnalyticsDashboard: React.FC = () => {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Monthly Registration Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-bold text-gray-900">User Registration Trends</h3>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-lg">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-sm"></div>
-                <span className="font-semibold text-emerald-700">Farmers</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 shadow-sm"></div>
-                <span className="font-semibold text-blue-700">Buyers</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-lg">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 shadow-sm"></div>
-                <span className="font-semibold text-amber-700">CUSAFA</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-rose-50 rounded-lg">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-rose-400 to-rose-600 shadow-sm"></div>
-                <span className="font-semibold text-rose-700">MAO</span>
-              </div>
-              <select 
-                value={viewMode}
-                onChange={(e) => setViewMode(e.target.value as 'monthly' | 'yearly')}
-                className="text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-              >
-                <option value="monthly">📅 Monthly View</option>
-                <option value="yearly">📊 Yearly View</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Year Filter Buttons - Only show in Monthly mode */}
-          {viewMode === 'monthly' && (
-            <div className="mb-6 flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-semibold text-gray-700">Select Year:</span>
-              <button
-                onClick={() => {
-                  setMonthlyData(allMonthlyData);
-                  setSelectedYear(0);
-                }}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                  selectedYear === 0
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg scale-105'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                All Months
-              </button>
-              {availableYears.map((year) => (
-                <button
-                  key={year}
-                  onClick={() => setSelectedYear(year)}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    selectedYear === year
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg scale-105'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {year}
-                </button>
-              ))}
-              {availableYears.length === 0 && (
-                <span className="text-sm text-gray-400">No data available</span>
-              )}
-            </div>
-          )}
-
-          {/* Enhanced Bar Chart with SVG */}
-          <div className="h-80 relative bg-gradient-to-br from-gray-50 to-white rounded-xl p-4">
-            {(() => {
-              const labels = viewMode === 'yearly' 
-                ? displayData.map(d => d.year.toString())
-                : displayData.map((d: any) => d.month || '');
-              
-              const dataFarmers = displayData.map(d => d.farmers);
-              const dataBuyers = displayData.map(d => d.buyers);
-              const dataCusafa = displayData.map(d => d.cusafa);
-              const dataMao = displayData.map(d => d.mao);
-              
-              return (
-                <>
-                  {/* Empty state message */}
-                  {displayData.every(d => d.farmers === 0 && d.buyers === 0 && d.cusafa === 0 && d.mao === 0) && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <p className="text-gray-400 text-sm font-medium">No registration data available for the selected period</p>
-                    </div>
-                  )}
-
-                  {/* Y-axis labels */}
-                  <div className="absolute left-0 top-0 bottom-12 flex flex-col justify-between text-xs text-gray-400">
-                    <span>{Math.round(maxValue)}</span>
-                    <span>{Math.round(maxValue * 0.8)}</span>
-                    <span>{Math.round(maxValue * 0.6)}</span>
-                    <span>{Math.round(maxValue * 0.4)}</span>
-                    <span>{Math.round(maxValue * 0.2)}</span>
-                    <span>0</span>
-                  </div>
-
-                  {/* Chart Area */}
-                  <div className="ml-8 h-full pb-8">
-                    <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
-                      <defs>
-                        {/* Gradients for bars */}
-                        <linearGradient id="farmersBarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#10b981" stopOpacity="0.9" />
-                          <stop offset="100%" stopColor="#059669" stopOpacity="0.7" />
-                        </linearGradient>
-                        <linearGradient id="buyersBarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.9" />
-                          <stop offset="100%" stopColor="#2563eb" stopOpacity="0.7" />
-                        </linearGradient>
-                        <linearGradient id="cusafaBarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.9" />
-                          <stop offset="100%" stopColor="#d97706" stopOpacity="0.7" />
-                        </linearGradient>
-                        <linearGradient id="maoBarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.9" />
-                          <stop offset="100%" stopColor="#e11d48" stopOpacity="0.7" />
-                        </linearGradient>
-                      </defs>
-
-                      {/* Grid lines */}
-                      <line x1="0" y1="60" x2="1000" y2="60" stroke="#f3f4f6" strokeWidth="1" />
-                      <line x1="0" y1="120" x2="1000" y2="120" stroke="#f3f4f6" strokeWidth="1" />
-                      <line x1="0" y1="180" x2="1000" y2="180" stroke="#f3f4f6" strokeWidth="1" />
-                      <line x1="0" y1="240" x2="1000" y2="240" stroke="#f3f4f6" strokeWidth="1" />
-                      <line x1="0" y1="300" x2="1000" y2="300" stroke="#e5e7eb" strokeWidth="2" />
-
-                      {/* Dynamic bars based on data */}
-                      {labels.map((_, i) => {
-                        const barWidth = 1000 / labels.length;
-                        const groupX = i * barWidth;
-                        const barSpacing = barWidth / 5.5;
-                        
-                        const farmersHeight = Math.max((dataFarmers[i] / maxValue) * 280, 0);
-                        const buyersHeight = Math.max((dataBuyers[i] / maxValue) * 280, 0);
-                        const cusafaHeight = Math.max((dataCusafa[i] / maxValue) * 280, 0);
-                        const maoHeight = Math.max((dataMao[i] / maxValue) * 280, 0);
-                        
-                        return (
-                          <g key={i}>
-                            {/* Farmers bar */}
-                            <rect 
-                              x={groupX + barSpacing * 0.5} 
-                              y={300 - farmersHeight} 
-                              width={barSpacing * 0.9} 
-                              height={farmersHeight} 
-                              fill="url(#farmersBarGradient)" 
-                              rx="8" 
-                              className="hover:opacity-90 transition-all duration-300 cursor-pointer"
-                              style={{ 
-                                animation: `barGrow 0.6s ease-out ${i * 0.08}s backwards`,
-                                transformOrigin: 'bottom',
-                                filter: 'drop-shadow(0 2px 4px rgba(16, 185, 129, 0.2))'
-                              }}
-                            />
-                            {dataFarmers[i] > 0 && (
-                              <text 
-                                x={groupX + barSpacing * 0.95} 
-                                y={Math.max(300 - farmersHeight - 10, 15)} 
-                                textAnchor="middle" 
-                                className="text-xs font-bold fill-emerald-600"
-                                style={{ fontSize: '10px' }}
-                              >
-                                {dataFarmers[i]}
-                              </text>
-                            )}
-
-                            {/* Buyers bar */}
-                            <rect 
-                              x={groupX + barSpacing * 1.6} 
-                              y={300 - buyersHeight} 
-                              width={barSpacing * 0.9} 
-                              height={buyersHeight} 
-                              fill="url(#buyersBarGradient)" 
-                              rx="8" 
-                              className="hover:opacity-90 transition-all duration-300 cursor-pointer"
-                              style={{ 
-                                animation: `barGrow 0.6s ease-out ${i * 0.08 + 0.1}s backwards`,
-                                transformOrigin: 'bottom',
-                                filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2))'
-                              }}
-                            />
-                            {dataBuyers[i] > 0 && (
-                              <text 
-                                x={groupX + barSpacing * 2.05} 
-                                y={Math.max(300 - buyersHeight - 10, 15)} 
-                                textAnchor="middle" 
-                                className="text-xs font-bold fill-blue-600"
-                                style={{ fontSize: '10px' }}
-                              >
-                                {dataBuyers[i]}
-                              </text>
-                            )}
-
-                            {/* CUSAFA bar */}
-                            <rect 
-                              x={groupX + barSpacing * 2.7} 
-                              y={300 - cusafaHeight} 
-                              width={barSpacing * 0.9} 
-                              height={cusafaHeight} 
-                              fill="url(#cusafaBarGradient)" 
-                              rx="8" 
-                              className="hover:opacity-90 transition-all duration-300 cursor-pointer"
-                              style={{ 
-                                animation: `barGrow 0.6s ease-out ${i * 0.08 + 0.2}s backwards`,
-                                transformOrigin: 'bottom',
-                                filter: 'drop-shadow(0 2px 4px rgba(245, 158, 11, 0.2))'
-                              }}
-                            />
-                            {dataCusafa[i] > 0 && (
-                              <text 
-                                x={groupX + barSpacing * 3.15} 
-                                y={Math.max(300 - cusafaHeight - 10, 15)} 
-                                textAnchor="middle" 
-                                className="text-xs font-bold fill-amber-600"
-                                style={{ fontSize: '10px' }}
-                              >
-                                {dataCusafa[i]}
-                              </text>
-                            )}
-
-                            {/* MAO bar */}
-                            <rect 
-                              x={groupX + barSpacing * 3.8} 
-                              y={300 - maoHeight} 
-                              width={barSpacing * 0.9} 
-                              height={maoHeight} 
-                              fill="url(#maoBarGradient)" 
-                              rx="8" 
-                              className="hover:opacity-90 transition-all duration-300 cursor-pointer"
-                              style={{ 
-                                animation: `barGrow 0.6s ease-out ${i * 0.08 + 0.3}s backwards`,
-                                transformOrigin: 'bottom',
-                                filter: 'drop-shadow(0 2px 4px rgba(244, 63, 94, 0.2))'
-                              }}
-                            />
-                            {dataMao[i] > 0 && (
-                              <text 
-                                x={groupX + barSpacing * 4.25} 
-                                y={Math.max(300 - maoHeight - 10, 15)} 
-                                textAnchor="middle" 
-                                className="text-xs font-bold fill-rose-600"
-                                style={{ fontSize: '10px' }}
-                              >
-                                {dataMao[i]}
-                              </text>
-                            )}
-                          </g>
-                        );
-                      })}
-                    </svg>
-                  </div>
-
-                  {/* X-axis labels */}
-                  <div className="ml-8 flex justify-between text-xs text-gray-600 font-medium mt-2">
-                    {labels.map((label, i) => (
-                      <span key={i} className="flex-1 text-center">
-                        {viewMode === 'yearly' ? label : (
-                          <>
-                            <div className="font-semibold">{label}</div>
-                            <div className="text-[10px] text-gray-400">{displayData[i]?.year}</div>
-                          </>
-                        )}
-                      </span>
-                    ))}
-                  </div>
-                </>
-              );
-            })()}
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        {/* Monthly Registration Chart - Now using Recharts */}
+        <div className="lg:col-span-2 h-full">
+          <RegistrationTrendsChart
+            data={monthlyData}
+            availableYears={availableYears}
+            selectedYear={selectedYear}
+            setSelectedYear={setSelectedYear}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            yearlyData={yearlyData}
+          />
         </div>
 
-        {/* User Composition Pie Chart */}
-        <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
-          <h3 className="text-xl font-bold text-gray-900 mb-8">User Composition</h3>
-          
-          <div className="flex items-center justify-center mb-8">
-            <div className="relative w-64 h-64">
-              {/* SVG Donut Chart - Enhanced to match Production Distribution */}
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                {/* Background circle */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="none"
-                  stroke="#f3f4f6"
-                  strokeWidth="14"
-                />
-                
+        {/* User Composition Pie Chart - Enhanced to match height */}
+        <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-gray-100 flex flex-col h-full transition-all duration-300">
+          <div className="mb-10 text-center lg:text-left">
+            <h3 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">User Composition</h3>
+            <p className="text-sm md:text-base text-gray-500 mt-2 font-medium">Breakdown by user roles</p>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[350px]">
+            {/* Enhanced Pie Chart with SVG */}
+            <div className="relative w-80 h-80 group">
+              <svg className="w-full h-full transform -rotate-90 drop-shadow-2xl" viewBox="0 0 100 100">
                 {(() => {
-                  const circumference = 251.2;
-                  
-                  // Calculate dash arrays
-                  const farmersDash = (farmersPercentage / 100) * circumference;
-                  const buyersDash = (buyersPercentage / 100) * circumference;
-                  const cusafaDash = (cusafaPercentage / 100) * circumference;
-                  const maoDash = (maoPercentage / 100) * circumference;
-                  
+                  const circumference = 2 * Math.PI * 40;
+                  const total = (stats.totalFarmers || 0) + (stats.totalBuyers || 0) + (stats.totalCusafa || 0) + (stats.totalMao || 0);
+
+                  if (total === 0) return <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="16" />;
+
+                  const farmersPercent = (stats.totalFarmers / total) * 100;
+                  const buyersPercent = (stats.totalBuyers / total) * 100;
+                  const cusafaPercent = (stats.totalCusafa / total) * 100;
+                  const maoPercent = (stats.totalMao / total) * 100;
+
+                  const farmersDash = (farmersPercent / 100) * circumference;
+                  const buyersDash = (buyersPercent / 100) * circumference;
+                  const cusafaDash = (cusafaPercent / 100) * circumference;
+                  const maoDash = (maoPercent / 100) * circumference;
+
                   return (
                     <>
                       {/* Farmers segment */}
@@ -566,13 +314,13 @@ const UserAnalyticsDashboard: React.FC = () => {
                         r="40"
                         fill="none"
                         stroke="url(#farmersGradient)"
-                        strokeWidth="14"
+                        strokeWidth="16"
                         strokeDasharray={`${farmersDash} ${circumference}`}
                         strokeDashoffset="0"
                         strokeLinecap="round"
-                        className="transition-all duration-700"
+                        className="transition-all duration-1000 ease-out"
                       />
-                      
+
                       {/* Buyers segment */}
                       <circle
                         cx="50"
@@ -580,13 +328,13 @@ const UserAnalyticsDashboard: React.FC = () => {
                         r="40"
                         fill="none"
                         stroke="url(#buyersGradient)"
-                        strokeWidth="14"
+                        strokeWidth="16"
                         strokeDasharray={`${buyersDash} ${circumference}`}
                         strokeDashoffset={`-${farmersDash}`}
                         strokeLinecap="round"
-                        className="transition-all duration-700"
+                        className="transition-all duration-1000 ease-out"
                       />
-                      
+
                       {/* CUSAFA segment */}
                       <circle
                         cx="50"
@@ -594,13 +342,13 @@ const UserAnalyticsDashboard: React.FC = () => {
                         r="40"
                         fill="none"
                         stroke="url(#cusafaGradient)"
-                        strokeWidth="14"
+                        strokeWidth="16"
                         strokeDasharray={`${cusafaDash} ${circumference}`}
                         strokeDashoffset={`-${farmersDash + buyersDash}`}
                         strokeLinecap="round"
-                        className="transition-all duration-700"
+                        className="transition-all duration-1000 ease-out"
                       />
-                      
+
                       {/* MAO segment */}
                       <circle
                         cx="50"
@@ -608,13 +356,13 @@ const UserAnalyticsDashboard: React.FC = () => {
                         r="40"
                         fill="none"
                         stroke="url(#maoGradient)"
-                        strokeWidth="14"
+                        strokeWidth="16"
                         strokeDasharray={`${maoDash} ${circumference}`}
                         strokeDashoffset={`-${farmersDash + buyersDash + cusafaDash}`}
                         strokeLinecap="round"
-                        className="transition-all duration-700"
+                        className="transition-all duration-1000 ease-out"
                       />
-                      
+
                       {/* Gradients */}
                       <defs>
                         <linearGradient id="farmersGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -638,44 +386,44 @@ const UserAnalyticsDashboard: React.FC = () => {
                   );
                 })()}
               </svg>
-              
+
               {/* Center text - Enhanced */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{totalUsersForPie}</div>
-                <div className="text-sm font-semibold text-gray-500 mt-1">Total Users</div>
+                <div className="text-5xl font-black bg-gradient-to-br from-gray-900 to-gray-600 bg-clip-text text-transparent">{totalUsersForPie}</div>
+                <div className="text-xs font-black text-gray-400 uppercase tracking-widest mt-1">Total Users</div>
               </div>
             </div>
           </div>
 
           {/* Legend - Enhanced */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-md"></div>
-                <span className="text-sm font-semibold text-gray-700">Farmers</span>
+          <div className="grid grid-cols-2 gap-4 mt-10">
+            <div className="flex flex-col p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 hover:bg-white hover:scale-105 transition-all duration-300">
+              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Farmers</span>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-black text-emerald-900">{farmersPercentage}%</span>
+                <span className="text-xs font-bold text-emerald-600 bg-white px-2 py-0.5 rounded-full shadow-sm">{stats.totalFarmers}</span>
               </div>
-              <span className="text-base font-bold text-emerald-600">{farmersPercentage}%</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 shadow-md"></div>
-                <span className="text-sm font-semibold text-gray-700">Buyers</span>
+            <div className="flex flex-col p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50 hover:bg-white hover:scale-105 transition-all duration-300">
+              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Buyers</span>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-black text-blue-900">{buyersPercentage}%</span>
+                <span className="text-xs font-bold text-blue-600 bg-white px-2 py-0.5 rounded-full shadow-sm">{stats.totalBuyers}</span>
               </div>
-              <span className="text-base font-bold text-blue-600">{buyersPercentage}%</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-amber-50 rounded-xl hover:bg-amber-100 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 shadow-md"></div>
-                <span className="text-sm font-semibold text-gray-700">CUSAFA</span>
+            <div className="flex flex-col p-4 bg-amber-50/50 rounded-2xl border border-amber-100/50 hover:bg-white hover:scale-105 transition-all duration-300">
+              <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">CUSAFA</span>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-black text-amber-900">{cusafaPercentage}%</span>
+                <span className="text-xs font-bold text-amber-600 bg-white px-2 py-0.5 rounded-full shadow-sm">{stats.totalCusafa}</span>
               </div>
-              <span className="text-base font-bold text-amber-600">{cusafaPercentage}%</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-rose-50 rounded-xl hover:bg-rose-100 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-rose-400 to-rose-600 shadow-md"></div>
-                <span className="text-sm font-semibold text-gray-700">MAO</span>
+            <div className="flex flex-col p-4 bg-rose-50/50 rounded-2xl border border-rose-100/50 hover:bg-white hover:scale-105 transition-all duration-300">
+              <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">MAO</span>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-black text-rose-900">{maoPercentage}%</span>
+                <span className="text-xs font-bold text-rose-600 bg-white px-2 py-0.5 rounded-full shadow-sm">{stats.totalMao}</span>
               </div>
-              <span className="text-base font-bold text-rose-600">{maoPercentage}%</span>
             </div>
           </div>
         </div>
@@ -712,11 +460,10 @@ const UserAnalyticsDashboard: React.FC = () => {
                 <tr key={index} className="hover:bg-gradient-to-r hover:from-gray-50 hover:to-white transition-all duration-200">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-md ${
-                        user.role === 'farmer' ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' :
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-md ${user.role === 'farmer' ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' :
                         user.role === 'buyer' ? 'bg-gradient-to-br from-blue-400 to-blue-600' :
-                        user.role === 'officer' ? 'bg-gradient-to-br from-amber-400 to-amber-600' : 'bg-gradient-to-br from-purple-400 to-purple-600'
-                      }`}>
+                          user.role === 'officer' ? 'bg-gradient-to-br from-amber-400 to-amber-600' : 'bg-gradient-to-br from-purple-400 to-purple-600'
+                        }`}>
                         {user.full_name.charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-4">
@@ -725,11 +472,10 @@ const UserAnalyticsDashboard: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-3 py-1.5 text-xs font-bold rounded-lg shadow-sm ${
-                      user.role === 'farmer' ? 'bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800' :
+                    <span className={`inline-flex px-3 py-1.5 text-xs font-bold rounded-lg shadow-sm ${user.role === 'farmer' ? 'bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800' :
                       user.role === 'buyer' ? 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800' :
-                      user.role === 'officer' ? 'bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800' : 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800'
-                    }`}>
+                        user.role === 'officer' ? 'bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800' : 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800'
+                      }`}>
                       {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                     </span>
                   </td>
@@ -737,10 +483,10 @@ const UserAnalyticsDashboard: React.FC = () => {
                     {user.email}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600">
-                    {new Date(user.created_at).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric', 
-                      year: 'numeric' 
+                    {new Date(user.created_at).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
                     })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

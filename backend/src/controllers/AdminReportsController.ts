@@ -15,8 +15,8 @@ export class AdminReportsController {
       // 1. Total Seedlings Received (from association_seedling_distributions)
       const { data: associationDistributions, error: assocError } = await supabase
         .from('association_seedling_distributions')
-        .select('quantity_distributed');
-      
+        .select('quantity_distributed, date_distributed');
+
       const totalSeedlingsReceived = associationDistributions?.reduce(
         (sum, d) => sum + (d.quantity_distributed || 0), 0
       ) || 0;
@@ -24,8 +24,8 @@ export class AdminReportsController {
       // 2. Total Seedlings Distributed to Farmers (from farmer_seedling_distributions)
       const { data: farmerDistributions, error: farmerError } = await supabase
         .from('farmer_seedling_distributions')
-        .select('quantity_distributed');
-      
+        .select('quantity_distributed, date_distributed');
+
       const totalSeedlingsDistributed = farmerDistributions?.reduce(
         (sum, d) => sum + (d.quantity_distributed || 0), 0
       ) || 0;
@@ -35,7 +35,7 @@ export class AdminReportsController {
         .from('farmer_seedling_distributions')
         .select('quantity_distributed')
         .eq('status', 'planted');
-      
+
       const totalSeedlingsPlanted = plantedSeedlings?.reduce(
         (sum, d) => sum + (d.quantity_distributed || 0), 0
       ) || 0;
@@ -44,7 +44,7 @@ export class AdminReportsController {
       const { data: harvests, error: harvestsError } = await supabase
         .from('harvests')
         .select('area_hectares');
-      
+
       const totalAreaPlanted = harvests?.reduce(
         (sum, h) => sum + (parseFloat(h.area_hectares) || 0), 0
       ) || 0;
@@ -52,8 +52,8 @@ export class AdminReportsController {
       // 5. Total Harvest Fiber (ALL harvests regardless of status)
       const { data: allHarvests, error: allHarvestsError } = await supabase
         .from('harvests')
-        .select('dry_fiber_output_kg');
-      
+        .select('dry_fiber_output_kg, harvest_date');
+
       const totalHarvestFiber = allHarvests?.reduce(
         (sum, h) => sum + (parseFloat(h.dry_fiber_output_kg) || 0), 0
       ) || 0;
@@ -63,7 +63,7 @@ export class AdminReportsController {
         .from('harvests')
         .select('dry_fiber_output_kg')
         .in('status', ['Verified', 'In Inventory', 'Delivered', 'Sold']);
-      
+
       const actualHarvested = verifiedHarvests?.reduce(
         (sum, h) => sum + (parseFloat(h.dry_fiber_output_kg) || 0), 0
       ) || 0;
@@ -77,13 +77,13 @@ export class AdminReportsController {
       const { data: monitoredFarms } = await supabase
         .from('monitoring_records')
         .select('farmer_id');
-      
+
       const uniqueFarmsMonitored = new Set(monitoredFarms?.map(m => m.farmer_id) || []).size;
 
       // Recent monitoring visits (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
+
       const { count: recentMonitoringVisits } = await supabase
         .from('monitoring_records')
         .select('*', { count: 'exact', head: true })
@@ -114,7 +114,11 @@ export class AdminReportsController {
         actualHarvested: Math.round(actualHarvested * 100) / 100,
         totalMonitoringVisits: totalMonitoringVisits || 0,
         farmsMonitored: uniqueFarmsMonitored,
-        recentMonitoringVisits: recentMonitoringVisits || 0
+        recentMonitoringVisits: recentMonitoringVisits || 0,
+        // Monthly breakdowns for charts
+        monthlyReceived: calculateMonthlySums(associationDistributions || [], 'date_distributed', 'quantity_distributed'),
+        monthlyDistributed: calculateMonthlySums(farmerDistributions || [], 'date_distributed', 'quantity_distributed'),
+        monthlyHarvest: calculateMonthlySums(allHarvests || [], 'harvest_date', 'dry_fiber_output_kg')
       });
     } catch (error) {
       console.error('Error fetching production report:', error);
@@ -339,7 +343,7 @@ function calculateMonthlyTrends(
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
-  
+
   // Create array for last 24 months (2 years)
   const monthlyData = [];
   for (let i = 23; i >= 0; i--) {
@@ -347,28 +351,28 @@ function calculateMonthlyTrends(
     const targetYear = targetDate.getFullYear();
     const targetMonth = targetDate.getMonth();
     const monthName = months[targetMonth];
-    
+
     // Count registrations for this specific month
     const farmersCount = farmers.filter(f => {
       const date = new Date(f.created_at);
       return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
     }).length;
-    
+
     const buyersCount = buyers.filter(b => {
       const date = new Date(b.created_at);
       return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
     }).length;
-    
+
     const cusafaCount = cusafa.filter(c => {
       const date = new Date(c.created_at);
       return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
     }).length;
-    
+
     const maoCount = mao.filter(m => {
       const date = new Date(m.created_at);
       return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
     }).length;
-    
+
     monthlyData.push({
       month: monthName,
       year: targetYear,
@@ -378,6 +382,30 @@ function calculateMonthlyTrends(
       mao: maoCount
     });
   }
-  
+
   return monthlyData;
+}
+
+/**
+ * Helper function to calculate monthly sums for the current year
+ */
+function calculateMonthlySums(
+  items: any[],
+  dateField: string,
+  valueField: string
+) {
+  const sums = new Array(12).fill(0);
+  const currentYear = new Date().getFullYear();
+
+  items.forEach(item => {
+    if (!item[dateField]) return;
+    const date = new Date(item[dateField]);
+    const val = parseFloat(item[valueField]) || 0;
+
+    if (!isNaN(date.getTime()) && date.getFullYear() === currentYear) {
+      sums[date.getMonth()] += val;
+    }
+  });
+
+  return sums;
 }

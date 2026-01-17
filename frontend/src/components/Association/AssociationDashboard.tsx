@@ -134,35 +134,35 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
   ];
 
   const stats = [
-    { 
-      title: 'Total Farmers', 
-      value: '24', 
-      change: '+2 this month', 
-      icon: Users, 
+    {
+      title: 'Total Farmers',
+      value: '24',
+      change: '+2 this month',
+      icon: Users,
       color: 'bg-blue-500',
       trend: 'up'
     },
-    { 
-      title: 'Seedlings Received', 
-      value: '1,250', 
-      change: '+150 this month', 
-      icon: Package, 
+    {
+      title: 'Seedlings Received',
+      value: '1,250',
+      change: '+150 this month',
+      icon: Package,
       color: 'bg-green-500',
       trend: 'up'
     },
-    { 
-      title: 'Distributed', 
-      value: '980', 
-      change: '+80 this week', 
-      icon: Sprout, 
+    {
+      title: 'Distributed',
+      value: '980',
+      change: '+80 this week',
+      icon: Sprout,
       color: 'bg-purple-500',
       trend: 'up'
     },
-    { 
-      title: 'Remaining', 
-      value: '270', 
-      change: '-10 this week', 
-      icon: AlertCircle, 
+    {
+      title: 'Remaining',
+      value: '270',
+      change: '-10 this week',
+      icon: AlertCircle,
       color: 'bg-orange-500',
       trend: 'down'
     }
@@ -188,7 +188,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
               {stats.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
-                  <div 
+                  <div
                     key={index}
                     className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
                   >
@@ -270,7 +270,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                 <span>Add Farmer</span>
               </button>
             </div>
-            
+
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
               <div className="p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
@@ -287,7 +287,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                     <span>Filter</span>
                   </button>
                 </div>
-                
+
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -363,7 +363,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                     </tbody>
                   </table>
                 </div>
-                
+
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
                   <p className="text-sm text-gray-500">Showing 2 of 24 farmers</p>
                   <div className="flex space-x-2">
@@ -396,7 +396,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                 <span>Distribute Seedlings</span>
               </button>
             </div>
-            
+
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
               <div className="p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
@@ -415,7 +415,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                     <span>Filter</span>
                   </button>
                 </div>
-                
+
                 {loading ? (
                   <div className="flex justify-center items-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
@@ -482,7 +482,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                     </table>
                   </div>
                 )}
-                
+
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
                   <p className="text-sm text-gray-500">Showing {filteredSeedlings.length} of {seedlings.length} seedlings</p>
                   <div className="flex space-x-2">
@@ -509,7 +509,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
               <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
               <p className="text-gray-500 mt-1">Manage your association profile and preferences</p>
             </div>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -562,7 +562,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Security</h3>
                   <div className="space-y-4">
@@ -598,7 +598,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Status</h3>
@@ -617,7 +617,7 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Danger Zone</h3>
                   <div className="p-4 bg-red-50 rounded-xl">
@@ -652,12 +652,12 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                 <p className="text-sm text-gray-500">Association Portal</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <button className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100">
                 <Bell className="w-5 h-5" />
               </button>
-              
+
               <div className="flex items-center space-x-3">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-medium text-gray-900">{user.fullName || 'Association Officer'}</p>
@@ -688,11 +688,10 @@ const AssociationDashboard: React.FC<AssociationDashboardProps> = ({ onLogout })
                     <button
                       key={item.id}
                       onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center space-x-3 px-3 py-3 rounded-xl text-left transition-all duration-200 ${
-                        activeTab === item.id
+                      className={`w-full flex items-center space-x-3 px-3 py-3 rounded-xl text-left transition-all duration-200 ${activeTab === item.id
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm'
                           : 'text-gray-600 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       <Icon className="w-5 h-5" />
                       <span className="font-medium">{item.label}</span>

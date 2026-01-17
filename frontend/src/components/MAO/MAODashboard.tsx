@@ -27,6 +27,19 @@ import {
   Coins,
   Upload
 } from 'lucide-react';
+import {
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart as RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend
+} from 'recharts';
 
 // Add CSS animations for charts
 const chartAnimations = `
@@ -327,6 +340,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [,] = useState('');
   const [,] = useState('');
   const [hoveredPoint, setHoveredPoint] = useState<{ month: string, received: number, distributed: number, x: number, y: number } | null>(null);
+  const [hoveredMonitoring, setHoveredMonitoring] = useState<{ month: string, total: number, healthy: number, needsSupport: number, x: number, y: number } | null>(null);
   const [chartView, setChartView] = useState<'monthly' | 'yearly'>('monthly');
   const [monitoringView, setMonitoringView] = useState<'monthly' | 'yearly'>('monthly');
   const [deliveryView, setDeliveryView] = useState<'monthly' | 'yearly'>('monthly');
@@ -380,8 +394,18 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
       // Calculate monthly data from actual database dates
       const currentYear = new Date().getFullYear();
-      let monthlyReceived = new Array(12).fill(0);
-      let monthlyDistributed = new Array(12).fill(0);
+      let monthlyReceived = productionData.monthlyReceived || new Array(12).fill(0);
+      let monthlyDistributed = productionData.monthlyDistributed || new Array(12).fill(0);
+      let monthlyHarvest = productionData.monthlyHarvest || new Array(12).fill(0);
+
+      // Process deliveries for monthly harvest (production)
+      deliveries.forEach((d: any) => {
+        const date = new Date(d.created_at);
+        if (date.getFullYear() === currentYear && (d.status === 'Completed' || d.status === 'Delivered')) {
+          const monthIndex = date.getMonth();
+          monthlyHarvest[monthIndex] += parseFloat(d.quantity_kg || 0);
+        }
+      });
 
       try {
         // Fetch seedling distributions for monthly data
@@ -394,7 +418,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
           // Process association distributions (Received)
           const distributions = associationDist.distributions || associationDist || [];
-          console.log('?? Processing association distributions (Received):', distributions.length, 'records');
+          console.log('📦 Processing association distributions (Received):', distributions.length, 'records');
 
           distributions.forEach((dist: any) => {
             const date = new Date(dist.date_distributed);
@@ -402,13 +426,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               const monthIndex = date.getMonth();
               const quantity = parseInt(dist.quantity_distributed || 0);
               monthlyReceived[monthIndex] += quantity;
-              console.log(`  Month ${monthIndex + 1}: +${quantity} (Total now: ${monthlyReceived[monthIndex]})`);
             }
           });
-
-          const totalReceived = monthlyReceived.reduce((a, b) => a + b, 0);
-          console.log('? Total Received from database:', totalReceived);
-          console.log('📅 Monthly Received:', monthlyReceived);
         }
 
         // For distributed data, fetch from CUSAFA endpoint which has all farmer distributions
@@ -419,11 +438,10 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
           if (farmerDistRes.ok) {
             const farmerDistData = await farmerDistRes.json();
-            console.log('?? CUSAFA distributions data:', farmerDistData);
 
             // Process farmer distributions (Distributed to farmers)
             const farmerDists = farmerDistData.farmer_distributions || [];
-            console.log('?? Processing farmer distributions (Distributed):', farmerDists.length, 'records');
+            console.log('🚜 Processing farmer distributions (Distributed):', farmerDists.length, 'records');
 
             farmerDists.forEach((dist: any) => {
               const date = new Date(dist.date_distributed);
@@ -431,13 +449,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 const monthIndex = date.getMonth();
                 const quantity = parseInt(dist.quantity_distributed || 0);
                 monthlyDistributed[monthIndex] += quantity;
-                console.log(`  Month ${monthIndex + 1}: +${quantity} (Total now: ${monthlyDistributed[monthIndex]})`);
               }
             });
-
-            const totalDistributed = monthlyDistributed.reduce((a, b) => a + b, 0);
-            console.log('? Total Distributed from database:', totalDistributed);
-            console.log('📅 Monthly Distributed:', monthlyDistributed);
           }
         } catch (err) {
           console.log('Could not fetch distributed data:', err);
@@ -462,9 +475,6 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         if (monitoringRes.ok) {
           const monitoringData = await monitoringRes.json();
           const records = Array.isArray(monitoringData) ? monitoringData : (monitoringData.records || monitoringData.data || []);
-
-          console.log('Monitoring records fetched:', records.length);
-          console.log('Sample record:', records[0]); // Debug first record
 
           records.forEach((record: any) => {
             const date = new Date(record.date_of_visit);
@@ -492,64 +502,73 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               needsSupportFarms++;
             }
           });
-
-          console.log('Monitoring stats - Total:', totalMonitoring, 'Healthy:', healthyFarms, 'Needs Support:', needsSupportFarms);
-          console.log('Monthly monitoring:', monthlyMonitoring);
-          console.log('Monthly healthy:', monthlyHealthy);
-          console.log('Monthly needs support:', monthlyNeedsSupport);
         }
       } catch (err) {
         console.log('Could not fetch monitoring data', err);
       }
 
-      // Use zeros if no monitoring data found
-      if (totalMonitoring === 0) {
-        monthlyMonitoring = Array(12).fill(0);
-        monthlyHealthy = Array(12).fill(0);
-        monthlyNeedsSupport = Array(12).fill(0);
-        totalMonitoring = 0;
-        healthyFarms = 0;
-        needsSupportFarms = 0;
+      // ---------------------------------------------------------
+      // FETCH RAW HARVESTS AND APPLY FALLBACKS
+      // ---------------------------------------------------------
+
+      // 1. Try to fetch raw harvest data for accurate monthly breakdown
+      try {
+        const harvestsRes = await fetch('https://easyabaca-api.vercel.app/api/admin/harvests/all', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (harvestsRes.ok) {
+          const harvestsData = await harvestsRes.json();
+          // Normalize data structure (array vs {data: []})
+          const harvests = Array.isArray(harvestsData) ? harvestsData : (harvestsData.data || []);
+
+          if (harvests.length > 0) {
+            console.log('🌾 Processing harvest data:', harvests.length, 'records');
+            // Reset to fill with real data
+            monthlyHarvest = new Array(12).fill(0);
+            harvests.forEach((h: any) => {
+              // Use harvest_date or created_at
+              const dateStr = h.harvest_date || h.created_at;
+              if (!dateStr) return;
+
+              const date = new Date(dateStr);
+              if (date.getFullYear() === currentYear) {
+                // Sum up dry fiber output
+                monthlyHarvest[date.getMonth()] += parseFloat(h.dry_fiber_output_kg || 0);
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch harvest breakdown:', e);
       }
 
-      // Log the current state of monthly data
-      console.log('Monthly Received data:', monthlyReceived);
-      console.log('Monthly Distributed data:', monthlyDistributed);
+      // 2. Apply "Dump in Jan" Fallbacks if arrays are empty but totals exist
+      // This ensures the Bar Chart shows SOMETHING (Total) instead of 0
 
-      // Check monthly data totals
-      const totalReceivedFromMonthly = monthlyReceived.reduce((a, b) => a + b, 0);
-      const totalDistributedFromMonthly = monthlyDistributed.reduce((a, b) => a + b, 0);
+      const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
 
-      console.log('=== MONTHLY DATA FROM DATABASE ===');
-      console.log('Received monthly breakdown:', monthlyReceived);
-      console.log('Received total from monthly:', totalReceivedFromMonthly);
-      console.log('Distributed monthly breakdown:', monthlyDistributed);
-      console.log('Distributed total from monthly:', totalDistributedFromMonthly);
-
-      // Don't adjust - use actual database numbers as-is
-      // The line chart will show EXACTLY what's in the database
-
-      // Use zeros if no received data found
-      if (totalReceivedFromMonthly === 0) {
-        monthlyReceived = Array(12).fill(0);
+      // Check Received
+      if (sum(monthlyReceived) === 0 && (productionData.totalSeedlingsReceived || 0) > 0) {
+        monthlyReceived[0] = productionData.totalSeedlingsReceived;
       }
 
-      // For distributed data - if no data from database, leave it as zeros
-      // Don't calculate or estimate - only show real data from database
-      if (totalDistributedFromMonthly === 0) {
-        console.log('?? No distributed data found in database');
-        console.log('?? Distributed will show as 0 (no data recorded yet)');
-        // monthlyDistributed stays as [0,0,0,0,0,0,0,0,0,0,0,0]
+      // Check Distributed
+      if (sum(monthlyDistributed) === 0 && (productionData.totalSeedlingsDistributed || 0) > 0) {
+        monthlyDistributed[0] = productionData.totalSeedlingsDistributed;
       }
 
-      console.log('Final Monthly Received:', monthlyReceived);
-      console.log('Final Monthly Distributed:', monthlyDistributed);
+      // Check Harvest
+      if (sum(monthlyHarvest) === 0 && (productionData.totalHarvestFiber || 0) > 0) {
+        monthlyHarvest[0] = productionData.totalHarvestFiber;
+      }
 
       setDashboardData({
         production: {
           ...productionData,
           monthlyReceived,
           monthlyDistributed,
+          monthlyHarvest, // Add monthly harvest data
           healthyFarms,
           needsSupportFarms,
           totalMonitoringVisits: totalMonitoring || productionData.totalMonitoringVisits,
@@ -1113,86 +1132,66 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         </button>
                       </div>
 
-                      {/* Top Stats Cards - Simple Design */}
+                      {/* Top Stats Cards - Vibrant Gradient Design */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                        {/* Received */}
-                        <div className="bg-[#fff7ed] rounded-xl shadow-sm p-5 border border-orange-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#fb923c] rounded-lg shadow-sm">
-                              <Package className="w-5 h-5 text-white" />
+                        {/* Received - Orange Gradient */}
+                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <Package className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-green-600 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
-                              <TrendingUp className="w-3 h-3" />
-                              +10%
-                            </span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-2">Received</p>
-                          <p className="text-4xl font-bold text-gray-900 mb-1">{(dashboardData.production?.totalSeedlingsReceived || 0).toLocaleString()}</p>
-                          <p className="text-xs text-gray-500">+10% this week</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Received Seedlings (Association)</p>
+                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalSeedlingsReceived || 0).toLocaleString()}</p>
+                          <p className="text-xs text-white/70">Total seedlings</p>
                         </div>
 
-                        {/* Distributed */}
-                        <div className="bg-[#eff6ff] rounded-xl shadow-sm p-5 border border-blue-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#3b82f6] rounded-lg shadow-sm">
-                              <Truck className="w-5 h-5 text-white" />
+                        {/* Distributed - Blue Gradient */}
+                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <Truck className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-green-600 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
-                              <TrendingUp className="w-3 h-3" />
-                              +14.6%
-                            </span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-2">Distributed</p>
-                          <p className="text-4xl font-bold text-gray-900 mb-1">{(dashboardData.production?.totalSeedlingsDistributed || 0).toLocaleString()}</p>
-                          <p className="text-xs text-gray-500">+14.6% this week</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Distributed Seedlings (Farmers)</p>
+                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalSeedlingsDistributed || 0).toLocaleString()}</p>
+                          <p className="text-xs text-white/70">To farmers</p>
                         </div>
 
-                        {/* Planted */}
-                        <div className="bg-[#f5f3ff] rounded-xl shadow-sm p-5 border border-purple-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#8b5cf6] rounded-lg shadow-sm">
-                              <Sprout className="w-5 h-5 text-white" />
+                        {/* Planted - Purple Gradient */}
+                        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <Sprout className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-red-600 flex items-center gap-1 bg-red-50 px-2 py-1 rounded-full">
-                              <TrendingUp className="w-3 h-3 rotate-180" />
-                              -0.9%
-                            </span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-2">Planted</p>
-                          <p className="text-4xl font-bold text-gray-900 mb-1">{(dashboardData.production?.totalSeedlingsPlanted || 0).toLocaleString()}</p>
-                          <p className="text-xs text-gray-500">-0.9% this week</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Planted</p>
+                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalSeedlingsPlanted || 0).toLocaleString()}</p>
+                          <p className="text-xs text-white/70">Seedlings planted</p>
                         </div>
 
-                        {/* Area Planted */}
-                        <div className="bg-[#ecfdf5] rounded-xl shadow-sm p-5 border border-emerald-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#10b981] rounded-lg shadow-sm">
-                              <BarChart3 className="w-5 h-5 text-white" />
+                        {/* Area Planted - Green Gradient */}
+                        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <BarChart3 className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-green-600 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
-                              <TrendingUp className="w-3 h-3" />
-                              +1.3%
-                            </span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-2">Area Planted</p>
-                          <p className="text-4xl font-bold text-gray-900 mb-1">{(dashboardData.production?.totalAreaPlanted || 0).toLocaleString()} <span className="text-xl">ha</span></p>
-                          <p className="text-xs text-gray-500">+1.3% this week</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Area Planted</p>
+                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalAreaPlanted || 0).toLocaleString()} <span className="text-xl">ha</span></p>
+                          <p className="text-xs text-white/70">Total hectares</p>
                         </div>
 
-                        {/* Harvest Fiber */}
-                        <div className="bg-[#fff7ed] rounded-xl shadow-sm p-5 border border-orange-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#f97316] rounded-lg shadow-sm">
-                              <Award className="w-5 h-5 text-white" />
+                        {/* Harvest Fiber - Orange Gradient */}
+                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <Award className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-green-600 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
-                              <TrendingUp className="w-3 h-3" />
-                              +10%
-                            </span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-2">Harvest Fiber</p>
-                          <p className="text-4xl font-bold text-gray-900 mb-1">{(dashboardData.production?.totalHarvestFiber || 0).toLocaleString()} <span className="text-xl">kg</span></p>
-                          <p className="text-xs text-gray-500">+10% this week</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Harvest Fiber</p>
+                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalHarvestFiber || 0).toLocaleString()} <span className="text-xl">kg</span></p>
+                          <p className="text-xs text-white/70">Total harvested</p>
                         </div>
                       </div>
 
@@ -1201,15 +1200,22 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         {/* Seedling Analytics Line Chart - Enhanced */}
                         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                           <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-lg font-semibold text-gray-900">Seedling Distribution Trends</h3>
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900">Distribution & Harvest Overview</h3>
+                              <p className="text-sm text-gray-500 font-normal mt-1">Seedling distribution vs. harvest production</p>
+                            </div>
                             <div className="flex items-center gap-4 text-sm">
                               <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-[#fb923c]"></div>
-                                <span className="text-gray-600">Received</span>
+                                <span className="text-gray-600">Received (Assoc)</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-[#3b82f6]"></div>
-                                <span className="text-gray-600">Distributed</span>
+                                <span className="text-gray-600">Distributed (Farmers)</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-[#10b981]"></div>
+                                <span className="text-gray-600">Harvest Total</span>
                               </div>
                               <select
                                 className="text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
@@ -1222,210 +1228,220 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             </div>
                           </div>
 
-                          <div className="h-80 relative bg-white">
+                          <div className="w-full">
                             {(() => {
-                              let dataReceived, dataDistributed, labels;
+                              let chartData: any[] = [];
+                              const prodData: any = dashboardData.production;
 
                               if (chartView === 'yearly') {
                                 const currentYear = new Date().getFullYear();
                                 const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
-                                labels = years.map(y => y.toString());
-                                const yearlyTotal = dashboardData.production.totalSeedlingsReceived || 0;
-                                const yearlyDistTotal = dashboardData.production.totalSeedlingsDistributed || 0;
+                                const yearlyTotal = prodData.totalSeedlingsReceived || 0;
+                                const yearlyDistTotal = prodData.totalSeedlingsDistributed || 0;
+                                const yearlyHarvestTotal = prodData.totalHarvestFiber || 0;
 
-                                dataReceived = years.map(year => year === currentYear ? yearlyTotal : 0);
-                                dataDistributed = years.map(year => year === currentYear ? yearlyDistTotal : 0);
+                                chartData = years.map(year => ({
+                                  period: year.toString(),
+                                  received: year === currentYear ? yearlyTotal : 0,
+                                  distributed: year === currentYear ? yearlyDistTotal : 0,
+                                  harvested: year === currentYear ? yearlyHarvestTotal : 0
+                                }));
                               } else {
-                                dataReceived = dashboardData.production.monthlyReceived || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                                dataDistributed = dashboardData.production.monthlyDistributed || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                                labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                const dataReceived = prodData.monthlyReceived || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                                const dataDistributed = prodData.monthlyDistributed || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                                const dataHarvested = prodData.monthlyHarvest || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                                const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                                chartData = labels.map((label, i) => ({
+                                  period: label,
+                                  received: dataReceived[i],
+                                  distributed: dataDistributed[i],
+                                  harvested: dataHarvested[i]
+                                }));
                               }
 
-                              const maxValue = Math.max(...dataReceived, ...dataDistributed, 100) * 1.1;
-
                               return (
-                                <>
-                                  <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-xs text-gray-400 w-12 pt-1">
-                                    <span>{Math.round(maxValue).toLocaleString()}</span>
-                                    <span>{Math.round(maxValue * 0.5).toLocaleString()}</span>
-                                    <span>0</span>
+                                <div className="overflow-x-auto">
+                                  <div style={{ minWidth: chartView === 'monthly' ? '600px' : '100%', width: '100%' }}>
+                                    <ResponsiveContainer width="100%" height={380}>
+                                      <RechartsBarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                        <XAxis
+                                          dataKey="period"
+                                          stroke="#374151"
+                                          style={{ fontSize: '12px', fontWeight: 500 }}
+                                          axisLine={false}
+                                          tickLine={false}
+                                          dy={5}
+                                        />
+                                        <YAxis
+                                          stroke="#374151"
+                                          style={{ fontSize: '12px', fontWeight: 500 }}
+                                          axisLine={false}
+                                          tickLine={false}
+                                        />
+                                        <Tooltip
+                                          contentStyle={{
+                                            backgroundColor: '#fff',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            fontSize: '12px',
+                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                                          }}
+                                          cursor={{ fill: '#f9fafb' }}
+                                        />
+                                        <Legend
+                                          wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                                          iconType="circle"
+                                        />
+                                        <Bar
+                                          dataKey="received"
+                                          fill="#fb923c"
+                                          name="Received (Association)"
+                                          radius={[4, 4, 0, 0]}
+                                          barSize={chartView === 'monthly' ? 20 : 30}
+                                        />
+                                        <Bar
+                                          dataKey="distributed"
+                                          fill="#3b82f6"
+                                          name="Distributed (Farmers)"
+                                          radius={[4, 4, 0, 0]}
+                                          barSize={chartView === 'monthly' ? 20 : 30}
+                                        />
+                                        <Bar
+                                          dataKey="harvested"
+                                          fill="#10b981"
+                                          name="Harvest Total (kg)"
+                                          radius={[4, 4, 0, 0]}
+                                          barSize={chartView === 'monthly' ? 20 : 30}
+                                        />
+                                      </RechartsBarChart>
+                                    </ResponsiveContainer>
                                   </div>
-
-                                  <div className="ml-12 h-full">
-                                    <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
-                                      {/* Grid lines */}
-                                      <line x1="0" y1="0" x2="1000" y2="0" stroke="#f3f4f6" strokeWidth="1" />
-                                      <line x1="0" y1="150" x2="1000" y2="150" stroke="#f3f4f6" strokeWidth="1" />
-                                      <line x1="0" y1="300" x2="1000" y2="300" stroke="#e5e7eb" strokeWidth="1" />
-
-                                      {labels.map((label, i) => {
-                                        const groupWidth = 1000 / labels.length;
-                                        const barWidth = groupWidth * 0.35;
-                                        const spacing = groupWidth * 0.1;
-                                        const xBase = i * groupWidth + (groupWidth - (barWidth * 2 + spacing)) / 2;
-
-                                        const hReceived = (dataReceived[i] / maxValue) * 300;
-                                        const hDistributed = (dataDistributed[i] / maxValue) * 300;
-
-                                        return (
-                                          <g key={i}>
-                                            <rect
-                                              x={xBase}
-                                              y={300 - hReceived}
-                                              width={barWidth}
-                                              height={hReceived}
-                                              fill="#fb923c"
-                                              rx="2"
-                                              className="hover:opacity-80 transition-opacity cursor-pointer"
-                                              onMouseEnter={(e) => {
-                                                const rect = e.currentTarget.getBoundingClientRect();
-                                                setHoveredPoint({
-                                                  month: labels[i],
-                                                  received: dataReceived[i],
-                                                  distributed: dataDistributed[i],
-                                                  x: rect.left + rect.width / 2,
-                                                  y: rect.top
-                                                });
-                                              }}
-                                              onMouseLeave={() => setHoveredPoint(null)}
-                                            />
-                                            <rect
-                                              x={xBase + barWidth + spacing}
-                                              y={300 - hDistributed}
-                                              width={barWidth}
-                                              height={hDistributed}
-                                              fill="#3b82f6"
-                                              rx="2"
-                                              className="hover:opacity-80 transition-opacity cursor-pointer"
-                                              onMouseEnter={(e) => {
-                                                const rect = e.currentTarget.getBoundingClientRect();
-                                                setHoveredPoint({
-                                                  month: labels[i],
-                                                  received: dataReceived[i],
-                                                  distributed: dataDistributed[i],
-                                                  x: rect.left + rect.width / 2,
-                                                  y: rect.top
-                                                });
-                                              }}
-                                              onMouseLeave={() => setHoveredPoint(null)}
-                                            />
-                                          </g>
-                                        );
-                                      })}
-                                    </svg>
-
-                                    <div className="flex justify-between text-[10px] text-gray-500 mt-2">
-                                      {labels.map((label, i) => (
-                                        <span key={i} className="flex-1 text-center">{label}</span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                </>
+                                </div>
                               );
                             })()}
-
-                            {hoveredPoint && (
-                              <div
-                                className="fixed bg-white shadow-lg rounded-lg px-3 py-2 text-xs border border-gray-200 z-50 pointer-events-none"
-                                style={{
-                                  left: `${hoveredPoint.x}px`,
-                                  top: `${hoveredPoint.y - 60}px`,
-                                  transform: 'translateX(-50%)'
-                                }}
-                              >
-                                <div className="font-semibold text-gray-900 mb-1">{hoveredPoint.month}</div>
-                                <div className="flex items-center gap-2 mb-0.5">
-                                  <div className="w-2 h-2 rounded-full bg-[#fb923c]"></div>
-                                  <span>Received: {hoveredPoint.received.toLocaleString()}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-[#3b82f6]"></div>
-                                  <span>Distributed: {hoveredPoint.distributed.toLocaleString()}</span>
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </div>
 
-                        {/* Production Distribution Donut Chart - Simple */}
+
+                        {/* Production Overview Donut Chart - Clean Design */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-8">Production Distribution</h3>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">Production Overview</h3>
+                          <p className="text-xs text-gray-500 mb-6">Planted vs Harvest</p>
 
-                          {/* Simple Donut Chart */}
-                          <div className="relative w-64 h-64 mx-auto mb-8">
-                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                              <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="12" />
+                          {(() => {
+                            // Planted (Units) vs Harvested (Kg)
+                            const totalPlanted = dashboardData.production.totalSeedlingsPlanted || 0;
+                            const totalHarvested = dashboardData.production.totalHarvestFiber || 0;
 
-                              {(() => {
-                                const total = (dashboardData.production.totalSeedlingsPlanted || 0) + (dashboardData.production.totalAreaPlanted || 0) + (dashboardData.production.totalHarvestFiber || 0);
-                                const circumference = 251.2;
+                            // Planted = Growing in field
+                            const planted = totalPlanted;
 
-                                const plantedPercent = total > 0 ? (dashboardData.production.totalSeedlingsPlanted / total) * 100 : 33;
-                                const areaPercent = total > 0 ? (dashboardData.production.totalAreaPlanted / total) * 100 : 33;
-                                const harvestPercent = total > 0 ? (dashboardData.production.totalHarvestFiber / total) * 100 : 34;
+                            // Pending Planting = Distributed to farmers but not yet planted
 
-                                const plantedDash = (plantedPercent / 100) * circumference;
-                                const areaDash = (areaPercent / 100) * circumference;
-                                const harvestDash = (harvestPercent / 100) * circumference;
 
-                                return (
-                                  <>
-                                    <circle
-                                      cx="50" cy="50" r="40" fill="none"
-                                      stroke="#8b5cf6" strokeWidth="12"
-                                      strokeDasharray={`${plantedDash} ${circumference}`}
-                                      strokeDashoffset="0"
-                                      className="transition-all duration-500"
-                                    />
-                                    <circle
-                                      cx="50" cy="50" r="40" fill="none"
-                                      stroke="#10b981" strokeWidth="12"
-                                      strokeDasharray={`${areaDash} ${circumference}`}
-                                      strokeDashoffset={`-${plantedDash}`}
-                                      className="transition-all duration-500"
-                                    />
-                                    <circle
-                                      cx="50" cy="50" r="40" fill="none"
-                                      stroke="#f97316" strokeWidth="12"
-                                      strokeDasharray={`${harvestDash} ${circumference}`}
-                                      strokeDashoffset={`-${plantedDash + areaDash}`}
-                                      className="transition-all duration-500"
-                                    />
-                                  </>
-                                );
-                              })()}
-                            </svg>
+                            // In Stock = Received by Association but not yet distributed to farmers
 
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                              <div className="text-3xl font-bold text-gray-900">{(dashboardData.production.totalSeedlingsPlanted + dashboardData.production.totalAreaPlanted + dashboardData.production.totalHarvestFiber).toLocaleString()}</div>
-                              <div className="text-xs font-medium text-gray-500">Total</div>
-                            </div>
-                          </div>
 
-                          {/* Simple Legend */}
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between p-2.5 rounded-lg border border-gray-50">
-                              <div className="flex items-center gap-3">
-                                <div className="w-2.5 h-2.5 rounded-full bg-[#8b5cf6]"></div>
-                                <span className="text-sm text-gray-600">Planted</span>
-                              </div>
-                              <span className="text-sm font-semibold text-gray-900">{dashboardData.production.totalSeedlingsPlanted.toLocaleString()}</span>
-                            </div>
-                            <div className="flex items-center justify-between p-2.5 rounded-lg border border-gray-50">
-                              <div className="flex items-center gap-3">
-                                <div className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></div>
-                                <span className="text-sm text-gray-600">Area (ha)</span>
-                              </div>
-                              <span className="text-sm font-semibold text-gray-900">{dashboardData.production.totalAreaPlanted.toLocaleString()}</span>
-                            </div>
-                            <div className="flex items-center justify-between p-2.5 rounded-lg border border-gray-50">
-                              <div className="flex items-center gap-3">
-                                <div className="w-2.5 h-2.5 rounded-full bg-[#f97316]"></div>
-                                <span className="text-sm text-gray-600">Harvest (kg)</span>
-                              </div>
-                              <span className="text-sm font-semibold text-gray-900">{dashboardData.production.totalHarvestFiber.toLocaleString()}</span>
-                            </div>
-                          </div>
+                            // Create chart data array
+                            const chartData: { name: string; value: number; fill: string }[] = [];
+
+                            if (totalPlanted > 0) {
+                              chartData.push({ name: 'Planted', value: totalPlanted, fill: '#10b981' });
+                            }
+                            if (totalHarvested > 0) {
+                              chartData.push({ name: 'Harvested Total', value: totalHarvested, fill: '#f97316' });
+                            }
+
+                            // Calculate total
+                            const total = totalPlanted + totalHarvested;
+
+                            // Show empty state if no data
+                            if (chartData.length === 0 || total === 0) {
+                              return (
+                                <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                                  <div className="p-6 bg-gray-100 rounded-full mb-4">
+                                    <Activity className="w-12 h-12 text-gray-300" />
+                                  </div>
+                                  <p className="font-semibold text-gray-500">No data available</p>
+                                  <p className="text-sm text-gray-400 mt-2">Seedling data will appear here</p>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <>
+                                {/* Donut Chart - Balanced Size */}
+                                <div className="relative">
+                                  <ResponsiveContainer width="100%" height={300}>
+                                    <RechartsPieChart>
+                                      <Pie
+                                        data={chartData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={80}
+                                        outerRadius={110}
+                                        paddingAngle={4}
+                                        dataKey="value"
+                                        cornerRadius={10}
+                                        strokeWidth={0}
+                                      >
+                                        {chartData.map((entry, index) => (
+                                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        ))}
+                                      </Pie>
+                                      <Tooltip
+                                        contentStyle={{
+                                          backgroundColor: '#fff',
+                                          border: 'none',
+                                          borderRadius: '12px',
+                                          fontSize: '12px',
+                                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                          padding: '8px 12px'
+                                        }}
+                                        formatter={(value: number) => {
+                                          const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                          return [`${value.toLocaleString()} (${percentage}%)`, ''];
+                                        }}
+                                      />
+                                    </RechartsPieChart>
+                                  </ResponsiveContainer>
+
+                                  {/* Center Label */}
+                                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none" style={{ marginTop: '-20px' }}>
+                                    <div className="text-4xl font-black text-gray-900">
+                                      {totalHarvested.toLocaleString()}
+                                    </div>
+                                    <div className="text-xs text-gray-400 font-medium mt-1 uppercase tracking-wide">Total Production (kg)</div>
+                                  </div>
+                                </div>
+
+                                {/* Legend Grid - 2x2 Layout */}
+                                <div className="grid grid-cols-2 gap-3 mt-6">
+                                  {/* Planted */}
+                                  <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                      <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">Planted</span>
+                                    </div>
+                                    <div className="text-2xl font-black text-green-600">{total > 0 ? ((totalPlanted / total) * 100).toFixed(0) : '0'}%</div>
+                                    <div className="text-xs text-gray-500 mt-1">{totalPlanted.toLocaleString()}</div>
+                                  </div>
+
+                                  {/* Harvested */}
+                                  <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                                      <span className="text-xs font-semibold text-orange-700 uppercase tracking-wide">Harvested Total</span>
+                                    </div>
+                                    <div className="text-2xl font-black text-orange-600">{total > 0 ? ((totalHarvested / total) * 100).toFixed(0) : '0'}%</div>
+                                    <div className="text-xs text-gray-500 mt-1">{totalHarvested.toLocaleString()}</div>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -1435,164 +1451,180 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                       <h2 className="text-2xl font-semibold text-gray-900 mb-6">Field Monitoring</h2>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                        {/* Total Monitoring */}
-                        <div className="bg-[#eff6ff] rounded-xl shadow-sm p-5 border border-blue-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#3b82f6] rounded-lg shadow-sm">
-                              <Eye className="w-5 h-5 text-white" />
+                        {/* Total Monitoring - Blue Gradient */}
+                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <Eye className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Records</span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-2">Total Monitoring</p>
-                          <p className="text-5xl font-bold text-gray-900">{dashboardData.production.totalMonitoringVisits}</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Total Monitoring</p>
+                          <p className="text-5xl font-bold text-white mb-1">{dashboardData.production.totalMonitoringVisits}</p>
+                          <p className="text-xs text-white/70">Monitoring records</p>
                         </div>
 
-                        {/* Healthy Farms */}
-                        <div className="bg-[#ecfdf5] rounded-xl shadow-sm p-5 border border-green-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#10b981] rounded-lg shadow-sm">
-                              <CheckCircle className="w-5 h-5 text-white" />
+                        {/* Healthy Farms - Green Gradient */}
+                        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <CheckCircle className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">Excellent</span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-2">Healthy Farms</p>
-                          <p className="text-5xl font-bold text-gray-900">{dashboardData.production.healthyFarms}</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Healthy Farms</p>
+                          <p className="text-5xl font-bold text-white mb-1">{dashboardData.production.healthyFarms}</p>
+                          <p className="text-xs text-white/70">In good condition</p>
                         </div>
 
-                        {/* Needs Support */}
-                        <div className="bg-[#fffbeb] rounded-xl shadow-sm p-5 border border-amber-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#f59e0b] rounded-lg shadow-sm">
-                              <Activity className="w-5 h-5 text-white" />
+                        {/* Needs Support - Orange Gradient */}
+                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <Activity className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded-full">Action Needed</span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-2">Needs Support</p>
-                          <p className="text-5xl font-bold text-gray-900">{dashboardData.production.needsSupportFarms}</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Needs Support</p>
+                          <p className="text-5xl font-bold text-white mb-1">{dashboardData.production.needsSupportFarms}</p>
+                          <p className="text-xs text-white/70">Requires attention</p>
                         </div>
                       </div>
 
-                      {/* Monitoring Bar Chart - Enhanced */}
+                      {/* Monitoring Bar Chart - Modern Recharts Design */}
                       <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                        <div className="flex items-center justify-between mb-8">
-                          <h3 className="text-lg font-semibold text-gray-900">Monitoring Status Overview</h3>
-                          <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full bg-[#3b82f6]"></div>
-                              <span className="text-gray-600">Total</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Monitoring Status Overview</h3>
+                            <p className="text-xs text-gray-500 mt-1">Track farm health and monitoring visits</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                              <button
+                                onClick={() => setMonitoringView('monthly')}
+                                className={`px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 ${monitoringView === 'monthly'
+                                  ? 'bg-white text-blue-600 shadow-sm'
+                                  : 'text-gray-600 hover:text-gray-900'
+                                  }`}
+                              >
+                                Monthly
+                              </button>
+                              <button
+                                onClick={() => setMonitoringView('yearly')}
+                                className={`px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 ${monitoringView === 'yearly'
+                                  ? 'bg-white text-blue-600 shadow-sm'
+                                  : 'text-gray-600 hover:text-gray-900'
+                                  }`}
+                              >
+                                Yearly
+                              </button>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full bg-[#10b981]"></div>
-                              <span className="text-gray-600">Healthy</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full bg-[#f59e0b]"></div>
-                              <span className="text-gray-600">Needs Support</span>
-                            </div>
-                            <select
-                              className="text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                              value={monitoringView}
-                              onChange={(e) => setMonitoringView(e.target.value as 'monthly' | 'yearly')}
-                            >
-                              <option value="monthly">Monthly</option>
-                              <option value="yearly">Yearly</option>
-                            </select>
                           </div>
                         </div>
 
-                        <div className="h-80 relative bg-white">
+                        {/* Data Insights Badges */}
+                        <div className="flex flex-wrap items-center gap-2 mb-6">
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <span className="text-xs font-semibold text-blue-700">Total</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg">
+                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                            <span className="text-xs font-semibold text-green-700">Healthy</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-lg">
+                            <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                            <span className="text-xs font-semibold text-amber-700">Needs Support</span>
+                          </div>
+                        </div>
+
+                        <div className="w-full">
                           {(() => {
-                            let dataTotal, dataHealthy, dataNeedsSupport, labels;
+                            let chartData: any[] = [];
 
                             if (monitoringView === 'yearly') {
                               const currentYear = new Date().getFullYear();
                               const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
-                              labels = years.map(y => y.toString());
                               const yearlyTotal = dashboardData.production.totalMonitoringVisits || 0;
                               const yearlyHealthy = dashboardData.production.healthyFarms || 0;
                               const yearlyNeeds = dashboardData.production.needsSupportFarms || 0;
 
-                              dataTotal = years.map(year => year === currentYear ? yearlyTotal : 0);
-                              dataHealthy = years.map(year => year === currentYear ? yearlyHealthy : 0);
-                              dataNeedsSupport = years.map(year => year === currentYear ? yearlyNeeds : 0);
+                              chartData = years.map(year => ({
+                                period: year.toString(),
+                                total: year === currentYear ? yearlyTotal : 0,
+                                healthy: year === currentYear ? yearlyHealthy : 0,
+                                needsSupport: year === currentYear ? yearlyNeeds : 0
+                              }));
                             } else {
-                              dataTotal = dashboardData.production.monthlyMonitoring || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                              dataHealthy = dashboardData.production.monthlyHealthy || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                              dataNeedsSupport = dashboardData.production.monthlyNeedsSupport || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                              labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                              const dataTotal = dashboardData.production.monthlyMonitoring || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                              const dataHealthy = dashboardData.production.monthlyHealthy || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                              const dataNeedsSupport = dashboardData.production.monthlyNeedsSupport || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                              const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                              chartData = labels.map((label, i) => ({
+                                period: label,
+                                total: dataTotal[i],
+                                healthy: dataHealthy[i],
+                                needsSupport: dataNeedsSupport[i]
+                              }));
                             }
 
-                            const maxValue = Math.max(...dataTotal, 10) * 1.1;
-
                             return (
-                              <>
-                                <div className="absolute left-0 top-0 bottom-12 flex flex-col justify-between text-xs text-gray-400 w-10">
-                                  <span>{Math.round(maxValue)}</span>
-                                  <span>{Math.round(maxValue * 0.5)}</span>
-                                  <span>0</span>
+                              <div className="overflow-x-auto">
+                                <div style={{ minWidth: monitoringView === 'monthly' ? '600px' : '100%', width: '100%' }}>
+                                  <ResponsiveContainer width="100%" height={380}>
+                                    <RechartsBarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                      <XAxis
+                                        dataKey="period"
+                                        stroke="#374151"
+                                        style={{ fontSize: '12px', fontWeight: 500 }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        dy={5}
+                                      />
+                                      <YAxis
+                                        stroke="#374151"
+                                        style={{ fontSize: '12px', fontWeight: 500 }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                      />
+                                      <Tooltip
+                                        contentStyle={{
+                                          backgroundColor: '#fff',
+                                          border: 'none',
+                                          borderRadius: '12px',
+                                          fontSize: '12px',
+                                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                                        }}
+                                        cursor={{ fill: '#f9fafb' }}
+                                      />
+                                      <Legend
+                                        wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                                        iconType="circle"
+                                      />
+                                      <Bar
+                                        dataKey="total"
+                                        fill="#3b82f6"
+                                        name="Total Monitoring"
+                                        radius={[6, 6, 0, 0]}
+                                        barSize={monitoringView === 'monthly' ? 25 : 35}
+                                      />
+                                      <Bar
+                                        dataKey="healthy"
+                                        fill="#10b981"
+                                        name="Healthy Farms"
+                                        radius={[6, 6, 0, 0]}
+                                        barSize={monitoringView === 'monthly' ? 25 : 35}
+                                      />
+                                      <Bar
+                                        dataKey="needsSupport"
+                                        fill="#f59e0b"
+                                        name="Needs Support"
+                                        radius={[6, 6, 0, 0]}
+                                        barSize={monitoringView === 'monthly' ? 25 : 35}
+                                      />
+                                    </RechartsBarChart>
+                                  </ResponsiveContainer>
                                 </div>
-
-                                <div className="ml-10 h-full pb-8">
-                                  <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
-                                    <line x1="0" y1="0" x2="1000" y2="0" stroke="#f3f4f6" strokeWidth="1" />
-                                    <line x1="0" y1="150" x2="1000" y2="150" stroke="#f3f4f6" strokeWidth="1" />
-                                    <line x1="0" y1="300" x2="1000" y2="300" stroke="#e5e7eb" strokeWidth="1" />
-
-                                    {labels.map((_, i) => {
-                                      const groupWidth = 1000 / labels.length;
-                                      const barWidth = groupWidth * 0.25;
-                                      const spacing = groupWidth * 0.05;
-                                      const groupX = i * groupWidth + (groupWidth - (barWidth * 3 + spacing * 2)) / 2;
-
-                                      const hTotal = (dataTotal[i] / maxValue) * 300;
-                                      const hHealthy = (dataHealthy[i] / maxValue) * 300;
-                                      const hNeeds = (dataNeedsSupport[i] / maxValue) * 300;
-
-                                      return (
-                                        <g key={i}>
-                                          <rect
-                                            x={groupX}
-                                            y={300 - hTotal}
-                                            width={barWidth}
-                                            height={hTotal}
-                                            fill="#3b82f6"
-                                            rx="2"
-                                            className="hover:opacity-80 transition-opacity"
-                                          />
-                                          <rect
-                                            x={groupX + barWidth + spacing}
-                                            y={300 - hHealthy}
-                                            width={barWidth}
-                                            height={hHealthy}
-                                            fill="#10b981"
-                                            rx="2"
-                                            className="hover:opacity-80 transition-opacity"
-                                          />
-                                          <rect
-                                            x={groupX + (barWidth + spacing) * 2}
-                                            y={300 - hNeeds}
-                                            width={barWidth}
-                                            height={hNeeds}
-                                            fill="#f59e0b"
-                                            rx="2"
-                                            className="hover:opacity-80 transition-opacity"
-                                          />
-                                          {/* Value labels */}
-                                          {dataTotal[i] > 0 && (
-                                            <text x={groupX + barWidth / 2} y={300 - hTotal - 5} textAnchor="middle" fontSize="10" fill="#6b7280">{dataTotal[i]}</text>
-                                          )}
-                                        </g>
-                                      );
-                                    })}
-                                  </svg>
-
-                                  <div className="flex justify-between text-[10px] text-gray-500 mt-4">
-                                    {labels.map((label, i) => (
-                                      <span key={i} className="flex-1 text-center">{label}</span>
-                                    ))}
-                                  </div>
-                                </div>
-                              </>
+                              </div>
                             );
                           })()}
                         </div>
@@ -1608,182 +1640,206 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                     <div>
                       <h2 className="text-2xl font-semibold text-gray-900 mb-6">Delivery Tracking Analytics</h2>
 
-                      {/* Top Statistics Cards - Simple Design */}
+                      {/* Top Statistics Cards - Vibrant Gradient Design */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        {/* In Transit Card */}
-                        <div className="bg-[#eff6ff] rounded-xl shadow-sm p-5 border border-blue-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#3b82f6] rounded-lg shadow-sm">
-                              <Truck className="w-5 h-5 text-white" />
+                        {/* In Transit Card - Blue Gradient */}
+                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <Truck className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">+3.2%</span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-1">In Transit</p>
-                          <p className="text-4xl font-bold text-gray-900">{dashboardData.deliveries.inTransit}</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">In Transit</p>
+                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.deliveries.inTransit}</p>
+                          <p className="text-xs text-white/70">Currently shipping</p>
                         </div>
 
-                        {/* Delivered Card */}
-                        <div className="bg-[#ecfdf5] rounded-xl shadow-sm p-5 border border-green-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#10b981] rounded-lg shadow-sm">
-                              <Package className="w-5 h-5 text-white" />
+                        {/* Delivered Card - Green Gradient */}
+                        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <Package className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">0%</span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-1">Delivered</p>
-                          <p className="text-4xl font-bold text-gray-900">{dashboardData.deliveries.delivered}</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Delivered</p>
+                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.deliveries.delivered}</p>
+                          <p className="text-xs text-white/70">Successfully delivered</p>
                         </div>
 
-                        {/* Completed Card */}
-                        <div className="bg-[#f5f3ff] rounded-xl shadow-sm p-5 border border-purple-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#8b5cf6] rounded-lg shadow-sm">
-                              <CheckCircle className="w-5 h-5 text-white" />
+                        {/* Completed Card - Purple Gradient */}
+                        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <CheckCircle className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded-full">0%</span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
-                          <p className="text-4xl font-bold text-gray-900">{dashboardData.deliveries.completed}</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Completed</p>
+                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.deliveries.completed}</p>
+                          <p className="text-xs text-white/70">Fully completed</p>
                         </div>
 
-                        {/* Cancelled Card */}
-                        <div className="bg-[#fef2f2] rounded-xl shadow-sm p-5 border border-red-100 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-[#ef4444] rounded-lg shadow-sm">
-                              <X className="w-5 h-5 text-white" />
+                        {/* Cancelled Card - Red Gradient */}
+                        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <X className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-full">0%</span>
                           </div>
-                          <p className="text-sm font-medium text-gray-600 mb-1">Cancelled</p>
-                          <p className="text-4xl font-bold text-gray-900">{dashboardData.deliveries.cancelled || 0}</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Cancelled</p>
+                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.deliveries.cancelled || 0}</p>
+                          <p className="text-xs text-white/70">Cancelled orders</p>
                         </div>
                       </div>
 
                       {/* Charts Section - Enhanced */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        {/* Delivery Status Distribution - Simple Donut */}
+                        {/* Delivery Status - Modern Recharts Design */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                          <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900">Delivery Status</h3>
-                            <select
-                              value={deliveryStatusView}
-                              onChange={(e) => setDeliveryStatusView(e.target.value as 'monthly' | 'yearly')}
-                              className="text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-                            >
-                              <option value="monthly">Monthly</option>
-                              <option value="yearly">Yearly</option>
-                            </select>
-                          </div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">Delivery Status</h3>
+                          <p className="text-xs text-gray-500 mb-6">Breakdown by delivery status</p>
 
-                          {deliveryStatusView === 'monthly' && (
-                            <div className="mb-4">
-                              <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                                className="w-full text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-                              >
-                                {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, i) => (
-                                  <option key={i} value={i}>{m}</option>
-                                ))}
-                              </select>
-                            </div>
-                          )}
+                          {(() => {
+                            const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
+                            const currentYear = new Date().getFullYear();
+                            const filteredDeliveries = rawDeliveries.filter((d: any) => {
+                              const deliveryDate = new Date(d.created_at || d.delivery_date);
+                              if (deliveryStatusView === 'monthly') {
+                                return deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === currentYear;
+                              } else {
+                                return deliveryDate.getFullYear() === currentYear;
+                              }
+                            });
 
-                          <div className="flex items-center justify-center mb-8">
-                            <div className="relative w-48 h-48">
-                              <svg viewBox="0 0 200 200" className="transform -rotate-90">
-                                {(() => {
-                                  const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
-                                  const currentYear = new Date().getFullYear();
-                                  const filteredDeliveries = rawDeliveries.filter((d: any) => {
-                                    const deliveryDate = new Date(d.created_at || d.delivery_date);
-                                    if (deliveryStatusView === 'monthly') {
-                                      return deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === currentYear;
-                                    } else {
-                                      return deliveryDate.getFullYear() === currentYear;
-                                    }
-                                  });
+                            const inTransit = filteredDeliveries.filter((d: any) => d.status === 'In Transit').length;
+                            const delivered = filteredDeliveries.filter((d: any) => d.status === 'Delivered').length;
+                            const completed = filteredDeliveries.filter((d: any) => d.status === 'Completed').length;
+                            const cancelled = filteredDeliveries.filter((d: any) => d.status === 'Cancelled').length;
+                            const total = inTransit + delivered + completed + cancelled;
 
-                                  const inTransit = filteredDeliveries.filter((d: any) => d.status === 'In Transit').length;
-                                  const delivered = filteredDeliveries.filter((d: any) => d.status === 'Delivered').length;
-                                  const completed = filteredDeliveries.filter((d: any) => d.status === 'Completed').length;
-                                  const cancelled = filteredDeliveries.filter((d: any) => d.status === 'Cancelled').length;
-                                  const total = inTransit + delivered + completed + cancelled;
+                            // Create chart data array
+                            const chartData: { name: string; value: number; fill: string }[] = [];
 
-                                  if (total === 0) return <circle cx="100" cy="100" r="70" fill="none" stroke="#f3f4f6" strokeWidth="24" />;
+                            if (inTransit > 0) {
+                              chartData.push({ name: 'In Transit', value: inTransit, fill: '#3b82f6' });
+                            }
+                            if (delivered > 0) {
+                              chartData.push({ name: 'Delivered', value: delivered, fill: '#10b981' });
+                            }
+                            if (completed > 0) {
+                              chartData.push({ name: 'Completed', value: completed, fill: '#8b5cf6' });
+                            }
+                            if (cancelled > 0) {
+                              chartData.push({ name: 'Cancelled', value: cancelled, fill: '#ef4444' });
+                            }
 
-                                  const segments = [
-                                    { value: inTransit, color: '#8b5cf6' },
-                                    { value: delivered, color: '#10b981' },
-                                    { value: completed, color: '#f97316' },
-                                    { value: cancelled, color: '#ef4444' }
-                                  ];
-
-                                  let currentAngle = 0;
-                                  const radius = 70;
-                                  const circumference = 2 * Math.PI * radius;
-
-                                  return segments.map((segment, index) => {
-                                    if (segment.value === 0) return null;
-                                    const length = (segment.value / total) * circumference;
-                                    const offset = -(currentAngle / total) * circumference;
-                                    currentAngle += segment.value;
-                                    return (
-                                      <circle
-                                        key={index} cx="100" cy="100" r={radius} fill="none"
-                                        stroke={segment.color} strokeWidth="24"
-                                        strokeDasharray={`${length} ${circumference}`}
-                                        strokeDashoffset={offset}
-                                        className="transition-all duration-500"
-                                      />
-                                    );
-                                  });
-                                })()}
-                              </svg>
-                              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <p className="text-3xl font-bold text-gray-900">
-                                  {(() => {
-                                    const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
-                                    const currentYear = new Date().getFullYear();
-                                    return rawDeliveries.filter((d: any) => {
-                                      const deliveryDate = new Date(d.created_at || d.delivery_date);
-                                      return deliveryStatusView === 'monthly' ? deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === currentYear : deliveryDate.getFullYear() === currentYear;
-                                    }).length;
-                                  })()}
-                                </p>
-                                <p className="text-xs text-gray-500">Deliveries</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-3">
-                            {[
-                              { label: 'In Transit', color: '#8b5cf6', key: 'In Transit' },
-                              { label: 'Delivered', color: '#10b981', key: 'Delivered' },
-                              { label: 'Completed', color: '#f97316', key: 'Completed' },
-                              { label: 'Cancelled', color: '#ef4444', key: 'Cancelled' }
-                            ].map((s, i) => {
-                              const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
-                              const currentYear = new Date().getFullYear();
-                              const count = rawDeliveries.filter((d: any) => {
-                                const deliveryDate = new Date(d.created_at || d.delivery_date);
-                                const dateMatch = deliveryStatusView === 'monthly' ? deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === currentYear : deliveryDate.getFullYear() === currentYear;
-                                return dateMatch && d.status === s.key;
-                              }).length;
+                            // Show empty state if no data
+                            if (chartData.length === 0 || total === 0) {
                               return (
-                                <div key={i} className="flex items-center justify-between p-2 rounded-lg border border-gray-50">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }}></div>
-                                    <span className="text-xs text-gray-600">{s.label}</span>
+                                <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                                  <div className="p-6 bg-gray-100 rounded-full mb-4">
+                                    <Activity className="w-12 h-12 text-gray-300" />
                                   </div>
-                                  <span className="text-xs font-semibold text-gray-900">{count}</span>
+                                  <p className="font-semibold text-gray-500">No delivery data</p>
+                                  <p className="text-sm text-gray-400 mt-2">Delivery data will appear here</p>
                                 </div>
                               );
-                            })}
-                          </div>
+                            }
+
+                            return (
+                              <>
+                                {/* Donut Chart - Balanced Size */}
+                                <div className="relative">
+                                  <ResponsiveContainer width="100%" height={300}>
+                                    <RechartsPieChart>
+                                      <Pie
+                                        data={chartData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={80}
+                                        outerRadius={110}
+                                        paddingAngle={4}
+                                        dataKey="value"
+                                        cornerRadius={10}
+                                        strokeWidth={0}
+                                      >
+                                        {chartData.map((entry, index) => (
+                                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        ))}
+                                      </Pie>
+                                      <Tooltip
+                                        contentStyle={{
+                                          backgroundColor: '#fff',
+                                          border: 'none',
+                                          borderRadius: '12px',
+                                          fontSize: '12px',
+                                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                          padding: '8px 12px'
+                                        }}
+                                        formatter={(value: number) => {
+                                          const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                          return [`${value.toLocaleString()} (${percentage}%)`, ''];
+                                        }}
+                                      />
+                                    </RechartsPieChart>
+                                  </ResponsiveContainer>
+
+                                  {/* Center Label */}
+                                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none" style={{ marginTop: '-20px' }}>
+                                    <div className="text-4xl font-black text-gray-900">
+                                      {total}
+                                    </div>
+                                    <div className="text-xs text-gray-400 font-medium mt-1 uppercase tracking-wide">Total Deliveries</div>
+                                  </div>
+                                </div>
+
+                                {/* Legend Grid - 2x2 Layout */}
+                                <div className="grid grid-cols-2 gap-3 mt-6">
+                                  {/* In Transit */}
+                                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                      <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">In Transit</span>
+                                    </div>
+                                    <div className="text-2xl font-black text-blue-600">{total > 0 ? ((inTransit / total) * 100).toFixed(0) : '0'}%</div>
+                                    <div className="text-xs text-gray-500 mt-1">{inTransit.toLocaleString()}</div>
+                                  </div>
+
+                                  {/* Delivered */}
+                                  <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                      <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">Delivered</span>
+                                    </div>
+                                    <div className="text-2xl font-black text-green-600">{total > 0 ? ((delivered / total) * 100).toFixed(0) : '0'}%</div>
+                                    <div className="text-xs text-gray-500 mt-1">{delivered.toLocaleString()}</div>
+                                  </div>
+
+                                  {/* Completed */}
+                                  <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                                      <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Completed</span>
+                                    </div>
+                                    <div className="text-2xl font-black text-purple-600">{total > 0 ? ((completed / total) * 100).toFixed(0) : '0'}%</div>
+                                    <div className="text-xs text-gray-500 mt-1">{completed.toLocaleString()}</div>
+                                  </div>
+
+                                  {/* Cancelled */}
+                                  <div className="bg-red-50 rounded-xl p-4 border border-red-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                      <span className="text-xs font-semibold text-red-700 uppercase tracking-wide">Cancelled</span>
+                                    </div>
+                                    <div className="text-2xl font-black text-red-600">{total > 0 ? ((cancelled / total) * 100).toFixed(0) : '0'}%</div>
+                                    <div className="text-xs text-gray-500 mt-1">{cancelled.toLocaleString()}</div>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
 
-                        {/* Fiber Delivery Analytics - Simple Bar Chart */}
+                        {/* Fiber Delivery Analytics - Enhanced Bar Chart */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                           <div className="flex items-center justify-between mb-8">
                             <h3 className="text-lg font-semibold text-gray-900">Delivery Analytics</h3>
@@ -1828,12 +1884,12 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                         return (
                                           <div key={i} className="flex-1 flex flex-col items-center group relative h-full justify-end">
                                             <div
-                                              className="w-full bg-[#10b981] rounded-t-sm transition-all duration-300 hover:opacity-80"
-                                              style={{ height: `${h}%`, minHeight: value > 0 ? '2px' : '0' }}
+                                              className="w-full bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-md transition-all duration-300 hover:from-emerald-600 hover:to-emerald-500 shadow-sm"
+                                              style={{ height: `${h}%`, minHeight: value > 0 ? '3px' : '0' }}
                                             >
                                               {value > 0 && (
-                                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                  {value.toFixed(1)}k
+                                                <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+                                                  {value.toFixed(1)}kg
                                                 </div>
                                               )}
                                             </div>
@@ -1850,9 +1906,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             })()}
                           </div>
 
-                          <div className="mt-8 p-4 bg-emerald-50 rounded-lg border border-emerald-100 text-center">
-                            <p className="text-xs font-medium text-emerald-800 mb-1">Total Fiber Delivered</p>
-                            <p className="text-2xl font-bold text-emerald-600">{(dashboardData.deliveries?.totalFiberKg || 0).toFixed(2)} kg</p>
+                          <div className="mt-8 p-5 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg text-center">
+                            <p className="text-sm font-medium text-white/90 mb-1">Total Fiber Delivered</p>
+                            <p className="text-3xl font-bold text-white">{(dashboardData.deliveries?.totalFiberKg || 0).toFixed(2)} kg</p>
                           </div>
                         </div>
                       </div>
@@ -1860,26 +1916,57 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
                     {/* Sales Report Section - Bottom */}
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">Sales Analytics</h2>
+                      <h2 className="text-2xl font-semibold text-gray-900 mb-6">Sales Analytics</h2>
 
-                      {/* Stats Cards - Simplified */}
+                      {/* Stats Cards - Vibrant Gradient Design */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        {[
-                          { label: 'Revenue', value: `₱${(dashboardData.sales?.totalAmount || 0).toLocaleString()}`, icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-                          { label: 'Active Farmers', value: dashboardData.users.totalFarmers, icon: User, color: 'text-blue-500', bg: 'bg-blue-50' },
-                          { label: 'Abaca Sold', value: `${(dashboardData.sales?.totalKgSold || 0).toLocaleString()}kg`, icon: Package, color: 'text-purple-500', bg: 'bg-purple-50' },
-                          { label: 'Transactions', value: dashboardData.sales?.recentSales?.length || 0, icon: FileText, color: 'text-gray-500', bg: 'bg-gray-50' }
-                        ].map((stat, i) => (
-                          <div key={i} className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className={`p-2 rounded-lg ${stat.bg}`}>
-                                <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                              </div>
-                              <span className="text-sm font-medium text-gray-500">{stat.label}</span>
+                        {/* Revenue Card - Purple Gradient */}
+                        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <CheckCircle className="w-6 h-6 text-white" />
                             </div>
-                            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                           </div>
-                        ))}
+                          <p className="text-sm font-medium text-white/90 mb-2">Revenue</p>
+                          <p className="text-4xl font-bold text-white mb-1">₱{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</p>
+                          <p className="text-xs text-white/70">Total sales revenue</p>
+                        </div>
+
+                        {/* Active Farmers Card - Green Gradient */}
+                        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <User className="w-6 h-6 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-sm font-medium text-white/90 mb-2">Active Farmers</p>
+                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.users.totalFarmers}</p>
+                          <p className="text-xs text-white/70">Registered farmers</p>
+                        </div>
+
+                        {/* Abaca Sold Card - Blue Gradient */}
+                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <Package className="w-6 h-6 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-sm font-medium text-white/90 mb-2">Abaca Sold</p>
+                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.sales?.totalKgSold || 0).toLocaleString()} <span className="text-xl">kg</span></p>
+                          <p className="text-xs text-white/70">Total fiber sold</p>
+                        </div>
+
+                        {/* Transactions Card - Orange Gradient */}
+                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <FileText className="w-6 h-6 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-sm font-medium text-white/90 mb-2">Transactions</p>
+                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.sales?.recentSales?.length || 0}</p>
+                          <p className="text-xs text-white/70">Total sales records</p>
+                        </div>
                       </div>
 
                       {/* Analytics Charts */}
