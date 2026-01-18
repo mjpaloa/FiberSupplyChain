@@ -221,8 +221,8 @@ const DeliveryTrackingMonitor: React.FC = () => {
                 key={status}
                 onClick={() => setStatusFilter(status)}
                 className={`px-5 py-4 rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 ${statusFilter === status
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
                   }`}
               >
                 {status === 'all' ? 'All Deliveries' : status}
@@ -349,10 +349,10 @@ const DeliveryTrackingMonitor: React.FC = () => {
                       <div className="flex-1 bg-gray-200 rounded-full h-2 w-20 overflow-hidden">
                         <div
                           className={`h-2 rounded-full transition-all duration-500 ${getStatusProgress(delivery.status) === 100
-                              ? 'bg-gradient-to-r from-emerald-500 to-green-600'
-                              : getStatusProgress(delivery.status) >= 50
-                                ? 'bg-gradient-to-r from-blue-500 to-emerald-500'
-                                : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                            ? 'bg-gradient-to-r from-emerald-500 to-green-600'
+                            : getStatusProgress(delivery.status) >= 50
+                              ? 'bg-gradient-to-r from-blue-500 to-emerald-500'
+                              : 'bg-gradient-to-r from-purple-500 to-blue-500'
                             }`}
                           style={{ width: `${getStatusProgress(delivery.status)}%` }}
                         ></div>
@@ -390,8 +390,8 @@ const DeliveryTrackingMonitor: React.FC = () => {
                       setCurrentPage(1);
                     }}
                     className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${entriesPerPage === size
-                        ? 'bg-indigo-500 text-white shadow-lg'
-                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
+                      ? 'bg-indigo-500 text-white shadow-lg'
+                      : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
                       }`}
                   >
                     {size}
@@ -410,8 +410,8 @@ const DeliveryTrackingMonitor: React.FC = () => {
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                   className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                     }`}
                 >
                   Previous
@@ -420,8 +420,8 @@ const DeliveryTrackingMonitor: React.FC = () => {
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages || totalPages === 0}
                   className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages || totalPages === 0
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                     }`}
                 >
                   Next
@@ -579,7 +579,7 @@ const DeliveryTrackingMonitor: React.FC = () => {
                     Fiber Details
                   </h3>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-8 text-center sm:text-left">
                     <div>
                       <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Variety</p>
                       <p className="text-xl font-black">{selectedDelivery.variety}</p>
@@ -590,26 +590,9 @@ const DeliveryTrackingMonitor: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Grade</p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 justify-center sm:justify-start">
                         <span className="text-xl font-black text-amber-400">{selectedDelivery.grade}</span>
                       </div>
-                    </div>
-                    <div>
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Price/kg</p>
-                      <p className="text-xl font-black">₱{selectedDelivery.price_per_kg}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 pt-8 border-t border-white/10 flex items-center justify-between">
-                    <div>
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Estimated Value</p>
-                      <p className="text-3xl font-black text-emerald-400">₱{selectedDelivery.total_amount.toLocaleString()}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Payment Status</p>
-                      <span className={`inline-block px-4 py-2 rounded-2xl text-sm font-black shadow-md ${getPaymentStatusColor(selectedDelivery.payment_status)}`}>
-                        {selectedDelivery.payment_status}
-                      </span>
                     </div>
                   </div>
                 </div>
