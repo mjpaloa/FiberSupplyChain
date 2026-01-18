@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Eye, 
-  DollarSign, 
-  Package, 
-  Users, 
- 
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
+  Eye,
+  DollarSign,
+  Package,
+  Users,
+
   Download,
   Search,
- 
+
 } from 'lucide-react';
 import { getUserData, getAuthToken } from '../../utils/authToken';
 
@@ -81,25 +81,25 @@ const SalesVerificationDashboard: React.FC = () => {
       setLoading(true);
       const token = getAuthToken();
       const apiUrl = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
-      
+
       if (!token) {
         console.error('No authentication token found');
         return;
       }
-      
+
       const response = await fetch(`${apiUrl}/api/sales/reports`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         const transactionData = result.reports.map((report: any) => ({
           report_id: report.report_id,
@@ -124,7 +124,7 @@ const SalesVerificationDashboard: React.FC = () => {
           reviewed_by: report.reviewed_by,
           rejection_reason: report.rejection_reason
         }));
-        
+
         setTransactions(transactionData);
         calculateStats(transactionData);
       }
@@ -182,12 +182,12 @@ const SalesVerificationDashboard: React.FC = () => {
       const token = getAuthToken();
       const userData = getUserData();
       const apiUrl = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
-      
+
       if (!token || !userData) {
         alert('Authentication error. Please log in again.');
         return;
       }
-      
+
       const response = await fetch(`${apiUrl}/api/sales/reports/${reportId}/status`, {
         method: 'PUT',
         headers: {
@@ -205,9 +205,9 @@ const SalesVerificationDashboard: React.FC = () => {
 
       if (result.success) {
         // Update local state
-        setTransactions(prev => 
-          prev.map(t => 
-            t.report_id === reportId 
+        setTransactions(prev =>
+          prev.map(t =>
+            t.report_id === reportId
               ? { ...t, status, reviewed_at: new Date().toISOString(), reviewed_by: userData.officer_id || userData.user_id, rejection_reason: reason }
               : t
           )
@@ -244,10 +244,10 @@ const SalesVerificationDashboard: React.FC = () => {
       approved: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
       rejected: { color: 'bg-red-100 text-red-800', icon: XCircle }
     };
-    
+
     const config = statusConfig[status as keyof typeof statusConfig];
     const Icon = config.icon;
-    
+
     return (
       <div className="flex items-center gap-1">
         <Icon className="w-3 h-3" />
@@ -305,7 +305,7 @@ const SalesVerificationDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Total Revenue - Green */}
+          {/* Total Sales - Green */}
           <div className="group relative bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl p-6 shadow-lg overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
             <div className="relative">
@@ -314,7 +314,7 @@ const SalesVerificationDashboard: React.FC = () => {
                   <DollarSign className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-white/90 text-sm font-medium mb-1">Total Revenue</p>
+              <p className="text-white/90 text-sm font-medium mb-1">Total Sales</p>
               <p className="text-3xl font-bold text-white">₱{stats.totalRevenue.toLocaleString()}</p>
             </div>
           </div>
@@ -447,7 +447,7 @@ const SalesVerificationDashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
-          
+
           {filteredTransactions.length === 0 && (
             <div className="p-8 text-center">
               <div className="text-gray-500 mb-2">No transactions found</div>
@@ -477,9 +477,9 @@ const SalesVerificationDashboard: React.FC = () => {
             </div>
             <div>
               <div className="text-2xl font-bold text-purple-600">
-                ₱{filteredTransactions.length > 0 ? 
-                  (filteredTransactions.reduce((sum, t) => sum + t.total_amount, 0) / 
-                   filteredTransactions.reduce((sum, t) => sum + t.quantity_sold, 0)).toFixed(2) : '0'}
+                ₱{filteredTransactions.length > 0 ?
+                  (filteredTransactions.reduce((sum, t) => sum + t.total_amount, 0) /
+                    filteredTransactions.reduce((sum, t) => sum + t.quantity_sold, 0)).toFixed(2) : '0'}
               </div>
               <div className="text-sm text-gray-600">Avg Price/kg</div>
             </div>
@@ -502,7 +502,7 @@ const SalesVerificationDashboard: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-6">
               {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -527,7 +527,7 @@ const SalesVerificationDashboard: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Details</h3>
                   <div className="space-y-3">
@@ -566,7 +566,7 @@ const SalesVerificationDashboard: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Information</h3>
                   <div className="space-y-3">
@@ -608,7 +608,7 @@ const SalesVerificationDashboard: React.FC = () => {
                     <span className="text-gray-600">Current Status:</span>
                     <div className="mt-2">{getStatusBadge(selectedTransaction.status)}</div>
                   </div>
-                  
+
                   {selectedTransaction.status === 'pending' && (
                     <div className="flex gap-3">
                       <button

@@ -2066,16 +2066,16 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
                       {/* Stats Cards - Vibrant Gradient Design */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        {/* Revenue Card - Purple Gradient */}
+                        {/* Sales Card - Purple Gradient */}
                         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
                           <div className="flex items-center mb-4">
                             <div className="p-2 bg-white/20 rounded-lg">
                               <CheckCircle className="w-6 h-6 text-white" />
                             </div>
                           </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Revenue</p>
+                          <p className="text-sm font-medium text-white/90 mb-2">Sales</p>
                           <p className="text-4xl font-bold text-white mb-1">₱{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</p>
-                          <p className="text-xs text-white/70">Total sales revenue</p>
+                          <p className="text-xs text-white/70">Total sales amount</p>
                         </div>
 
                         {/* Active Farmers Card - Green Gradient */}
@@ -2120,7 +2120,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         {/* Sales Overview Donut */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 flex flex-col">
                           <div className="mb-6">
-                            <h3 className="text-xl font-bold text-gray-900">Revenue Status</h3>
+                            <h3 className="text-xl font-bold text-gray-900">Sales Status</h3>
                             <p className="text-xs text-gray-500 font-normal mt-1">Status of all sales transactions</p>
                           </div>
                           <div className="flex-1 flex flex-col justify-center items-center">
@@ -2138,7 +2138,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 return (
                                   <div className="flex flex-col items-center justify-center h-64 text-gray-400">
                                     <Activity className="w-12 h-12 text-gray-200 mb-2" />
-                                    <p className="text-sm">No revenue data</p>
+                                    <p className="text-sm">No sales data</p>
                                   </div>
                                 );
                               }
@@ -2201,7 +2201,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           <div className="flex items-center justify-between mb-8">
                             <div>
                               <h3 className="text-xl font-bold text-gray-900">Sales Performance Analytics</h3>
-                              <p className="text-sm text-gray-500 font-normal mt-1">Comparison of Abaca Volume (kg) vs Revenue (₱)</p>
+                              <p className="text-sm text-gray-500 font-normal mt-1">Comparison of Abaca Volume (kg) vs Sales (₱)</p>
                             </div>
                             <div className="flex items-center gap-3">
                               <select
@@ -2269,7 +2269,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   <RechartsBarChart
                                     data={chartData}
                                     margin={{ top: 10, right: 30, left: 10, bottom: 20 }}
-                                    barGap={12}
+                                    barGap={18}
+                                    barCategoryGap="25%"
                                   >
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis
@@ -2288,7 +2289,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                       style={{ fontSize: '11px', fontWeight: 500, fill: '#8b5cf6' }}
                                       tickFormatter={(value) => `${value}kg`}
                                     />
-                                    {/* Secondary Y-Axis (Revenue) */}
+                                    {/* Secondary Y-Axis (Sales) */}
                                     <YAxis
                                       yAxisId="right"
                                       orientation="right"
@@ -2320,16 +2321,16 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                       fill="#8b5cf6"
                                       radius={[6, 6, 0, 0]}
                                       animationDuration={1500}
-                                      barSize={abacaSoldView === 'monthly' ? 32 : 64}
+                                      barSize={abacaSoldView === 'monthly' ? 24 : 48}
                                     />
                                     <Bar
                                       yAxisId="right"
-                                      name="Revenue (₱)"
+                                      name="Sales (₱)"
                                       dataKey="revenue"
                                       fill="#3b82f6"
                                       radius={[6, 6, 0, 0]}
                                       animationDuration={2000}
-                                      barSize={abacaSoldView === 'monthly' ? 32 : 64}
+                                      barSize={abacaSoldView === 'monthly' ? 24 : 48}
                                     />
                                   </RechartsBarChart>
                                 </ResponsiveContainer>

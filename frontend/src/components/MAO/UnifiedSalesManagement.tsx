@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
+import {
+  Users,
   FileText,
   Download,
   Eye,
@@ -60,7 +60,7 @@ const UnifiedSalesManagement: React.FC = () => {
         setLoading(true);
         const token = getAuthToken();
         const apiUrl = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
-        
+
         if (!token) {
           console.error('No authentication token found');
           setLoading(false);
@@ -106,7 +106,7 @@ const UnifiedSalesManagement: React.FC = () => {
     try {
       const token = getAuthToken();
       const apiUrl = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
-      
+
       const response = await fetch(`${apiUrl}/api/sales/reports/${reportId}/status`, {
         method: 'PUT',
         headers: {
@@ -120,9 +120,9 @@ const UnifiedSalesManagement: React.FC = () => {
       });
 
       if (response.ok) {
-        setRecentReports(prev => 
-          prev.map(report => 
-            report.id === reportId 
+        setRecentReports(prev =>
+          prev.map(report =>
+            report.id === reportId
               ? { ...report, status: 'approved' as const }
               : report
           )
@@ -158,7 +158,7 @@ const UnifiedSalesManagement: React.FC = () => {
     try {
       const token = getAuthToken();
       const apiUrl = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
-      
+
       const response = await fetch(`${apiUrl}/api/sales/reports/${selectedReport.id}`, {
         method: 'PUT',
         headers: {
@@ -180,12 +180,12 @@ const UnifiedSalesManagement: React.FC = () => {
           prev.map(report =>
             report.id === selectedReport.id
               ? {
-                  ...report,
-                  buyerName: editFormData.buyerName,
-                  totalRevenue: parseFloat(editFormData.totalRevenue),
-                  totalQuantity: parseFloat(editFormData.totalQuantity),
-                  status: editFormData.status
-                }
+                ...report,
+                buyerName: editFormData.buyerName,
+                totalRevenue: parseFloat(editFormData.totalRevenue),
+                totalQuantity: parseFloat(editFormData.totalQuantity),
+                status: editFormData.status
+              }
               : report
           )
         );
@@ -222,7 +222,7 @@ const UnifiedSalesManagement: React.FC = () => {
     try {
       const token = getAuthToken();
       const apiUrl = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
-      
+
       const response = await fetch(`${apiUrl}/api/sales/reports/${reportId}/status`, {
         method: 'PUT',
         headers: {
@@ -237,9 +237,9 @@ const UnifiedSalesManagement: React.FC = () => {
       });
 
       if (response.ok) {
-        setRecentReports(prev => 
-          prev.map(report => 
-            report.id === reportId 
+        setRecentReports(prev =>
+          prev.map(report =>
+            report.id === reportId
               ? { ...report, status: 'rejected' as const }
               : report
           )
@@ -252,17 +252,17 @@ const UnifiedSalesManagement: React.FC = () => {
 
   // Filter reports based on search and filters
   const filteredReports = recentReports.filter(report => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       report.farmerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.buyerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.id?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || report.status === statusFilter;
-    
+
     const matchesDate = dateFilter === 'all' || (() => {
       const reportDate = new Date(report.submittedAt);
       const now = new Date();
-      
+
       switch (dateFilter) {
         case 'today':
           return reportDate.toDateString() === now.toDateString();
@@ -275,7 +275,7 @@ const UnifiedSalesManagement: React.FC = () => {
           return true;
       }
     })();
-    
+
     return matchesSearch && matchesStatus && matchesDate;
   });
 
@@ -308,7 +308,7 @@ const UnifiedSalesManagement: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
       {/* Stats Cards - Matching User Management */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        {/* Verified Revenue Card - Blue */}
+        {/* Verified Sales Card - Blue */}
         <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
           <div className="relative">
@@ -317,7 +317,7 @@ const UnifiedSalesManagement: React.FC = () => {
                 <span className="text-2xl font-bold text-white">₱</span>
               </div>
             </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Verified Revenue</p>
+            <p className="text-white/90 text-sm font-medium mb-1">Verified Sales</p>
             <p className="text-3xl font-bold text-white">
               ₱{recentReports.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.totalRevenue || 0), 0).toLocaleString()}
             </p>
@@ -408,7 +408,7 @@ const UnifiedSalesManagement: React.FC = () => {
               />
             </div>
           </div>
-          
+
           {/* Filters */}
           <div className="flex gap-3">
             <select
@@ -421,7 +421,7 @@ const UnifiedSalesManagement: React.FC = () => {
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
             </select>
-            
+
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
@@ -432,7 +432,7 @@ const UnifiedSalesManagement: React.FC = () => {
               <option value="week">This Week</option>
               <option value="month">This Month</option>
             </select>
-            
+
             <button className="flex items-center px-6 py-4 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-2xl hover:from-blue-500 hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold border-2 border-blue-300">
               <Download className="w-5 h-5 mr-2" />
               Export
@@ -479,9 +479,8 @@ const UnifiedSalesManagement: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-indigo-100">
                 {currentReports.map((report, index) => (
-                  <tr key={report.id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${
-                    index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
-                  }`}>
+                  <tr key={report.id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
+                    }`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="font-bold text-blue-900 text-sm">{report.farmerName}</div>
@@ -504,11 +503,10 @@ const UnifiedSalesManagement: React.FC = () => {
                         {report.status === 'pending' && <Clock className="w-4 h-4 text-yellow-500" />}
                         {report.status === 'approved' && <CheckCircle className="w-4 h-4 text-green-500" />}
                         {report.status === 'rejected' && <XCircle className="w-4 h-4 text-red-500" />}
-                        <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full shadow-md ${
-                          report.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full shadow-md ${report.status === 'approved' ? 'bg-green-100 text-green-800' :
                           report.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
                           {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                         </span>
                       </div>
@@ -518,14 +516,14 @@ const UnifiedSalesManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <button 
+                        <button
                           onClick={() => handleViewReport(report)}
                           className="p-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
                           title="View Details"
                         >
                           <Eye size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleEditReport(report)}
                           className="p-2 bg-emerald-100 text-emerald-600 rounded-xl hover:bg-emerald-200 hover:shadow-md transition-all duration-200"
                           title="Edit Report"
@@ -534,14 +532,14 @@ const UnifiedSalesManagement: React.FC = () => {
                         </button>
                         {report.status === 'pending' && (
                           <>
-                            <button 
+                            <button
                               onClick={() => handleApproveReport(report.id)}
                               className="p-2 bg-green-100 text-green-600 rounded-xl hover:bg-green-200 hover:shadow-md transition-all duration-200"
                               title="Approve Report"
                             >
                               <CheckCircle className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleRejectReport(report.id)}
                               className="p-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
                               title="Reject Report"
@@ -550,7 +548,7 @@ const UnifiedSalesManagement: React.FC = () => {
                             </button>
                           </>
                         )}
-                        <button 
+                        <button
                           onClick={() => handleDeleteReport(report.id)}
                           className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 hover:shadow-md transition-all duration-200"
                           title="Delete"
@@ -576,11 +574,10 @@ const UnifiedSalesManagement: React.FC = () => {
                     <button
                       key={size}
                       onClick={() => handleItemsPerPageChange(size)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
-                          ? 'bg-indigo-500 text-white shadow-lg'
-                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
-                      }`}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
+                        ? 'bg-indigo-500 text-white shadow-lg'
+                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
+                        }`}
                     >
                       {size}
                     </button>
@@ -597,22 +594,20 @@ const UnifiedSalesManagement: React.FC = () => {
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                    }`}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                      }`}
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === totalPages
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                    }`}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                      }`}
                   >
                     Next
                   </button>
@@ -659,7 +654,7 @@ const UnifiedSalesManagement: React.FC = () => {
               {/* Financial Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-green-50 p-4 rounded-xl">
-                  <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
+                  <p className="text-sm text-gray-600 mb-1">Total Sales</p>
                   <p className="text-2xl font-bold text-green-900">₱{selectedReport.totalRevenue.toLocaleString()}</p>
                 </div>
                 <div className="bg-blue-50 p-4 rounded-xl">
@@ -672,11 +667,10 @@ const UnifiedSalesManagement: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-xl">
                   <p className="text-sm text-gray-600 mb-2">Status</p>
-                  <span className={`inline-flex px-4 py-2 text-sm font-bold rounded-full ${
-                    selectedReport.status === 'approved' ? 'bg-green-100 text-green-800' :
+                  <span className={`inline-flex px-4 py-2 text-sm font-bold rounded-full ${selectedReport.status === 'approved' ? 'bg-green-100 text-green-800' :
                     selectedReport.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
                     {selectedReport.status.charAt(0).toUpperCase() + selectedReport.status.slice(1)}
                   </span>
                 </div>
@@ -748,15 +742,15 @@ const UnifiedSalesManagement: React.FC = () => {
                 />
               </div>
 
-              {/* Total Revenue */}
+              {/* Total Sales */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Total Revenue (₱)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Total Sales (₱)</label>
                 <input
                   type="number"
                   value={editFormData.totalRevenue}
                   onChange={(e) => setEditFormData({ ...editFormData, totalRevenue: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-                  placeholder="Enter total revenue"
+                  placeholder="Enter total sales"
                 />
               </div>
 
