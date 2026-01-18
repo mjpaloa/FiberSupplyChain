@@ -104,7 +104,7 @@ export class FiberDeliveryController {
       // Update harvest status to 'Delivered'
       const { error: updateError } = await supabase
         .from('harvests')
-        .update({ 
+        .update({
           status: 'Delivered',
           updated_at: new Date().toISOString()
         })
@@ -368,7 +368,7 @@ export class FiberDeliveryController {
       if (cancelledDelivery.harvest_id) {
         const { error: inventoryUpdateError } = await supabase
           .from('harvests')
-          .update({ 
+          .update({
             status: 'In Inventory',
             updated_at: new Date().toISOString()
           })
@@ -411,6 +411,9 @@ export class FiberDeliveryController {
             contact_number,
             municipality,
             barangay
+          ),
+          harvests (
+            farmer_name
           )
         `)
         .order('created_at', { ascending: false });
@@ -496,7 +499,7 @@ export class FiberDeliveryController {
       if (status === 'Cancelled' && updatedDelivery.harvest_id) {
         const { error: inventoryUpdateError } = await supabase
           .from('harvests')
-          .update({ 
+          .update({
             status: 'In Inventory',
             updated_at: new Date().toISOString()
           })
@@ -511,7 +514,7 @@ export class FiberDeliveryController {
       }
 
       res.status(200).json({
-        message: status === 'Cancelled' 
+        message: status === 'Cancelled'
           ? 'Delivery cancelled successfully. Fiber returned to inventory.'
           : 'Delivery status updated successfully',
         delivery: updatedDelivery
