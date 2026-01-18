@@ -1786,11 +1786,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                       </div>
 
                       {/* Charts Section - Enhanced */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                         {/* Delivery Status - Modern Recharts Design */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">Delivery Status</h3>
-                          <p className="text-xs text-gray-500 mb-6">Breakdown by delivery status</p>
+                        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                          <h3 className="text-lg font-semibold text-gray-900">Delivery Status</h3>
+                          <p className="text-xs text-gray-500 font-normal mt-1">Breakdown by current status</p>
 
                           {(() => {
                             const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
@@ -1849,11 +1849,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                         data={chartData}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={80}
-                                        outerRadius={110}
-                                        paddingAngle={4}
+                                        innerRadius={70}
+                                        outerRadius={100}
+                                        paddingAngle={5}
                                         dataKey="value"
-                                        cornerRadius={10}
+                                        cornerRadius={8}
                                         strokeWidth={0}
                                       >
                                         {chartData.map((entry, index) => (
@@ -1878,11 +1878,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   </ResponsiveContainer>
 
                                   {/* Center Label */}
-                                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none" style={{ marginTop: '-20px' }}>
-                                    <div className="text-4xl font-black text-gray-900">
+                                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                                    <div className="text-4xl font-black text-gray-900 leading-tight">
                                       {total}
                                     </div>
-                                    <div className="text-xs text-gray-400 font-medium mt-1 uppercase tracking-wide">Total Deliveries</div>
+                                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Deliveries</div>
                                   </div>
                                 </div>
 
@@ -1934,9 +1934,12 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         </div>
 
                         {/* Fiber Delivery Analytics - Enhanced Bar Chart */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                          <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-lg font-semibold text-gray-900">Delivery Analytics</h3>
+                        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                          <div className="flex items-center justify-between mb-6">
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900">Delivery Analytics</h3>
+                              <p className="text-xs text-gray-500 font-normal mt-1">Fiber quantity (kg) over time</p>
+                            </div>
                             <select
                               value={deliveryView}
                               onChange={(e) => setDeliveryView(e.target.value as 'monthly' | 'yearly')}
@@ -1947,62 +1950,111 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             </select>
                           </div>
 
-                          <div className="h-64 relative bg-white">
+                          <div className="w-full">
                             {(() => {
-                              let labels, data;
                               const currentYear = new Date().getFullYear();
+                              let chartData: any[] = [];
+                              const rawDists = dashboardData.deliveries?.rawDeliveries || [];
 
                               if (deliveryView === 'monthly') {
-                                labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                const currentMonth = new Date().getMonth();
-                                data = labels.map((_, i) => i === currentMonth ? (dashboardData.deliveries?.totalFiberKg || 0) : 0);
+                                const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                const monthlyData = new Array(12).fill(0);
+
+                                rawDists.forEach((d: any) => {
+                                  const date = new Date(d.created_at);
+                                  if (date.getFullYear() === currentYear) {
+                                    monthlyData[date.getMonth()] += parseFloat(d.quantity_kg || 0);
+                                  }
+                                });
+
+                                // Fallback: If all months are 0 but we have total, put it in current month
+                                const totalFromRaw = monthlyData.reduce((a, b) => a + b, 0);
+                                if (totalFromRaw === 0 && (dashboardData.deliveries?.totalFiberKg || 0) > 0) {
+                                  monthlyData[new Date().getMonth()] = dashboardData.deliveries.totalFiberKg;
+                                }
+
+                                chartData = labels.map((label, i) => ({
+                                  period: label,
+                                  quantity: monthlyData[i]
+                                }));
                               } else {
-                                labels = Array.from({ length: 5 }, (_, i) => (currentYear - 4 + i).toString());
-                                data = labels.map(y => parseInt(y) === currentYear ? (dashboardData.deliveries?.totalFiberKg || 0) : 0);
+                                const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
+                                const yearlyData = new Array(5).fill(0);
+
+                                rawDists.forEach((d: any) => {
+                                  const date = new Date(d.created_at);
+                                  const year = date.getFullYear();
+                                  const index = years.indexOf(year);
+                                  if (index !== -1) {
+                                    yearlyData[index] += parseFloat(d.quantity_kg || 0);
+                                  }
+                                });
+
+                                // Fallback
+                                const totalFromRaw = yearlyData.reduce((a, b) => a + b, 0);
+                                if (totalFromRaw === 0 && (dashboardData.deliveries?.totalFiberKg || 0) > 0) {
+                                  yearlyData[4] = dashboardData.deliveries.totalFiberKg;
+                                }
+
+                                chartData = years.map((year, i) => ({
+                                  period: year.toString(),
+                                  quantity: yearlyData[i]
+                                }));
                               }
 
-                              const maxValue = Math.max(...data, 10) * 1.1;
-
                               return (
-                                <>
-                                  <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-[10px] text-gray-400 w-8">
-                                    <span>{Math.round(maxValue)}</span>
-                                    <span>0</span>
+                                <div className="overflow-x-auto">
+                                  <div style={{ minWidth: deliveryView === 'monthly' ? '600px' : '100%', width: '100%' }}>
+                                    <ResponsiveContainer width="100%" height={500}>
+                                      <RechartsBarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 10 }}>
+                                        <defs>
+                                          <linearGradient id="deliveryGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={1} />
+                                            <stop offset="95%" stopColor="#34d399" stopOpacity={0.8} />
+                                          </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e1e8ed" vertical={false} />
+                                        <XAxis
+                                          dataKey="period"
+                                          stroke="#64748b"
+                                          style={{ fontSize: '11px', fontWeight: 500 }}
+                                          axisLine={false}
+                                          tickLine={false}
+                                          dy={10}
+                                        />
+                                        <YAxis
+                                          stroke="#64748b"
+                                          style={{ fontSize: '11px', fontWeight: 500 }}
+                                          axisLine={false}
+                                          tickLine={false}
+                                          tickCount={8}
+                                          tickFormatter={(value) => `${value}`}
+                                        />
+                                        <Tooltip
+                                          contentStyle={{
+                                            backgroundColor: '#fff',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            fontSize: '11px',
+                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                            padding: '8px 12px'
+                                          }}
+                                          cursor={{ fill: '#f8fafc' }}
+                                          formatter={(value: number) => [`${value.toFixed(2)} kg`, 'Fiber Delivered']}
+                                        />
+                                        <Bar
+                                          dataKey="quantity"
+                                          fill="url(#deliveryGradient)"
+                                          radius={[6, 6, 0, 0]}
+                                          barSize={deliveryView === 'monthly' ? 30 : 60}
+                                          animationDuration={1500}
+                                        />
+                                      </RechartsBarChart>
+                                    </ResponsiveContainer>
                                   </div>
-
-                                  <div className="ml-8 h-full flex flex-col">
-                                    <div className="flex-1 flex items-end justify-between gap-1 border-b border-gray-100 pb-1">
-                                      {labels.map((label, i) => {
-                                        const value = data[i];
-                                        const h = (value / maxValue) * 100;
-                                        return (
-                                          <div key={i} className="flex-1 flex flex-col items-center group relative h-full justify-end">
-                                            <div
-                                              className="w-full bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-md transition-all duration-300 hover:from-emerald-600 hover:to-emerald-500 shadow-sm"
-                                              style={{ height: `${h}%`, minHeight: value > 0 ? '3px' : '0' }}
-                                            >
-                                              {value > 0 && (
-                                                <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
-                                                  {value.toFixed(1)}kg
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                    <div className="flex justify-between text-[9px] text-gray-500 mt-2">
-                                      {labels.map((l, i) => <span key={i} className="flex-1 text-center">{l}</span>)}
-                                    </div>
-                                  </div>
-                                </>
+                                </div>
                               );
                             })()}
-                          </div>
-
-                          <div className="mt-8 p-5 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg text-center">
-                            <p className="text-sm font-medium text-white/90 mb-1">Total Fiber Delivered</p>
-                            <p className="text-3xl font-bold text-white">{(dashboardData.deliveries?.totalFiberKg || 0).toFixed(2)} kg</p>
                           </div>
                         </div>
                       </div>
@@ -2066,172 +2118,221 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                       {/* Analytics Charts */}
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                         {/* Sales Overview Donut */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                          <h3 className="text-base font-semibold text-gray-900 mb-6">Revenue Status</h3>
-                          <div className="flex flex-col items-center">
-                            <div className="relative w-40 h-40 mb-6">
-                              <svg viewBox="0 0 200 200" className="transform -rotate-90">
-                                {(() => {
-                                  const total = (dashboardData.sales?.totalAmount || 0) + (dashboardData.sales?.pendingAmount || 0);
-                                  if (total === 0) return <circle cx="100" cy="100" r="80" fill="none" stroke="#f3f4f6" strokeWidth="20" />;
-                                  const radius = 80;
-                                  const circumference = 2 * Math.PI * radius;
-                                  const approvedPct = (dashboardData.sales?.totalAmount || 0) / total;
-                                  return (
-                                    <>
-                                      <circle cx="100" cy="100" r={radius} fill="none" stroke="#fbbf24" strokeWidth="20" />
-                                      <circle
-                                        cx="100" cy="100" r={radius} fill="none" stroke="#10b981" strokeWidth="20"
-                                        strokeDasharray={`${approvedPct * circumference} ${circumference}`}
-                                        className="transition-all duration-500"
-                                      />
-                                    </>
-                                  );
-                                })()}
-                              </svg>
-                              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-xl font-bold text-gray-900">₱{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k</span>
-                                <span className="text-[10px] text-gray-500">Total Revenue</span>
-                              </div>
-                            </div>
-                            <div className="w-full space-y-2">
-                              <div className="flex items-center justify-between text-xs">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                  <span className="text-gray-600">Approved</span>
-                                </div>
-                                <span className="font-semibold text-gray-900">₱{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</span>
-                              </div>
-                              <div className="flex items-center justify-between text-xs">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                                  <span className="text-gray-600">Pending</span>
-                                </div>
-                                <span className="font-semibold text-gray-900">₱{(dashboardData.sales?.pendingAmount || 0).toLocaleString()}</span>
-                              </div>
-                            </div>
+                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 flex flex-col">
+                          <div className="mb-6">
+                            <h3 className="text-xl font-bold text-gray-900">Revenue Status</h3>
+                            <p className="text-xs text-gray-500 font-normal mt-1">Status of all sales transactions</p>
                           </div>
-                        </div>
-
-                        {/* Abaca Volume Bar Chart */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                          <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-base font-semibold text-gray-900">Abaca Volume</h3>
-                            <select
-                              value={abacaSoldView}
-                              onChange={(e) => setAbacaSoldView(e.target.value as 'monthly' | 'yearly')}
-                              className="text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 outline-none"
-                            >
-                              <option value="monthly">Monthly</option>
-                              <option value="yearly">Yearly</option>
-                            </select>
-                          </div>
-                          <div className="h-48 relative">
+                          <div className="flex-1 flex flex-col justify-center items-center">
                             {(() => {
-                              const recentSales = dashboardData.sales?.recentSales || [];
-                              const currentYear = new Date().getFullYear();
+                              const approved = dashboardData.sales?.totalAmount || 0;
+                              const pending = dashboardData.sales?.pendingAmount || 0;
+                              const total = approved + pending;
 
-                              let labels: string[] = [];
-                              let data: number[] = [];
+                              const chartData = [
+                                { name: 'Approved', value: approved, fill: '#10b981' },
+                                { name: 'Pending', value: pending, fill: '#fbbf24' }
+                              ];
 
-                              if (abacaSoldView === 'monthly') {
-                                labels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
-                                data = Array(12).fill(0);
-                                recentSales.forEach((sale: any) => {
-                                  const saleDate = new Date(sale.sale_date);
-                                  if (saleDate.getFullYear() === currentYear) {
-                                    data[saleDate.getMonth()] += (sale.quantity_sold || 0);
-                                  }
-                                });
-                              } else {
-                                const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
-                                labels = years.map(y => y.toString());
-                                data = Array(5).fill(0);
-                                recentSales.forEach((sale: any) => {
-                                  const saleDate = new Date(sale.sale_date);
-                                  const yearIdx = years.indexOf(saleDate.getFullYear());
-                                  if (yearIdx !== -1) {
-                                    data[yearIdx] += (sale.quantity_sold || 0);
-                                  }
-                                });
+                              if (total === 0) {
+                                return (
+                                  <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                                    <Activity className="w-12 h-12 text-gray-200 mb-2" />
+                                    <p className="text-sm">No revenue data</p>
+                                  </div>
+                                );
                               }
 
-                              const max = Math.max(...data, 10);
                               return (
-                                <div className="h-full flex items-end justify-between gap-1">
-                                  {labels.map((l, i) => (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group transition-all">
-                                      <div
-                                        className="w-full bg-purple-500 rounded-t-sm hover:bg-purple-600 transition-colors relative"
-                                        style={{ height: `${(data[i] / max) * 100}%` }}
-                                      >
-                                      </div>
-                                      <span className="text-[10px] text-gray-400">{l}</span>
+                                <>
+                                  <div className="relative w-full">
+                                    <ResponsiveContainer width="100%" height={380}>
+                                      <RechartsPieChart>
+                                        <Pie
+                                          data={chartData}
+                                          cx="50%"
+                                          cy="50%"
+                                          innerRadius={75}
+                                          outerRadius={135}
+                                          paddingAngle={5}
+                                          dataKey="value"
+                                          cornerRadius={10}
+                                          strokeWidth={0}
+                                        >
+                                          {chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                                          ))}
+                                        </Pie>
+                                        <Tooltip
+                                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                          formatter={(value: number) => [`₱${value.toLocaleString()}`, '']}
+                                        />
+                                      </RechartsPieChart>
+                                    </ResponsiveContainer>
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                                      <div className="text-3xl font-black text-gray-900">₱{Math.round(total / 1000)}k</div>
+                                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Total</div>
                                     </div>
-                                  ))}
-                                </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-3 w-full mt-8">
+                                    <div className="flex flex-col p-3 bg-emerald-50 rounded-xl border border-emerald-100 transition-all hover:shadow-sm">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">Approved</span>
+                                      </div>
+                                      <span className="text-lg font-black text-emerald-700">₱{approved.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex flex-col p-3 bg-amber-50 rounded-xl border border-amber-100 transition-all hover:shadow-sm">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                                        <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tight">Pending</span>
+                                      </div>
+                                      <span className="text-lg font-black text-amber-700">₱{pending.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                </>
                               );
                             })()}
                           </div>
                         </div>
 
-                        {/* Revenue Trend Bar Chart */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                          <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-base font-semibold text-gray-900">Revenue Trend</h3>
-                            <select
-                              value={salesChartView}
-                              onChange={(e) => setSalesChartView(e.target.value as 'monthly' | 'yearly')}
-                              className="text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 outline-none"
-                            >
-                              <option value="monthly">Monthly</option>
-                              <option value="yearly">Yearly</option>
-                            </select>
+                        {/* Unified Sales Performance Analytics */}
+                        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                          <div className="flex items-center justify-between mb-8">
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900">Sales Performance Analytics</h3>
+                              <p className="text-sm text-gray-500 font-normal mt-1">Comparison of Abaca Volume (kg) vs Revenue (₱)</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <select
+                                value={abacaSoldView}
+                                onChange={(e) => {
+                                  const val = e.target.value as 'monthly' | 'yearly';
+                                  setAbacaSoldView(val);
+                                  setSalesChartView(val);
+                                }}
+                                className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                              >
+                                <option value="monthly">Monthly Overview</option>
+                                <option value="yearly">Yearly Overview</option>
+                              </select>
+                            </div>
                           </div>
-                          <div className="h-48 relative">
+
+                          <div className="w-full">
                             {(() => {
                               const recentSales = dashboardData.sales?.recentSales || [];
                               const currentYear = new Date().getFullYear();
+                              let chartData = [];
 
-                              let labels: string[] = [];
-                              let data: number[] = [];
+                              if (abacaSoldView === 'monthly') {
+                                const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                const volData = Array(12).fill(0);
+                                const revData = Array(12).fill(0);
 
-                              if (salesChartView === 'monthly') {
-                                labels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
-                                data = Array(12).fill(0);
                                 recentSales.forEach((sale: any) => {
                                   const saleDate = new Date(sale.sale_date);
                                   if (saleDate.getFullYear() === currentYear) {
-                                    data[saleDate.getMonth()] += (sale.total_amount || 0);
+                                    volData[saleDate.getMonth()] += (sale.quantity_sold || 0);
+                                    revData[saleDate.getMonth()] += (sale.total_amount || 0);
                                   }
                                 });
+
+                                chartData = labels.map((l, i) => ({
+                                  period: l,
+                                  volume: volData[i],
+                                  revenue: revData[i]
+                                }));
                               } else {
                                 const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
-                                labels = years.map(y => y.toString());
-                                data = Array(5).fill(0);
+                                const volData = Array(5).fill(0);
+                                const revData = Array(5).fill(0);
+
                                 recentSales.forEach((sale: any) => {
                                   const saleDate = new Date(sale.sale_date);
                                   const yearIdx = years.indexOf(saleDate.getFullYear());
                                   if (yearIdx !== -1) {
-                                    data[yearIdx] += (sale.total_amount || 0);
+                                    volData[yearIdx] += (sale.quantity_sold || 0);
+                                    revData[yearIdx] += (sale.total_amount || 0);
                                   }
                                 });
+
+                                chartData = years.map((y, i) => ({
+                                  period: y.toString(),
+                                  volume: volData[i],
+                                  revenue: revData[i]
+                                }));
                               }
 
-                              const max = Math.max(...data, 1000);
                               return (
-                                <div className="h-full flex items-end justify-between gap-1">
-                                  {labels.map((l, i) => (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group transition-all">
-                                      <div
-                                        className="w-full bg-blue-500 rounded-t-sm hover:bg-blue-600 transition-colors"
-                                        style={{ height: `${(data[i] / max) * 100}%` }}
-                                      >
-                                      </div>
-                                      <span className="text-[10px] text-gray-400">{l}</span>
-                                    </div>
-                                  ))}
-                                </div>
+                                <ResponsiveContainer width="100%" height={450}>
+                                  <RechartsBarChart
+                                    data={chartData}
+                                    margin={{ top: 10, right: 30, left: 10, bottom: 20 }}
+                                    barGap={12}
+                                  >
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                    <XAxis
+                                      dataKey="period"
+                                      axisLine={false}
+                                      tickLine={false}
+                                      style={{ fontSize: '12px', fontWeight: 500, fill: '#64748b' }}
+                                      dy={15}
+                                    />
+                                    {/* Primary Y-Axis (Volume) */}
+                                    <YAxis
+                                      yAxisId="left"
+                                      orientation="left"
+                                      axisLine={false}
+                                      tickLine={false}
+                                      style={{ fontSize: '11px', fontWeight: 500, fill: '#8b5cf6' }}
+                                      tickFormatter={(value) => `${value}kg`}
+                                    />
+                                    {/* Secondary Y-Axis (Revenue) */}
+                                    <YAxis
+                                      yAxisId="right"
+                                      orientation="right"
+                                      axisLine={false}
+                                      tickLine={false}
+                                      style={{ fontSize: '11px', fontWeight: 500, fill: '#3b82f6' }}
+                                      tickFormatter={(value) => `₱${Math.round(value / 1000)}k`}
+                                    />
+                                    <Tooltip
+                                      contentStyle={{
+                                        borderRadius: '16px',
+                                        border: 'none',
+                                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                                        padding: '12px'
+                                      }}
+                                      cursor={{ fill: '#f8fafc' }}
+                                    />
+                                    <Legend
+                                      verticalAlign="top"
+                                      align="right"
+                                      height={50}
+                                      iconType="circle"
+                                      wrapperStyle={{ paddingBottom: '20px', fontSize: '12px', fontWeight: 600 }}
+                                    />
+                                    <Bar
+                                      yAxisId="left"
+                                      name="Abaca Volume (kg)"
+                                      dataKey="volume"
+                                      fill="#8b5cf6"
+                                      radius={[6, 6, 0, 0]}
+                                      animationDuration={1500}
+                                      barSize={abacaSoldView === 'monthly' ? 32 : 64}
+                                    />
+                                    <Bar
+                                      yAxisId="right"
+                                      name="Revenue (₱)"
+                                      dataKey="revenue"
+                                      fill="#3b82f6"
+                                      radius={[6, 6, 0, 0]}
+                                      animationDuration={2000}
+                                      barSize={abacaSoldView === 'monthly' ? 32 : 64}
+                                    />
+                                  </RechartsBarChart>
+                                </ResponsiveContainer>
                               );
                             })()}
                           </div>

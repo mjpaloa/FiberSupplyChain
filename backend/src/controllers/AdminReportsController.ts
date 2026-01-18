@@ -231,25 +231,30 @@ export class AdminReportsController {
    */
   static async getUsersReport(req: Request, res: Response) {
     try {
+      console.log('📊 AdminReportsController: Fetching User Statistics...');
       // 1. Count Farmers
       const { count: farmersCount, error: farmersError } = await supabase
         .from('farmers')
         .select('*', { count: 'exact', head: true });
+      if (farmersError) console.error('❌ Supabase error (farmers):', farmersError);
 
       // 2. Count Buyers
       const { count: buyersCount, error: buyersError } = await supabase
         .from('buyers')
         .select('*', { count: 'exact', head: true });
+      if (buyersError) console.error('❌ Supabase error (buyers):', buyersError);
 
       // 3. Count CUSAFA Officers (Association Officers)
       const { count: cusafaCount, error: cusafaError } = await supabase
         .from('association_officers')
         .select('*', { count: 'exact', head: true });
+      if (cusafaError) console.error('❌ Supabase error (cusafa):', cusafaError);
 
       // 4. Count MAO Officers
       const { count: maoCount, error: maoError } = await supabase
         .from('organization')
         .select('*', { count: 'exact', head: true });
+      if (maoError) console.error('❌ Supabase error (mao):', maoError);
 
       // 5. Get all users with created_at for monthly trends
       const { data: allFarmers } = await supabase

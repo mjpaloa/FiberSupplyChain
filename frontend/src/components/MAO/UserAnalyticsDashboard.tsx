@@ -14,8 +14,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell
+  Cell,
+  Legend
 } from 'recharts';
+import { getApiUrl } from '../../config/api';
 
 import RegistrationTrendsChart from './RegistrationTrendsChart';
 
@@ -65,6 +67,7 @@ interface MonthlyData {
 const UserAnalyticsDashboard: React.FC = () => {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [allMonthlyData, setAllMonthlyData] = useState<MonthlyData[]>([]); // Store all data
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -92,13 +95,15 @@ const UserAnalyticsDashboard: React.FC = () => {
   const fetchUserStats = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/admin/users-report', {
+      const response = await fetch(getApiUrl('/api/admin/users-report'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ User stats data received:', data);
         setStats(data);
 
         // Use monthly trends data from backend
@@ -130,9 +135,14 @@ const UserAnalyticsDashboard: React.FC = () => {
           }));
           setMonthlyData(monthlyStats);
         }
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        setError(errData.error || `Failed to fetch user statistics (Status ${response.status})`);
+        console.error('❌ Failed to fetch user stats:', response.status, errData);
       }
-    } catch (error) {
-      console.error('Error fetching user stats:', error);
+    } catch (error: any) {
+      console.error('❌ Error fetching user stats:', error);
+      setError(error.message || 'An unexpected error occurred while loading statistics.');
     } finally {
       setLoading(false);
     }
@@ -175,10 +185,21 @@ const UserAnalyticsDashboard: React.FC = () => {
     );
   }
 
-  if (!stats) {
+  if (error || !stats) {
     return (
-      <div className="text-center py-16">
-        <p className="text-gray-600">Unable to load user statistics</p>
+      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100">
+        <div className="p-6 bg-red-50 rounded-full mb-6">
+          <Users className="w-12 h-12 text-red-400" />
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Oops! Something went wrong</h3>
+        <p className="text-gray-500 mb-8 max-w-md text-center">{error || 'Unable to load user statistics at this time.'}</p>
+        <button
+          onClick={fetchUserStats}
+          className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Try Again
+        </button>
       </div>
     );
   }
