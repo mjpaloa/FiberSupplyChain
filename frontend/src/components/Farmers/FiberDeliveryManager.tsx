@@ -16,7 +16,11 @@ import {
   AlertTriangle,
   Building,
   Phone,
-  FileText
+  FileText,
+  User,
+  Leaf,
+  Award,
+  Building2
 } from 'lucide-react';
 
 interface Buyer {
@@ -74,6 +78,9 @@ interface Delivery {
     contact_number: string;
     municipality: string;
     barangay: string;
+  };
+  harvests?: {
+    farmer_name: string;
   };
 }
 
@@ -148,23 +155,23 @@ const FiberDeliveryManager: React.FC = () => {
     setLoadingBuyers(true);
     try {
       console.log('🔍 Fetching buyers from API...');
-      
+
       const response = await apiGet('/api/buyers/all');
-      
+
       if (!response.ok) {
         console.error('❌ Failed to fetch buyers:', response.status);
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         console.error('Error details:', errorData);
         return;
       }
-      
+
       const data = await response.json();
       console.log('✅ Buyers loaded:', data.buyers?.length || 0, 'buyers');
-      
+
       if (data.buyers && data.buyers.length > 0) {
         console.log('First buyer:', data.buyers[0].business_name);
       }
-      
+
       setBuyers(data.buyers || []);
     } catch (error) {
       console.error('❌ Error fetching buyers:', error);
@@ -185,7 +192,7 @@ const FiberDeliveryManager: React.FC = () => {
       const url = isEditMode && selectedDelivery
         ? `https://easyabaca-api.vercel.app/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
         : 'https://easyabaca-api.vercel.app/api/fiber-deliveries/create';
-      
+
       const method = isEditMode ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -243,7 +250,7 @@ const FiberDeliveryManager: React.FC = () => {
 
   const handleDelete = async () => {
     if (!selectedDelivery) return;
-    
+
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
@@ -400,11 +407,10 @@ const FiberDeliveryManager: React.FC = () => {
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg font-medium transition-colors ${
-                statusFilter === status
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg font-medium transition-colors ${statusFilter === status
+                ? 'bg-emerald-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               {status === 'all' ? 'All' : status}
             </button>
@@ -545,8 +551,8 @@ const FiberDeliveryManager: React.FC = () => {
                   <p className="text-emerald-50 text-sm">Schedule delivery from your inventory</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setShowCreateModal(false)} 
+              <button
+                onClick={() => setShowCreateModal(false)}
                 className="p-2 hover:bg-white/20 rounded-xl transition-all text-white"
               >
                 <X size={24} />
@@ -560,7 +566,7 @@ const FiberDeliveryManager: React.FC = () => {
                   <Package className="text-emerald-600" size={20} />
                   <h3 className="text-lg font-bold text-gray-900">Harvest Details</h3>
                 </div>
-                
+
                 <div className="space-y-4">
                   {/* Fiber Selection */}
                   <div>
@@ -645,7 +651,7 @@ const FiberDeliveryManager: React.FC = () => {
                   <Calendar className="text-blue-600" size={20} />
                   <h3 className="text-lg font-bold text-gray-900">Delivery Information</h3>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Delivery Date */}
                   <div>
@@ -759,115 +765,150 @@ const FiberDeliveryManager: React.FC = () => {
         </div>
       )}
 
-      {/* Details Modal */}
       {showDetailsModal && selectedDelivery && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white">
-              <h2 className="text-2xl font-bold text-gray-900">Delivery Details</h2>
-              <button onClick={() => setShowDetailsModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <X size={24} />
+        <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[1.5rem] max-w-2xl w-full max-h-[92vh] overflow-y-auto shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-100 flex justify-between items-start sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Delivery Details</h2>
+                <p className="text-sm text-gray-500 font-medium">#{selectedDelivery.delivery_id.slice(0, 12)}</p>
+              </div>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <XCircle size={24} className="text-gray-400" />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Current Status</p>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedDelivery.status)}`}>
-                  {selectedDelivery.status}
-                </span>
-              </div>
-
-              {/* Farmer Information */}
-              <div className="border-t pt-4">
-                <h3 className="font-bold text-gray-900 mb-3">Farmer Information</h3>
-                <div className="space-y-2">
+            <div className="p-6 space-y-4">
+              {/* Delivery Summary Card */}
+              <div className="bg-blue-50/40 border border-blue-100 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4 text-blue-700">
+                  <Package size={20} />
+                  <h3 className="font-bold">Delivery Summary</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-y-4">
                   <div>
-                    <p className="text-sm text-gray-600">Name:</p>
-                    <p className="font-semibold">{selectedDelivery.farmers?.full_name || 'N/A'}</p>
+                    <p className="text-xs text-blue-600 font-medium mb-0.5">Variety</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.variety}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Contact:</p>
-                    <p className="font-semibold">{selectedDelivery.farmer_contact || selectedDelivery.farmers?.contact_number || 'N/A'}</p>
+                    <p className="text-xs text-blue-600 font-medium mb-0.5">Quantity</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.quantity_kg?.toLocaleString()} kg</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Location:</p>
-                    <p className="font-semibold">{selectedDelivery.pickup_location || `${selectedDelivery.farmers?.barangay || ''}, ${selectedDelivery.farmers?.municipality || ''}`}</p>
+                    <p className="text-xs text-blue-600 font-medium mb-0.5">Date Created</p>
+                    <p className="text-base font-bold text-slate-800">{new Date(selectedDelivery.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-600 font-medium mb-0.5">Status</p>
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold shadow-sm ${getStatusColor(selectedDelivery.status)}`}>
+                      <span className="w-2 h-2 rounded-full bg-current opacity-20"></span>
+                      {selectedDelivery.status}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Buyer Information */}
-              <div className="border-t pt-4">
-                <h3 className="font-bold text-gray-900 mb-3">Buyer Information</h3>
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-sm text-gray-600">Business:</p>
-                    <p className="font-semibold">{selectedDelivery.buyers?.business_name || 'N/A'}</p>
+              {/* Farmer Information Card */}
+              <div className="bg-emerald-50/40 border border-emerald-100 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4 text-emerald-700">
+                  <User size={20} />
+                  <h3 className="font-bold">Farmer Information</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-y-4">
+                  <div className="col-span-2">
+                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Name</p>
+                    <p className="text-base font-bold text-slate-800">
+                      {selectedDelivery.farmers?.full_name || selectedDelivery.harvests?.farmer_name || 'N/A'}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Contact:</p>
-                    <p className="font-semibold">{selectedDelivery.buyer_contact || selectedDelivery.buyers?.contact_number || 'N/A'}</p>
+                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Contact Number</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.farmer_contact || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Address:</p>
-                    <p className="font-semibold">{selectedDelivery.buyers?.business_address || selectedDelivery.delivery_location || 'N/A'}</p>
+                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Location</p>
+                    <p className="text-base font-bold text-slate-800">
+                      {selectedDelivery.farmers ? `${selectedDelivery.farmers.barangay}, ${selectedDelivery.farmers.municipality}` : selectedDelivery.pickup_location}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Fiber Details */}
-              <div className="border-t pt-4">
-                <h3 className="font-bold text-gray-900 mb-3">Fiber Details</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Variety</p>
-                    <p className="font-semibold">{selectedDelivery.variety}</p>
+              {/* Buyer Information Card */}
+              <div className="bg-slate-50/60 border border-slate-200 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4 text-slate-700">
+                  <Building2 size={20} />
+                  <h3 className="font-bold">Buyer Information</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-y-4">
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-500 font-medium mb-0.5">Business Name</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.buyers?.business_name || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Fiber (kg)</p>
-                    <p className="font-semibold">{selectedDelivery.quantity_kg} kg</p>
+                    <p className="text-xs text-slate-500 font-medium mb-0.5">Contact Info</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.buyer_contact || 'N/A'}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Grade</p>
-                    <p className="font-semibold">{selectedDelivery.grade}</p>
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-500 font-medium mb-0.5">Address</p>
+                    <p className="text-sm font-semibold text-slate-700">{selectedDelivery.buyers?.business_address || 'N/A'}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Delivery Information */}
-              <div className="border-t pt-4">
-                <h3 className="font-bold text-gray-900 mb-3">Delivery Information</h3>
-                <div className="space-y-3">
+              {/* Logistics & Payment Card */}
+              <div className="bg-purple-50/40 border border-purple-100 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4 text-purple-700">
+                  <Truck size={20} />
+                  <h3 className="font-bold">Logistics & Payment</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-y-4">
                   <div>
-                    <p className="text-sm text-gray-600">Delivery Date & Time</p>
-                    <p className="font-semibold">
+                    <p className="text-xs text-purple-600 font-medium mb-0.5">Date & Time</p>
+                    <p className="text-sm font-bold text-slate-800">
                       {new Date(selectedDelivery.delivery_date).toLocaleDateString()}
                       {selectedDelivery.delivery_time && ` at ${selectedDelivery.delivery_time}`}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Delivery Method</p>
-                    <p className="font-semibold">{selectedDelivery.delivery_method}</p>
+                    <p className="text-xs text-purple-600 font-medium mb-0.5">Method</p>
+                    <p className="text-sm font-bold text-slate-800">{selectedDelivery.delivery_method}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Pickup Location</p>
-                    <p className="font-semibold">{selectedDelivery.pickup_location}</p>
+                    <p className="text-xs text-purple-600 font-medium mb-0.5">Destination</p>
+                    <p className="text-sm font-bold text-slate-800">{selectedDelivery.delivery_location}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Delivery Location</p>
-                    <p className="font-semibold">{selectedDelivery.delivery_location}</p>
+                    <p className="text-xs text-purple-600 font-medium mb-0.5">Total Amount</p>
+                    <p className="text-base font-black text-purple-700">₱{selectedDelivery.total_amount?.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Notes */}
               {selectedDelivery.notes && (
-                <div className="border-t pt-4">
-                  <h3 className="font-bold text-gray-900 mb-2">Notes</h3>
-                  <p className="text-gray-700">{selectedDelivery.notes}</p>
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-2 text-gray-700">
+                    <FileText size={18} />
+                    <h3 className="font-bold text-sm">Additional Notes</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 italic leading-relaxed whitespace-pre-wrap">
+                    {selectedDelivery.notes}
+                  </p>
                 </div>
               )}
+            </div>
+
+            <div className="p-6 border-t border-gray-50 flex justify-end">
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="px-8 py-2.5 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-all shadow-md active:scale-95 text-sm"
+              >
+                Close View
+              </button>
             </div>
           </div>
         </div>

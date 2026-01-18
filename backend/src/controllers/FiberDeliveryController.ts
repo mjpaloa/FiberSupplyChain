@@ -150,6 +150,9 @@ export class FiberDeliveryController {
             contact_number,
             municipality,
             barangay
+          ),
+          harvests (
+            farmer_name
           )
         `)
         .eq('farmer_id', farmerId)

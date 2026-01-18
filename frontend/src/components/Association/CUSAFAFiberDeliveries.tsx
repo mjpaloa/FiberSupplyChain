@@ -12,7 +12,12 @@ import {
   Edit,
   Download,
   User,
-  XCircle
+  XCircle,
+  MapPin,
+  Phone,
+  Building2,
+  Calendar,
+  FileText
 } from 'lucide-react';
 
 interface Delivery {
@@ -40,11 +45,13 @@ interface Delivery {
     business_address: string;
   };
   farmers?: {
-    first_name: string;
-    last_name: string;
+    full_name: string;
     contact_number: string;
     municipality: string;
     barangay: string;
+  };
+  harvests?: {
+    farmer_name: string;
   };
 }
 
@@ -158,7 +165,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
   const filteredDeliveries = deliveries.filter(delivery => {
     const searchLower = searchTerm.toLowerCase();
     const buyerName = delivery.buyers?.business_name?.toLowerCase() || '';
-    const farmerName = `${delivery.farmers?.first_name || ''} ${delivery.farmers?.last_name || ''}`.toLowerCase();
+    const farmerName = (delivery.farmers?.full_name || delivery.harvests?.farmer_name || '').toLowerCase();
     const variety = delivery.variety?.toLowerCase() || '';
     const deliveryId = delivery.delivery_id?.toLowerCase() || '';
     const location = delivery.delivery_location?.toLowerCase() || '';
@@ -193,7 +200,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
     const headers = ['Delivery ID', 'Farmer', 'Buyer', 'Variety', 'Quantity (kg)', 'Grade', 'Status', 'Delivery Date', 'Location'];
     const rows = filteredDeliveries.map(d => [
       d.delivery_id,
-      `${d.farmers?.first_name || ''} ${d.farmers?.last_name || ''}`,
+      d.farmers?.full_name || d.harvests?.farmer_name || 'N/A',
       d.buyers?.business_name || 'N/A',
       d.variety,
       d.quantity_kg,
@@ -397,7 +404,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
                       <div className="min-w-0">
                         <div className="font-bold text-blue-900 text-sm sm:text-sm md:text-base truncate">{delivery.buyers?.business_name || 'Buyer'}</div>
                         {delivery.farmers && (
-                          <div className="text-emerald-600 text-xs sm:text-xs md:text-sm font-medium truncate hidden sm:block">👨‍🌾 {delivery.farmers.first_name} {delivery.farmers.last_name}</div>
+                          <div className="text-emerald-600 text-xs sm:text-xs md:text-sm font-medium truncate hidden sm:block">👨‍🌾 {delivery.farmers.full_name || delivery.harvests?.farmer_name || 'Farmer'}</div>
                         )}
                       </div>
                     </div>
@@ -555,91 +562,151 @@ const CUSAFAFiberDeliveries: React.FC = () => {
 
       {/* Details Modal */}
       {showDetailsModal && selectedDelivery && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white">
-              <h2 className="text-2xl font-bold text-gray-900">Delivery Details</h2>
-              <button onClick={() => setShowDetailsModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <X size={24} />
+        <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[1.5rem] max-w-2xl w-full max-h-[92vh] overflow-y-auto shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-100 flex justify-between items-start sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Delivery Details</h2>
+                <p className="text-sm text-gray-500 font-medium">#{selectedDelivery.delivery_id.slice(0, 12)}</p>
+              </div>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} className="text-gray-400" />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Current Status</p>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedDelivery.status)}`}>
-                  {selectedDelivery.status}
-                </span>
-              </div>
-
-              <div className="border-t pt-4">
-                <h3 className="font-bold text-gray-900 mb-3">Farmer Information</h3>
-                <div className="space-y-2">
-                  <p className="text-sm"><strong>Name:</strong> {selectedDelivery.farmers?.first_name} {selectedDelivery.farmers?.last_name}</p>
-                  <p className="text-sm"><strong>Contact:</strong> {selectedDelivery.farmer_contact}</p>
-                  <p className="text-sm"><strong>Location:</strong> {selectedDelivery.farmers?.barangay}, {selectedDelivery.farmers?.municipality}</p>
+            <div className="p-6 space-y-4">
+              {/* Delivery Summary Card */}
+              <div className="bg-blue-50/40 border border-blue-100 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4 text-blue-700">
+                  <Package size={20} />
+                  <h3 className="font-bold">Delivery Summary</h3>
                 </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <h3 className="font-bold text-gray-900 mb-3">Buyer Information</h3>
-                <div className="space-y-2">
-                  <p className="text-sm"><strong>Business:</strong> {selectedDelivery.buyers?.business_name}</p>
-                  <p className="text-sm"><strong>Contact:</strong> {selectedDelivery.buyer_contact}</p>
-                  <p className="text-sm"><strong>Address:</strong> {selectedDelivery.buyers?.business_address}</p>
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <h3 className="font-bold text-gray-900 mb-3">Fiber Details</h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-y-4">
                   <div>
-                    <p className="text-sm text-gray-600">Variety</p>
-                    <p className="font-semibold">{selectedDelivery.variety}</p>
+                    <p className="text-xs text-blue-600 font-medium mb-0.5">Variety</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.variety}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Fiber (kg)</p>
-                    <p className="font-semibold">{selectedDelivery.quantity_kg} kg</p>
+                    <p className="text-xs text-blue-600 font-medium mb-0.5">Quantity</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.quantity_kg?.toLocaleString()} kg</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Grade</p>
-                    <p className="font-semibold">{selectedDelivery.grade}</p>
+                    <p className="text-xs text-blue-600 font-medium mb-0.5">Date Created</p>
+                    <p className="text-base font-bold text-slate-800">{new Date(selectedDelivery.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-600 font-medium mb-0.5">Status</p>
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold shadow-sm ${getStatusColor(selectedDelivery.status)}`}>
+                      <span className="w-2 h-2 rounded-full bg-current opacity-20"></span>
+                      {selectedDelivery.status}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <h3 className="font-bold text-gray-900 mb-3">Delivery Information</h3>
-                <div className="space-y-3">
+              {/* Farmer Information Card */}
+              <div className="bg-emerald-50/40 border border-emerald-100 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4 text-emerald-700">
+                  <User size={20} />
+                  <h3 className="font-bold">Farmer Information</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-y-4">
+                  <div className="col-span-2">
+                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Name</p>
+                    <p className="text-base font-bold text-slate-800">
+                      {selectedDelivery.farmers?.full_name || selectedDelivery.harvests?.farmer_name || 'N/A'}
+                    </p>
+                  </div>
                   <div>
-                    <p className="text-sm text-gray-600">Delivery Date & Time</p>
-                    <p className="font-semibold">
+                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Contact Number</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.farmer_contact || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Barangay</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.farmers?.barangay || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Municipality</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.farmers?.municipality || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buyer Information Card */}
+              <div className="bg-slate-50/60 border border-slate-200 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4 text-slate-700">
+                  <Building2 size={20} />
+                  <h3 className="font-bold">Buyer Information</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-y-4">
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-500 font-medium mb-0.5">Business Name</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.buyers?.business_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 font-medium mb-0.5">Contact Info</p>
+                    <p className="text-base font-bold text-slate-800">{selectedDelivery.buyer_contact || 'N/A'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-500 font-medium mb-0.5">Address</p>
+                    <p className="text-sm font-semibold text-slate-700">{selectedDelivery.buyers?.business_address || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delivery & Logistics Card */}
+              <div className="bg-purple-50/40 border border-purple-100 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4 text-purple-700">
+                  <Truck size={20} />
+                  <h3 className="font-bold">Logistics Information</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-y-4">
+                  <div>
+                    <p className="text-xs text-purple-600 font-medium mb-0.5">Date & Time</p>
+                    <p className="text-sm font-bold text-slate-800">
                       {new Date(selectedDelivery.delivery_date).toLocaleDateString()}
                       {selectedDelivery.delivery_time && ` at ${selectedDelivery.delivery_time}`}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Delivery Method</p>
-                    <p className="font-semibold">{selectedDelivery.delivery_method}</p>
+                    <p className="text-xs text-purple-600 font-medium mb-0.5">Method</p>
+                    <p className="text-sm font-bold text-slate-800">{selectedDelivery.delivery_method}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Pickup Location</p>
-                    <p className="font-semibold">{selectedDelivery.pickup_location}</p>
+                    <p className="text-xs text-purple-600 font-medium mb-0.5">Pickup</p>
+                    <p className="text-sm font-bold text-slate-800">{selectedDelivery.pickup_location}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Delivery Location</p>
-                    <p className="font-semibold">{selectedDelivery.delivery_location}</p>
+                    <p className="text-xs text-purple-600 font-medium mb-0.5">Destination</p>
+                    <p className="text-sm font-bold text-slate-800">{selectedDelivery.delivery_location}</p>
                   </div>
                 </div>
               </div>
 
-
               {selectedDelivery.notes && (
-                <div className="border-t pt-4">
-                  <h3 className="font-bold text-gray-900 mb-2">Notes</h3>
-                  <p className="text-gray-700">{selectedDelivery.notes}</p>
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-2 text-gray-700">
+                    <FileText size={18} />
+                    <h3 className="font-bold text-sm">Additional Notes</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 italic leading-relaxed whitespace-pre-wrap">
+                    {selectedDelivery.notes}
+                  </p>
                 </div>
               )}
+            </div>
+
+            <div className="p-6 border-t border-gray-50 flex justify-end">
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="px-8 py-2.5 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-all shadow-md active:scale-95 text-sm"
+              >
+                Close View
+              </button>
             </div>
           </div>
         </div>
@@ -661,7 +728,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
 
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <p className="text-sm text-gray-700 mb-2">
-                <strong>Farmer:</strong> {selectedDelivery.farmers?.first_name} {selectedDelivery.farmers?.last_name}
+                <strong>Farmer:</strong> {selectedDelivery.farmers?.full_name || selectedDelivery.harvests?.farmer_name || 'N/A'}
               </p>
               <p className="text-sm text-gray-700 mb-2">
                 <strong>Buyer:</strong> {selectedDelivery.buyers?.business_name}

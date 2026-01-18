@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  ShoppingCart, 
-  Search, 
-  CheckCircle, 
-  XCircle, 
-  Eye, 
-  Edit, 
+import {
+  Users,
+  ShoppingCart,
+  Search,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Edit,
   Trash2,
   Filter,
   Download,
@@ -70,7 +70,7 @@ const UserManagement: React.FC = () => {
 
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (user.association && user.association.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -90,7 +90,7 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      
+
       let endpoint = '';
       if (activeTab === 'farmers') {
         endpoint = '/api/mao/farmers';
@@ -118,7 +118,7 @@ const UserManagement: React.FC = () => {
   const fetchUserDetails = async (userId: string) => {
     try {
       let endpoint = '';
-      
+
       if (activeTab === 'farmers') {
         endpoint = `/api/mao/farmers/${userId}`;
       } else if (activeTab === 'buyers') {
@@ -143,7 +143,7 @@ const UserManagement: React.FC = () => {
   const handleVerify = async (userId: string) => {
     try {
       let endpoint = '';
-      
+
       if (activeTab === 'farmers') {
         endpoint = `/api/mao/farmers/${userId}/verify`;
       } else if (activeTab === 'buyers') {
@@ -172,7 +172,7 @@ const UserManagement: React.FC = () => {
 
     try {
       let endpoint = '';
-      
+
       if (activeTab === 'farmers') {
         endpoint = `/api/mao/farmers/${selectedUser.id}/reject`;
       } else if (activeTab === 'buyers') {
@@ -203,7 +203,7 @@ const UserManagement: React.FC = () => {
 
     try {
       let endpoint = '';
-      
+
       if (activeTab === 'farmers') {
         endpoint = `/api/mao/farmers/${userId}/deactivate`;
       } else if (activeTab === 'buyers') {
@@ -232,7 +232,7 @@ const UserManagement: React.FC = () => {
 
     try {
       let endpoint = '';
-      
+
       if (activeTab === 'farmers') {
         endpoint = `/api/mao/farmers/${userId}/reactivate`;
       } else if (activeTab === 'buyers') {
@@ -261,7 +261,7 @@ const UserManagement: React.FC = () => {
 
     try {
       let endpoint = '';
-      
+
       if (activeTab === 'farmers') {
         endpoint = `/api/mao/farmers/${selectedUser.id}`;
       } else if (activeTab === 'buyers') {
@@ -407,8 +407,8 @@ const UserManagement: React.FC = () => {
       });
 
       // Create CSV content with title
-      const title = activeTab === 'farmers' ? 'COMMODITY PROFILE - ABACA FARMERS' : 
-                    activeTab === 'buyers' ? 'BUYERS LIST' : 'ASSOCIATION OFFICERS LIST';
+      const title = activeTab === 'farmers' ? 'COMMODITY PROFILE - ABACA FARMERS' :
+        activeTab === 'buyers' ? 'BUYERS LIST' : 'ASSOCIATION OFFICERS LIST';
       const csvContent = [
         title,
         `Export Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`,
@@ -459,26 +459,26 @@ const UserManagement: React.FC = () => {
 
       // Create PDF using jsPDF
       const doc = new jsPDF('landscape', 'mm', 'a4');
-      const title = activeTab === 'farmers' ? 'COMMODITY PROFILE' : 
-                    activeTab === 'buyers' ? 'BUYERS LIST' : 'ASSOCIATION OFFICERS LIST';
+      const title = activeTab === 'farmers' ? 'COMMODITY PROFILE' :
+        activeTab === 'buyers' ? 'BUYERS LIST' : 'ASSOCIATION OFFICERS LIST';
       const subtitle = activeTab === 'farmers' ? 'ABACA' : '';
-      
+
       // Add title
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
       doc.text(title, doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
-      
+
       if (subtitle) {
         doc.setFontSize(14);
         doc.text(subtitle, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
       }
-      
+
       // Add metadata
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.text(`Export Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, 14, subtitle ? 30 : 25);
       doc.text(`Total Records: ${detailedUsers.length}`, 14, subtitle ? 35 : 30);
-      
+
       // Prepare table data
       if (activeTab === 'farmers') {
         const tableData = detailedUsers.map((user, index) => [
@@ -505,8 +505,8 @@ const UserManagement: React.FC = () => {
         autoTable(doc, {
           startY: subtitle ? 40 : 35,
           head: [[
-            'No.', 'Farmer ID', 'Name', 'Sex', 'Age', 'Birthday', 'Civil Status', 
-            'Email', 'Contact', 'Barangay', 'Municipality', 'Association', 
+            'No.', 'Farmer ID', 'Name', 'Sex', 'Age', 'Birthday', 'Civil Status',
+            'Email', 'Contact', 'Barangay', 'Municipality', 'Association',
             'Farm Area', 'Abaca Type', 'Price Max', 'Buyer', 'Income', 'Status'
           ]],
           body: tableData,
@@ -536,7 +536,7 @@ const UserManagement: React.FC = () => {
         autoTable(doc, {
           startY: 35,
           head: [[
-            'No.', 'Buyer ID', 'Business Name', 'Owner Name', 'Email', 
+            'No.', 'Buyer ID', 'Business Name', 'Owner Name', 'Email',
             'Contact', 'Business Address', 'Business Type', 'Status', 'Date Registered'
           ]],
           body: tableData,
@@ -564,7 +564,7 @@ const UserManagement: React.FC = () => {
         autoTable(doc, {
           startY: 35,
           head: [[
-            'No.', 'Officer ID', 'Name', 'Email', 'Contact', 
+            'No.', 'Officer ID', 'Name', 'Email', 'Contact',
             'Organization', 'Position', 'Status', 'Date Registered'
           ]],
           body: tableData,
@@ -578,11 +578,11 @@ const UserManagement: React.FC = () => {
           }
         });
       }
-      
+
       // Save PDF
       const fileName = `${activeTab}_commodity_profile_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
-      
+
     } catch (error) {
       console.error('Error exporting PDF:', error);
       alert('Failed to export PDF');
@@ -661,15 +661,13 @@ const UserManagement: React.FC = () => {
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 sm:mb-8">
         <button
           onClick={() => setActiveTab('farmers')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'farmers'
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'farmers'
               ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+            }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'farmers' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
-          }`}>
+          <div className={`p-2 rounded-lg transition-colors ${activeTab === 'farmers' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
+            }`}>
             <Users className="w-5 h-5" />
           </div>
           <span>Farmers</span>
@@ -679,15 +677,13 @@ const UserManagement: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('buyers')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'buyers'
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'buyers'
               ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+            }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'buyers' ? 'bg-white/20' : 'bg-blue-50 group-hover:bg-blue-100'
-          }`}>
+          <div className={`p-2 rounded-lg transition-colors ${activeTab === 'buyers' ? 'bg-white/20' : 'bg-blue-50 group-hover:bg-blue-100'
+            }`}>
             <ShoppingCart className="w-5 h-5" />
           </div>
           <span>Buyers</span>
@@ -697,15 +693,13 @@ const UserManagement: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('associations')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'associations'
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'associations'
               ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl shadow-purple-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+            }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'associations' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
-          }`}>
+          <div className={`p-2 rounded-lg transition-colors ${activeTab === 'associations' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
+            }`}>
             <Building2 className="w-5 h-5" />
           </div>
           <span>Association</span>
@@ -835,115 +829,114 @@ const UserManagement: React.FC = () => {
                   {filteredUsers
                     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                     .map((user) => (
-                    <tr key={user.id} className="hover:bg-gradient-to-r hover:from-emerald-50/50 hover:to-teal-50/50 transition-all duration-200 group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div>
-                          <div className="font-semibold text-gray-900">{user.name}</div>
-                          <div className="text-xs text-gray-500">{user.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-gray-400" />
-                        {user.contactNumber || 'N/A'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div className="font-medium text-gray-900">
-                        {activeTab === 'farmers' ? user.association : activeTab === 'buyers' ? user.businessName : user.association}
-                      </div>
-                      {activeTab === 'associations' && user.position && (
-                        <div className="text-xs text-gray-500">{user.position}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        user.status === 'verified' 
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : user.status === 'pending'
-                          ? 'bg-amber-100 text-amber-700'
-                          : user.status === 'deactivated'
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}>
-                        {user.status === 'deactivated' ? 'Deactivated' : user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-gray-400" />
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => {
-                            setSelectedUser(user);
-                            fetchUserDetails(user.id);
-                            setShowViewModal(true);
-                          }}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md group-hover:bg-blue-50"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {user.status === 'pending' && (
-                          <>
-                            <button
-                              onClick={() => handleVerify(user.id)}
-                              className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-                              title="Verify"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </button>
+                      <tr key={user.id} className="hover:bg-gradient-to-r hover:from-emerald-50/50 hover:to-teal-50/50 transition-all duration-200 group">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <div className="font-semibold text-gray-900">{user.name}</div>
+                              <div className="text-xs text-gray-500">{user.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-gray-400" />
+                            {user.contactNumber || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="font-medium text-gray-900">
+                            {activeTab === 'farmers' ? user.association : activeTab === 'buyers' ? user.businessName : user.association}
+                          </div>
+                          {activeTab === 'associations' && user.position && (
+                            <div className="text-xs text-gray-500">{user.position}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${user.status === 'verified'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : user.status === 'pending'
+                                ? 'bg-amber-100 text-amber-700'
+                                : user.status === 'deactivated'
+                                  ? 'bg-orange-100 text-orange-700'
+                                  : 'bg-red-100 text-red-700'
+                            }`}>
+                            {user.status === 'deactivated' ? 'Deactivated' : user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-gray-400" />
+                            {new Date(user.createdAt).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => {
                                 setSelectedUser(user);
-                                setShowRejectModal(true);
+                                fetchUserDetails(user.id);
+                                setShowViewModal(true);
                               }}
-                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-                              title="Reject"
+                              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md group-hover:bg-blue-50"
+                              title="View Details"
                             >
-                              <XCircle className="w-4 h-4" />
+                              <Eye className="w-4 h-4" />
                             </button>
-                          </>
-                        )}
-                        <button
-                          onClick={async () => {
-                            setSelectedUser(user);
-                            setShowEditModal(true);
-                            await fetchUserDetails(user.id);
-                          }}
-                          className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        {user.status === 'verified' && (
-                          <button
-                            onClick={() => handleDeactivate(user.id)}
-                            className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-                            title="Deactivate"
-                          >
-                            <UserX className="w-4 h-4" />
-                          </button>
-                        )}
-                        {user.status === 'deactivated' && (
-                          <button
-                            onClick={() => handleReactivate(user.id)}
-                            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-                            title="Reactivate"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {user.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => handleVerify(user.id)}
+                                  className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                  title="Verify"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedUser(user);
+                                    setShowRejectModal(true);
+                                  }}
+                                  className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                  title="Reject"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={async () => {
+                                setSelectedUser(user);
+                                setShowEditModal(true);
+                                await fetchUserDetails(user.id);
+                              }}
+                              className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                              title="Edit"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            {user.status === 'verified' && (
+                              <button
+                                onClick={() => handleDeactivate(user.id)}
+                                className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                title="Deactivate"
+                              >
+                                <UserX className="w-4 h-4" />
+                              </button>
+                            )}
+                            {user.status === 'deactivated' && (
+                              <button
+                                onClick={() => handleReactivate(user.id)}
+                                className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                title="Reactivate"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -962,11 +955,10 @@ const UserManagement: React.FC = () => {
                           setItemsPerPage(size);
                           setCurrentPage(1);
                         }}
-                        className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                          itemsPerPage === size
+                        className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
                             ? 'bg-emerald-500 text-white shadow-lg'
                             : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
-                        }`}
+                          }`}
                       >
                         {size}
                       </button>
@@ -983,22 +975,20 @@ const UserManagement: React.FC = () => {
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        currentPage === 1
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                      }`}
+                        }`}
                     >
                       Previous
                     </button>
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredUsers.length / itemsPerPage), prev + 1))}
                       disabled={currentPage >= Math.ceil(filteredUsers.length / itemsPerPage)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        currentPage >= Math.ceil(filteredUsers.length / itemsPerPage)
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage >= Math.ceil(filteredUsers.length / itemsPerPage)
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                      }`}
+                        }`}
                     >
                       Next
                     </button>
@@ -1028,7 +1018,7 @@ const UserManagement: React.FC = () => {
                 <XCircle className="w-6 h-6 text-gray-600" />
               </button>
             </div>
-            
+
             {loadingDetails ? (
               <div className="p-12 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -1037,27 +1027,43 @@ const UserManagement: React.FC = () => {
             ) : selectedUserDetails ? (
               <div className="p-6 space-y-6">
                 {/* Status Banner */}
-                <div className={`p-4 rounded-lg border-2 ${
-                  selectedUserDetails.verification_status === 'verified'
-                    ? 'bg-emerald-50 border-emerald-200'
-                    : selectedUserDetails.verification_status === 'pending'
-                    ? 'bg-amber-50 border-amber-200'
-                    : 'bg-red-50 border-red-200'
-                }`}>
+                <div className={`p-4 rounded-lg border-2 ${!selectedUserDetails.is_active || selectedUserDetails.deactivated_at
+                    ? 'bg-orange-50 border-orange-200'
+                    : selectedUserDetails.verification_status === 'verified'
+                      ? 'bg-emerald-50 border-emerald-200'
+                      : selectedUserDetails.verification_status === 'pending'
+                        ? 'bg-amber-50 border-amber-200'
+                        : 'bg-red-50 border-red-200'
+                  }`}>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Verification Status</p>
-                      <p className={`text-2xl font-bold mt-1 ${
-                        selectedUserDetails.verification_status === 'verified'
-                          ? 'text-emerald-700'
-                          : selectedUserDetails.verification_status === 'pending'
-                          ? 'text-amber-700'
-                          : 'text-red-700'
-                      }`}>
-                        {selectedUserDetails.verification_status?.toUpperCase() || 'PENDING'}
+                      <p className={`text-2xl font-bold mt-1 ${!selectedUserDetails.is_active || selectedUserDetails.deactivated_at
+                          ? 'text-orange-700'
+                          : selectedUserDetails.verification_status === 'verified'
+                            ? 'text-emerald-700'
+                            : selectedUserDetails.verification_status === 'pending'
+                              ? 'text-amber-700'
+                              : 'text-red-700'
+                        }`}>
+                        {(!selectedUserDetails.is_active || selectedUserDetails.deactivated_at)
+                          ? 'DEACTIVATED'
+                          : selectedUserDetails.verification_status?.toUpperCase() || 'PENDING'}
                       </p>
                     </div>
-                    {selectedUserDetails.verified_at && (
+                    {selectedUserDetails.deactivated_at && (
+                      <div className="text-right">
+                        <p className="text-sm text-orange-600 font-medium">Deactivated On</p>
+                        <p className="text-sm font-bold text-orange-900">
+                          {new Date(selectedUserDetails.deactivated_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    )}
+                    {(selectedUserDetails.verified_at && !selectedUserDetails.deactivated_at) && (
                       <div className="text-right">
                         <p className="text-sm text-gray-600">Verified On</p>
                         <p className="text-sm font-medium text-gray-900">
@@ -1183,12 +1189,12 @@ const UserManagement: React.FC = () => {
                             <Calendar className="w-3 h-3" /> Birthday
                           </p>
                           <p className="font-medium text-gray-900">
-                            {selectedUserDetails.birthday 
+                            {selectedUserDetails.birthday
                               ? new Date(selectedUserDetails.birthday).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })
                               : 'Not provided'}
                           </p>
                         </div>
@@ -1351,7 +1357,7 @@ const UserManagement: React.FC = () => {
                     <div>
                       <p className="text-xs text-gray-500">Last Updated</p>
                       <p className="font-medium text-gray-900">
-                        {selectedUserDetails.updated_at 
+                        {selectedUserDetails.updated_at
                           ? new Date(selectedUserDetails.updated_at).toLocaleString()
                           : 'N/A'}
                       </p>
@@ -1359,7 +1365,7 @@ const UserManagement: React.FC = () => {
                     <div>
                       <p className="text-xs text-gray-500">Last Login</p>
                       <p className="font-medium text-gray-900">
-                        {selectedUserDetails.last_login 
+                        {selectedUserDetails.last_login
                           ? new Date(selectedUserDetails.last_login).toLocaleString()
                           : 'Never logged in'}
                       </p>
@@ -1750,7 +1756,7 @@ const UserManagement: React.FC = () => {
 
       {/* Fullscreen Image Modal */}
       {fullscreenImage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
           onClick={() => setFullscreenImage(null)}
         >

@@ -19,7 +19,7 @@ export class UserManagementController {
         name: farmer.full_name,
         email: farmer.email,
         type: 'farmer',
-        status: farmer.is_verified ? 'verified' : (farmer.is_active ? 'pending' : 'rejected'),
+        status: farmer.deactivated_at ? 'deactivated' : (farmer.is_verified ? 'verified' : (farmer.verification_status === 'rejected' ? 'rejected' : 'pending')),
         association: farmer.association_name,
         municipality: farmer.municipality,
         contactNumber: farmer.contact_number,
@@ -59,7 +59,7 @@ export class UserManagementController {
       const { data, error } = await supabase
         .from('buyers')
         .select('*')
-        .order('created_at', { ascending: false});
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -69,7 +69,7 @@ export class UserManagementController {
         name: buyer.owner_name,
         email: buyer.email,
         type: 'buyer',
-        status: buyer.is_verified ? 'verified' : (buyer.is_active ? 'pending' : 'rejected'),
+        status: buyer.deactivated_at ? 'deactivated' : (buyer.is_verified ? 'verified' : (buyer.verification_status === 'rejected' ? 'rejected' : 'pending')),
         businessName: buyer.business_name,
         contactNumber: buyer.contact_number,
         createdAt: buyer.created_at,
@@ -125,9 +125,9 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
-        message: 'Farmer verified successfully. They can now login to the system.', 
-        farmer: data 
+      res.status(200).json({
+        message: 'Farmer verified successfully. They can now login to the system.',
+        farmer: data
       });
     } catch (error) {
       console.error('Error verifying farmer:', error);
@@ -164,9 +164,9 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
-        message: 'Farmer application rejected. They will be notified of the reason.', 
-        farmer: data 
+      res.status(200).json({
+        message: 'Farmer application rejected. They will be notified of the reason.',
+        farmer: data
       });
     } catch (error) {
       console.error('Error rejecting farmer:', error);
@@ -207,7 +207,7 @@ export class UserManagementController {
 
       // Set deactivation timestamp
       const deactivatedAt = new Date().toISOString();
-      
+
       const { data, error } = await supabase
         .from('farmers')
         .update({
@@ -222,9 +222,9 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
+      res.status(200).json({
         message: 'Farmer deactivated successfully. Account will be permanently deleted after 3 days if not reactivated.',
-        farmer: data 
+        farmer: data
       });
     } catch (error) {
       console.error('Error deactivating farmer:', error);
@@ -254,9 +254,9 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
+      res.status(200).json({
         message: 'Farmer reactivated successfully.',
-        farmer: data 
+        farmer: data
       });
     } catch (error) {
       console.error('Error reactivating farmer:', error);
@@ -306,9 +306,9 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
-        message: 'Buyer verified successfully. They can now login to the system.', 
-        buyer: data 
+      res.status(200).json({
+        message: 'Buyer verified successfully. They can now login to the system.',
+        buyer: data
       });
     } catch (error) {
       console.error('Error verifying buyer:', error);
@@ -345,9 +345,9 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
-        message: 'Buyer application rejected. They will be notified of the reason.', 
-        buyer: data 
+      res.status(200).json({
+        message: 'Buyer application rejected. They will be notified of the reason.',
+        buyer: data
       });
     } catch (error) {
       console.error('Error rejecting buyer:', error);
@@ -388,7 +388,7 @@ export class UserManagementController {
 
       // Set deactivation timestamp
       const deactivatedAt = new Date().toISOString();
-      
+
       const { data, error } = await supabase
         .from('buyers')
         .update({
@@ -403,9 +403,9 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
+      res.status(200).json({
         message: 'Buyer deactivated successfully. Account will be permanently deleted after 3 days if not reactivated.',
-        buyer: data 
+        buyer: data
       });
     } catch (error) {
       console.error('Error deactivating buyer:', error);
@@ -435,9 +435,9 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
+      res.status(200).json({
         message: 'Buyer reactivated successfully.',
-        buyer: data 
+        buyer: data
       });
     } catch (error) {
       console.error('Error reactivating buyer:', error);
@@ -472,7 +472,7 @@ export class UserManagementController {
   static async getOfficers(req: Request, res: Response) {
     try {
       console.log('🔍 Fetching association officers from association_officers table...');
-      
+
       const { data, error } = await supabase
         .from('association_officers')
         .select('*')
@@ -495,12 +495,14 @@ export class UserManagementController {
       const officers = data.map(officer => {
         // Ensure consistent status determination
         let status = 'pending';
-        if (officer.verification_status === 'verified' || officer.is_verified === true) {
+        if (officer.deactivated_at) {
+          status = 'deactivated';
+        } else if (officer.verification_status === 'verified' || officer.is_verified === true) {
           status = 'verified';
         } else if (officer.verification_status === 'rejected') {
           status = 'rejected';
         }
-        
+
         return {
           id: officer.officer_id,
           name: officer.full_name,
@@ -639,7 +641,7 @@ export class UserManagementController {
 
       // Set deactivation timestamp
       const deactivatedAt = new Date().toISOString();
-      
+
       const { data, error } = await supabase
         .from('association_officers')
         .update({
@@ -654,9 +656,9 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
+      res.status(200).json({
         message: 'Association officer deactivated successfully. Account will be permanently deleted after 3 days if not reactivated.',
-        officer: data 
+        officer: data
       });
     } catch (error) {
       console.error('Error deactivating association officer:', error);
@@ -686,9 +688,9 @@ export class UserManagementController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
+      res.status(200).json({
         message: 'Association officer reactivated successfully.',
-        officer: data 
+        officer: data
       });
     } catch (error) {
       console.error('Error reactivating association officer:', error);

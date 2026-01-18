@@ -626,14 +626,14 @@ export class AuthService {
           'Account is inactive'
         );
 
-        // If account has rejection reason, show it to the user
-        if (user.rejection_reason) {
-          throw new Error(
-            `Your account application was rejected. Reason: ${user.rejection_reason}\n\n` +
-            `Please contact support@mao.gov.ph for assistance.`
-          );
+        // Distinguish between deactivated and rejected
+        if (user.deactivated_at) {
+          throw new Error('Your account has been deactivated. Please contact support@mao.gov.ph for reactivation requests.');
+        } else if (user.verification_status === 'rejected' || user.rejection_reason) {
+          const reason = user.rejection_reason || 'Your application did not meet our requirements.';
+          throw new Error(`Your account application was rejected. Reason: ${reason}. Please contact support@mao.gov.ph for assistance.`);
         } else {
-          throw new Error('Your account is inactive. Please contact support@mao.gov.ph for assistance.');
+          throw new Error('Your account is currently inactive. Please contact support@mao.gov.ph for assistance.');
         }
       }
 
@@ -780,6 +780,27 @@ export class AuthService {
 
       if (!tokenData) {
         throw new Error('Refresh token not found or revoked');
+      }
+
+      // Check if user is still active in their respective table
+      let tableName = '';
+      let idField = '';
+      switch (payload.userType) {
+        case 'farmer': tableName = 'farmers'; idField = 'farmer_id'; break;
+        case 'buyer': tableName = 'buyers'; idField = 'buyer_id'; break;
+        case 'officer': tableName = 'organization'; idField = 'officer_id'; break;
+        case 'association_officer': tableName = 'association_officers'; idField = 'officer_id'; break;
+        default: throw new Error('Invalid user type in token');
+      }
+
+      const { data: user, error: userError } = await supabase
+        .from(tableName)
+        .select('is_active')
+        .eq(idField, payload.userId)
+        .single();
+
+      if (userError || !user || !user.is_active) {
+        throw new Error('Your account is inactive. Please contact support.');
       }
 
       // Generate new tokens
