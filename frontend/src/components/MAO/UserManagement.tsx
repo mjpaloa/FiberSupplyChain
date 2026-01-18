@@ -408,7 +408,7 @@ const UserManagement: React.FC = () => {
 
       // Create CSV content with title
       const title = activeTab === 'farmers' ? 'COMMODITY PROFILE - ABACA FARMERS' :
-        activeTab === 'buyers' ? 'BUYERS LIST' : 'ASSOCIATION OFFICERS LIST';
+        activeTab === 'buyers' ? 'BUYERS LIST' : 'ASSOCIATION COORDINATORS LIST';
       const csvContent = [
         title,
         `Export Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`,
@@ -460,7 +460,7 @@ const UserManagement: React.FC = () => {
       // Create PDF using jsPDF
       const doc = new jsPDF('landscape', 'mm', 'a4');
       const title = activeTab === 'farmers' ? 'COMMODITY PROFILE' :
-        activeTab === 'buyers' ? 'BUYERS LIST' : 'ASSOCIATION OFFICERS LIST';
+        activeTab === 'buyers' ? 'BUYERS LIST' : 'ASSOCIATION COORDINATORS LIST';
       const subtitle = activeTab === 'farmers' ? 'ABACA' : '';
 
       // Add title
@@ -662,8 +662,8 @@ const UserManagement: React.FC = () => {
         <button
           onClick={() => setActiveTab('farmers')}
           className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'farmers'
-              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
             }`}
         >
           <div className={`p-2 rounded-lg transition-colors ${activeTab === 'farmers' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
@@ -678,8 +678,8 @@ const UserManagement: React.FC = () => {
         <button
           onClick={() => setActiveTab('buyers')}
           className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'buyers'
-              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
             }`}
         >
           <div className={`p-2 rounded-lg transition-colors ${activeTab === 'buyers' ? 'bg-white/20' : 'bg-blue-50 group-hover:bg-blue-100'
@@ -694,8 +694,8 @@ const UserManagement: React.FC = () => {
         <button
           onClick={() => setActiveTab('associations')}
           className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'associations'
-              ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl shadow-purple-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl shadow-purple-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
             }`}
         >
           <div className={`p-2 rounded-lg transition-colors ${activeTab === 'associations' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
@@ -854,12 +854,12 @@ const UserManagement: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${user.status === 'verified'
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : user.status === 'pending'
-                                ? 'bg-amber-100 text-amber-700'
-                                : user.status === 'deactivated'
-                                  ? 'bg-orange-100 text-orange-700'
-                                  : 'bg-red-100 text-red-700'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : user.status === 'pending'
+                              ? 'bg-amber-100 text-amber-700'
+                              : user.status === 'deactivated'
+                                ? 'bg-orange-100 text-orange-700'
+                                : 'bg-red-100 text-red-700'
                             }`}>
                             {user.status === 'deactivated' ? 'Deactivated' : user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                           </span>
@@ -956,8 +956,8 @@ const UserManagement: React.FC = () => {
                           setCurrentPage(1);
                         }}
                         className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
-                            ? 'bg-emerald-500 text-white shadow-lg'
-                            : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
+                          ? 'bg-emerald-500 text-white shadow-lg'
+                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
                           }`}
                       >
                         {size}
@@ -976,8 +976,8 @@ const UserManagement: React.FC = () => {
                       onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
                       className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                         }`}
                     >
                       Previous
@@ -986,8 +986,8 @@ const UserManagement: React.FC = () => {
                       onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredUsers.length / itemsPerPage), prev + 1))}
                       disabled={currentPage >= Math.ceil(filteredUsers.length / itemsPerPage)}
                       className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage >= Math.ceil(filteredUsers.length / itemsPerPage)
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                         }`}
                     >
                       Next
@@ -1006,7 +1006,7 @@ const UserManagement: React.FC = () => {
           <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
               <h2 className="text-2xl font-bold text-gray-800">
-                {activeTab === 'farmers' ? 'Farmer' : activeTab === 'buyers' ? 'Buyer' : 'Association Officer'} Details
+                {activeTab === 'farmers' ? 'Farmer' : activeTab === 'buyers' ? 'Buyer' : 'Association Coordinator'} Details
               </h2>
               <button
                 onClick={() => {
@@ -1028,23 +1028,23 @@ const UserManagement: React.FC = () => {
               <div className="p-6 space-y-6">
                 {/* Status Banner */}
                 <div className={`p-4 rounded-lg border-2 ${!selectedUserDetails.is_active || selectedUserDetails.deactivated_at
-                    ? 'bg-orange-50 border-orange-200'
-                    : selectedUserDetails.verification_status === 'verified'
-                      ? 'bg-emerald-50 border-emerald-200'
-                      : selectedUserDetails.verification_status === 'pending'
-                        ? 'bg-amber-50 border-amber-200'
-                        : 'bg-red-50 border-red-200'
+                  ? 'bg-orange-50 border-orange-200'
+                  : selectedUserDetails.verification_status === 'verified'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : selectedUserDetails.verification_status === 'pending'
+                      ? 'bg-amber-50 border-amber-200'
+                      : 'bg-red-50 border-red-200'
                   }`}>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Verification Status</p>
                       <p className={`text-2xl font-bold mt-1 ${!selectedUserDetails.is_active || selectedUserDetails.deactivated_at
-                          ? 'text-orange-700'
-                          : selectedUserDetails.verification_status === 'verified'
-                            ? 'text-emerald-700'
-                            : selectedUserDetails.verification_status === 'pending'
-                              ? 'text-amber-700'
-                              : 'text-red-700'
+                        ? 'text-orange-700'
+                        : selectedUserDetails.verification_status === 'verified'
+                          ? 'text-emerald-700'
+                          : selectedUserDetails.verification_status === 'pending'
+                            ? 'text-amber-700'
+                            : 'text-red-700'
                         }`}>
                         {(!selectedUserDetails.is_active || selectedUserDetails.deactivated_at)
                           ? 'DEACTIVATED'

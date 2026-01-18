@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Sprout, 
-  Plus, 
-  Search, 
+import {
+  Sprout,
+  Plus,
+  Search,
   Filter,
   Eye,
   Edit,
@@ -128,13 +128,13 @@ const AssociationSeedlingManagement: React.FC = () => {
       const response = await fetch('https://easyabaca-api.vercel.app/api/mao/associations', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       // Ensure data is an array
       if (Array.isArray(data)) {
         setAssociations(data);
@@ -155,13 +155,13 @@ const AssociationSeedlingManagement: React.FC = () => {
       const response = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/mao/associations', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       // Ensure data is an array
       if (Array.isArray(data)) {
         setDistributions(data);
@@ -246,8 +246,8 @@ const AssociationSeedlingManagement: React.FC = () => {
   // Handle association change
   const handleAssociationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const associationId = e.target.value;
-    setFormData({ 
-      ...formData, 
+    setFormData({
+      ...formData,
       recipient_association_id: associationId
     });
   };
@@ -273,7 +273,7 @@ const AssociationSeedlingManagement: React.FC = () => {
 
   // Convert all photo files to base64 before submission
   const prepareFormDataForSubmission = async (): Promise<DistributionSubmissionData> => {
-    const data: DistributionSubmissionData = { 
+    const data: DistributionSubmissionData = {
       variety: formData.variety,
       source_supplier: formData.source_supplier,
       quantity_distributed: typeof formData.quantity_distributed === 'string' ? parseInt(formData.quantity_distributed) || 0 : formData.quantity_distributed,
@@ -285,7 +285,7 @@ const AssociationSeedlingManagement: React.FC = () => {
       packaging_photo: null,
       quality_photo: null
     };
-    
+
     if (formData.seedling_photo && formData.seedling_photo instanceof File) {
       try {
         data.seedling_photo = await fileToBase64(formData.seedling_photo);
@@ -295,7 +295,7 @@ const AssociationSeedlingManagement: React.FC = () => {
     } else if (typeof formData.seedling_photo === 'string') {
       data.seedling_photo = formData.seedling_photo;
     }
-    
+
     if (formData.packaging_photo && formData.packaging_photo instanceof File) {
       try {
         data.packaging_photo = await fileToBase64(formData.packaging_photo);
@@ -305,7 +305,7 @@ const AssociationSeedlingManagement: React.FC = () => {
     } else if (typeof formData.packaging_photo === 'string') {
       data.packaging_photo = formData.packaging_photo;
     }
-    
+
     if (formData.quality_photo && formData.quality_photo instanceof File) {
       try {
         data.quality_photo = await fileToBase64(formData.quality_photo);
@@ -315,22 +315,22 @@ const AssociationSeedlingManagement: React.FC = () => {
     } else if (typeof formData.quality_photo === 'string') {
       data.quality_photo = formData.quality_photo;
     }
-    
+
     return data;
   };
 
   // Override handleSubmit to handle photo uploads
   const handleSubmitWithPhotos = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Prevent double submission
     if (submitting) return;
-    
+
     setSubmitting(true);
     try {
       const token = localStorage.getItem('accessToken');
       const data = await prepareFormDataForSubmission();
-      
+
       const response = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/mao/distribute-to-association', {
         method: 'POST',
         headers: {
@@ -361,15 +361,15 @@ const AssociationSeedlingManagement: React.FC = () => {
   const handleUpdateWithPhotos = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDistribution) return;
-    
+
     // Prevent double submission
     if (submitting) return;
-    
+
     setSubmitting(true);
     try {
       const token = localStorage.getItem('accessToken');
       const data = await prepareFormDataForSubmission();
-      
+
       const response = await fetch(`https://easyabaca-api.vercel.app/api/association-seedlings/mao/associations/${selectedDistribution.distribution_id}`, {
         method: 'PUT',
         headers: {
@@ -418,7 +418,7 @@ const AssociationSeedlingManagement: React.FC = () => {
     }
 
     const headers = ['Date', 'Variety', 'Quantity', 'Source/Supplier', 'Recipient Association', 'Status', 'Remarks'];
-    
+
     const rows = filteredDistributions.map(d => [
       new Date(d.date_distributed).toLocaleDateString(),
       d.variety,
@@ -652,9 +652,8 @@ const AssociationSeedlingManagement: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-indigo-100">
                 {currentDistributions.map((distribution, index) => (
-                  <tr key={distribution.distribution_id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${
-                    index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
-                  }`}>
+                  <tr key={distribution.distribution_id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
+                    }`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-md">
                         {distribution.seedling_photo ? (
@@ -726,26 +725,25 @@ const AssociationSeedlingManagement: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-4 py-2 rounded-xl text-xs font-semibold border-2 ${
-                        distribution.status === 'distributed_to_association' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                        distribution.status === 'partially_distributed_to_farmers' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                        distribution.status === 'fully_distributed_to_farmers' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        'bg-red-50 text-red-700 border-red-200'
-                      }`}>
+                      <span className={`px-4 py-2 rounded-xl text-xs font-semibold border-2 ${distribution.status === 'distributed_to_association' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                          distribution.status === 'partially_distributed_to_farmers' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            distribution.status === 'fully_distributed_to_farmers' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              'bg-red-50 text-red-700 border-red-200'
+                        }`}>
                         {distribution.status === 'distributed_to_association' ? '📦 Distributed to Association' :
-                         distribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                         distribution.status === 'fully_distributed_to_farmers' ? '✅ Fully to Farmers' :
-                         '❌ Cancelled'}
+                          distribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
+                            distribution.status === 'fully_distributed_to_farmers' ? '✅ Fully to Farmers' :
+                              '❌ Cancelled'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {distribution.status !== 'distributed_to_association' && distribution.status !== 'cancelled' ? (
                         <div className="flex items-center gap-2">
                           <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-emerald-500 h-2 rounded-full" 
-                              style={{ 
-                                width: `${((distribution.quantity_distributed - (distribution.remaining_quantity || 0)) / distribution.quantity_distributed) * 100}%` 
+                            <div
+                              className="bg-emerald-500 h-2 rounded-full"
+                              style={{
+                                width: `${((distribution.quantity_distributed - (distribution.remaining_quantity || 0)) / distribution.quantity_distributed) * 100}%`
                               }}
                             ></div>
                           </div>
@@ -802,11 +800,10 @@ const AssociationSeedlingManagement: React.FC = () => {
                     <button
                       key={size}
                       onClick={() => handleItemsPerPageChange(size)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
                           ? 'bg-emerald-500 text-white shadow-lg'
                           : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
@@ -823,22 +820,20 @@ const AssociationSeedlingManagement: React.FC = () => {
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === 1
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                    }`}
+                      }`}
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === totalPages
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                    }`}
+                      }`}
                   >
                     Next
                   </button>
@@ -984,13 +979,13 @@ const AssociationSeedlingManagement: React.FC = () => {
                       />
                       {formData.seedling_photo && (
                         <div className="mt-2 text-xs text-gray-600 truncate">Selected: {
-                          typeof formData.seedling_photo === 'string' 
-                            ? 'Photo uploaded' 
+                          typeof formData.seedling_photo === 'string'
+                            ? 'Photo uploaded'
                             : formData.seedling_photo.name
                         }</div>
                       )}
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-bold text-purple-800 mb-2">Distribution Photo</label>
                       <input
@@ -1001,13 +996,13 @@ const AssociationSeedlingManagement: React.FC = () => {
                       />
                       {formData.packaging_photo && (
                         <div className="mt-2 text-xs text-gray-600 truncate">Selected: {
-                          typeof formData.packaging_photo === 'string' 
-                            ? 'Photo uploaded' 
+                          typeof formData.packaging_photo === 'string'
+                            ? 'Photo uploaded'
                             : formData.packaging_photo.name
                         }</div>
                       )}
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-bold text-amber-800 mb-2">Quality Photo</label>
                       <input
@@ -1018,8 +1013,8 @@ const AssociationSeedlingManagement: React.FC = () => {
                       />
                       {formData.quality_photo && (
                         <div className="mt-2 text-xs text-gray-600 truncate">Selected: {
-                          typeof formData.quality_photo === 'string' 
-                            ? 'Photo uploaded' 
+                          typeof formData.quality_photo === 'string'
+                            ? 'Photo uploaded'
                             : formData.quality_photo.name
                         }</div>
                       )}
@@ -1097,21 +1092,20 @@ const AssociationSeedlingManagement: React.FC = () => {
                   <p className="font-medium text-gray-900">{selectedDistribution.recipient_association_name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Recipient Officer</p>
+                  <p className="text-sm text-gray-600">Recipient Coordinator</p>
                   <p className="font-medium text-gray-900">{selectedDistribution.association_officers?.full_name || selectedDistribution.recipient_association_name || <span className="text-gray-400 italic">Not specified</span>}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Status</p>
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                    selectedDistribution.status === 'distributed_to_association' ? 'bg-blue-100 text-blue-700' :
-                    selectedDistribution.status === 'partially_distributed_to_farmers' ? 'bg-amber-100 text-amber-700' :
-                    selectedDistribution.status === 'fully_distributed_to_farmers' ? 'bg-green-100 text-green-700' :
-                    'bg-red-100 text-red-700'
-                  }`}>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedDistribution.status === 'distributed_to_association' ? 'bg-blue-100 text-blue-700' :
+                      selectedDistribution.status === 'partially_distributed_to_farmers' ? 'bg-amber-100 text-amber-700' :
+                        selectedDistribution.status === 'fully_distributed_to_farmers' ? 'bg-green-100 text-green-700' :
+                          'bg-red-100 text-red-700'
+                    }`}>
                     {selectedDistribution.status === 'distributed_to_association' ? '📦 Distributed to Association' :
-                     selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                     selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Fully to Farmers' :
-                     '❌ Cancelled'}
+                      selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
+                        selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Fully to Farmers' :
+                          '❌ Cancelled'}
                   </span>
                 </div>
                 <div>
@@ -1138,10 +1132,10 @@ const AssociationSeedlingManagement: React.FC = () => {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
-                      <div 
-                        className="bg-blue-500 h-3 rounded-full" 
-                        style={{ 
-                          width: `${((selectedDistribution.quantity_distributed - (selectedDistribution.remaining_quantity || 0)) / selectedDistribution.quantity_distributed) * 100}%` 
+                      <div
+                        className="bg-blue-500 h-3 rounded-full"
+                        style={{
+                          width: `${((selectedDistribution.quantity_distributed - (selectedDistribution.remaining_quantity || 0)) / selectedDistribution.quantity_distributed) * 100}%`
                         }}
                       ></div>
                     </div>

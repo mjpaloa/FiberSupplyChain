@@ -58,7 +58,7 @@ const OfficerManagement: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      
+
       if (!token) {
         console.error('❌ No access token found. Please login again.');
         alert('Session expired. Please login again.');
@@ -80,18 +80,18 @@ const OfficerManagement: React.FC = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('❌ Failed to fetch officers:', response.status, errorData);
-        
+
         if (response.status === 401) {
           alert('⚠️ Authentication failed. Please logout and login again.');
         }
-        
+
         setOfficers([]); // Set empty array on error
         return;
       }
 
       const data = await response.json();
       console.log('✅ Officers data received:', data); // Debug log
-      
+
       // Ensure data is an array
       if (Array.isArray(data)) {
         setOfficers(data);
@@ -142,16 +142,16 @@ const OfficerManagement: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('✅ Officer updated successfully!');
+        alert('✅ Coordinator updated successfully!');
         setShowEditModal(false);
         fetchOfficers();
       } else {
         const data = await response.json();
-        alert(`❌ Failed to update officer: ${data.error || 'Unknown error'}`);
+        alert(`❌ Failed to update coordinator: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error updating officer:', error);
-      alert('❌ Failed to update officer');
+      console.error('Error updating coordinator:', error);
+      alert('❌ Failed to update coordinator');
     }
   };
 
@@ -186,7 +186,7 @@ const OfficerManagement: React.FC = () => {
         body: JSON.stringify({
           email: currentUser?.email,
           password: deletePassword,
-          userType: 'officer',
+          userType: 'coordinator',
         }),
       });
 
@@ -205,16 +205,16 @@ const OfficerManagement: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('✅ Officer deleted successfully!');
+        alert('✅ Coordinator deleted successfully!');
         setShowDeleteModal(false);
         fetchOfficers();
       } else {
         const data = await response.json();
-        setDeleteError(data.error || 'Failed to delete officer');
+        setDeleteError(data.error || 'Failed to delete coordinator');
       }
     } catch (error) {
-      console.error('Error deleting officer:', error);
-      setDeleteError('Failed to delete officer. Please try again.');
+      console.error('Error deleting coordinator:', error);
+      setDeleteError('Failed to delete coordinator. Please try again.');
     } finally {
       setDeleteLoading(false);
     }
@@ -229,16 +229,7 @@ const OfficerManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50 p-8">
-      {/* Action Button */}
-      <div className="mb-8 flex justify-end">
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold"
-        >
-          <UserPlus className="w-5 h-5" />
-          Create Officer
-        </button>
-      </div>
+      {/* Action Button moved to search area */}
 
       {/* Modern Stats Cards with Gradients */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
@@ -251,7 +242,7 @@ const OfficerManagement: React.FC = () => {
               </div>
               <TrendingUp className="w-5 h-5 text-white/60" />
             </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Total Officers</p>
+            <p className="text-white/90 text-sm font-medium mb-1">Total Staff</p>
             <p className="text-4xl font-bold text-white">{stats.total}</p>
           </div>
         </div>
@@ -298,17 +289,26 @@ const OfficerManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Modern Search Bar */}
+      {/* Modern Search Bar & Action Button */}
       <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
-        <div className="relative group">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
-          <input
-            type="text"
-            placeholder="Search by name, email, or position..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
-          />
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="relative group flex-1 w-full">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
+            <input
+              type="text"
+              placeholder="Search by name, email, or position..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
+            />
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold whitespace-nowrap"
+          >
+            <UserPlus className="w-5 h-5" />
+            Create Coordinator
+          </button>
         </div>
       </div>
 
@@ -320,14 +320,14 @@ const OfficerManagement: React.FC = () => {
               <div className="absolute inset-0 rounded-full border-4 border-emerald-200"></div>
               <div className="absolute inset-0 rounded-full border-4 border-emerald-600 border-t-transparent animate-spin"></div>
             </div>
-            <p className="mt-4 text-gray-600 font-medium">Loading officers...</p>
+            <p className="mt-4 text-gray-600 font-medium">Loading staff...</p>
           </div>
         ) : filteredOfficers.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
               <Users className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-gray-600 font-medium">No officers found</p>
+            <p className="text-gray-600 font-medium">No staff found</p>
             <p className="text-sm text-gray-400 mt-1">Try adjusting your search</p>
           </div>
         ) : (
@@ -336,7 +336,7 @@ const OfficerManagement: React.FC = () => {
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Officer
+                    Coordinator
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Email
@@ -394,11 +394,10 @@ const OfficerManagement: React.FC = () => {
                       {officer.office_name || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        officer.profile_completed
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-blue-100 text-blue-700'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${officer.profile_completed
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-blue-100 text-blue-700'
+                        }`}>
                         {officer.profile_completed ? 'Complete' : 'Pending Profile'}
                       </span>
                     </td>
@@ -414,14 +413,14 @@ const OfficerManagement: React.FC = () => {
                         <button
                           onClick={() => handleEditClick(officer)}
                           className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
-                          title="Edit Officer"
+                          title="Edit Coordinator"
                         >
                           <Edit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(officer)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                          title="Delete Officer"
+                          title="Delete Coordinator"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
@@ -435,7 +434,7 @@ const OfficerManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Create Officer Modal */}
+      {/* Create Coordinator Modal */}
       {showCreateModal && (
         <CreateOfficerModal
           onClose={() => setShowCreateModal(false)}
@@ -469,7 +468,7 @@ const OfficerManagement: React.FC = () => {
                   )}
                   <div>
                     <h2 className="text-2xl font-bold">{selectedOfficer.full_name}</h2>
-                    <p className="text-emerald-100">{selectedOfficer.position || 'Officer'}</p>
+                    <p className="text-emerald-100">{selectedOfficer.position || 'Coordinator'}</p>
                   </div>
                 </div>
                 <button
@@ -543,18 +542,16 @@ const OfficerManagement: React.FC = () => {
                   Account Status
                 </h3>
                 <div className="flex flex-wrap gap-3">
-                  <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-                    selectedOfficer.profile_completed
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-blue-100 text-blue-700'
-                  }`}>
+                  <span className={`px-4 py-2 rounded-full text-sm font-medium ${selectedOfficer.profile_completed
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-blue-100 text-blue-700'
+                    }`}>
                     {selectedOfficer.profile_completed ? '✓ Profile Complete' : '○ Profile Pending'}
                   </span>
-                  <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-                    selectedOfficer.is_active
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-red-100 text-red-700'
-                  }`}>
+                  <span className={`px-4 py-2 rounded-full text-sm font-medium ${selectedOfficer.is_active
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-red-100 text-red-700'
+                    }`}>
                     {selectedOfficer.is_active ? '✓ Active' : '○ Inactive'}
                   </span>
                   {selectedOfficer.is_super_admin && (
@@ -598,7 +595,7 @@ const OfficerManagement: React.FC = () => {
                 className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium flex items-center gap-2"
               >
                 <Edit className="w-4 h-4" />
-                Edit Officer
+                Edit Coordinator
               </button>
             </div>
           </div>
@@ -614,7 +611,7 @@ const OfficerManagement: React.FC = () => {
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold flex items-center gap-2">
                   <Edit className="w-6 h-6" />
-                  Edit Officer
+                  Edit Coordinator
                 </h2>
                 <button
                   onClick={() => setShowEditModal(false)}
@@ -801,7 +798,7 @@ const OfficerManagement: React.FC = () => {
                 ) : (
                   <>
                     <Trash2 className="w-4 h-4" />
-                    <span>Delete Officer</span>
+                    <span>Delete Coordinator</span>
                   </>
                 )}
               </button>

@@ -259,7 +259,7 @@ const UserAnalyticsDashboard: React.FC = () => {
           <p className="text-white/70 text-xs">Active buyers</p>
         </div>
 
-        {/* CUSAFA Officers */}
+        {/* CUSAFA Coordinators */}
         <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-white/20 rounded-xl">
@@ -268,10 +268,10 @@ const UserAnalyticsDashboard: React.FC = () => {
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">CUSAFA</p>
           <p className="text-4xl font-bold text-white mb-2">{stats.totalCusafa || 0}</p>
-          <p className="text-white/70 text-xs">Association officers</p>
+          <p className="text-white/70 text-xs">Association coordinators</p>
         </div>
 
-        {/* MAO Officers */}
+        {/* MAO Coordinators */}
         <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-white/20 rounded-xl">
@@ -280,7 +280,7 @@ const UserAnalyticsDashboard: React.FC = () => {
           </div>
           <p className="text-white/90 text-sm font-medium mb-1">MAO</p>
           <p className="text-4xl font-bold text-white mb-2">{stats.totalMao || 0}</p>
-          <p className="text-white/70 text-xs">Municipal officers</p>
+          <p className="text-white/70 text-xs">Municipal coordinators</p>
         </div>
       </div>
 

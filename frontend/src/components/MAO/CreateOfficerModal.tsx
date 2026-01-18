@@ -31,7 +31,7 @@ const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ onClose, onSucc
 
     try {
       const token = localStorage.getItem('accessToken');
-      
+
       const response = await fetch('https://easyabaca-api.vercel.app/api/mao/create-officer', {
         method: 'POST',
         headers: {
@@ -49,10 +49,10 @@ const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ onClose, onSucc
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create officer account');
+        throw new Error(data.error || 'Failed to create coordinator account');
       }
 
-      alert('✅ Officer account created successfully!');
+      alert('✅ Coordinator account created successfully!');
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -72,8 +72,8 @@ const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ onClose, onSucc
               <UserPlus className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Create Officer Account</h2>
-              <p className="text-sm text-gray-600">Add a new MAO officer</p>
+              <h2 className="text-xl font-bold text-gray-800">Create Coordinator Account</h2>
+              <p className="text-sm text-gray-600">Add a new MAO coordinator</p>
             </div>
           </div>
           <button
@@ -120,7 +120,7 @@ const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ onClose, onSucc
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
-              placeholder="officer@association.com"
+              placeholder="coordinator@association.com"
             />
           </div>
 

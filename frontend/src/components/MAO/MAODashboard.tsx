@@ -144,7 +144,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     position: user?.position
   });
 
-  // Note: All features are now available to both admin and super admin
+  // Note: Maintenance and Activity Logs are restricted to Super Admin only
 
   // Fetch officer profile data
   const fetchOfficerProfile = async () => {
@@ -836,34 +836,40 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Content Management</span>
           </button>
 
-          {/* Officer Management - Available to all admins */}
-          <button
-            onClick={() => setCurrentPage('officers')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'officers' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <Shield className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Officer Management</span>
-          </button>
+          {/* Staff Management - Super Admin only */}
+          {isSuperAdmin && (
+            <button
+              onClick={() => setCurrentPage('officers')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'officers' ? 'bg-emerald-600' : 'hover:bg-slate-700'
+                } ${!sidebarOpen && 'justify-center'}`}
+            >
+              <Shield className="w-5 h-5 flex-shrink-0" />
+              <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Staff Management</span>
+            </button>
+          )}
 
-          <button
-            onClick={() => setCurrentPage('activity-logs')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'activity-logs' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <Activity className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Activity Logs</span>
-          </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => setCurrentPage('activity-logs')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'activity-logs' ? 'bg-emerald-600' : 'hover:bg-slate-700'
+                } ${!sidebarOpen && 'justify-center'}`}
+            >
+              <Activity className="w-5 h-5 flex-shrink-0" />
+              <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Activity Logs</span>
+            </button>
+          )}
 
-          {/* Maintenance Mode - Available to all admins */}
-          <button
-            onClick={() => setCurrentPage('maintenance')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'maintenance' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <Settings className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Maintenance Mode</span>
-          </button>
+          {/* Maintenance Mode - Super Admin only */}
+          {isSuperAdmin && (
+            <button
+              onClick={() => setCurrentPage('maintenance')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'maintenance' ? 'bg-emerald-600' : 'hover:bg-slate-700'
+                } ${!sidebarOpen && 'justify-center'}`}
+            >
+              <Settings className="w-5 h-5 flex-shrink-0" />
+              <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Maintenance Mode</span>
+            </button>
+          )}
         </nav>
 
         {/* Logout */}
@@ -901,7 +907,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             currentPage === 'sales-analytics' ? 'Sales Management' :
                               currentPage === 'buyer-prices' ? 'Buyer Price Listings' :
                                 currentPage === 'delivery-tracking' ? 'Delivery Tracking Monitor' :
-                                  currentPage === 'officers' ? 'Officer Management' :
+                                  currentPage === 'officers' ? 'Staff Management' :
                                     currentPage === 'activity-logs' ? 'Activity Logs & Security' :
                                       currentPage === 'maintenance' ? 'Maintenance Mode' :
                                         currentPage === 'content' ? 'Content Management' :
@@ -1017,7 +1023,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               >
                 <div className="text-right hidden lg:block">
                   <p className="text-sm font-semibold text-gray-800">
-                    {user?.fullName || 'Officer'}
+                    {user?.fullName || 'Coordinator'}
                   </p>
                   <p className="text-xs text-gray-500">
                     {isSuperAdmin ? (
@@ -2455,7 +2461,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           </div>
                         )}
                       </div>
-                      <h3 className="text-2xl font-bold text-gray-800 mt-4">{editFormData.full_name || user?.fullName || 'MAO Officer'}</h3>
+                      <h3 className="text-2xl font-bold text-gray-800 mt-4">{editFormData.full_name || user?.fullName || 'MAO Coordinator'}</h3>
                       <p className="text-emerald-600 font-semibold">{editFormData.position || 'Municipal Agriculture Officer'}</p>
                       {uploadingPhoto && (
                         <p className="text-sm text-emerald-600 mt-2 flex items-center gap-2">
