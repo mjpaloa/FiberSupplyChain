@@ -39,25 +39,25 @@ const farmerRegistrationValidation = [
     .withMessage('Full name is required')
     .isLength({ min: 2, max: 255 })
     .withMessage('Full name must be between 2 and 255 characters'),
-  
+
   body('sex')
     .optional()
     .isIn(['Male', 'Female', 'Other'])
     .withMessage('Sex must be Male, Female, or Other'),
-  
+
   body('age')
     .optional()
     .isInt({ min: 18, max: 100 })
     .withMessage('Age must be between 18 and 100'),
-  
+
   body('contactNumber')
     .optional({ checkFalsy: true })
     .matches(/^(\+639\d{9}|09\d{9}|9\d{9})$/)
     .withMessage('Invalid Philippine contact number (format: 09XXXXXXXXX or +639XXXXXXXXX)'),
-  
+
   emailValidation,
   passwordValidation,
-  
+
   body('farmAreaHectares')
     .optional()
     .custom((value) => {
@@ -68,7 +68,7 @@ const farmerRegistrationValidation = [
       }
       return true;
     }),
-  
+
   body('yearsInFarming')
     .optional()
     .custom((value) => {
@@ -79,7 +79,7 @@ const farmerRegistrationValidation = [
       }
       return true;
     }),
-  
+
   body('averageHarvestVolumeKg')
     .optional()
     .custom((value) => {
@@ -90,7 +90,7 @@ const farmerRegistrationValidation = [
       }
       return true;
     }),
-  
+
   body('harvestFrequencyWeeks')
     .optional()
     .custom((value) => {
@@ -101,7 +101,7 @@ const farmerRegistrationValidation = [
       }
       return true;
     }),
-  
+
   body('sellingPriceRangeMin')
     .optional()
     .custom((value) => {
@@ -112,7 +112,7 @@ const farmerRegistrationValidation = [
       }
       return true;
     }),
-  
+
   body('sellingPriceRangeMax')
     .optional()
     .custom((value) => {
@@ -123,7 +123,7 @@ const farmerRegistrationValidation = [
       }
       return true;
     }),
-  
+
   body('incomePerCycle')
     .optional()
     .custom((value) => {
@@ -134,7 +134,7 @@ const farmerRegistrationValidation = [
       }
       return true;
     }),
-  
+
   body('profilePhoto')
     .optional()
     .custom((value) => {
@@ -144,7 +144,7 @@ const farmerRegistrationValidation = [
       }
       return true;
     }),
-  
+
   body('validIdPhoto')
     .optional()
     .custom((value) => {
@@ -164,37 +164,37 @@ const buyerRegistrationValidation = [
     .withMessage('Business name is required')
     .isLength({ min: 2, max: 255 })
     .withMessage('Business name must be between 2 and 255 characters'),
-  
+
   body('ownerName')
     .trim()
     .notEmpty()
     .withMessage('Owner name is required')
     .isLength({ min: 2, max: 255 })
     .withMessage('Owner name must be between 2 and 255 characters'),
-  
+
   body('contactNumber')
     .optional({ checkFalsy: true })
     .matches(/^(\+639\d{9}|09\d{9}|9\d{9})$/)
     .withMessage('Invalid Philippine contact number (format: 09XXXXXXXXX or +639XXXXXXXXX)'),
-  
+
   emailValidation,
   passwordValidation,
-  
+
   body('acceptedQualityGrades')
     .optional()
     .isArray()
     .withMessage('Accepted quality grades must be an array'),
-  
+
   body('priceRangeMin')
     .optional()
     .isFloat({ min: 0 })
     .withMessage('Minimum price must be a positive number'),
-  
+
   body('priceRangeMax')
     .optional()
     .isFloat({ min: 0 })
     .withMessage('Maximum price must be a positive number'),
-  
+
   body('partneredAssociations')
     .optional()
     .isArray()
@@ -209,29 +209,29 @@ const officerRegistrationValidation = [
     .withMessage('Full name is required')
     .isLength({ min: 2, max: 255 })
     .withMessage('Full name must be between 2 and 255 characters'),
-  
+
   body('position')
     .trim()
     .notEmpty()
     .withMessage('Position is required')
     .isLength({ min: 2, max: 100 })
     .withMessage('Position must be between 2 and 100 characters'),
-  
+
   body('associationName')
     .trim()
     .notEmpty()
     .withMessage('Association name is required')
     .isLength({ min: 2, max: 255 })
     .withMessage('Association name must be between 2 and 255 characters'),
-  
+
   body('contactNumber')
     .optional({ checkFalsy: true })
     .matches(/^(\+639\d{9}|09\d{9}|9\d{9})$/)
     .withMessage('Invalid Philippine contact number (format: 09XXXXXXXXX or +639XXXXXXXXX)'),
-  
+
   emailValidation,
   passwordValidation,
-  
+
   body('farmersUnderSupervision')
     .optional()
     .isInt({ min: 0 })
@@ -241,11 +241,11 @@ const officerRegistrationValidation = [
 // Login Validation
 const loginValidation = [
   emailValidation,
-  
+
   body('password')
     .notEmpty()
     .withMessage('Password is required'),
-  
+
   body('userType')
     .isIn(['farmer', 'buyer', 'officer', 'association_officer'])
     .withMessage('User type must be farmer, buyer, officer, or association_officer'),
@@ -349,6 +349,21 @@ router.post(
     body('newPassword').isLength({ min: 4 }).withMessage('Password must be at least 4 characters long'),
   ],
   AuthController.resetPassword
+);
+
+/**
+ * @route   POST /api/auth/change-password
+ * @desc    Change user password
+ * @access  Private
+ */
+router.post(
+  '/change-password',
+  authenticate,
+  [
+    body('oldPassword').notEmpty().withMessage('Old password is required'),
+    body('newPassword').isLength({ min: 4 }).withMessage('New password must be at least 4 characters long'),
+  ],
+  AuthController.changePassword
 );
 
 export default router;

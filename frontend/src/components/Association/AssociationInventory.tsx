@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Package, 
-  Search, 
+import {
+  Package,
+  Search,
   Filter,
   Eye,
   Share2,
@@ -105,13 +105,13 @@ const AssociationInventory: React.FC = () => {
       const response = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/received', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (Array.isArray(data)) {
         // Backend already provides distributed_to_farmers and remaining_quantity
         // No need to recalculate on frontend
@@ -324,13 +324,13 @@ const AssociationInventory: React.FC = () => {
   };
 
   const filteredDistributions = distributions.filter(dist => {
-    const matchesSearch = 
+    const matchesSearch =
       dist.variety.toLowerCase().includes(searchTerm.toLowerCase()) ||
       dist.source_supplier?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       dist.organization?.full_name.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || dist.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -370,7 +370,7 @@ const AssociationInventory: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          
+
         </div>
       </div>
 
@@ -516,9 +516,9 @@ const AssociationInventory: React.FC = () => {
                       <td className="px-3 sm:px-4 py-3 border-b border-gray-100">
                         <span className={`inline-block px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-normal sm:whitespace-nowrap ${getStatusColor(dist.status)}`}>
                           {dist.status === 'distributed_to_association' ? '📦 Received' :
-                           dist.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                           dist.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
-                           '❌ Cancelled'}
+                            dist.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
+                              dist.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
+                                '❌ Cancelled'}
                         </span>
                       </td>
                       <td className="px-3 sm:px-4 py-3 border-b border-gray-100">
@@ -555,11 +555,10 @@ const AssociationInventory: React.FC = () => {
                           <button
                             onClick={() => openDistributeModal(dist)}
                             disabled={remainingQty === 0}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                              remainingQty > 0
-                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            }`}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${remainingQty > 0
+                              ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              }`}
                             title={remainingQty > 0 ? 'Distribute to Farmers' : 'No remaining seedlings'}
                           >
                             <Share2 size={16} />
@@ -573,7 +572,7 @@ const AssociationInventory: React.FC = () => {
             </table>
           </div>
         )}
-        
+
         {/* Pagination Footer */}
         {filteredDistributions.length > 0 && (
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mt-6 pt-4 px-2 sm:px-4 pb-2 border-t border-gray-200">
@@ -655,9 +654,9 @@ const AssociationInventory: React.FC = () => {
                   <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Status</p>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedDistribution.status)}`}>
                     {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
-                     selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                     selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
-                     '❌ Cancelled'}
+                      selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
+                        selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
+                          '❌ Cancelled'}
                   </span>
                 </div>
               </div>
@@ -679,9 +678,9 @@ const AssociationInventory: React.FC = () => {
                     {selectedDistribution.seedling_photo && (
                       <div>
                         <p className="text-xs text-gray-600 mb-2">Seedling Photo</p>
-                        <img 
-                          src={selectedDistribution.seedling_photo} 
-                          alt="Seedling" 
+                        <img
+                          src={selectedDistribution.seedling_photo}
+                          alt="Seedling"
                           className="w-full h-32 object-cover rounded-lg border border-gray-200"
                         />
                       </div>
@@ -689,9 +688,9 @@ const AssociationInventory: React.FC = () => {
                     {selectedDistribution.packaging_photo && (
                       <div>
                         <p className="text-xs text-gray-600 mb-2">Distribution Photo</p>
-                        <img 
-                          src={selectedDistribution.packaging_photo} 
-                          alt="Packaging" 
+                        <img
+                          src={selectedDistribution.packaging_photo}
+                          alt="Packaging"
                           className="w-full h-32 object-cover rounded-lg border border-gray-200"
                         />
                       </div>
@@ -699,9 +698,9 @@ const AssociationInventory: React.FC = () => {
                     {selectedDistribution.quality_photo && (
                       <div>
                         <p className="text-xs text-gray-600 mb-2">Quality Photo</p>
-                        <img 
-                          src={selectedDistribution.quality_photo} 
-                          alt="Quality" 
+                        <img
+                          src={selectedDistribution.quality_photo}
+                          alt="Quality"
                           className="w-full h-32 object-cover rounded-lg border border-gray-200"
                         />
                       </div>
@@ -738,34 +737,34 @@ const AssociationInventory: React.FC = () => {
             <div className="overflow-y-auto flex-1">
               <form onSubmit={handleDistributeSubmit} className="p-4 sm:p-6 space-y-5 sm:space-y-6">
                 {/* Summary Cards Section */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 sm:p-5 border border-gray-200">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                  <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2 uppercase tracking-wide">
                     <Package className="w-4 h-4 text-emerald-600" />
                     Distribution Summary
                   </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="bg-white rounded-lg p-3 sm:p-4 border-l-4 border-blue-500 shadow-sm">
-                      <p className="text-xs text-gray-600 mb-1">Total Received</p>
-                      <p className="text-lg sm:text-xl font-bold text-blue-700">{selectedDistribution.quantity_distributed.toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">seedlings</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                    <div className="bg-blue-50 rounded-xl p-3 border border-blue-100 text-center">
+                      <p className="text-[10px] md:text-xs text-blue-600 font-semibold uppercase mb-1">Total Received</p>
+                      <p className="text-lg md:text-xl font-black text-blue-700">{selectedDistribution.quantity_distributed.toLocaleString()}</p>
+                      <p className="text-[10px] text-blue-500 font-medium">seedlings</p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 sm:p-4 border-l-4 border-purple-500 shadow-sm">
-                      <p className="text-xs text-gray-600 mb-1">Distributed so far</p>
-                      <p className="text-lg sm:text-xl font-bold text-purple-700">{(selectedDistribution.distributed_to_farmers || 0).toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">seedlings</p>
+                    <div className="bg-purple-50 rounded-xl p-3 border border-purple-100 text-center">
+                      <p className="text-[10px] md:text-xs text-purple-600 font-semibold uppercase mb-1">Distributed</p>
+                      <p className="text-lg md:text-xl font-black text-purple-700">{(selectedDistribution.distributed_to_farmers || 0).toLocaleString()}</p>
+                      <p className="text-[10px] text-purple-500 font-medium">so far</p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 sm:p-4 border-l-4 border-emerald-500 shadow-sm">
-                      <p className="text-xs text-gray-600 mb-1">Available Stock</p>
-                      <p className="text-lg sm:text-xl font-bold text-emerald-700">{getAvailableQuantity(selectedDistribution).toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">seedlings remaining</p>
+                    <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100 text-center">
+                      <p className="text-[10px] md:text-xs text-emerald-600 font-semibold uppercase mb-1">Available</p>
+                      <p className="text-lg md:text-xl font-black text-emerald-700">{getAvailableQuantity(selectedDistribution).toLocaleString()}</p>
+                      <p className="text-[10px] text-emerald-500 font-medium">remaining</p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 sm:p-4 border-l-4 border-gray-400 shadow-sm">
-                      <p className="text-xs text-gray-600 mb-1">Current Status</p>
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium mt-1 ${getStatusColor(selectedDistribution.status)}`}>
+                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-center flex flex-col justify-center items-center">
+                      <p className="text-[10px] md:text-xs text-gray-500 font-semibold uppercase mb-1">Status</p>
+                      <span className={`px-2 py-1 rounded-full text-[10px] md:text-xs font-bold ${getStatusColor(selectedDistribution.status)}`}>
                         {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
-                         selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Partial' :
-                         selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
-                         '❌ Cancelled'}
+                          selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
+                            selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Full' :
+                              '❌ Cancelled'}
                       </span>
                     </div>
                   </div>
@@ -847,134 +846,16 @@ const AssociationInventory: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Photo Upload Section */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 sm:p-5 border border-gray-200">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <Camera className="w-4 h-4 text-emerald-600" />
-                    Seedling Photos <span className="text-gray-500 font-normal text-xs">(Optional)</span>
-                  </h3>
-                  <div className="space-y-4">
-                    {/* Seedling Photo */}
-                    <div className="bg-white rounded-lg p-3 sm:p-4">
-                      <label className="block text-xs font-semibold text-gray-700 mb-2">📸 Seedling Photo</label>
-                      <div className="relative">
-                        {distributeForm.seedling_photo ? (
-                          <div className="relative group">
-                            <img 
-                              src={distributeForm.seedling_photo} 
-                              alt="Seedling" 
-                              className="w-full h-40 sm:h-48 object-cover rounded-lg border-2 border-emerald-300"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setDistributeForm(prev => ({ ...prev, seedling_photo: '' }))}
-                              className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <label className="flex flex-col items-center justify-center w-full h-32 sm:h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
-                            <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-2" />
-                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Click to Upload</span>
-                            <span className="text-xs text-gray-500 mt-1">JPG, PNG (Max 5MB)</span>
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              className="hidden" 
-                              onChange={(e) => handlePhotoChange(e, 'seedling_photo')}
-                            />
-                          </label>
-                        )}
-                      </div>
-                    </div>
 
-                    {/* Distribution Photo */}
-                    <div className="bg-white rounded-lg p-3 sm:p-4">
-                      <label className="block text-xs font-semibold text-gray-700 mb-2">📦 Distribution Photo</label>
-                      <div className="relative">
-                        {distributeForm.packaging_photo ? (
-                          <div className="relative group">
-                            <img 
-                              src={distributeForm.packaging_photo} 
-                              alt="Packaging" 
-                              className="w-full h-40 sm:h-48 object-cover rounded-lg border-2 border-emerald-300"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setDistributeForm(prev => ({ ...prev, packaging_photo: '' }))}
-                              className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <label className="flex flex-col items-center justify-center w-full h-32 sm:h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
-                            <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-2" />
-                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Click to Upload</span>
-                            <span className="text-xs text-gray-500 mt-1">JPG, PNG (Max 5MB)</span>
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              className="hidden" 
-                              onChange={(e) => handlePhotoChange(e, 'packaging_photo')}
-                            />
-                          </label>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Quality Photo */}
-                    <div className="bg-white rounded-lg p-3 sm:p-4">
-                      <label className="block text-xs font-semibold text-gray-700 mb-2">✨ Quality Photo</label>
-                      <div className="relative">
-                        {distributeForm.quality_photo ? (
-                          <div className="relative group">
-                            <img 
-                              src={distributeForm.quality_photo} 
-                              alt="Quality" 
-                              className="w-full h-40 sm:h-48 object-cover rounded-lg border-2 border-emerald-300"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setDistributeForm(prev => ({ ...prev, quality_photo: '' }))}
-                              className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <label className="flex flex-col items-center justify-center w-full h-32 sm:h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
-                            <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-2" />
-                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Click to Upload</span>
-                            <span className="text-xs text-gray-500 mt-1">JPG, PNG (Max 5MB)</span>
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              className="hidden" 
-                              onChange={(e) => handlePhotoChange(e, 'quality_photo')}
-                            />
-                          </label>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800 flex items-start gap-2">
-                      <span>💡</span>
-                      <span>Tip: Upload clear photos to help farmers identify the seedlings and verify quality.</span>
-                    </p>
-                  </div>
-                </div>
               </form>
             </div>
 
             {/* Fixed Footer */}
             <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6 rounded-b-xl sm:rounded-b-2xl flex-shrink-0">
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
-                <button 
-                  type="button" 
-                  onClick={closeDistributeModal} 
+                <button
+                  type="button"
+                  onClick={closeDistributeModal}
                   className="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm sm:text-base"
                 >
                   Cancel

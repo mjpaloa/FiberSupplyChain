@@ -71,7 +71,7 @@ export default function FarmerHarvestView() {
     try {
       const token = localStorage.getItem('token');
       const statusParam = filter !== 'all' ? `?status=${encodeURIComponent(filter)}` : '';
-      
+
       const response = await fetch(`https://easyabaca-api.vercel.app/api/harvests/farmer/harvests${statusParam}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -414,11 +414,10 @@ export default function FarmerHarvestView() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {paginatedHarvests.map((harvest, index) => (
-                  <tr 
-                    key={harvest.harvest_id} 
-                    className={`transition-all duration-200 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 ${
-                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                    }`}
+                  <tr
+                    key={harvest.harvest_id}
+                    className={`transition-all duration-200 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                      }`}
                   >
                     <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 sm:gap-2">
@@ -525,11 +524,10 @@ export default function FarmerHarvestView() {
                         setItemsPerPage(size);
                         setCurrentPageNum(1);
                       }}
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${itemsPerPage === size
                           ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg scale-105'
                           : 'bg-white text-gray-600 hover:bg-emerald-50 border-2 border-gray-200 hover:border-emerald-300 hover:shadow-md'
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
@@ -599,16 +597,16 @@ export default function FarmerHarvestView() {
       {/* View Details Modal */}
       {showViewModal && selectedHarvest && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 px-8 py-6 flex justify-between items-center border-b-4 border-blue-700">
+            <div className="shrink-0 bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4 md:px-8 md:py-6 flex justify-between items-center border-b-4 border-blue-700">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
                   <Eye className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Harvest Details</h2>
-                  <p className="text-blue-100 text-sm">Complete harvest information</p>
+                  <h2 className="text-xl md:text-2xl font-bold text-white">Harvest Details</h2>
+                  <p className="text-blue-100 text-xs md:text-sm">Complete harvest information</p>
                 </div>
               </div>
               <button
@@ -621,7 +619,7 @@ export default function FarmerHarvestView() {
             </div>
 
             {/* Modal Content */}
-            <div className="overflow-y-auto max-h-[calc(90vh-100px)] p-8">
+            <div className="flex-1 overflow-y-auto p-6 md:p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Harvest Information */}
                 <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border-2 border-emerald-200">
@@ -703,28 +701,28 @@ export default function FarmerHarvestView() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Action Buttons */}
-              <div className="mt-6 flex gap-3 justify-end">
-                {selectedHarvest.status !== 'Verified' && selectedHarvest.status !== 'In Inventory' && (
-                  <button
-                    onClick={() => {
-                      setShowViewModal(false);
-                      handleEditClick(selectedHarvest);
-                    }}
-                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold flex items-center gap-2"
-                  >
-                    <Edit2 className="w-5 h-5" />
-                    Edit Harvest
-                  </button>
-                )}
+            {/* Action Buttons - Fixed Footer */}
+            <div className="shrink-0 px-6 py-4 md:px-8 md:py-6 border-t border-gray-100 bg-gray-50 flex gap-3 justify-end">
+              {selectedHarvest.status !== 'Verified' && selectedHarvest.status !== 'In Inventory' && (
                 <button
-                  onClick={() => setShowViewModal(false)}
-                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-semibold"
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleEditClick(selectedHarvest);
+                  }}
+                  className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold flex items-center gap-2 text-sm md:text-base"
                 >
-                  Close
+                  <Edit2 className="w-4 h-4 md:w-5 md:h-5" />
+                  Edit Harvest
                 </button>
-              </div>
+              )}
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-semibold text-sm md:text-base"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
@@ -762,7 +760,7 @@ export default function FarmerHarvestView() {
                   <input
                     type="text"
                     value={editFormData.abaca_variety || ''}
-                    onChange={(e) => setEditFormData({...editFormData, abaca_variety: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, abaca_variety: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                   />
                 </div>
@@ -774,7 +772,7 @@ export default function FarmerHarvestView() {
                       type="number"
                       step="0.01"
                       value={editFormData.area_hectares || ''}
-                      onChange={(e) => setEditFormData({...editFormData, area_hectares: parseFloat(e.target.value)})}
+                      onChange={(e) => setEditFormData({ ...editFormData, area_hectares: parseFloat(e.target.value) })}
                       className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                     />
                   </div>
@@ -785,7 +783,7 @@ export default function FarmerHarvestView() {
                       type="number"
                       step="0.01"
                       value={editFormData.dry_fiber_output_kg || ''}
-                      onChange={(e) => setEditFormData({...editFormData, dry_fiber_output_kg: parseFloat(e.target.value)})}
+                      onChange={(e) => setEditFormData({ ...editFormData, dry_fiber_output_kg: parseFloat(e.target.value) })}
                       className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                     />
                   </div>
@@ -795,7 +793,7 @@ export default function FarmerHarvestView() {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Fiber Grade</label>
                   <select
                     value={editFormData.fiber_grade || ''}
-                    onChange={(e) => setEditFormData({...editFormData, fiber_grade: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, fiber_grade: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                   >
                     <option value="Grade A">Grade A</option>
@@ -811,7 +809,7 @@ export default function FarmerHarvestView() {
                     <input
                       type="text"
                       value={editFormData.municipality || ''}
-                      onChange={(e) => setEditFormData({...editFormData, municipality: e.target.value})}
+                      onChange={(e) => setEditFormData({ ...editFormData, municipality: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                     />
                   </div>
@@ -821,7 +819,7 @@ export default function FarmerHarvestView() {
                     <input
                       type="text"
                       value={editFormData.barangay || ''}
-                      onChange={(e) => setEditFormData({...editFormData, barangay: e.target.value})}
+                      onChange={(e) => setEditFormData({ ...editFormData, barangay: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                     />
                   </div>
@@ -832,7 +830,7 @@ export default function FarmerHarvestView() {
                   <input
                     type="date"
                     value={editFormData.harvest_date?.split('T')[0] || ''}
-                    onChange={(e) => setEditFormData({...editFormData, harvest_date: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, harvest_date: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                   />
                 </div>

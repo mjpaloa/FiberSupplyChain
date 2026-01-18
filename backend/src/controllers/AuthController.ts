@@ -404,7 +404,8 @@ export class AuthController {
           full_name: officer.full_name,
           email: officer.email,
           position: officer.position,
-          association_name: officer.association_name,
+          association_name: officer.association_name || officer.office_name,
+          office_name: officer.office_name || officer.association_name,
           contact_number: officer.contact_number,
           address: officer.address,
           term_start_date: officer.term_start_date,
@@ -596,6 +597,100 @@ export class AuthController {
     } catch (error: any) {
       console.error('Error in resetPassword:', error);
       res.status(500).json({ error: error.message || 'Failed to reset password' });
+    }
+  }
+
+  /**
+   * Change password for the currently logged-in user
+   * POST /api/auth/change-password
+   */
+  static async changePassword(req: Request, res: Response): Promise<void> {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      const userId = req.user?.userId;
+      const userType = req.user?.userType;
+
+      if (!userId || !userType) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      if (!oldPassword || !newPassword) {
+        res.status(400).json({ error: 'Old and new passwords are required' });
+        return;
+      }
+
+      // Determine table and ID field
+      let tableName: string;
+      let idField: string;
+
+      switch (userType) {
+        case 'farmer':
+          tableName = 'farmers';
+          idField = 'farmer_id';
+          break;
+        case 'buyer':
+          tableName = 'buyers';
+          idField = 'buyer_id';
+          break;
+        case 'officer':
+          tableName = 'organization';
+          idField = 'officer_id';
+          break;
+        case 'association_officer':
+          tableName = 'association_officers';
+          idField = 'officer_id';
+          break;
+        default:
+          res.status(400).json({ error: 'Invalid user type' });
+          return;
+      }
+
+      // Fetch user to verify old password
+      const { data: user, error } = await supabase
+        .from(tableName)
+        .select('password_hash')
+        .eq(idField, userId)
+        .single();
+
+      if (error || !user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+
+      // Verify old password
+      const isPasswordValid = await AuthService.comparePassword(
+        oldPassword,
+        user.password_hash
+      );
+
+      if (!isPasswordValid) {
+        res.status(400).json({ error: 'Invalid current password' });
+        return;
+      }
+
+      // Hash new password
+      const passwordHash = await AuthService.hashPasswordPublic(newPassword);
+
+      // Update password
+      const { error: updateError } = await supabase
+        .from(tableName)
+        .update({
+          password_hash: passwordHash,
+          updated_at: new Date().toISOString()
+        })
+        .eq(idField, userId);
+
+      if (updateError) {
+        console.error('Error updating password:', updateError);
+        res.status(500).json({ error: 'Failed to update password' });
+        return;
+      }
+
+      res.status(200).json({ message: 'Password changed successfully' });
+    } catch (error: any) {
+      console.error('Error in changePassword:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
   }
 }

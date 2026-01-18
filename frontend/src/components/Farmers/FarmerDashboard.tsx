@@ -25,7 +25,10 @@ import {
   DollarSign,
   Activity,
   Lock,
-  ChevronDown
+  ChevronDown,
+  Layers,
+  Clock,
+  TrendingUp
 } from 'lucide-react';
 import {
   LineChart,
@@ -1462,96 +1465,134 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   <>
 
                     {/* 1. KPI Cards Section */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-                      {/* Seedlings Received */}
-                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                          <div className="p-2 sm:p-2.5 md:p-3 bg-emerald-500 rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300">
-                            <Package className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-                          </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+
+                      {/* Seedlings Received - Vibrant Blue */}
+                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <Package className="w-16 h-16 transform rotate-12" />
                         </div>
-                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Seedlings Received</p>
-                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{totalDistributed.toLocaleString()}</h3>
+                        <div className="relative z-10">
+                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
+                            <Package className="w-6 h-6 text-white" />
+                          </div>
+                          <p className="text-sm font-bold text-blue-50 uppercase tracking-widest mb-1 opacity-90">Seedlings Received</p>
+                          <h3 className="text-4xl font-black text-white mb-2 tracking-tight">{totalDistributed.toLocaleString()}</h3>
+                          <p className="text-xs text-blue-100 opacity-80 flex items-center gap-1 font-medium">
+                            <Package size={12} /> From MAO distributions
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Seedlings Planted */}
-                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                          <div className="p-2 sm:p-2.5 md:p-3 bg-blue-500 rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300">
-                            <Leaf className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-                          </div>
+                      {/* Seedlings Planted - Vibrant Green */}
+                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <Leaf className="w-16 h-16 transform rotate-12" />
                         </div>
-                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Seedlings Planted</p>
-                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{totalPlanted.toLocaleString()}</h3>
+                        <div className="relative z-10">
+                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
+                            <Leaf className="w-6 h-6 text-white" />
+                          </div>
+                          <p className="text-sm font-bold text-emerald-50 uppercase tracking-widest mb-1 opacity-90">Seedlings Planted</p>
+                          <h3 className="text-4xl font-black text-white mb-2 tracking-tight">{totalPlanted.toLocaleString()}</h3>
+                          <p className="text-xs text-emerald-100 opacity-80 flex items-center gap-1 font-medium">
+                            <CheckCircle size={12} /> Successfully planted
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Fiber Harvested */}
-                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                          <div className="p-2 sm:p-2.5 md:p-3 bg-orange-500 rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300">
-                            <Activity className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-                          </div>
+                      {/* Fiber Harvested - Vibrant Orange */}
+                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <Activity className="w-16 h-16 transform rotate-12" />
                         </div>
-                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Fiber Harvested</p>
-                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{totalFiberKg.toLocaleString()} <span className="text-base sm:text-lg md:text-2xl">kg</span></h3>
+                        <div className="relative z-10">
+                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
+                            <Activity className="w-6 h-6 text-white" />
+                          </div>
+                          <p className="text-sm font-bold text-orange-50 uppercase tracking-widest mb-1 opacity-90">Fiber Harvested</p>
+                          <h3 className="text-4xl font-black text-white mb-2 tracking-tight">{totalFiberKg.toLocaleString()} <span className="text-xl opacity-80 font-bold">kg</span></h3>
+                          <p className="text-xs text-orange-100 opacity-80 flex items-center gap-1 font-medium">
+                            <TrendingUp size={12} /> Total production output
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Total Revenue */}
-                      <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                          <div className="p-2 sm:p-2.5 md:p-3 bg-purple-500 rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300">
-                            <PhilippinePeso className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-                          </div>
+                      {/* Total Revenue - Vibrant Purple */}
+                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <PhilippinePeso className="w-16 h-16 transform rotate-12" />
                         </div>
-                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Total Revenue</p>
-                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">₱{totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'K' : totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                        <div className="relative z-10">
+                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
+                            <PhilippinePeso className="w-6 h-6 text-white" />
+                          </div>
+                          <p className="text-sm font-bold text-purple-50 uppercase tracking-widest mb-1 opacity-90">Total Revenue</p>
+                          <h3 className="text-4xl font-black text-white mb-2 tracking-tight">₱{totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'K' : totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                          <p className="text-xs text-purple-100 opacity-80 flex items-center gap-1 font-medium">
+                            <DollarSign size={12} /> From approved sales
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Farm Status */}
+                      {/* Farm Status - Dynamic Gradient */}
                       {(() => {
                         const condition = latestFarmStatus?.condition || 'No Data';
-                        const getStatusColor = (status: string) => {
-                          if (status === 'Healthy') return { bg: 'bg-green-500', text: 'text-green-600', border: 'border-green-100' };
-                          if (status === 'Needs Support') return { bg: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-100' };
-                          if (status === 'Damaged') return { bg: 'bg-red-500', text: 'text-red-600', border: 'border-red-100' };
-                          return { bg: 'bg-indigo-500', text: 'text-indigo-600', border: 'border-indigo-100' };
+                        const getStatusGradient = (status: string) => {
+                          if (status === 'Healthy') return 'from-teal-500 to-teal-600';
+                          if (status === 'Needs Support') return 'from-amber-500 to-amber-600';
+                          if (status === 'Damaged') return 'from-red-500 to-red-600';
+                          return 'from-gray-500 to-gray-600';
                         };
-                        const colors = getStatusColor(condition);
+                        const bgGradient = getStatusGradient(condition);
                         return (
-                          <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                            <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                              <div className={`p-2 sm:p-2.5 md:p-3 ${colors.bg} rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300`}>
-                                <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-                              </div>
+                          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${bgGradient} p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300`}>
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                              <CheckCircle className="w-16 h-16 transform rotate-12" />
                             </div>
-                            <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Farm Status</p>
-                            <h3 className={`text-2xl sm:text-3xl md:text-4xl font-bold ${colors.text} mb-1 sm:mb-2`}>{condition}</h3>
+                            <div className="relative z-10">
+                              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
+                                <CheckCircle className="w-6 h-6 text-white" />
+                              </div>
+                              <p className="text-sm font-medium text-white/90 uppercase tracking-wider mb-1">Farm Status</p>
+                              <h3 className="text-3xl font-bold text-white mb-2">{condition}</h3>
+                              <p className="text-xs text-white/80 flex items-center gap-1">
+                                <Activity size={12} /> Latest monitoring report
+                              </p>
+                            </div>
                           </div>
                         );
                       })()}
 
-                      {/* Delivery Status */}
+                      {/* Delivery Status - Cyan/Dynamic Gradient */}
                       {(() => {
                         const status = latestDeliveryStatus?.status || 'No Data';
                         const count = latestDeliveryStatus?.count || 0;
-                        const getDeliveryColor = (status: string) => {
-                          if (status === 'Active') return { bg: 'bg-cyan-500', text: 'text-cyan-600', border: 'border-cyan-100' };
-                          if (status === 'Completed') return { bg: 'bg-emerald-500', text: 'text-emerald-600', border: 'border-emerald-100' };
-                          if (status === 'No Deliveries') return { bg: 'bg-rose-500', text: 'text-rose-600', border: 'border-rose-100' };
-                          return { bg: 'bg-blue-500', text: 'text-blue-600', border: 'border-blue-100' };
+                        const getDeliveryGradient = (status: string) => {
+                          if (status === 'Active') return 'from-cyan-500 to-blue-600';
+                          if (status === 'Completed') return 'from-emerald-500 to-teal-600';
+                          if (status === 'No Deliveries') return 'from-pink-500 to-rose-600';
+                          return 'from-indigo-500 to-violet-600';
                         };
-                        const colors = getDeliveryColor(status);
+                        const bgGradient = getDeliveryGradient(status);
+
                         return (
-                          <div className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                            <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
-                              <div className={`p-2 sm:p-2.5 md:p-3 ${colors.bg} rounded-lg sm:rounded-xl group-hover:rotate-6 transition-transform duration-300`}>
-                                <Truck className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-                              </div>
+                          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${bgGradient} p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300`}>
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                              <Truck className="w-16 h-16 transform rotate-12" />
                             </div>
-                            <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Delivery Status</p>
-                            <h3 className={`text-2xl sm:text-3xl md:text-4xl font-bold ${colors.text} mb-1 sm:mb-2`}>
-                              {status === 'No Deliveries' ? 'None' : status} {status === 'Active' && count > 0 && <span className="text-base sm:text-lg md:text-2xl">({count})</span>}
-                            </h3>
+                            <div className="relative z-10">
+                              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
+                                <Truck className="w-6 h-6 text-white" />
+                              </div>
+                              <p className="text-sm font-medium text-white/90 uppercase tracking-wider mb-1">Delivery Status</p>
+                              <h3 className="text-3xl font-bold text-white mb-2">
+                                {status === 'No Deliveries' ? 'None' : status}
+                              </h3>
+                              <p className="text-xs text-white/80 flex items-center gap-1">
+                                <Clock size={12} /> {status === 'Active' ? `${count} active delivery` : 'Updated status'}
+                              </p>
+                            </div>
                           </div>
                         );
                       })()}

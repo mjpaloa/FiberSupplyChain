@@ -37,7 +37,7 @@ export class AuthService {
   /**
    * Compare password with hash
    */
-  private static async comparePassword(
+  public static async comparePassword(
     password: string,
     hash: string
   ): Promise<boolean> {
@@ -122,7 +122,7 @@ export class AuthService {
         // If user was rejected, delete the old record to allow re-registration
         if (existing.verification_status === 'rejected' || existing.is_verified === false) {
           console.log(`🔄 Allowing re-registration for rejected farmer: ${data.email}`);
-          
+
           const { error: deleteError } = await supabase
             .from('farmers')
             .delete()
@@ -234,7 +234,7 @@ export class AuthService {
         // If user was rejected, delete the old record to allow re-registration
         if (existing.verification_status === 'rejected' || existing.is_verified === false) {
           console.log(`🔄 Allowing re-registration for rejected buyer: ${data.email}`);
-          
+
           const { error: deleteError } = await supabase
             .from('buyers')
             .delete()
@@ -339,7 +339,7 @@ export class AuthService {
         // If user was rejected, delete the old record to allow re-registration
         if (existingAssoc.verification_status === 'rejected' || existingAssoc.is_verified === false) {
           console.log(`🔄 Allowing re-registration for rejected officer: ${data.email}`);
-          
+
           const { error: deleteError } = await supabase
             .from('association_officers')
             .delete()
@@ -403,7 +403,7 @@ export class AuthService {
         fullName: data.fullName,
         associationName: (data as any).associationName
       });
-      
+
       const { data: officer, error } = await supabase
         .from('association_officers')
         .insert({
@@ -432,7 +432,7 @@ export class AuthService {
         console.error('❌ Error inserting association officer:', error);
         throw error;
       }
-      
+
       console.log('✅ Association officer inserted successfully:', officer.officer_id);
 
       await this.logAuthEvent(
@@ -502,10 +502,10 @@ export class AuthService {
       // Full profile will be completed on first login
       // If isSuperAdmin flag is set, mark profile as completed and set super admin privileges
       const isSuperAdmin = data.isSuperAdmin === true;
-      
+
       // Determine if this is a public registration (has position, officeName, etc.)
       const isPublicRegistration = data.position && data.officeName;
-      
+
       const { data: officer, error } = await supabase
         .from('organization')
         .insert({
@@ -588,7 +588,7 @@ export class AuthService {
 
       // Fetch user from database
       console.log(`🔍 Looking for ${userType} with email ${email} in table ${tableName}`);
-      
+
       const { data, error } = await supabase
         .from(tableName)
         .select('*')
@@ -625,7 +625,7 @@ export class AuthService {
           userAgent,
           'Account is inactive'
         );
-        
+
         // If account has rejection reason, show it to the user
         if (user.rejection_reason) {
           throw new Error(
@@ -642,7 +642,7 @@ export class AuthService {
       // Enhanced verification check to ensure both fields are consistent
       const isVerified = user.is_verified === true;
       const verificationStatus = user.verification_status || 'pending';
-      
+
       // If either field indicates the user is not verified, deny login
       if (!isVerified || verificationStatus !== 'verified') {
         await this.logAuthEvent(
@@ -654,7 +654,7 @@ export class AuthService {
           userAgent,
           'Account not verified'
         );
-        
+
         // Provide specific error message based on verification status
         if (verificationStatus === 'rejected') {
           const reason = user.rejection_reason || 'Your application did not meet our requirements.';

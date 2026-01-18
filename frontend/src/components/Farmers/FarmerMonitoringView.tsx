@@ -42,57 +42,60 @@ const FarmerMonitoringView: React.FC = () => {
   // Calculate stats
   const stats = useMemo(() => {
     console.log('📊 Calculating stats from records:', records.length);
-    
+
     // Count all Ongoing records with upcoming dates (future dates)
     const upcoming = records.filter(r => {
       const status = (r as any).status;
       if (status !== 'Ongoing') return false;
       if (!r.nextMonitoringDate) return false;
-      
+
       const days = daysUntilMonitoring(r.nextMonitoringDate);
       const isUpcoming = days >= 0;
       console.log(`Record ${r.monitoringId}: status=${status}, nextDate=${r.nextMonitoringDate}, days=${days}, isUpcoming=${isUpcoming}`);
       return isUpcoming;
     }).length;
-    
+
     // Count all Ongoing records with overdue dates (past dates)
     const overdue = records.filter(r => {
       const status = (r as any).status;
       if (status !== 'Ongoing') return false;
       if (!r.nextMonitoringDate) return false;
-      
+
       const days = daysUntilMonitoring(r.nextMonitoringDate);
       return days < 0;
     }).length;
-    
+
     // Get the latest Ongoing record's next visit date for display
     const ongoingRecords = records.filter(r => (r as any).status === 'Ongoing');
-    const sortedOngoing = [...ongoingRecords].sort((a, b) => 
+    const sortedOngoing = [...ongoingRecords].sort((a, b) =>
       new Date(b.dateOfVisit).getTime() - new Date(a.dateOfVisit).getTime()
     );
     const nextVisitDate = sortedOngoing[0]?.nextMonitoringDate || null;
-    
+
     const completed = records.filter(r => (r as any).status === 'Completed').length;
     const doneMonitor = records.filter(r => (r as any).status === 'Done Monitor').length;
-    
-    // Count healthy vs needs support farms based on latest record condition
-    const healthyFarms = records.filter(r => 
+
+    // Count healthy, needs support, and damaged farms separately
+    const healthyFarms = records.filter(r =>
       r.farmCondition === 'Healthy'
     ).length;
-    const needsSupport = records.filter(r => 
-      r.farmCondition === 'Needs Support' || r.farmCondition === 'Damaged'
+    const needsSupport = records.filter(r =>
+      r.farmCondition === 'Needs Support'
     ).length;
-    
-    console.log('📈 Stats calculated:', { upcoming, overdue, completed, doneMonitor, healthyFarms, needsSupport, nextVisitDate });
-    return { upcoming, nextVisitDate, overdue, completed, doneMonitor, healthyFarms, needsSupport };
+    const damagedFarms = records.filter(r =>
+      r.farmCondition === 'Damaged'
+    ).length;
+
+    console.log('📈 Stats calculated:', { upcoming, overdue, completed, doneMonitor, healthyFarms, needsSupport, damagedFarms, nextVisitDate });
+    return { upcoming, nextVisitDate, overdue, completed, doneMonitor, healthyFarms, needsSupport, damagedFarms };
   }, [records]);
 
   // Filter and search records
   const filteredRecords = useMemo(() => {
-    let filtered = [...records].sort((a, b) => 
+    let filtered = [...records].sort((a, b) =>
       new Date(b.dateOfVisit).getTime() - new Date(a.dateOfVisit).getTime()
     );
-    
+
     if (searchQuery) {
       filtered = filtered.filter(record =>
         record.monitoredBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -107,7 +110,7 @@ const FarmerMonitoringView: React.FC = () => {
       filtered = filtered.filter(record => {
         const status = (record as any).status;
         console.log(`Checking record ${record.monitoringId}: status=${status}, nextDate=${record.nextMonitoringDate}`);
-        
+
         if (status !== 'Ongoing') {
           console.log(`  ❌ Not Ongoing`);
           return false;
@@ -116,7 +119,7 @@ const FarmerMonitoringView: React.FC = () => {
           console.log(`  ❌ No next monitoring date`);
           return false;
         }
-        
+
         const days = daysUntilMonitoring(record.nextMonitoringDate);
         const isUpcoming = days >= 0;
         console.log(`  Days until monitoring: ${days}, isUpcoming: ${isUpcoming}`);
@@ -130,7 +133,7 @@ const FarmerMonitoringView: React.FC = () => {
         const status = (record as any).status;
         if (status !== 'Ongoing') return false;
         if (!record.nextMonitoringDate) return false;
-        
+
         const days = daysUntilMonitoring(record.nextMonitoringDate);
         return days < 0;
       });
@@ -161,7 +164,7 @@ const FarmerMonitoringView: React.FC = () => {
   const fetchMyMonitoringRecords = async () => {
     try {
       setLoading(true);
-      
+
       const token = localStorage.getItem('accessToken');
       const response = await fetch('https://easyabaca-api.vercel.app/api/farmers/monitoring', {
         headers: {
@@ -176,7 +179,7 @@ const FarmerMonitoringView: React.FC = () => {
 
       const data = await response.json();
       console.log('Farmer monitoring records loaded:', data);
-      
+
       // Map API response to MonitoringRecord format
       const mappedRecords: MonitoringRecord[] = data.records?.map((record: any) => ({
         monitoringId: record.monitoring_id,
@@ -226,19 +229,19 @@ const FarmerMonitoringView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Statistics Cards - Match MAO Dashboard Style */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-6 md:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
         {/* Total Monitoring Card */}
         <div className="relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
-                <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                <Activity className="w-5 h-5 text-white" />
               </div>
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white/60" />
             </div>
-            <p className="text-white/80 text-xs sm:text-sm font-medium mb-1">Total Monitoring</p>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{records.length}</p>
+            <p className="text-white/80 text-xs font-medium mb-1">Total Monitoring</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{records.length}</p>
+            <p className="text-[10px] text-white/60">Monitoring records</p>
           </div>
         </div>
 
@@ -246,16 +249,17 @@ const FarmerMonitoringView: React.FC = () => {
         <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-102 sm:hover:scale-105 overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
-                <Leaf className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                <Leaf className="w-5 h-5 text-white" />
               </div>
-              <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
+              <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[10px] text-white font-semibold">
                 Active
               </span>
             </div>
-            <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Healthy Farms</p>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{stats.healthyFarms}</p>
+            <p className="text-white/90 text-xs font-medium mb-1">Healthy Farms</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{stats.healthyFarms}</p>
+            <p className="text-[10px] text-white/70">In good condition</p>
           </div>
         </div>
 
@@ -263,16 +267,35 @@ const FarmerMonitoringView: React.FC = () => {
         <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-102 sm:hover:scale-105 overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
-                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                <AlertCircle className="w-5 h-5 text-white" />
               </div>
-              <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
-                Action Needed
+              <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[10px] text-white font-semibold">
+                Support
               </span>
             </div>
-            <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Needs Support</p>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{stats.needsSupport}</p>
+            <p className="text-white/90 text-xs font-medium mb-1">Needs Support</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{stats.needsSupport}</p>
+            <p className="text-[10px] text-white/70">Requires attention</p>
+          </div>
+        </div>
+
+        {/* Damaged Farms Card */}
+        <div className="group relative bg-gradient-to-br from-red-500 to-rose-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-102 sm:hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                <X className="w-5 h-5 text-white" />
+              </div>
+              <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[10px] text-white font-semibold">
+                Critical
+              </span>
+            </div>
+            <p className="text-white/90 text-xs font-medium mb-1">Damaged Farms</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{stats.damagedFarms}</p>
+            <p className="text-[10px] text-white/70">Critical condition</p>
           </div>
         </div>
 
@@ -280,14 +303,14 @@ const FarmerMonitoringView: React.FC = () => {
         <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-102 sm:hover:scale-105 overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
-                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                <Calendar className="w-5 h-5 text-white" />
               </div>
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white/60" />
             </div>
-            <p className="text-white/90 text-xs sm:text-sm font-medium mb-1">Upcoming Visits</p>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{stats.upcoming}</p>
+            <p className="text-white/90 text-xs font-medium mb-1">Upcoming Visits</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{stats.upcoming}</p>
+            <p className="text-[10px] text-white/70">Planned visits</p>
           </div>
         </div>
       </div>
@@ -296,15 +319,13 @@ const FarmerMonitoringView: React.FC = () => {
       <div className="flex flex-wrap gap-2 sm:gap-3">
         <button
           onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${
-            activeTab === 'all'
-              ? 'bg-gradient-to-r from-slate-500 to-slate-700 text-white shadow-xl shadow-slate-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${activeTab === 'all'
+            ? 'bg-gradient-to-r from-slate-500 to-slate-700 text-white shadow-xl shadow-slate-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            }`}
         >
-          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${
-            activeTab === 'all' ? 'bg-white/20' : 'bg-slate-50 group-hover:bg-slate-100'
-          }`}>
+          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${activeTab === 'all' ? 'bg-white/20' : 'bg-slate-50 group-hover:bg-slate-100'
+            }`}>
             <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <span className="hidden sm:inline">All Records ({records.length})</span>
@@ -315,15 +336,13 @@ const FarmerMonitoringView: React.FC = () => {
         </button>
         <button
           onClick={() => { setActiveTab('upcoming'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${
-            activeTab === 'upcoming'
-              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${activeTab === 'upcoming'
+            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            }`}
         >
-          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${
-            activeTab === 'upcoming' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
-          }`}>
+          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${activeTab === 'upcoming' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
+            }`}>
             <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <span className="hidden sm:inline">Upcoming ({stats.upcoming})</span>
@@ -334,15 +353,13 @@ const FarmerMonitoringView: React.FC = () => {
         </button>
         <button
           onClick={() => { setActiveTab('overdue'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${
-            activeTab === 'overdue'
-              ? 'bg-gradient-to-r from-amber-400 to-orange-600 text-white shadow-xl shadow-amber-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${activeTab === 'overdue'
+            ? 'bg-gradient-to-r from-amber-400 to-orange-600 text-white shadow-xl shadow-amber-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            }`}
         >
-          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${
-            activeTab === 'overdue' ? 'bg-white/20' : 'bg-amber-50 group-hover:bg-amber-100'
-          }`}>
+          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${activeTab === 'overdue' ? 'bg-white/20' : 'bg-amber-50 group-hover:bg-amber-100'
+            }`}>
             <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <span className="hidden sm:inline">Overdue ({stats.overdue})</span>
@@ -353,15 +370,13 @@ const FarmerMonitoringView: React.FC = () => {
         </button>
         <button
           onClick={() => { setActiveTab('done'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${
-            activeTab === 'done'
-              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl shadow-green-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${activeTab === 'done'
+            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl shadow-green-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            }`}
         >
-          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${
-            activeTab === 'done' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
-          }`}>
+          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${activeTab === 'done' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
+            }`}>
             <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <span className="hidden sm:inline">Done ({stats.doneMonitor})</span>
@@ -372,15 +387,13 @@ const FarmerMonitoringView: React.FC = () => {
         </button>
         <button
           onClick={() => { setActiveTab('completed'); setCurrentPage(1); }}
-          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${
-            activeTab === 'completed'
-              ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+          className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base ${activeTab === 'completed'
+            ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            }`}
         >
-          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${
-            activeTab === 'completed' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
-          }`}>
+          <div className={`p-1 sm:p-1.5 md:p-2 rounded-md sm:rounded-lg transition-colors ${activeTab === 'completed' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
+            }`}>
             <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <span className="hidden sm:inline">Complete ({stats.completed})</span>
@@ -424,11 +437,10 @@ const FarmerMonitoringView: React.FC = () => {
                     <button
                       key={size}
                       onClick={() => { setItemsPerPage(size); setCurrentPage(1); }}
-                      className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
-                          ? 'bg-emerald-500 text-white shadow-lg'
-                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50'
-                      }`}
+                      className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${itemsPerPage === size
+                        ? 'bg-emerald-500 text-white shadow-lg'
+                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50'
+                        }`}
                     >
                       {size}
                     </button>
@@ -458,74 +470,74 @@ const FarmerMonitoringView: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {currentRecords.map((record, index) => (
-                    <tr key={record.monitoringId} className={`hover:bg-emerald-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <div className="text-sm font-mono text-gray-500">{record.monitoringId}</div>
-                        </div>
-                      </td>
-                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <div className="text-xs sm:text-sm font-semibold text-gray-900">{formatDate(record.dateOfVisit)}</div>
-                      </td>
-                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <div className="text-xs sm:text-sm font-medium text-gray-900">{record.monitoredBy}</div>
-                      </td>
-                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-bold ${getConditionColor(record.farmCondition)}`}>
-                          {record.farmCondition}
+                  <tr key={record.monitoringId} className={`hover:bg-emerald-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-gray-400" />
+                        <div className="text-sm font-mono text-gray-500">{record.monitoringId}</div>
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm font-semibold text-gray-900">{formatDate(record.dateOfVisit)}</div>
+                    </td>
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm font-medium text-gray-900">{record.monitoredBy}</div>
+                    </td>
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-bold ${getConditionColor(record.farmCondition)}`}>
+                        {record.farmCondition}
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm font-medium text-gray-900">{record.growthStage}</div>
+                    </td>
+                    <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      {(record as any).status === 'Completed' ? (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                          ✓ Completed
                         </span>
-                      </td>
-                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <div className="text-xs sm:text-sm font-medium text-gray-900">{record.growthStage}</div>
-                      </td>
-                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        {(record as any).status === 'Completed' ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                            ✓ Completed
-                          </span>
-                        ) : (record as any).status === 'Done Monitor' ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
-                            ✓ Done Monitor
-                          </span>
-                        ) : (
-                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
-                            🔄 Ongoing
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {(record as any).status === 'Done Monitor' ? (
-                          // Show date only, no countdown for Done Monitor
-                          record.nextMonitoringDate ? (
-                            <div className="text-sm text-gray-600">{formatDate(record.nextMonitoringDate)}</div>
-                          ) : (
-                            <div className="text-sm text-gray-500 italic">No next visit</div>
-                          )
-                        ) : record.nextMonitoringDate ? (
-                          // Show date + countdown for Ongoing/Completed
-                          <>
-                            <div className="text-sm font-semibold text-gray-900">{formatDate(record.nextMonitoringDate)}</div>
-                            <div className="text-xs text-emerald-600">
-                              ({daysUntilMonitoring(record.nextMonitoringDate) >= 0 
-                                ? `in ${daysUntilMonitoring(record.nextMonitoringDate)} days`
-                                : `${Math.abs(daysUntilMonitoring(record.nextMonitoringDate))} days overdue`})
-                            </div>
-                          </>
+                      ) : (record as any).status === 'Done Monitor' ? (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
+                          ✓ Done Monitor
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                          🔄 Ongoing
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {(record as any).status === 'Done Monitor' ? (
+                        // Show date only, no countdown for Done Monitor
+                        record.nextMonitoringDate ? (
+                          <div className="text-sm text-gray-600">{formatDate(record.nextMonitoringDate)}</div>
                         ) : (
                           <div className="text-sm text-gray-500 italic">No next visit</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => setSelectedRecord(record)}
-                          className="p-1.5 sm:p-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition-all"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
+                        )
+                      ) : record.nextMonitoringDate ? (
+                        // Show date + countdown for Ongoing/Completed
+                        <>
+                          <div className="text-sm font-semibold text-gray-900">{formatDate(record.nextMonitoringDate)}</div>
+                          <div className="text-xs text-emerald-600">
+                            ({daysUntilMonitoring(record.nextMonitoringDate) >= 0
+                              ? `in ${daysUntilMonitoring(record.nextMonitoringDate)} days`
+                              : `${Math.abs(daysUntilMonitoring(record.nextMonitoringDate))} days overdue`})
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-sm text-gray-500 italic">No next visit</div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => setSelectedRecord(record)}
+                        className="p-1.5 sm:p-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition-all"
+                        title="View Details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -547,11 +559,10 @@ const FarmerMonitoringView: React.FC = () => {
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                      currentPage === page
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
-                    }`}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all ${currentPage === page
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                      }`}
                   >
                     {page}
                   </button>
@@ -581,8 +592,8 @@ const FarmerMonitoringView: React.FC = () => {
                   <h2 className="text-2xl font-bold mb-1">Complete Monitoring Report</h2>
                   <p className="text-emerald-100 text-sm">Full details of farm visit</p>
                 </div>
-                <button 
-                  onClick={() => setSelectedRecord(null)} 
+                <button
+                  onClick={() => setSelectedRecord(null)}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 >
                   <X className="w-6 h-6" />
@@ -719,7 +730,7 @@ const FarmerMonitoringView: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <span className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white font-bold">
-                      {daysUntilMonitoring(selectedRecord.nextMonitoringDate) >= 0 
+                      {daysUntilMonitoring(selectedRecord.nextMonitoringDate) >= 0
                         ? `In ${daysUntilMonitoring(selectedRecord.nextMonitoringDate)} days`
                         : `${Math.abs(daysUntilMonitoring(selectedRecord.nextMonitoringDate))} days overdue`}
                     </span>

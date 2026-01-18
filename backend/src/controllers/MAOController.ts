@@ -34,40 +34,54 @@ export class MAOController {
       }
 
       const {
+        fullName,
         position,
         officeName,
+        associationName, // Add as fallback
         assignedMunicipality,
         assignedBarangay,
         contactNumber,
+        contact_number, // Add as fallback
         address,
         profilePicture,
       } = req.body;
 
+      const finalOfficeName = officeName || associationName;
+      const finalContactNumber = contactNumber || contact_number;
+
       console.log('📝 Received profile update data:', {
+        fullName,
         position,
-        officeName,
+        officeName: finalOfficeName,
         assignedMunicipality,
         assignedBarangay,
-        contactNumber,
+        contactNumber: finalContactNumber,
         address,
         userId
       });
 
       // Update officer profile
+      const updatePayload: any = {
+        position,
+        office_name: finalOfficeName,
+        assigned_municipality: assignedMunicipality,
+        assigned_barangay: assignedBarangay,
+        contact_number: finalContactNumber,
+        address,
+        profile_picture: profilePicture || null,
+        profile_completed: true,
+        profile_completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Also update full_name if provided
+      if (fullName) {
+        updatePayload.full_name = fullName;
+      }
+
       const { data, error } = await supabase
         .from('organization')
-        .update({
-          position,
-          office_name: officeName,
-          assigned_municipality: assignedMunicipality,
-          assigned_barangay: assignedBarangay,
-          contact_number: contactNumber,
-          address,
-          profile_picture: profilePicture || null, // Save base64 image or URL
-          profile_completed: true,
-          profile_completed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq('officer_id', userId)
         .select()
         .single();
@@ -79,12 +93,11 @@ export class MAOController {
       }
 
       console.log('✅ Profile updated in database:', {
+        full_name: data.full_name,
         contact_number: data.contact_number,
         address: data.address,
         position: data.position,
-        office_name: data.office_name,
-        assigned_municipality: data.assigned_municipality,
-        assigned_barangay: data.assigned_barangay
+        office_name: data.office_name
       });
 
       res.status(200).json({
@@ -254,8 +267,8 @@ export class MAOController {
       console.log('📥 Received monitoring data:', req.body);
 
       // Validate required fields (farmerId is optional, nextMonitoringDate optional if status=Completed)
-      if (!monitoringId || !dateOfVisit || !monitoredBy || !farmerName || 
-          !farmCondition || !growthStage || !actionsTaken || !recommendations) {
+      if (!monitoringId || !dateOfVisit || !monitoredBy || !farmerName ||
+        !farmCondition || !growthStage || !actionsTaken || !recommendations) {
         console.error('❌ Missing required fields');
         res.status(400).json({ error: 'Missing required fields' });
         return;

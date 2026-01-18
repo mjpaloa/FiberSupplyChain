@@ -25,7 +25,8 @@ import {
   Clock,
   Bell,
   Coins,
-  Upload
+  Upload,
+  Lock
 } from 'lucide-react';
 import {
   PieChart as RechartsPieChart,
@@ -112,6 +113,15 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
+  // Change Password states
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
+
   // Notification states
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -172,7 +182,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           contact_number: data.contact_number || '',
           address: data.address || '',
           position: data.position || user?.position || '',
-          association_name: data.association_name || '',
+          association_name: data.association_name || data.office_name || '',
           full_name: data.full_name || user?.fullName || ''
         };
         console.log('📝 Setting form data:', formData);
@@ -210,8 +220,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          fullName: editFormData.full_name,
           position: editFormData.position || '',
-          associationName: editFormData.association_name || '',
+          officeName: editFormData.association_name || '', // Using officeName as expected by backend
           contactNumber: editFormData.contact_number || '',
           address: editFormData.address || '',
           termStartDate: null,
@@ -267,8 +278,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           },
           body: JSON.stringify({
             profilePicture: base64String,
+            fullName: editFormData.full_name,
             position: editFormData.position || user?.position,
-            associationName: editFormData.association_name,
+            officeName: editFormData.association_name,
             contactNumber: editFormData.contact_number,
             address: editFormData.address,
           }),
@@ -287,6 +299,44 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const _handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('❌ New passwords do not match');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`https://easyabaca-api.vercel.app/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          oldPassword: passwordForm.oldPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+
+      if (response.ok) {
+        alert('✅ Password changed successfully!');
+        setShowChangePasswordModal(false);
+        setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        const errorData = await response.json();
+        alert('❌ Failed to change password: ' + (errorData.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error changing password:', error);
+      alert('❌ Error changing password');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   // Dashboard data states
   const [dashboardData, setDashboardData] = useState({
     production: {
@@ -302,9 +352,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       recentMonitoringVisits: 0,
       healthyFarms: 0,
       needsSupportFarms: 0,
+      damagedFarms: 0,
       monthlyMonitoring: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       monthlyHealthy: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       monthlyNeedsSupport: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      monthlyDamaged: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       monthlyReceived: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       monthlyDistributed: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     },
@@ -463,8 +515,10 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       let monthlyMonitoring = new Array(12).fill(0);
       let monthlyHealthy = new Array(12).fill(0);
       let monthlyNeedsSupport = new Array(12).fill(0);
+      let monthlyDamaged = new Array(12).fill(0);
       let healthyFarms = 0;
       let needsSupportFarms = 0;
+      let damagedFarms = 0;
       let totalMonitoring = 0;
 
       try {
@@ -490,16 +544,17 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               } else if (record.farm_condition === 'Needs Support') {
                 monthlyNeedsSupport[monthIndex]++;
               } else if (record.farm_condition === 'Damaged') {
-                // Count damaged as needs support for simplicity
-                monthlyNeedsSupport[monthIndex]++;
+                monthlyDamaged[monthIndex]++;
               }
             }
 
             // Count overall totals (not just current year)
             if (record.farm_condition === 'Healthy') {
               healthyFarms++;
-            } else if (record.farm_condition === 'Needs Support' || record.farm_condition === 'Damaged') {
+            } else if (record.farm_condition === 'Needs Support') {
               needsSupportFarms++;
+            } else if (record.farm_condition === 'Damaged') {
+              damagedFarms++;
             }
           });
         }
@@ -571,10 +626,12 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           monthlyHarvest, // Add monthly harvest data
           healthyFarms,
           needsSupportFarms,
+          damagedFarms,
           totalMonitoringVisits: totalMonitoring || productionData.totalMonitoringVisits,
           monthlyMonitoring,
           monthlyHealthy,
-          monthlyNeedsSupport
+          monthlyNeedsSupport,
+          monthlyDamaged
         },
         sales: salesData,
         users: usersData,
@@ -1133,7 +1190,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                       </div>
 
                       {/* Top Stats Cards - Vibrant Gradient Design */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
                         {/* Received - Orange Gradient */}
                         <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
                           <div className="flex items-center mb-4">
@@ -1156,6 +1213,18 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           <p className="text-sm font-medium text-white/90 mb-2">Distributed Seedlings (Farmers)</p>
                           <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalSeedlingsDistributed || 0).toLocaleString()}</p>
                           <p className="text-xs text-white/70">To farmers</p>
+                        </div>
+
+                        {/* Total Monitoring - Blue/Indigo Gradient */}
+                        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <Eye className="w-6 h-6 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-sm font-medium text-white/90 mb-2">Total Monitoring Visits</p>
+                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalMonitoringVisits || 0).toLocaleString()}</p>
+                          <p className="text-xs text-white/70">Monitoring records</p>
                         </div>
 
                         {/* Planted - Purple Gradient */}
@@ -1290,10 +1359,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                           }}
                                           cursor={{ fill: '#f9fafb' }}
                                         />
-                                        <Legend
-                                          wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                                          iconType="circle"
-                                        />
+
                                         <Bar
                                           dataKey="received"
                                           fill="#fb923c"
@@ -1450,7 +1516,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                     <div className="mb-8">
                       <h2 className="text-2xl font-semibold text-gray-900 mb-6">Field Monitoring</h2>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                         {/* Total Monitoring - Blue Gradient */}
                         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
                           <div className="flex items-center mb-4">
@@ -1485,6 +1551,18 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           <p className="text-sm font-medium text-white/90 mb-2">Needs Support</p>
                           <p className="text-5xl font-bold text-white mb-1">{dashboardData.production.needsSupportFarms}</p>
                           <p className="text-xs text-white/70">Requires attention</p>
+                        </div>
+
+                        {/* Damaged Farms - Red Gradient */}
+                        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
+                          <div className="flex items-center mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <X className="w-6 h-6 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-sm font-medium text-white/90 mb-2">Damaged Farms</p>
+                          <p className="text-5xl font-bold text-white mb-1">{dashboardData.production.damagedFarms}</p>
+                          <p className="text-xs text-white/70">Critical condition</p>
                         </div>
                       </div>
 
@@ -1533,6 +1611,10 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             <div className="w-2 h-2 rounded-full bg-amber-500"></div>
                             <span className="text-xs font-semibold text-amber-700">Needs Support</span>
                           </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-lg">
+                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                            <span className="text-xs font-semibold text-red-700">Damaged</span>
+                          </div>
                         </div>
 
                         <div className="w-full">
@@ -1545,24 +1627,28 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               const yearlyTotal = dashboardData.production.totalMonitoringVisits || 0;
                               const yearlyHealthy = dashboardData.production.healthyFarms || 0;
                               const yearlyNeeds = dashboardData.production.needsSupportFarms || 0;
+                              const yearlyDamaged = dashboardData.production.damagedFarms || 0;
 
                               chartData = years.map(year => ({
                                 period: year.toString(),
                                 total: year === currentYear ? yearlyTotal : 0,
                                 healthy: year === currentYear ? yearlyHealthy : 0,
-                                needsSupport: year === currentYear ? yearlyNeeds : 0
+                                needsSupport: year === currentYear ? yearlyNeeds : 0,
+                                damaged: year === currentYear ? yearlyDamaged : 0
                               }));
                             } else {
                               const dataTotal = dashboardData.production.monthlyMonitoring || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
                               const dataHealthy = dashboardData.production.monthlyHealthy || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
                               const dataNeedsSupport = dashboardData.production.monthlyNeedsSupport || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                              const dataDamaged = dashboardData.production.monthlyDamaged || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
                               const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
                               chartData = labels.map((label, i) => ({
                                 period: label,
                                 total: dataTotal[i],
                                 healthy: dataHealthy[i],
-                                needsSupport: dataNeedsSupport[i]
+                                needsSupport: dataNeedsSupport[i],
+                                damaged: dataDamaged[i]
                               }));
                             }
 
@@ -1596,30 +1682,34 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                         }}
                                         cursor={{ fill: '#f9fafb' }}
                                       />
-                                      <Legend
-                                        wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                                        iconType="circle"
-                                      />
+
                                       <Bar
                                         dataKey="total"
                                         fill="#3b82f6"
                                         name="Total Monitoring"
                                         radius={[6, 6, 0, 0]}
-                                        barSize={monitoringView === 'monthly' ? 25 : 35}
+                                        barSize={monitoringView === 'monthly' ? 20 : 30}
                                       />
                                       <Bar
                                         dataKey="healthy"
                                         fill="#10b981"
                                         name="Healthy Farms"
                                         radius={[6, 6, 0, 0]}
-                                        barSize={monitoringView === 'monthly' ? 25 : 35}
+                                        barSize={monitoringView === 'monthly' ? 20 : 30}
                                       />
                                       <Bar
                                         dataKey="needsSupport"
                                         fill="#f59e0b"
                                         name="Needs Support"
                                         radius={[6, 6, 0, 0]}
-                                        barSize={monitoringView === 'monthly' ? 25 : 35}
+                                        barSize={monitoringView === 'monthly' ? 20 : 30}
+                                      />
+                                      <Bar
+                                        dataKey="damaged"
+                                        fill="#ef4444"
+                                        name="Damaged Farms"
+                                        radius={[6, 6, 0, 0]}
+                                        barSize={monitoringView === 'monthly' ? 20 : 30}
                                       />
                                     </RechartsBarChart>
                                   </ResponsiveContainer>
@@ -2357,39 +2447,50 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                     </div>
 
                     {/* Action Buttons - Enhanced */}
-                    <div className="flex justify-end gap-3 pt-6 mt-6 border-t-2 border-gray-200">
-                      {isEditMode ? (
-                        <>
-                          <button
-                            onClick={() => {
-                              setIsEditMode(false);
-                              fetchOfficerProfile();
-                            }}
-                            className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-bold shadow-md hover:shadow-lg"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={_handleSaveProfile}
-                            disabled={savingProfile}
-                            className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {savingProfile ? (
-                              <span className="flex items-center gap-2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                Saving...
-                              </span>
-                            ) : 'Save Changes'}
-                          </button>
-                        </>
-                      ) : (
+                    <div className="flex justify-between items-center pt-6 mt-6 border-t-2 border-gray-200">
+                      {!isEditMode && (
                         <button
-                          onClick={() => setIsEditMode(true)}
-                          className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-bold shadow-md"
+                          onClick={() => setShowChangePasswordModal(true)}
+                          className="flex items-center gap-2 px-6 py-3 bg-amber-50 text-amber-700 rounded-xl hover:bg-amber-100 transition-colors font-bold border border-amber-200 shadow-sm"
                         >
-                          Edit Profile
+                          <Lock className="w-5 h-5" />
+                          Change Password
                         </button>
                       )}
+                      <div className="flex gap-3 ml-auto">
+                        {isEditMode ? (
+                          <>
+                            <button
+                              onClick={() => {
+                                setIsEditMode(false);
+                                fetchOfficerProfile();
+                              }}
+                              className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-bold shadow-md hover:shadow-lg"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={_handleSaveProfile}
+                              disabled={savingProfile}
+                              className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {savingProfile ? (
+                                <span className="flex items-center gap-2">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  Saving...
+                                </span>
+                              ) : 'Save Changes'}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => setIsEditMode(true)}
+                            className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-bold shadow-md"
+                          >
+                            Edit Profile
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -2398,6 +2499,82 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           </div>
         )
       }
+
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div className="bg-amber-600 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white">
+                <Lock className="w-5 h-5" />
+                <h3 className="text-xl font-bold">Change Password</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowChangePasswordModal(false);
+                  setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                }}
+                className="text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={_handleChangePassword} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Current Password</label>
+                <input
+                  type="password"
+                  required
+                  value={passwordForm.oldPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  placeholder="Enter current password"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">New Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={4}
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  placeholder="Enter new password"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Confirm New Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={4}
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  placeholder="Confirm new password"
+                />
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowChangePasswordModal(false)}
+                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={changingPassword}
+                  className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-colors shadow-md disabled:opacity-50"
+                >
+                  {changingPassword ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div >
   );
 };

@@ -198,7 +198,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
 
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-6 p-2 md:space-y-8 md:p-6">
       {/* Top Buyers Ranking Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Class A Top Buyers */}
@@ -413,7 +413,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
             return (
               <div key={listing.listing_id} className="bg-white rounded-xl md:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200">
                 {/* Card Header */}
-                <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-4 md:p-5">
+                <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-5 md:p-6">
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                       <div className="p-2 bg-white/20 rounded-lg flex-shrink-0">
@@ -429,14 +429,14 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                 </div>
 
                 {/* Card Content */}
-                <div className="p-4 md:p-5 space-y-4">
+                <div className="p-5 md:p-6 space-y-5">
                   {/* Classes with Rankings */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {classesInfo.map((classInfo) => {
                       const rank = getRankForListing(listing.listing_id, classInfo.type);
 
                       return (
-                        <div key={classInfo.typeKey} className={`relative ${classInfo.bgColor} ${classInfo.borderColor} border-2 rounded-xl p-3 md:p-4 transition-all hover:shadow-md`}>
+                        <div key={classInfo.typeKey} className={`relative ${classInfo.bgColor} ${classInfo.borderColor} border-2 rounded-xl p-4 md:p-5 transition-all hover:shadow-md`}>
                           {/* Ranking Badge */}
                           {rank && (
                             <div className="absolute -top-2 -right-2 md:-top-3 md:-right-3 z-10">
@@ -449,7 +449,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                             </div>
                           )}
 
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className={`px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-bold ${classInfo.textColor} bg-white`}>
@@ -457,7 +457,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                                 </span>
                               </div>
                               <p className="text-xs text-gray-600 mb-1">{classInfo.quality}</p>
-                              <p className={`text-xl md:text-3xl font-black ${classInfo.textColor}`}>
+                              <p className={`text-2xl md:text-3xl font-black ${classInfo.textColor}`}>
                                 ₱{classInfo.price?.toFixed(2)}
                               </p>
                               <p className="text-xs text-gray-500">per kilogram</p>
@@ -466,7 +466,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                             {/* Image Thumbnail */}
                             {classInfo.image && (
                               <div
-                                className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform flex-shrink-0"
+                                className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform flex-shrink-0"
                                 onClick={() => setImageModal({ isOpen: true, imageUrl: classInfo.image!, label: `${listing.company_name} - ${classInfo.label}` })}
                               >
                                 <img

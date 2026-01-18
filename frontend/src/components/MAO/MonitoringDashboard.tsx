@@ -62,7 +62,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
   const filteredRecords = useMemo(() => {
     console.log('📊 MAO Dashboard: Starting filter with', records.length, 'records');
     let filtered = filterRecords(records, filters);
-    
+
     if (searchQuery) {
       filtered = filtered.filter(record =>
         record.farmerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -124,7 +124,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
       {/* Modern Stats Cards with Gradients */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
         {/* Total Monitoring Card */}
         <div className="group relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
@@ -136,7 +136,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
               <TrendingUp className="w-5 h-5 text-white/60" />
             </div>
             <p className="text-white/80 text-sm font-medium mb-1">Total Monitoring</p>
-            <p className="text-4xl font-bold text-white">{stats.totalMonitoring}</p>
+            <p className="text-4xl font-bold text-white mb-1">{stats.totalMonitoring}</p>
+            <p className="text-xs text-white/60">Monitoring records</p>
           </div>
         </div>
 
@@ -153,7 +154,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
               </span>
             </div>
             <p className="text-white/90 text-sm font-medium mb-1">Healthy Farms</p>
-            <p className="text-4xl font-bold text-white">{stats.healthyFarms}</p>
+            <p className="text-4xl font-bold text-white mb-1">{stats.healthyFarms}</p>
+            <p className="text-xs text-white/70">In good condition</p>
           </div>
         </div>
 
@@ -166,11 +168,30 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                 <AlertCircle className="w-6 h-6 text-white" />
               </div>
               <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
-                Action Needed
+                Support
               </span>
             </div>
             <p className="text-white/90 text-sm font-medium mb-1">Needs Support</p>
-            <p className="text-4xl font-bold text-white">{stats.needsSupport}</p>
+            <p className="text-4xl font-bold text-white mb-1">{stats.needsSupport}</p>
+            <p className="text-xs text-white/70">Requires attention</p>
+          </div>
+        </div>
+
+        {/* Damaged Farms Card - NEW */}
+        <div className="group relative bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <X className="w-6 h-6 text-white" />
+              </div>
+              <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
+                Critical
+              </span>
+            </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Damaged Farms</p>
+            <p className="text-4xl font-bold text-white mb-1">{stats.damagedFarms}</p>
+            <p className="text-xs text-white/70">Critical condition</p>
           </div>
         </div>
 
@@ -184,7 +205,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
               </div>
             </div>
             <p className="text-white/90 text-sm font-medium mb-1">Upcoming Visits</p>
-            <p className="text-4xl font-bold text-white">{stats.upcomingMonitoring}</p>
+            <p className="text-4xl font-bold text-white mb-1">{stats.upcomingMonitoring}</p>
+            <p className="text-xs text-white/70">Planned visits</p>
           </div>
         </div>
       </div>
@@ -268,15 +290,13 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 sm:mb-8">
         <button
           onClick={() => setActiveTab('all')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'all'
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'all'
               ? 'bg-gradient-to-r from-slate-500 to-slate-700 text-white shadow-xl shadow-slate-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+            }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'all' ? 'bg-white/20' : 'bg-slate-50 group-hover:bg-slate-100'
-          }`}>
+          <div className={`p-2 rounded-lg transition-colors ${activeTab === 'all' ? 'bg-white/20' : 'bg-slate-50 group-hover:bg-slate-100'
+            }`}>
             <Activity className="w-5 h-5" />
           </div>
           <span>All Records ({records.length})</span>
@@ -286,15 +306,13 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('upcoming')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'upcoming'
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'upcoming'
               ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+            }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'upcoming' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
-          }`}>
+          <div className={`p-2 rounded-lg transition-colors ${activeTab === 'upcoming' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
+            }`}>
             <Calendar className="w-5 h-5" />
           </div>
           <span>Upcoming ({stats.upcomingMonitoring})</span>
@@ -304,15 +322,13 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('overdue')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'overdue'
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'overdue'
               ? 'bg-gradient-to-r from-amber-400 to-orange-600 text-white shadow-xl shadow-amber-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+            }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'overdue' ? 'bg-white/20' : 'bg-amber-50 group-hover:bg-amber-100'
-          }`}>
+          <div className={`p-2 rounded-lg transition-colors ${activeTab === 'overdue' ? 'bg-white/20' : 'bg-amber-50 group-hover:bg-amber-100'
+            }`}>
             <AlertCircle className="w-5 h-5" />
           </div>
           <span>Overdue ({stats.overdueMonitoring})</span>
@@ -322,15 +338,13 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('completed')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'completed'
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'completed'
               ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl shadow-green-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+            }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'completed' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
-          }`}>
+          <div className={`p-2 rounded-lg transition-colors ${activeTab === 'completed' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
+            }`}>
             <AlertCircle className="w-5 h-5" />
           </div>
           <span>Completed ({records.filter(r => (r as any).status === 'Completed').length})</span>
@@ -340,15 +354,13 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('done')}
-          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'done'
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'done'
               ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
-          }`}
+            }`}
         >
-          <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'done' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
-          }`}>
+          <div className={`p-2 rounded-lg transition-colors ${activeTab === 'done' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
+            }`}>
             <Activity className="w-5 h-5" />
           </div>
           <span>Done ({records.filter(r => (r as any).status === 'Done Monitor').length})</span>
@@ -385,11 +397,10 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                     <button
                       key={size}
                       onClick={() => handleItemsPerPageChange(size)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
                           ? 'bg-indigo-500 text-white shadow-lg'
                           : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
@@ -439,9 +450,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
               </thead>
               <tbody className="bg-white divide-y divide-indigo-100">
                 {currentRecords.map((record, index) => (
-                  <tr key={record.monitoringId} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${
-                    index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
-                  }`}>
+                  <tr key={record.monitoringId} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
+                    }`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="font-bold text-blue-900 text-sm">{record.farmerName}</div>
@@ -497,7 +507,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                             {formatDate(record.nextMonitoringDate)}
                           </div>
                           <div className="text-xs text-indigo-600">
-                            ({daysUntilMonitoring(record.nextMonitoringDate) >= 0 
+                            ({daysUntilMonitoring(record.nextMonitoringDate) >= 0
                               ? `in ${daysUntilMonitoring(record.nextMonitoringDate)} days`
                               : `${Math.abs(daysUntilMonitoring(record.nextMonitoringDate))} days overdue`})
                           </div>
@@ -518,7 +528,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        
+
                         {/* Edit Button - Only for Ongoing records */}
                         {(record as any).status !== 'Completed' && (
                           <button
@@ -529,7 +539,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                             <Edit className="w-4 h-4" />
                           </button>
                         )}
-                        
+
                         {/* Delete Button - Always show */}
                         <button
                           onClick={async () => {
@@ -566,21 +576,20 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                 >
                   Previous
                 </button>
-                
+
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === page
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === page
                         ? 'bg-indigo-500 text-white shadow-lg'
                         : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>
                 ))}
-                
+
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
@@ -622,7 +631,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-6">
               {/* Basic Information */}
               <div className="bg-gray-50 rounded-xl p-5">
@@ -725,7 +734,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
               {/* Actions and Recommendations */}
               <div className="bg-purple-50 rounded-xl p-5 border-2 border-purple-200">
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center">
-                
+
                   Actions & Recommendations
                 </h3>
                 <div className="space-y-4">
@@ -757,7 +766,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                   <p className="text-lg font-bold text-indigo-900">
                     {formatDate(selectedRecord.nextMonitoringDate)}
                     <span className="ml-3 text-sm font-normal text-indigo-700">
-                      ({daysUntilMonitoring(selectedRecord.nextMonitoringDate) >= 0 
+                      ({daysUntilMonitoring(selectedRecord.nextMonitoringDate) >= 0
                         ? `in ${daysUntilMonitoring(selectedRecord.nextMonitoringDate)} days`
                         : `${Math.abs(daysUntilMonitoring(selectedRecord.nextMonitoringDate))} days overdue`})
                     </span>
