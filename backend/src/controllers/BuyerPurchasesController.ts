@@ -106,7 +106,7 @@ export class BuyerPurchasesController {
         });
       }
 
-      res.status(200).json({ 
+      res.status(200).json({
         purchases: data,
         sold_by_class: soldByClass
       });
@@ -396,7 +396,7 @@ export class BuyerPurchasesController {
       const availableKg = purchases?.reduce((sum, p) => sum + parseFloat(p.quantity || '0'), 0) || 0;
 
       if (availableKg < quantity_kg) {
-        res.status(400).json({ 
+        res.status(400).json({
           error: 'Insufficient inventory',
           available: availableKg,
           requested: quantity_kg
@@ -430,6 +430,50 @@ export class BuyerPurchasesController {
     } catch (error) {
       console.error('Error recording sale:', error);
       res.status(500).json({ error: 'Failed to record sale' });
+    }
+  }
+
+  /**
+   * Delete sale record
+   */
+  static async deleteSale(req: Request, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const { saleId } = req.params;
+
+      if (!userId) {
+        res.status(401).json({ error: 'User ID not found' });
+        return;
+      }
+
+      // Verify ownership
+      const { data: existing, error: fetchError } = await supabase
+        .from('buyer_sales')
+        .select('seller_id')
+        .eq('sale_id', saleId)
+        .single();
+
+      if (fetchError || !existing) {
+        res.status(404).json({ error: 'Sale record not found' });
+        return;
+      }
+
+      if (existing.seller_id !== userId) {
+        res.status(403).json({ error: 'Not authorized to delete this sale' });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('buyer_sales')
+        .delete()
+        .eq('sale_id', saleId);
+
+      if (error) throw error;
+
+      res.status(200).json({ message: 'Sale record deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting sale:', error);
+      res.status(500).json({ error: 'Failed to delete sale' });
     }
   }
 }

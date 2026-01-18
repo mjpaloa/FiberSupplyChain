@@ -22,6 +22,9 @@ router.get('/sales', authenticate, BuyerPurchasesController.getSales);
 // Update purchase
 router.put('/:purchaseId', authenticate, BuyerPurchasesController.updatePurchase);
 
+// Delete sale
+router.delete('/sales/:saleId', authenticate, BuyerPurchasesController.deleteSale);
+
 // Delete purchase
 router.delete('/:purchaseId', authenticate, BuyerPurchasesController.deletePurchase);
 

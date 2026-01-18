@@ -433,14 +433,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         return;
       }
 
-      // Calculate totals from ALL verified harvests (no date filtering)
-      const verifiedHarvests = harvests.filter((h: any) =>
-        h.status === 'Verified' || h.status === 'In Inventory'
+      // Calculate totals from ALL non-rejected harvests
+      const validHarvests = harvests.filter((h: any) =>
+        h.status === 'Verified' || h.status === 'In Inventory' || h.status === 'Delivered' || h.status === 'Pending Verification' || h.status === 'Sold'
       );
 
-      console.log('✅ Verified harvests:', verifiedHarvests.length, 'out of', harvests.length);
+      console.log('✅ Valid harvests for production:', validHarvests.length, 'out of', harvests.length);
 
-      const totalFiberKg = verifiedHarvests.reduce((sum: number, h: any) => {
+      const totalFiberKg = validHarvests.reduce((sum: number, h: any) => {
         const kg = parseFloat(h.dry_fiber_output_kg) || 0;
         return sum + kg;
       }, 0);
@@ -723,11 +723,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       const harvests = harvestData.harvests || harvestData;
       console.log('🌾 Harvest data fetched for charts:', harvests);
 
-      // Filter only verified harvests
-      const verifiedHarvests = Array.isArray(harvests)
-        ? harvests.filter((h: any) => h.status === 'Verified' || h.status === 'In Inventory')
+      // Filter all valid harvests for production calculations
+      const validHarvests = Array.isArray(harvests)
+        ? harvests.filter((h: any) => h.status === 'Verified' || h.status === 'In Inventory' || h.status === 'Delivered' || h.status === 'Pending Verification' || h.status === 'Sold')
         : [];
-      console.log('✅ Verified harvests for charts:', verifiedHarvests.length, 'items', verifiedHarvests.length > 0 ? { harvest_date: verifiedHarvests[0].harvest_date, fiber: verifiedHarvests[0].dry_fiber_output_kg } : 'no data');
+      console.log('✅ Valid harvests for charts:', validHarvests.length, 'items', validHarvests.length > 0 ? { harvest_date: validHarvests[0].harvest_date, fiber: validHarvests[0].dry_fiber_output_kg } : 'no data');
 
       // Fetch sales data for revenue
       const salesResponse = await apiGet(`https://easyabaca-api.vercel.app/api/sales/farmer-reports/${farmerId}`);
@@ -744,9 +744,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           fiberKg: 0
         }));
 
-        // Add harvest data for fiber production (verified only)
+        // Add harvest data for fiber production (valid only)
         let totalFiber = 0;
-        verifiedHarvests.forEach((harvest: any) => {
+        validHarvests.forEach((harvest: any) => {
           const harvestDate = new Date(harvest.harvest_date);
           if (harvestDate.getFullYear() === yearToUse) {
             const monthIndex = harvestDate.getMonth();
@@ -781,9 +781,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           yearlyData[year] = { year, revenue: 0, profit: 0, fiberKg: 0 };
         }
 
-        // Add harvest data for fiber production (verified only)
+        // Add harvest data for fiber production (valid only)
         let totalFiber = 0;
-        verifiedHarvests.forEach((harvest: any) => {
+        validHarvests.forEach((harvest: any) => {
           const year = new Date(harvest.harvest_date).getFullYear();
           if (yearlyData[year]) {
             const fiberKg = parseFloat(harvest.dry_fiber_output_kg) || 0;
