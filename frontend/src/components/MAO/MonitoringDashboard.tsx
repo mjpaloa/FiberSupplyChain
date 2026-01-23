@@ -291,8 +291,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         <button
           onClick={() => setActiveTab('all')}
           className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'all'
-              ? 'bg-gradient-to-r from-slate-500 to-slate-700 text-white shadow-xl shadow-slate-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            ? 'bg-gradient-to-r from-slate-500 to-slate-700 text-white shadow-xl shadow-slate-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
             }`}
         >
           <div className={`p-2 rounded-lg transition-colors ${activeTab === 'all' ? 'bg-white/20' : 'bg-slate-50 group-hover:bg-slate-100'
@@ -307,8 +307,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         <button
           onClick={() => setActiveTab('upcoming')}
           className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'upcoming'
-              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
             }`}
         >
           <div className={`p-2 rounded-lg transition-colors ${activeTab === 'upcoming' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
@@ -323,8 +323,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         <button
           onClick={() => setActiveTab('overdue')}
           className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'overdue'
-              ? 'bg-gradient-to-r from-amber-400 to-orange-600 text-white shadow-xl shadow-amber-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            ? 'bg-gradient-to-r from-amber-400 to-orange-600 text-white shadow-xl shadow-amber-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
             }`}
         >
           <div className={`p-2 rounded-lg transition-colors ${activeTab === 'overdue' ? 'bg-white/20' : 'bg-amber-50 group-hover:bg-amber-100'
@@ -339,8 +339,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         <button
           onClick={() => setActiveTab('completed')}
           className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'completed'
-              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl shadow-green-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl shadow-green-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
             }`}
         >
           <div className={`p-2 rounded-lg transition-colors ${activeTab === 'completed' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
@@ -355,8 +355,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         <button
           onClick={() => setActiveTab('done')}
           className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${activeTab === 'done'
-              ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+            ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
+            : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
             }`}
         >
           <div className={`p-2 rounded-lg transition-colors ${activeTab === 'done' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
@@ -398,8 +398,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                       key={size}
                       onClick={() => handleItemsPerPageChange(size)}
                       className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
-                          ? 'bg-indigo-500 text-white shadow-lg'
-                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
+                        ? 'bg-indigo-500 text-white shadow-lg'
+                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
                         }`}
                     >
                       {size}
@@ -582,8 +582,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                     key={page}
                     onClick={() => handlePageChange(page)}
                     className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === page
-                        ? 'bg-indigo-500 text-white shadow-lg'
-                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
+                      ? 'bg-indigo-500 text-white shadow-lg'
+                      : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
                       }`}
                   >
                     {page}

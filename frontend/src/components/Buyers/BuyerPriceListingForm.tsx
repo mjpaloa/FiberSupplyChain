@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  DollarSign, 
-  Package, 
-  Phone, 
-  MapPin, 
-  FileText, 
+import {
+  DollarSign,
+  Package,
+  Phone,
+  MapPin,
+  FileText,
   Calendar,
   CheckCircle,
   AlertCircle,
@@ -121,9 +121,8 @@ const BuyerPriceListingForm: React.FC = () => {
     <div className="w-full max-w-full">
       {/* Success/Error Message */}
       {message && (
-        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 shadow-sm ${
-          message.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
-        }`}>
+        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 shadow-sm ${message.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
+          }`}>
           {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
           <span className="font-medium">{message.text}</span>
         </div>
@@ -136,7 +135,7 @@ const BuyerPriceListingForm: React.FC = () => {
           <div>
             <p className="text-blue-900 font-bold mb-1.5 text-base">📢 Public Listing</p>
             <p className="text-blue-800 text-sm leading-relaxed">
-              Your price listing will be publicly visible to all farmers, associations, and MAO officers. 
+              Your price listing will be publicly visible to all farmers, associations, and MAO officers.
               Make sure to provide accurate information and keep your contact details updated.
             </p>
           </div>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Sprout, 
-  Plus, 
-  Search, 
+import {
+  Sprout,
+  Plus,
+  Search,
   Filter,
   Eye,
   Edit,
@@ -114,13 +114,13 @@ const SeedlingManagement: React.FC = () => {
       const response = await fetch('https://easyabaca-api.vercel.app/api/seedlings/all', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       // Ensure data is an array
       if (Array.isArray(data)) {
         setSeedlings(data);
@@ -145,13 +145,13 @@ const SeedlingManagement: React.FC = () => {
       const response = await fetch('https://easyabaca-api.vercel.app/api/mao/farmers', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       // Ensure data is an array
       if (Array.isArray(data)) {
         setFarmers(data);
@@ -291,7 +291,7 @@ const SeedlingManagement: React.FC = () => {
     }
 
     const headers = ['Date', 'Variety', 'Quantity', 'Source/Supplier', 'Recipient Farmer', 'Association', 'Status', 'Remarks'];
-    
+
     const rows = filteredSeedlings.map(s => [
       new Date(s.date_distributed).toLocaleDateString(),
       s.variety,
@@ -432,10 +432,9 @@ const SeedlingManagement: React.FC = () => {
                 ) : (
                   <TrendingDown className="w-3 h-3 text-red-500" />
                 )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.total, previousMonthStats.total).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.total, previousMonthStats.total) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
+                <span className={`text-xs font-medium ${calculateTrend(currentStats.total, previousMonthStats.total).startsWith('+') ? 'text-green-600' :
+                    calculateTrend(currentStats.total, previousMonthStats.total) === '0' ? 'text-gray-600' : 'text-red-600'
+                  }`}>
                   {calculateTrend(currentStats.total, previousMonthStats.total)}
                 </span>
               </div>
@@ -478,10 +477,9 @@ const SeedlingManagement: React.FC = () => {
                 ) : (
                   <TrendingDown className="w-3 h-3 text-red-500" />
                 )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
+                <span className={`text-xs font-medium ${calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity).startsWith('+') ? 'text-green-600' :
+                    calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity) === '0' ? 'text-gray-600' : 'text-red-600'
+                  }`}>
                   {calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity)}
                 </span>
               </div>
@@ -524,10 +522,9 @@ const SeedlingManagement: React.FC = () => {
                 ) : (
                   <TrendingDown className="w-3 h-3 text-red-500" />
                 )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
+                <span className={`text-xs font-medium ${calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth).startsWith('+') ? 'text-green-600' :
+                    calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth) === '0' ? 'text-gray-600' : 'text-red-600'
+                  }`}>
                   {calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth)}
                 </span>
               </div>
@@ -570,10 +567,9 @@ const SeedlingManagement: React.FC = () => {
                 ) : (
                   <TrendingDown className="w-3 h-3 text-red-500" />
                 )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.varieties, previousMonthStats.varieties).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.varieties, previousMonthStats.varieties) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
+                <span className={`text-xs font-medium ${calculateTrend(currentStats.varieties, previousMonthStats.varieties).startsWith('+') ? 'text-green-600' :
+                    calculateTrend(currentStats.varieties, previousMonthStats.varieties) === '0' ? 'text-gray-600' : 'text-red-600'
+                  }`}>
                   {calculateTrend(currentStats.varieties, previousMonthStats.varieties)}
                 </span>
               </div>
@@ -680,11 +676,10 @@ const SeedlingManagement: React.FC = () => {
                     <button
                       key={size}
                       onClick={() => handleItemsPerPageChange(size)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
                           ? 'bg-indigo-500 text-white shadow-lg'
                           : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
@@ -734,27 +729,26 @@ const SeedlingManagement: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-indigo-100">
                 {currentSeedlings.map((seedling, index) => (
-                  <tr key={seedling.seedling_id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${
-                    index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
-                  }`}>
+                  <tr key={seedling.seedling_id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
+                    }`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-md">
                         {seedling.seedling_photo ? (
-                          <img 
-                            src={seedling.seedling_photo} 
-                            alt="Seedling" 
+                          <img
+                            src={seedling.seedling_photo}
+                            alt="Seedling"
                             className="w-full h-full object-cover"
                           />
                         ) : seedling.packaging_photo ? (
-                          <img 
-                            src={seedling.packaging_photo} 
-                            alt="Packaging" 
+                          <img
+                            src={seedling.packaging_photo}
+                            alt="Packaging"
                             className="w-full h-full object-cover"
                           />
                         ) : seedling.quality_photo ? (
-                          <img 
-                            src={seedling.quality_photo} 
-                            alt="Quality" 
+                          <img
+                            src={seedling.quality_photo}
+                            alt="Quality"
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -800,16 +794,15 @@ const SeedlingManagement: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-4 py-2 rounded-full text-xs font-bold shadow-md ${
-                        seedling.status === 'planted' ? 'bg-emerald-500 text-white' :
-                        seedling.status === 'distributed' ? 'bg-blue-500 text-white' :
-                        seedling.status === 'damaged' ? 'bg-red-500 text-white' :
-                        'bg-amber-500 text-white'
-                      }`}>
+                      <span className={`px-4 py-2 rounded-full text-xs font-bold shadow-md ${seedling.status === 'planted' ? 'bg-emerald-500 text-white' :
+                          seedling.status === 'distributed' ? 'bg-blue-500 text-white' :
+                            seedling.status === 'damaged' ? 'bg-red-500 text-white' :
+                              'bg-amber-500 text-white'
+                        }`}>
                         {seedling.status === 'planted' ? '🌱 Planted' :
-                         seedling.status === 'distributed' ? '📦 Distributed' :
-                         seedling.status === 'damaged' ? '⚠️ Damaged' :
-                         '🔄 Replanted'}
+                          seedling.status === 'distributed' ? '📦 Distributed' :
+                            seedling.status === 'damaged' ? '⚠️ Damaged' :
+                              '🔄 Replanted'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -857,21 +850,20 @@ const SeedlingManagement: React.FC = () => {
                 >
                   Previous
                 </button>
-                
+
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === page
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === page
                         ? 'bg-indigo-500 text-white shadow-lg'
                         : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>
                 ))}
-                
+
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
@@ -1180,12 +1172,11 @@ const SeedlingManagement: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Status</p>
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                    selectedSeedling.status === 'planted' ? 'bg-green-100 text-green-700' :
-                    selectedSeedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
-                    selectedSeedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedSeedling.status === 'planted' ? 'bg-green-100 text-green-700' :
+                      selectedSeedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
+                        selectedSeedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                    }`}>
                     {selectedSeedling.status}
                   </span>
                 </div>
@@ -1242,9 +1233,9 @@ const SeedlingManagement: React.FC = () => {
                     {selectedSeedling.seedling_photo && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Seedling Photo</p>
-                        <img 
-                          src={selectedSeedling.seedling_photo} 
-                          alt="Seedling" 
+                        <img
+                          src={selectedSeedling.seedling_photo}
+                          alt="Seedling"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                         />
                       </div>
@@ -1252,9 +1243,9 @@ const SeedlingManagement: React.FC = () => {
                     {selectedSeedling.packaging_photo && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Distribution Photo</p>
-                        <img 
-                          src={selectedSeedling.packaging_photo} 
-                          alt="Packaging" 
+                        <img
+                          src={selectedSeedling.packaging_photo}
+                          alt="Packaging"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                         />
                       </div>
@@ -1262,9 +1253,9 @@ const SeedlingManagement: React.FC = () => {
                     {selectedSeedling.quality_photo && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Quality Check Photo</p>
-                        <img 
-                          src={selectedSeedling.quality_photo} 
-                          alt="Quality" 
+                        <img
+                          src={selectedSeedling.quality_photo}
+                          alt="Quality"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                         />
                       </div>
@@ -1281,9 +1272,9 @@ const SeedlingManagement: React.FC = () => {
                     {selectedSeedling.planting_photo_1 && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Planting Photo 1</p>
-                        <img 
-                          src={selectedSeedling.planting_photo_1} 
-                          alt="Planting 1" 
+                        <img
+                          src={selectedSeedling.planting_photo_1}
+                          alt="Planting 1"
                           className="w-full h-48 object-cover rounded-lg border border-green-200"
                         />
                       </div>
@@ -1291,9 +1282,9 @@ const SeedlingManagement: React.FC = () => {
                     {selectedSeedling.planting_photo_2 && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Planting Photo 2</p>
-                        <img 
-                          src={selectedSeedling.planting_photo_2} 
-                          alt="Planting 2" 
+                        <img
+                          src={selectedSeedling.planting_photo_2}
+                          alt="Planting 2"
                           className="w-full h-48 object-cover rounded-lg border border-green-200"
                         />
                       </div>
@@ -1301,9 +1292,9 @@ const SeedlingManagement: React.FC = () => {
                     {selectedSeedling.planting_photo_3 && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Planting Photo 3</p>
-                        <img 
-                          src={selectedSeedling.planting_photo_3} 
-                          alt="Planting 3" 
+                        <img
+                          src={selectedSeedling.planting_photo_3}
+                          alt="Planting 3"
                           className="w-full h-48 object-cover rounded-lg border border-green-200"
                         />
                       </div>

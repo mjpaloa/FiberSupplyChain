@@ -65,7 +65,7 @@ const FiberPurchaseForm: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      
+
       // Prepare JSON data with correct field names for backend
       const purchaseData = {
         price: formData.price,
@@ -80,30 +80,27 @@ const FiberPurchaseForm: React.FC = () => {
 
       const response = await fetch('https://easyabaca-api.vercel.app/api/buyer-purchases', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(purchaseData)
       });
 
       if (response.ok) {
         setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          // Reset form
-          setFormData({
-            price: '',
-            contactNumber: '',
-            farmerName: '',
-            fiberQuality: '',
-            quantity: '',
-            variety: '',
-            totalPrice: 0,
-            imageFile: null
-          });
-          setImagePreview('');
-        }, 2000);
+        // Reset form
+        setFormData({
+          price: '',
+          contactNumber: '',
+          farmerName: '',
+          fiberQuality: '',
+          quantity: '',
+          variety: '',
+          totalPrice: 0,
+          imageFile: null
+        });
+        setImagePreview('');
       }
     } catch (error) {
       console.error('Error submitting purchase:', error);
@@ -116,19 +113,51 @@ const FiberPurchaseForm: React.FC = () => {
   return (
     <div className="w-full max-w-full min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Purchase Abaca Fiber</h1>
-          <p className="text-sm sm:text-base text-gray-600">Fill out the form to create a new purchase request</p>
+        {/* Featured Card Header */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-12 mb-8 md:mb-10 shadow-2xl group transition-all duration-500 hover:shadow-blue-200/50 hover:scale-[1.01]">
+          {/* Decorative Background Elements */}
+          <div className="absolute top-0 right-0 -m-12 sm:-m-16 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
+            <Package size={240} className="text-white rotate-12" />
+          </div>
+          <div className="absolute -bottom-8 -left-8 opacity-5 group-hover:opacity-10 transition-opacity duration-700">
+            <Leaf size={160} className="text-white -rotate-12" />
+          </div>
+
+          <div className="relative z-10">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+              Purchase Abaca Fiber
+            </h1>
+          </div>
+
+          {/* Bottom highlight bar */}
+          <div className="absolute bottom-0 left-0 h-1.5 w-full bg-gradient-to-r from-blue-400 to-indigo-400 opacity-50"></div>
         </div>
 
-        {/* Success Message */}
+        {/* Success Modal Pop-up (Custom Alert Style) */}
         {showSuccess && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 animate-in fade-in duration-200">
-            <CheckCircle className="text-green-600 flex-shrink-0" size={24} />
-            <div>
-              <p className="font-semibold text-green-900">Purchase request submitted successfully!</p>
-              <p className="text-sm text-green-700">Your request has been added to the marketplace.</p>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-[#1e1f1c] text-white rounded-[2rem] shadow-2xl max-w-md w-full p-8 transform animate-in zoom-in slide-in-from-bottom-4 duration-300 border border-white/5">
+              <div className="mb-6">
+                <h3 className="text-xl font-medium text-gray-200">localhost:5173 says</h3>
+              </div>
+
+              <div className="flex items-start gap-3 mb-10">
+                <div className="mt-1 flex-shrink-0">
+                  <span className="text-xl">✓</span>
+                </div>
+                <p className="text-lg leading-relaxed">
+                  Transaction Added Successfully! Your purchase request has been recorded in our system.
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowSuccess(false)}
+                  className="px-8 py-2.5 bg-[#a3e635] text-black rounded-2xl font-bold text-lg hover:bg-[#bef264] transition-colors shadow-lg active:scale-95"
+                >
+                  OK
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -48,7 +48,7 @@ export default function MAOInventoryAddPage() {
       if (response.ok) {
         const data = await response.json();
         const foundHarvest = data.harvests.find((h: Harvest) => h.harvest_id === harvestId);
-        
+
         if (foundHarvest) {
           setHarvest(foundHarvest);
           setFormData(prev => ({
@@ -74,7 +74,7 @@ export default function MAOInventoryAddPage() {
 
     try {
       const token = localStorage.getItem('token');
-      
+
       const payload = {
         harvest_id: harvestId,
         stock_weight_kg: parseFloat(formData.stock_weight_kg),

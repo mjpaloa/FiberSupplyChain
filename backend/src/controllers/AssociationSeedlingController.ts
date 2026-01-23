@@ -84,9 +84,27 @@ export class AssociationSeedlingController {
         throw resultError;
       }
 
-      // Map view result to maintain existing nested shape
-      // MAO only tracks what they distributed to associations, NOT what associations distributed to farmers
-      const mapped = (resultData || []).map((row: any) => {
+      // Map view result and calculate progress real-time
+      const distributions = resultData || [];
+      const distIds = distributions.map((row: any) => row.distribution_id);
+
+      // Batch fetch farmer distributions to calculate progress
+      const { data: allFarmerDistributions } = await supabase
+        .from('farmer_seedling_distributions')
+        .select('association_distribution_id, quantity_distributed, status, recipient_farmer_id')
+        .in('association_distribution_id', distIds)
+        .not('status', 'eq', 'cancelled');
+
+      const mapped = distributions.map((row: any) => {
+        // Get stats for this specific distribution
+        const myFarmerDists = (allFarmerDistributions || []).filter(
+          f => f.association_distribution_id === row.distribution_id
+        );
+
+        const totalDistributed = myFarmerDists.reduce((sum, f) => sum + (f.quantity_distributed || 0), 0);
+        const uniqueFarmers = new Set(myFarmerDists.map(f => f.recipient_farmer_id)).size;
+        const remainingQuantity = Math.max(row.quantity_distributed - totalDistributed, 0);
+
         return {
           distribution_id: row.distribution_id,
           variety: row.variety,
@@ -94,7 +112,7 @@ export class AssociationSeedlingController {
           quantity_distributed: row.quantity_distributed,
           date_distributed: row.date_distributed,
           recipient_association_id: row.recipient_association_id,
-          recipient_association_name: row.recipient_association_name,
+          recipient_association_name: row.recipient_association_name || row.association_name,
           remarks: row.remarks,
           status: row.status,
           distributed_by: row.distributed_by,
@@ -104,22 +122,21 @@ export class AssociationSeedlingController {
           created_at: row.created_at,
           organization: row.distributed_by
             ? {
-                officer_id: row.distributed_by,
-                full_name: row.distributed_by_name || '',
-              }
+              officer_id: row.distributed_by,
+              full_name: row.distributed_by_name || '',
+            }
             : undefined,
           association_officers: row.recipient_association_id
             ? {
-                officer_id: row.recipient_association_id,
-                full_name: row.recipient_officer_name || '',
-                association_name: row.association_name || row.recipient_association_name,
-                contact_number: row.recipient_contact,
-              }
+              officer_id: row.recipient_association_id,
+              full_name: row.recipient_officer_name || '',
+              association_name: row.association_name || row.recipient_association_name,
+              contact_number: row.recipient_contact,
+            }
             : undefined,
-          // MAO doesn't track farmer distributions - that's the association's responsibility
-          distributed_to_farmers: 0,
-          farmers_count: 0,
-          remaining_quantity: 0, // MAO gave everything to the association
+          distributed_to_farmers: totalDistributed,
+          farmers_count: uniqueFarmers,
+          remaining_quantity: remainingQuantity,
         };
       });
 
@@ -140,8 +157,8 @@ export class AssociationSeedlingController {
 
       // Validate required fields
       if (!distributionData.variety || !distributionData.quantity_distributed || !distributionData.recipient_association_id) {
-        res.status(400).json({ 
-          error: 'Variety, quantity, and recipient association are required' 
+        res.status(400).json({
+          error: 'Variety, quantity, and recipient association are required'
         });
         return;
       }
@@ -171,9 +188,9 @@ export class AssociationSeedlingController {
 
       if (error) throw error;
 
-      res.status(201).json({ 
-        message: 'Seedlings distributed to association successfully', 
-        distribution: data 
+      res.status(201).json({
+        message: 'Seedlings distributed to association successfully',
+        distribution: data
       });
     } catch (error) {
       console.error('Error creating association distribution:', error);
@@ -192,8 +209,8 @@ export class AssociationSeedlingController {
 
       // Validate required fields
       if (!distributionData.variety || !distributionData.quantity_distributed || !distributionData.recipient_association_id) {
-        res.status(400).json({ 
-          error: 'Variety, quantity, and recipient association are required' 
+        res.status(400).json({
+          error: 'Variety, quantity, and recipient association are required'
         });
         return;
       }
@@ -229,9 +246,9 @@ export class AssociationSeedlingController {
         return;
       }
 
-      res.status(200).json({ 
-        message: 'Distribution updated successfully', 
-        distribution: data 
+      res.status(200).json({
+        message: 'Distribution updated successfully',
+        distribution: data
       });
     } catch (error) {
       console.error('Error updating association distribution:', error);
@@ -296,7 +313,7 @@ export class AssociationSeedlingController {
           .eq('association_distribution_id', row.distribution_id);
 
         const totalDistributed = farmerDistributions?.reduce(
-          (sum: number, dist: any) => sum + (dist.quantity_distributed || 0), 
+          (sum: number, dist: any) => sum + (dist.quantity_distributed || 0),
           0
         ) || 0;
 
@@ -317,9 +334,9 @@ export class AssociationSeedlingController {
           created_at: row.created_at,
           organization: row.distributed_by
             ? {
-                officer_id: row.distributed_by,
-                full_name: row.distributed_by_name || '',
-              }
+              officer_id: row.distributed_by,
+              full_name: row.distributed_by_name || '',
+            }
             : undefined,
           distributed_to_farmers: totalDistributed,
           farmers_count: row.farmers_receiving_count ?? 0,
@@ -413,7 +430,7 @@ export class AssociationSeedlingController {
 
       // Validate total quantity doesn't exceed available
       const totalDistributed = farmer_distributions.reduce((sum: number, dist: any) => sum + dist.quantity_distributed, 0);
-      
+
       // Get already distributed quantity
       const { data: existingDistributions, error: existingError } = await supabase
         .from('farmer_seedling_distributions')
@@ -423,10 +440,10 @@ export class AssociationSeedlingController {
       if (existingError) throw existingError;
 
       const alreadyDistributed = existingDistributions?.reduce((sum, dist) => sum + dist.quantity_distributed, 0) || 0;
-      
+
       if (alreadyDistributed + totalDistributed > assocDistribution.quantity_distributed) {
-        res.status(400).json({ 
-          error: `Cannot distribute ${totalDistributed} seedlings. Only ${assocDistribution.quantity_distributed - alreadyDistributed} remaining.` 
+        res.status(400).json({
+          error: `Cannot distribute ${totalDistributed} seedlings. Only ${assocDistribution.quantity_distributed - alreadyDistributed} remaining.`
         });
         return;
       }
@@ -452,7 +469,7 @@ export class AssociationSeedlingController {
 
       // Calculate new total distributed
       const newTotalDistributed = alreadyDistributed + totalDistributed;
-      
+
       // Update association distribution status based on remaining quantity
       let newStatus = 'partially_distributed_to_farmers';
       if (newTotalDistributed >= assocDistribution.quantity_distributed) {
@@ -488,8 +505,8 @@ export class AssociationSeedlingController {
         // Don't fail the request, just log the error
       }
 
-      res.status(201).json({ 
-        message: 'Seedlings distributed to farmers successfully', 
+      res.status(201).json({
+        message: 'Seedlings distributed to farmers successfully',
         distributions: data,
         remaining_quantity: assocDistribution.quantity_distributed - newTotalDistributed
       });
@@ -694,7 +711,7 @@ export class AssociationSeedlingController {
 
       // Validate distribution ID
       if (!id || id === 'undefined' || id === 'null') {
-        res.status(400).json({ 
+        res.status(400).json({
           error: 'Invalid distribution ID. Please provide a valid seedling distribution ID.',
           received: id
         });
@@ -771,9 +788,9 @@ export class AssociationSeedlingController {
 
       console.log('✅ Seedling marked as planted successfully');
 
-      res.status(200).json({ 
-        message: 'Seedlings marked as planted successfully', 
-        distribution: data 
+      res.status(200).json({
+        message: 'Seedlings marked as planted successfully',
+        distribution: data
       });
     } catch (error) {
       console.error('Error marking seedlings as planted:', error);
@@ -869,16 +886,16 @@ export class AssociationSeedlingController {
       let filteredFarmerData = farmerResult.data;
 
       if (association_name) {
-        filteredAssocData = filteredAssocData?.filter(d => 
+        filteredAssocData = filteredAssocData?.filter(d =>
           d.recipient_association_name?.toLowerCase().includes((association_name as string).toLowerCase())
         );
-        filteredFarmerData = filteredFarmerData?.filter(d => 
+        filteredFarmerData = filteredFarmerData?.filter(d =>
           (d.association_officers as any)?.association_name?.toLowerCase().includes((association_name as string).toLowerCase())
         );
       }
 
       if (municipality) {
-        filteredFarmerData = filteredFarmerData?.filter(d => 
+        filteredFarmerData = filteredFarmerData?.filter(d =>
           (d.farmers as any)?.municipality?.toLowerCase().includes((municipality as string).toLowerCase())
         );
       }
@@ -992,8 +1009,8 @@ export class AssociationSeedlingController {
       if (farmerError) throw farmerError;
 
       if (farmerDists && farmerDists.length > 0) {
-        res.status(400).json({ 
-          error: 'Cannot delete distribution. There are existing farmer distributions. Please delete farmer distributions first.' 
+        res.status(400).json({
+          error: 'Cannot delete distribution. There are existing farmer distributions. Please delete farmer distributions first.'
         });
         return;
       }
@@ -1054,7 +1071,7 @@ export class AssociationSeedlingController {
       // This month statistics
       const thisMonth = new Date();
       const thisMonthStart = new Date(thisMonth.getFullYear(), thisMonth.getMonth(), 1).toISOString().split('T')[0];
-      
+
       const thisMonthAssoc = assocData.filter(d => d.date_distributed >= thisMonthStart).length;
       const thisMonthFarmer = farmerData.filter(d => d.date_distributed >= thisMonthStart).length;
 
