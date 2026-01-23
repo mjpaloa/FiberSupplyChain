@@ -98,7 +98,7 @@ const FarmerDeliveryTracking: React.FC = () => {
   };
 
   const filteredDeliveries = deliveries.filter(delivery => {
-    const matchesSearch = 
+    const matchesSearch =
       delivery.buyers?.business_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       delivery.variety.toLowerCase().includes(searchQuery.toLowerCase()) ||
       delivery.delivery_location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -222,9 +222,9 @@ const FarmerDeliveryTracking: React.FC = () => {
                 className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base bg-white border-2 border-blue-200 rounded-lg sm:rounded-xl md:rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-medium shadow-md"
               />
             </div>
-            
-            <button 
-              onClick={downloadCSV} 
+
+            <button
+              onClick={downloadCSV}
               className="flex items-center justify-center px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-lg sm:rounded-xl md:rounded-2xl hover:from-blue-500 hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold border-2 border-blue-300 whitespace-nowrap"
             >
               <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
@@ -232,18 +232,17 @@ const FarmerDeliveryTracking: React.FC = () => {
               <span className="sm:hidden">Export</span>
             </button>
           </div>
-          
+
           {/* Status Filter Buttons - Second Row */}
           <div className="flex gap-1.5 sm:gap-2 flex-wrap">
             {['all', 'In Transit', 'Delivered', 'Completed', 'Cancelled'].map(status => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-2.5 sm:px-3 md:px-4 lg:px-5 py-1.5 sm:py-2 md:py-3 lg:py-4 text-xs sm:text-sm md:text-base rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 whitespace-nowrap ${
-                  statusFilter === status 
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105' 
+                className={`px-2.5 sm:px-3 md:px-4 lg:px-5 py-1.5 sm:py-2 md:py-3 lg:py-4 text-xs sm:text-sm md:text-base rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 whitespace-nowrap ${statusFilter === status
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105'
                     : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
-                }`}
+                  }`}
               >
                 {status === 'all' ? 'All' : status}
               </button>
@@ -279,18 +278,17 @@ const FarmerDeliveryTracking: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-indigo-100">
               {paginatedDeliveries.map((delivery, index) => (
-                <tr 
-                  key={delivery.delivery_id} 
-                  className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${
-                    index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
-                  }`}
+                <tr
+                  key={delivery.delivery_id}
+                  className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
+                    }`}
                 >
                   <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5 whitespace-nowrap">
                     <div className="flex items-center gap-2 sm:gap-3">
                       <div className="flex-shrink-0">
                         {delivery.buyers?.profile_photo ? (
-                          <img 
-                            src={delivery.buyers.profile_photo} 
+                          <img
+                            src={delivery.buyers.profile_photo}
                             alt={delivery.buyers.business_name}
                             className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shadow-lg border-2 border-white"
                             onError={(e) => {
@@ -301,7 +299,7 @@ const FarmerDeliveryTracking: React.FC = () => {
                             }}
                           />
                         ) : null}
-                        <div 
+                        <div
                           className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg border-2 border-white"
                           style={{ display: delivery.buyers?.profile_photo ? 'none' : 'flex' }}
                         >
@@ -342,14 +340,13 @@ const FarmerDeliveryTracking: React.FC = () => {
                   <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 bg-gray-200 rounded-full h-2 w-20 overflow-hidden">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            getStatusProgress(delivery.status) === 100 
-                              ? 'bg-gradient-to-r from-emerald-500 to-green-600' 
+                        <div
+                          className={`h-2 rounded-full transition-all duration-500 ${getStatusProgress(delivery.status) === 100
+                              ? 'bg-gradient-to-r from-emerald-500 to-green-600'
                               : getStatusProgress(delivery.status) >= 50
-                              ? 'bg-gradient-to-r from-blue-500 to-emerald-500'
-                              : 'bg-gradient-to-r from-purple-500 to-blue-500'
-                          }`}
+                                ? 'bg-gradient-to-r from-blue-500 to-emerald-500'
+                                : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                            }`}
                           style={{ width: `${getStatusProgress(delivery.status)}%` }}
                         ></div>
                       </div>
@@ -357,7 +354,7 @@ const FarmerDeliveryTracking: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-5 whitespace-normal">
-                    <button 
+                    <button
                       onClick={() => { setSelectedDelivery(delivery); setShowDetailsModal(true); }}
                       className="p-1.5 sm:p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-all hover:shadow-lg"
                     >
@@ -384,11 +381,10 @@ const FarmerDeliveryTracking: React.FC = () => {
                       setEntriesPerPage(size);
                       setCurrentPage(1);
                     }}
-                    className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
-                      entriesPerPage === size
+                    className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${entriesPerPage === size
                         ? 'bg-indigo-500 text-white shadow-lg'
                         : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
-                    }`}
+                      }`}
                   >
                     {size}
                   </button>
@@ -405,22 +401,20 @@ const FarmerDeliveryTracking: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
-                    currentPage === 1
+                  className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${currentPage === 1
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                  }`}
+                    }`}
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages || totalPages === 0}
-                  className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
-                    currentPage === totalPages || totalPages === 0
+                  className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${currentPage === totalPages || totalPages === 0
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                  }`}
+                    }`}
                 >
                   Next
                 </button>
@@ -454,8 +448,8 @@ const FarmerDeliveryTracking: React.FC = () => {
                     <p className="text-emerald-50 text-sm">Complete delivery information</p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setShowDetailsModal(false)} 
+                <button
+                  onClick={() => setShowDetailsModal(false)}
                   className="p-2 hover:bg-white/20 rounded-xl transition-all"
                 >
                   <XCircle size={24} className="text-white" />
@@ -542,7 +536,7 @@ const FarmerDeliveryTracking: React.FC = () => {
                   </div>
                   <h3 className="font-bold text-amber-900 text-lg">Fiber Details</h3>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   <div className="bg-white/70 rounded-xl p-3">
                     <p className="text-xs text-amber-600 font-medium mb-1">Variety</p>
                     <p className="text-base font-bold text-amber-900">{selectedDelivery.variety}</p>
@@ -554,10 +548,6 @@ const FarmerDeliveryTracking: React.FC = () => {
                   <div className="bg-white/70 rounded-xl p-3">
                     <p className="text-xs text-amber-600 font-medium mb-1">Grade</p>
                     <p className="text-base font-bold text-amber-900">{selectedDelivery.grade}</p>
-                  </div>
-                  <div className="bg-white/70 rounded-xl p-3">
-                    <p className="text-xs text-amber-600 font-medium mb-1">Price/kg</p>
-                    <p className="text-base font-bold text-amber-900">₱{selectedDelivery.price_per_kg}</p>
                   </div>
                 </div>
               </div>
@@ -594,7 +584,7 @@ const FarmerDeliveryTracking: React.FC = () => {
               </div>
 
               {/* Payment Information Card */}
-              {selectedDelivery.total_amount > 0 && (
+              {(selectedDelivery.payment_method || selectedDelivery.payment_status) && (
                 <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-5 shadow-md border border-indigo-200">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="p-2 bg-indigo-500 rounded-xl">
@@ -602,11 +592,7 @@ const FarmerDeliveryTracking: React.FC = () => {
                     </div>
                     <h3 className="font-bold text-indigo-900 text-lg">Payment Information</h3>
                   </div>
-                  <div className="grid sm:grid-cols-3 gap-3">
-                    <div className="bg-white/70 rounded-xl p-3">
-                      <p className="text-xs text-indigo-600 font-medium mb-1">Total Amount</p>
-                      <p className="text-xl font-bold text-indigo-600">₱{selectedDelivery.total_amount.toLocaleString()}</p>
-                    </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
                     <div className="bg-white/70 rounded-xl p-3">
                       <p className="text-xs text-indigo-600 font-medium mb-1">Payment Method</p>
                       <p className="text-base font-bold text-indigo-900">{selectedDelivery.payment_method}</p>
