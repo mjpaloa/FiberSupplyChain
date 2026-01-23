@@ -106,28 +106,54 @@ export default function HarvestSubmissionPage() {
       const token = getAuthToken();
       if (!token) return;
 
-      const response = await fetch('https://easyabaca-api.vercel.app/api/seedling-distribution/farmer/planted', {
+      // 1. Fetch planted seedlings
+      const seedlingsRes = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/farmer/received', {
         headers: getAuthHeader()
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setPlantedSeedlings(data.seedlings || []);
-        
-        // Auto-fill from most recent planted seedling
-        if (data.seedlings && data.seedlings.length > 0) {
-          const latest = data.seedlings[0];
-          setFormData(prev => ({
-            ...prev,
-            abaca_variety: latest.variety || '',
-            planting_date: latest.planting_date ? new Date(latest.planting_date).toISOString().split('T')[0] : '',
-            planting_material_source: latest.planting_notes || '',
-            planting_spacing: latest.planting_location || ''
-          }));
+      // 2. Fetch existing harvests to check what's already been harvested
+      const harvestsRes = await fetch('https://easyabaca-api.vercel.app/api/harvests/farmer/harvests', {
+        headers: getAuthHeader()
+      });
+
+      if (seedlingsRes.ok && harvestsRes.ok) {
+        const seedlingsData = await seedlingsRes.json();
+        const harvestsData = await harvestsRes.json();
+
+        const allPlanted = (seedlingsData || []).filter((s: any) => s.status === 'planted');
+        const allHarvests = harvestsData.harvests || [];
+
+        setPlantedSeedlings(allPlanted);
+
+        if (allPlanted.length > 0) {
+          // Find the first planted seedling that hasn't been harvested yet
+          // Match by variety and planting date
+          const unharvested = allPlanted.find((s: any) => {
+            const sDate = new Date(s.planting_date).toISOString().split('T')[0];
+            const alreadyHarvested = allHarvests.some((h: any) =>
+              h.abaca_variety === s.variety &&
+              h.planting_date === sDate
+            );
+            return !alreadyHarvested;
+          });
+
+          // If no unharvested found, fallback to the most recent planted one
+          const target = unharvested || allPlanted[0];
+
+          if (target) {
+            console.log('🌱 Auto-filling from seedling:', target);
+            setFormData(prev => ({
+              ...prev,
+              abaca_variety: target.variety || '',
+              planting_date: target.planting_date ? new Date(target.planting_date).toISOString().split('T')[0] : '',
+              planting_material_source: target.planting_notes || 'Tissue Culture',
+              planting_spacing: target.planting_location || ''
+            }));
+          }
         }
       }
     } catch (error) {
-      console.error('Error fetching planted seedlings:', error);
+      console.error('Error fetching data for auto-fill:', error);
     }
   };
 
@@ -146,7 +172,7 @@ export default function HarvestSubmissionPage() {
       if (response.ok) {
         const data = await response.json();
         setFarmerProfile(data.farmer);
-        
+
         // Auto-fill farm location fields from profile
         if (data.farmer) {
           setFormData(prev => ({
@@ -167,7 +193,7 @@ export default function HarvestSubmissionPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
@@ -182,15 +208,15 @@ export default function HarvestSubmissionPage() {
 
     try {
       const token = getAuthToken();
-      
+
       if (!token) {
         alert('No authentication token found. Please login again.');
         setLoading(false);
         return;
       }
-      
+
       console.log('Token exists:', !!token);
-      
+
       // Convert string numbers to actual numbers
       const payload = {
         ...formData,
@@ -205,7 +231,7 @@ export default function HarvestSubmissionPage() {
       };
 
       console.log('Submitting payload:', payload);
-      
+
       const response = await fetch('https://easyabaca-api.vercel.app/api/harvests/farmer/harvests', {
         method: 'POST',
         headers: {
@@ -227,7 +253,7 @@ export default function HarvestSubmissionPage() {
       } else {
         const error = await response.json();
         console.error('Backend error:', error);
-        
+
         if (response.status === 401) {
           alert('Authentication failed. Your session may have expired. Please logout and login again.');
         } else {
@@ -310,56 +336,56 @@ export default function HarvestSubmissionPage() {
                 <p className="text-sm text-emerald-600">Auto-filled from your profile</p>
               </div>
             </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Area (Hectares) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="area_hectares"
-                    step="0.01"
-                    required
-                    value={formData.area_hectares}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Farm Coordinates (GPS or Description)
-                  </label>
-                  <input
-                    type="text"
-                    name="farm_coordinates"
-                    placeholder="e.g., 7.6298, 125.4737"
-                    value={formData.farm_coordinates}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Farm Name</label>
-                  <input
-                    type="text"
-                    name="farm_name"
-                    value={formData.farm_name}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Landmark</label>
-                  <input
-                    type="text"
-                    name="landmark"
-                    value={formData.landmark}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Area (Hectares) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="area_hectares"
+                  step="0.01"
+                  required
+                  value={formData.area_hectares}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
               </div>
-            </section>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Farm Coordinates (GPS or Description)
+                </label>
+                <input
+                  type="text"
+                  name="farm_coordinates"
+                  placeholder="e.g., 7.6298, 125.4737"
+                  value={formData.farm_coordinates}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Farm Name</label>
+                <input
+                  type="text"
+                  name="farm_name"
+                  value={formData.farm_name}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Landmark</label>
+                <input
+                  type="text"
+                  name="landmark"
+                  value={formData.landmark}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+          </section>
 
           {/* Planting Information */}
           <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
@@ -371,62 +397,62 @@ export default function HarvestSubmissionPage() {
               </div>
               <h2 className="text-xl font-bold text-gray-900">Planting Information</h2>
             </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Abaca Variety <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="abaca_variety"
-                    required
-                    placeholder="e.g., Maguindanao, Abuab, Tangongon, Laylay, etc."
-                    value={formData.abaca_variety}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Common varieties: Maguindanao, Abuab, Tangongon, Laylay, Inosa, Linawaan</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Planting Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="planting_date"
-                    required
-                    value={formData.planting_date}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Planting Method <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="planting_material_source"
-                    required
-                    placeholder="e.g., Tissue Culture, Manual planting"
-                    value={formData.planting_material_source}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                  <input
-                    type="text"
-                    name="planting_spacing"
-                    placeholder="e.g., Farm A, Plot 1"
-                    value={formData.planting_spacing}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Abaca Variety <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="abaca_variety"
+                  required
+                  placeholder="e.g., Maguindanao, Abuab, Tangongon, Laylay, etc."
+                  value={formData.abaca_variety}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+                <p className="text-xs text-gray-500 mt-1">Common varieties: Maguindanao, Abuab, Tangongon, Laylay, Inosa, Linawaan</p>
               </div>
-            </section>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Planting Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="planting_date"
+                  required
+                  value={formData.planting_date}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Planting Method <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="planting_material_source"
+                  required
+                  placeholder="e.g., Tissue Culture, Manual planting"
+                  value={formData.planting_material_source}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <input
+                  type="text"
+                  name="planting_spacing"
+                  placeholder="e.g., Farm A, Plot 1"
+                  value={formData.planting_spacing}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+          </section>
 
           {/* Harvest Details */}
           <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
@@ -438,85 +464,85 @@ export default function HarvestSubmissionPage() {
               </div>
               <h2 className="text-xl font-bold text-gray-900">Harvest Details</h2>
             </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Harvest Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="harvest_date"
-                    required
-                    value={formData.harvest_date}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Harvest Method <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="harvest_method"
-                    required
-                    value={formData.harvest_method}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  >
-                    <option value="Manual Tuxying + Hand Stripping">Manual Tuxying + Hand Stripping</option>
-                    <option value="Mechanical Stripping">Mechanical Stripping</option>
-                    <option value="MSSM">MSSM</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Stalks Harvested</label>
-                  <input
-                    type="number"
-                    name="stalks_harvested"
-                    value={formData.stalks_harvested}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Dry Fiber Output (kg) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="dry_fiber_output_kg"
-                    step="0.01"
-                    required
-                    value={formData.dry_fiber_output_kg}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Wet Weight (kg)</label>
-                  <input
-                    type="number"
-                    name="wet_weight_kg"
-                    step="0.01"
-                    value={formData.wet_weight_kg}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Yield per Hectare (kg/ha)</label>
-                  <input
-                    type="number"
-                    name="yield_per_hectare_kg"
-                    step="0.01"
-                    value={formData.yield_per_hectare_kg}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Harvest Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="harvest_date"
+                  required
+                  value={formData.harvest_date}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
               </div>
-            </section>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Harvest Method <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="harvest_method"
+                  required
+                  value={formData.harvest_method}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                >
+                  <option value="Manual Tuxying + Hand Stripping">Manual Tuxying + Hand Stripping</option>
+                  <option value="Mechanical Stripping">Mechanical Stripping</option>
+                  <option value="MSSM">MSSM</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Stalks Harvested</label>
+                <input
+                  type="number"
+                  name="stalks_harvested"
+                  value={formData.stalks_harvested}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Dry Fiber Output (kg) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="dry_fiber_output_kg"
+                  step="0.01"
+                  required
+                  value={formData.dry_fiber_output_kg}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Wet Weight (kg)</label>
+                <input
+                  type="number"
+                  name="wet_weight_kg"
+                  step="0.01"
+                  value={formData.wet_weight_kg}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Yield per Hectare (kg/ha)</label>
+                <input
+                  type="number"
+                  name="yield_per_hectare_kg"
+                  step="0.01"
+                  value={formData.yield_per_hectare_kg}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+          </section>
 
           {/* Quality & Grading */}
           <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
@@ -528,59 +554,59 @@ export default function HarvestSubmissionPage() {
               </div>
               <h2 className="text-xl font-bold text-gray-900">Quality & Grading</h2>
             </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Fiber Grade</label>
-                  <select
-                    name="fiber_grade"
-                    value={formData.fiber_grade}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  >
-                    <option value="Grade A">Grade A</option>
-                    <option value="Grade B">Grade B</option>
-                    <option value="Grade C">Grade C</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Moisture Status <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="moisture_status"
-                    required
-                    value={formData.moisture_status}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  >
-                    <option value="Sun-dried">Sun-dried</option>
-                    <option value="Semi-dried">Semi-dried</option>
-                    <option value="Wet">Wet</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Fiber Color</label>
-                  <input
-                    type="text"
-                    name="fiber_color"
-                    value={formData.fiber_color}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bales Produced</label>
-                  <input
-                    type="number"
-                    name="bales_produced"
-                    value={formData.bales_produced}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Fiber Grade</label>
+                <select
+                  name="fiber_grade"
+                  value={formData.fiber_grade}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                >
+                  <option value="Grade A">Grade A</option>
+                  <option value="Grade B">Grade B</option>
+                  <option value="Grade C">Grade C</option>
+                </select>
               </div>
-            </section>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Moisture Status <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="moisture_status"
+                  required
+                  value={formData.moisture_status}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                >
+                  <option value="Sun-dried">Sun-dried</option>
+                  <option value="Semi-dried">Semi-dried</option>
+                  <option value="Wet">Wet</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Fiber Color</label>
+                <input
+                  type="text"
+                  name="fiber_color"
+                  value={formData.fiber_color}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bales Produced</label>
+                <input
+                  type="number"
+                  name="bales_produced"
+                  value={formData.bales_produced}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+          </section>
 
           {/* Pest & Disease Observations */}
           <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
@@ -592,49 +618,49 @@ export default function HarvestSubmissionPage() {
               </div>
               <h2 className="text-xl font-bold text-gray-900">Pest & Disease Observations</h2>
             </div>
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="pests_observed"
-                    checked={formData.pests_observed}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 block text-sm text-gray-700">Pests Observed</label>
-                </div>
-                {formData.pests_observed && (
-                  <textarea
-                    name="pests_description"
-                    placeholder="Describe the pests observed..."
-                    value={formData.pests_description}
-                    onChange={handleChange}
-                    rows={3}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                )}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="diseases_observed"
-                    checked={formData.diseases_observed}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 block text-sm text-gray-700">Diseases Observed</label>
-                </div>
-                {formData.diseases_observed && (
-                  <textarea
-                    name="diseases_description"
-                    placeholder="Describe the diseases observed..."
-                    value={formData.diseases_description}
-                    onChange={handleChange}
-                    rows={3}
-                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                )}
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="pests_observed"
+                  checked={formData.pests_observed}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                />
+                <label className="ml-2 block text-sm text-gray-700">Pests Observed</label>
               </div>
-            </section>
+              {formData.pests_observed && (
+                <textarea
+                  name="pests_description"
+                  placeholder="Describe the pests observed..."
+                  value={formData.pests_description}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              )}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="diseases_observed"
+                  checked={formData.diseases_observed}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                />
+                <label className="ml-2 block text-sm text-gray-700">Diseases Observed</label>
+              </div>
+              {formData.diseases_observed && (
+                <textarea
+                  name="diseases_description"
+                  placeholder="Describe the diseases observed..."
+                  value={formData.diseases_description}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                />
+              )}
+            </div>
+          </section>
 
           {/* Remarks */}
           <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">

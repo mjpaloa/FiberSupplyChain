@@ -450,9 +450,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
       // Calculate monthly data from actual database dates
       const currentYear = new Date().getFullYear();
-      let monthlyReceived = productionData.monthlyReceived || new Array(12).fill(0);
-      let monthlyDistributed = productionData.monthlyDistributed || new Array(12).fill(0);
-      let monthlyHarvest = productionData.monthlyHarvest || new Array(12).fill(0);
+      let monthlyReceived = new Array(12).fill(0);
+      let monthlyDistributed = new Array(12).fill(0);
+      let monthlyHarvest = new Array(12).fill(0);
 
       // Process deliveries for monthly harvest (production)
       deliveries.forEach((d: any) => {
@@ -1280,8 +1280,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                           <div className="flex items-center justify-between mb-8">
                             <div>
-                              <h3 className="text-lg font-semibold text-gray-900">Distribution & Harvest Overview</h3>
-                              <p className="text-sm text-gray-500 font-normal mt-1">Seedling distribution vs. harvest production</p>
+                              <h3 className="text-lg font-semibold text-gray-900">Seedling Distribution Overview</h3>
+                              <p className="text-sm text-gray-500 font-normal mt-1">Monthly seedling distribution statistics</p>
                             </div>
                             <div className="flex items-center gap-4 text-sm">
                               <div className="flex items-center gap-2">
@@ -1292,10 +1292,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 <div className="w-3 h-3 rounded-full bg-[#3b82f6]"></div>
                                 <span className="text-gray-600">Distributed (Farmers)</span>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#10b981]"></div>
-                                <span className="text-gray-600">Harvest Total</span>
-                              </div>
+
                               <select
                                 className="text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                                 value={chartView}
@@ -1343,7 +1340,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 <div className="overflow-x-auto">
                                   <div style={{ minWidth: chartView === 'monthly' ? '600px' : '100%', width: '100%' }}>
                                     <ResponsiveContainer width="100%" height={380}>
-                                      <RechartsBarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                                      <RechartsBarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }} barGap={8}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                                         <XAxis
                                           dataKey="period"
@@ -1384,13 +1381,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                           radius={[4, 4, 0, 0]}
                                           barSize={chartView === 'monthly' ? 20 : 30}
                                         />
-                                        <Bar
-                                          dataKey="harvested"
-                                          fill="#10b981"
-                                          name="Harvest Total (kg)"
-                                          radius={[4, 4, 0, 0]}
-                                          barSize={chartView === 'monthly' ? 20 : 30}
-                                        />
+
                                       </RechartsBarChart>
                                     </ResponsiveContainer>
                                   </div>

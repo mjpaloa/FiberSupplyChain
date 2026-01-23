@@ -310,49 +310,55 @@ export default function FarmerHarvestView() {
         </div>
       )}
 
-      {/* Modern Filters with Glassmorphism - UserManagement Style */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-white/20 p-3 sm:p-4 md:p-6 mb-4 sm:mb-5 md:mb-6">
-        <div className="flex flex-col gap-3 sm:gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <div className="relative group">
-              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 group-focus-within:text-emerald-500 transition-colors" />
-              <input
-                type="text"
-                placeholder="Search by variety, grade..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
-              />
-            </div>
+      {/* Unified Search, Filter & Submit Bar - Optimized for Mobile */}
+      <div className="bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-white/20 p-1 sm:p-2 mb-4 sm:mb-6">
+        <div className="flex flex-row items-center bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 focus-within:bg-white transition-all duration-200 overflow-hidden group">
+
+          {/* Search Part */}
+          <div className="relative flex-1 flex items-center min-w-0">
+            <Search className="absolute left-2.5 sm:left-4 text-gray-400 w-3.5 h-3.5 sm:w-5 sm:h-5 group-focus-within:text-emerald-500 transition-colors" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 sm:pl-12 pr-2 py-2.5 sm:py-3 md:py-4 text-xs sm:text-base bg-transparent border-none focus:ring-0 placeholder:text-gray-400"
+            />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            {/* Status Filter */}
-            <div className="flex-1 sm:w-auto">
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer font-medium"
-              >
-                <option value="all">All Status</option>
-                <option value="Pending Verification">⏳ Pending Verification</option>
-                <option value="Verified">✓ Verified</option>
-                <option value="Rejected">✗ Rejected</option>
-                <option value="In Inventory">📦 In Inventory</option>
-              </select>
-            </div>
+          {/* Vertical Divider */}
+          <div className="h-8 w-[1px] sm:w-[2px] bg-gray-200 flex-shrink-0"></div>
 
-            {/* Submit Button */}
-            <button
-              onClick={() => setShowSubmitForm(true)}
-              className="px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg sm:rounded-xl hover:shadow-lg transition-all duration-200 font-semibold flex items-center justify-center gap-2 whitespace-nowrap"
+          {/* Status Filter Part */}
+          <div className="relative flex items-center bg-transparent">
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="pl-2 sm:pl-4 pr-7 sm:pr-10 py-2 sm:py-4 bg-transparent border-none text-[10px] sm:text-sm font-bold text-gray-700 focus:ring-0 cursor-pointer appearance-none min-w-[70px] sm:min-w-[140px]"
             >
-              <Package className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Submit New Harvest</span>
-              <span className="sm:hidden">Submit Harvest</span>
-            </button>
+              <option value="all">All</option>
+              <option value="Pending Verification">Pending</option>
+              <option value="Verified">Verified</option>
+              <option value="Rejected">Rejected</option>
+              <option value="In Inventory">In Inventory</option>
+              <option value="Delivered">Delivered</option>
+            </select>
+            <div className="absolute right-1.5 sm:right-4 pointer-events-none text-gray-400">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           </div>
+
+          {/* Submit Button - Compact for Mobile */}
+          <button
+            onClick={() => setShowSubmitForm(true)}
+            className="px-3 sm:px-10 py-2.5 sm:py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 font-black flex items-center justify-center gap-2 whitespace-nowrap shadow-[-4px_0_15px_rgba(0,0,0,0.1)] active:scale-95"
+          >
+            <Package className="w-4 h-4 sm:w-6 sm:h-6" />
+            <span className="hidden sm:inline text-sm sm:text-base tracking-wide uppercase">Submit New Harvest</span>
+            <span className="sm:hidden text-[10px] font-bold uppercase">Add</span>
+          </button>
         </div>
       </div>
 
@@ -381,7 +387,7 @@ export default function FarmerHarvestView() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px]">
               <thead>
-                <tr className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border-b-2 border-emerald-100">
+                <tr className="bg-gradient-to-r from-emerald-5 via-teal-5 to-cyan-5 border-b-2 border-emerald-100">
                   <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left">
                     <div className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
                       <Calendar className="w-4 h-4" />
@@ -473,7 +479,7 @@ export default function FarmerHarvestView() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {harvest.status !== 'Verified' && harvest.status !== 'In Inventory' && (
+                        {harvest.status !== 'Verified' && harvest.status !== 'In Inventory' && harvest.status !== 'Delivered' && (
                           <>
                             <button
                               onClick={() => handleEditClick(harvest)}
@@ -525,8 +531,8 @@ export default function FarmerHarvestView() {
                         setCurrentPageNum(1);
                       }}
                       className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${itemsPerPage === size
-                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg scale-105'
-                          : 'bg-white text-gray-600 hover:bg-emerald-50 border-2 border-gray-200 hover:border-emerald-300 hover:shadow-md'
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg scale-105'
+                        : 'bg-white text-gray-600 hover:bg-emerald-50 border-2 border-gray-200 hover:border-emerald-300 hover:shadow-md'
                         }`}
                     >
                       {size}
