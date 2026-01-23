@@ -146,7 +146,11 @@ export default function HarvestSubmissionPage() {
               ...prev,
               abaca_variety: target.variety || '',
               planting_date: target.planting_date ? new Date(target.planting_date).toISOString().split('T')[0] : '',
-              planting_material_source: target.planting_notes || 'Tissue Culture',
+              planting_material_source: ['Sucker', 'Corm', 'Tissue Culture', 'Other'].includes(target.planting_material_source || '')
+                ? target.planting_material_source
+                : (['Sucker', 'Corm', 'Tissue Culture', 'Other'].includes(target.planting_notes || '')
+                  ? target.planting_notes
+                  : 'Tissue Culture'),
               planting_spacing: target.planting_location || ''
             }));
           }
@@ -217,10 +221,23 @@ export default function HarvestSubmissionPage() {
 
       console.log('Token exists:', !!token);
 
+      const today = new Date().toISOString().split('T')[0];
+      if (formData.harvest_date > today) {
+        alert('Harvest date cannot be in the future.');
+        setLoading(false);
+        return;
+      }
+
+      if (formData.planting_date > formData.harvest_date) {
+        alert('Planting date cannot be after the harvest date.');
+        setLoading(false);
+        return;
+      }
+
       // Convert string numbers to actual numbers
       const payload = {
         ...formData,
-        area_hectares: parseFloat(formData.area_hectares),
+        area_hectares: parseFloat(formData.area_hectares) || 0,
         planting_density_hills_per_ha: formData.planting_density_hills_per_ha ? parseInt(formData.planting_density_hills_per_ha) : null,
         stalks_harvested: formData.stalks_harvested ? parseInt(formData.stalks_harvested) : null,
         wet_weight_kg: formData.wet_weight_kg ? parseFloat(formData.wet_weight_kg) : null,
@@ -229,6 +246,12 @@ export default function HarvestSubmissionPage() {
         bales_produced: formData.bales_produced ? parseInt(formData.bales_produced) : null,
         weight_per_bale_kg: formData.weight_per_bale_kg ? parseFloat(formData.weight_per_bale_kg) : null
       };
+
+      if (payload.area_hectares <= 0) {
+        alert('Area must be greater than 0.');
+        setLoading(false);
+        return;
+      }
 
       console.log('Submitting payload:', payload);
 
@@ -251,13 +274,14 @@ export default function HarvestSubmissionPage() {
           window.location.reload();
         }, 1000);
       } else {
-        const error = await response.json();
-        console.error('Backend error:', error);
+        const errorData = await response.json();
+        console.error('Backend error:', errorData);
 
         if (response.status === 401) {
           alert('Authentication failed. Your session may have expired. Please logout and login again.');
         } else {
-          alert(`Error: ${error.error || error.message || 'Failed to submit harvest'}`);
+          const errorMessage = errorData.message || errorData.error || 'Failed to submit harvest';
+          alert(`Error: ${errorMessage}`);
         }
       }
     } catch (error) {
@@ -428,17 +452,20 @@ export default function HarvestSubmissionPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Planting Method <span className="text-red-500">*</span>
+                  Planting Source <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   name="planting_material_source"
                   required
-                  placeholder="e.g., Tissue Culture, Manual planting"
                   value={formData.planting_material_source}
                   onChange={handleChange}
                   className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
-                />
+                >
+                  <option value="Tissue Culture">Tissue Culture</option>
+                  <option value="Sucker">Sucker</option>
+                  <option value="Corm">Corm</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>

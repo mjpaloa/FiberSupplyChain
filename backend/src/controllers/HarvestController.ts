@@ -116,7 +116,7 @@ export class HarvestController {
           farmer_id: userId,
 
           // Location (auto-populated from farmer profile, can be overridden)
-          county_province: farmer.address, // Using address as county/province
+          county_province: farmer.address ? farmer.address.substring(0, 255) : '', // Trim to fit VARCHAR(255)
           municipality: farmer.municipality,
           barangay: farmer.barangay,
           farm_coordinates: farm_coordinates || farmer.farm_coordinates,
@@ -206,7 +206,11 @@ export class HarvestController {
 
       if (harvestError) {
         console.error('❌ Error creating harvest:', harvestError);
-        res.status(500).json({ error: 'Failed to create harvest record' });
+        res.status(400).json({
+          error: 'Failed to create harvest record',
+          message: harvestError.message,
+          code: harvestError.code
+        });
         return;
       }
 
@@ -419,8 +423,8 @@ export class HarvestController {
         in_inventory: data.filter(h => h.status === 'In Inventory').length,
         total_fiber_kg: data.reduce((sum, h) => sum + (h.dry_fiber_output_kg || 0), 0),
         total_area_hectares: data.reduce((sum, h) => sum + (h.area_hectares || 0), 0),
-        avg_yield_per_hectare: data.length > 0 
-          ? data.reduce((sum, h) => sum + (h.yield_per_hectare_kg || 0), 0) / data.length 
+        avg_yield_per_hectare: data.length > 0
+          ? data.reduce((sum, h) => sum + (h.yield_per_hectare_kg || 0), 0) / data.length
           : 0
       };
 
@@ -439,11 +443,11 @@ export class HarvestController {
   static async getAllHarvests(req: Request, res: Response) {
     try {
       const userId = req.user?.userId;
-      
+
       // More robust Super Admin check
       let isSuperAdmin = req.user?.isSuperAdmin === true;
       let userPosition = '';
-      
+
       // Additional check: if user is officer, check their position in database
       if (!isSuperAdmin && req.user?.userType === 'officer' && userId) {
         console.log('🔍 Checking officer details...');
@@ -452,23 +456,23 @@ export class HarvestController {
           .select('position, is_super_admin')
           .eq('officer_id', userId)
           .single();
-          
+
         if (!officerError && officerData) {
           console.log('🔍 Officer data:', officerData);
           userPosition = officerData.position || '';
           // Check if position indicates Super Admin
-          if (officerData.position && 
-              (officerData.position.includes('System Administrator') || 
-               officerData.position.includes('Admin') ||
-               officerData.is_super_admin)) {
+          if (officerData.position &&
+            (officerData.position.includes('System Administrator') ||
+              officerData.position.includes('Admin') ||
+              officerData.is_super_admin)) {
             isSuperAdmin = true;
             console.log('👑 User identified as Super Admin by position');
           }
         }
       }
-      
+
       console.log('📊 Fetching harvests for user:', userId, 'isSuperAdmin:', isSuperAdmin, 'Position:', userPosition);
-      
+
       const { status, municipality, barangay, limit = 50, offset = 0 } = req.query;
 
       let query = supabase
@@ -497,7 +501,7 @@ export class HarvestController {
       }
 
       query = query.range(Number(offset), Number(offset) + Number(limit) - 1);
-      
+
       console.log('🔍 Final query built');
 
       const { data, error } = await query;
@@ -524,7 +528,7 @@ export class HarvestController {
           .from('harvests')
           .select('*')
           .limit(5);
-          
+
         if (!allError && allData) {
           console.log('📋 All harvests in database (first 5):', allData.map(h => ({
             id: h.harvest_id,
@@ -535,7 +539,7 @@ export class HarvestController {
           })));
         }
       }
-      
+
       // Fetch verifier information separately since there's no FK constraint
       const harvestsWithVerifiers = await Promise.all(
         (data || []).map(async (harvest) => {
@@ -571,10 +575,10 @@ export class HarvestController {
   static async getAllHarvestsForSuperAdmin(req: Request, res: Response) {
     try {
       const userId = req.user?.userId;
-      
+
       // More robust Super Admin check
       let isSuperAdmin = req.user?.isSuperAdmin === true;
-      
+
       // Additional check: if user is officer, check their position in database
       if (!isSuperAdmin && req.user?.userType === 'officer' && userId) {
         console.log('🔍 Super Admin route - checking if user is Super Admin by position...');
@@ -583,20 +587,20 @@ export class HarvestController {
           .select('position, is_super_admin')
           .eq('officer_id', userId)
           .single();
-          
+
         if (!officerError && officerData) {
           console.log('🔍 Officer data in Super Admin route:', officerData);
           // Check if position indicates Super Admin
-          if (officerData.position && 
-              (officerData.position.includes('System Administrator') || 
-               officerData.position.includes('Admin') ||
-               officerData.is_super_admin)) {
+          if (officerData.position &&
+            (officerData.position.includes('System Administrator') ||
+              officerData.position.includes('Admin') ||
+              officerData.is_super_admin)) {
             isSuperAdmin = true;
             console.log('👑 User identified as Super Admin by position in Super Admin route');
           }
         }
       }
-      
+
       console.log('👑 Super Admin route - User:', userId, 'isSuperAdmin:', isSuperAdmin);
 
       if (!isSuperAdmin) {
