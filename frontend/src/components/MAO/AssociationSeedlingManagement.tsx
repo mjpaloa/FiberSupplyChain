@@ -725,19 +725,17 @@ const AssociationSeedlingManagement: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-4 py-2 rounded-xl text-xs font-semibold border-2 ${(distribution.status === 'distributed_to_association' || !distribution.status) ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                        (distribution.status === 'partially_distributed_to_farmers' || distribution.status === 'partially_planted') ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                          (distribution.status === 'fully_distributed_to_farmers' || distribution.status === 'fully_planted') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                            distribution.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-200' :
+                      <span className={`px-4 py-2 rounded-xl text-xs font-semibold border-2 ${(distribution.status?.toLowerCase() === 'distributed_to_association' || !distribution.status) ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        (distribution.status?.toLowerCase() === 'partially_distributed_to_farmers' || distribution.status?.toLowerCase() === 'partially_planted') ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                          (distribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || distribution.status?.toLowerCase() === 'fully_planted') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            distribution.status?.toLowerCase() === 'cancelled' ? 'bg-red-50 text-red-700 border-red-200' :
                               'bg-gray-50 text-gray-700 border-gray-200'
                         }`}>
-                        {distribution.status === 'distributed_to_association' || !distribution.status ? '📦 Distributed to Association' :
-                          distribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                            distribution.status === 'partially_planted' ? '🌱 Ongoing Planting' :
-                              distribution.status === 'fully_distributed_to_farmers' ? '✅ Fully to Farmers' :
-                                distribution.status === 'fully_planted' ? '🌳 All Seedlings Planted' :
-                                  distribution.status === 'cancelled' ? '❌ Cancelled' :
-                                    `❓ ${distribution.status}`}
+                        {distribution.status?.toLowerCase() === 'distributed_to_association' || !distribution.status ? '📦 Distributed to Association' :
+                          (distribution.status?.toLowerCase() === 'partially_distributed_to_farmers' || distribution.status?.toLowerCase() === 'partially_planted') ? '🔄 Ongoing Distribution' :
+                            (distribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || distribution.status?.toLowerCase() === 'fully_planted') ? '✅ Distributed to Farmers' :
+                              distribution.status?.toLowerCase() === 'cancelled' ? '❌ Cancelled' :
+                                `❓ ${distribution.status}`}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -1101,19 +1099,17 @@ const AssociationSeedlingManagement: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Status</p>
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${(selectedDistribution.status === 'distributed_to_association' || !selectedDistribution.status) ? 'bg-blue-100 text-blue-700' :
-                      (selectedDistribution.status === 'partially_distributed_to_farmers' || selectedDistribution.status === 'partially_planted') ? 'bg-amber-100 text-amber-700' :
-                        (selectedDistribution.status === 'fully_distributed_to_farmers' || selectedDistribution.status === 'fully_planted') ? 'bg-green-100 text-green-700' :
-                          selectedDistribution.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                            'bg-gray-100 text-gray-700'
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${(selectedDistribution.status?.toLowerCase() === 'distributed_to_association' || !selectedDistribution.status) ? 'bg-blue-100 text-blue-700' :
+                    (selectedDistribution.status?.toLowerCase() === 'partially_distributed_to_farmers' || selectedDistribution.status?.toLowerCase() === 'partially_planted') ? 'bg-amber-100 text-amber-700' :
+                      (selectedDistribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || selectedDistribution.status?.toLowerCase() === 'fully_planted') ? 'bg-green-100 text-green-700' :
+                        selectedDistribution.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-100' :
+                          'bg-gray-100 text-gray-700'
                     }`}>
-                    {selectedDistribution.status === 'distributed_to_association' || !selectedDistribution.status ? '📦 Distributed to Association' :
-                      selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                        selectedDistribution.status === 'partially_planted' ? '🌱 Ongoing Planting' :
-                          selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Fully to Farmers' :
-                            selectedDistribution.status === 'fully_planted' ? '🌳 All Seedlings Planted' :
-                              selectedDistribution.status === 'cancelled' ? '❌ Cancelled' :
-                                `❓ ${selectedDistribution.status}`}
+                    {selectedDistribution.status?.toLowerCase() === 'distributed_to_association' || !selectedDistribution.status ? '📦 Distributed to Association' :
+                      (selectedDistribution.status?.toLowerCase() === 'partially_distributed_to_farmers' || selectedDistribution.status?.toLowerCase() === 'partially_planted') ? '🔄 Ongoing Distribution' :
+                        (selectedDistribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || selectedDistribution.status?.toLowerCase() === 'fully_planted') ? '✅ Distributed to Farmers' :
+                          selectedDistribution.status?.toLowerCase() === 'cancelled' ? '❌ Cancelled' :
+                            `❓ ${selectedDistribution.status}`}
                   </span>
                 </div>
                 <div>
