@@ -24,9 +24,10 @@ EasyAbaca is a comprehensive, modern supply chain management system designed to 
 - **Authentication:** JWT (JSON Web Tokens) & Bcrypt for password hashing
 - **Integration:** Google reCAPTCHA v2 (Security)
 
-### Database & Hosting
-- **Database:** Supabase (PostgreSQL)
-- **Hosting:** Vercel (CI/CD via GitHub Integration)
+### Database & Infrastructure
+- **Database:** Supabase (Enterprise-grade PostgreSQL)
+- **Cloud Hosting:** Vercel (Frontend & Backend API)
+- **Security Logic:** Google reCAPTCHA v2 API Integration
 
 ---
 
@@ -88,7 +89,25 @@ Configure your `.env` files in both `frontend/` and `backend/` directories based
 
 ---
 
-## 🚢 Deployment Guide
+## � Security & Data Integrity
+
+### 📊 Database Architecture (Supabase/PostgreSQL)
+The system uses **Supabase** (powered by PostgreSQL) to ensure ACID compliance and high-performance data handling. The schema is normalized into specific tables for accounts, logistics, and production:
+- **Core Tables:** `farmers`, `buyers`, `association_officers`, and `organization` (MAO/CUSAFA officers).
+- **Logistics:** `fiber_deliveries`, `inventory`, and `harvests`.
+- **Auditing:** `activity_logs` table tracks system-wide events for transparency.
+
+### 🛡️ Anti-Bot Protection (reCAPTCHA Flow)
+To prevent automated attacks (bot registrations and brute-force logins), we have integrated **Google reCAPTCHA v2**:
+1. **Frontend Capture:** When a user logs in or registers, the browser captures a unique reCAPTCHA token after the "I'm not a robot" challenge.
+2. **Backend Submission:** This token is sent to our Express API within the request payload.
+3. **Google Verification:** The backend (`AuthController`) sends a secure server-to-server request to Google's verification API (`siteverify`) using the private `RECAPTCHA_SECRET_KEY`.
+4. **Validation:** If Google verifies the request as genuine, the system proceeds with the database operation. If rejected, the transaction is blocked, protecting the system from spam.
+
+
+---
+
+## �🚢 Deployment Guide
 
 The project is optimized for deployment on **Vercel**.
 
