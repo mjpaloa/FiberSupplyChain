@@ -4,15 +4,37 @@ import {
   XCircle,
   Clock,
   Eye,
-  DollarSign,
   Package,
   Users,
-
   Download,
   Search,
 
 } from 'lucide-react';
 import { getUserData, getAuthToken } from '../../utils/authToken';
+
+const PhilippinePeso = ({ className, size = 24 }: { className?: string; size?: number | string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+  >
+    <text
+      x="12"
+      y="12"
+      dy="1"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize="20"
+      fontWeight="bold"
+      fill="currentColor"
+    >
+      ₱
+    </text>
+  </svg>
+);
 
 interface SalesTransaction {
   report_id: string;
@@ -311,7 +333,7 @@ const SalesVerificationDashboard: React.FC = () => {
             <div className="relative">
               <div className="flex items-center justify-between mb-3">
                 <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <DollarSign className="w-6 h-6 text-white" />
+                  <PhilippinePeso className="w-6 h-6 text-white" />
                 </div>
               </div>
               <p className="text-white/90 text-sm font-medium mb-1">Total Sales</p>

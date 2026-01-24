@@ -1,26 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { apiGet } from '../../utils/apiClient';
 import {
-  Package,
-  TrendingUp,
-  MapPin,
-  CheckCircle,
-  Eye,
-  Truck,
-  Calendar,
-  DollarSign,
-  X,
-  Edit,
-  Trash2,
-  XCircle,
-  AlertTriangle,
-  Building,
-  Phone,
-  FileText,
-  User,
-  Leaf,
-  Award,
-  Building2
+  Download, Search, Package, TrendingUp, MapPin, CheckCircle, Eye, Truck, Calendar,
+  X, Edit, Trash2, XCircle, AlertTriangle, Building, Phone, FileText, User, Leaf, Award, Building2
 } from 'lucide-react';
 
 interface Buyer {
@@ -45,6 +27,30 @@ interface FiberInventoryItem {
   municipality: string;
   barangay: string;
 }
+
+const PhilippinePeso = ({ className, size = 24 }: { className?: string; size?: number | string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+  >
+    <text
+      x="12"
+      y="12"
+      dy="1"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize="20"
+      fontWeight="bold"
+      fill="currentColor"
+    >
+      ₱
+    </text>
+  </svg>
+);
 
 interface Delivery {
   delivery_id: string;
@@ -452,7 +458,7 @@ const FiberDeliveryManager: React.FC = () => {
                 <span className="text-gray-700">{delivery.quantity_kg} kg</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                <DollarSign className="text-gray-400" size={14} />
+                <PhilippinePeso className="text-gray-400" size={14} />
                 <span className="text-gray-700">₱{delivery.price_per_kg}/kg</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">

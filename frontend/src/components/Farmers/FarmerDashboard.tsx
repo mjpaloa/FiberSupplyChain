@@ -22,7 +22,6 @@ import {
   Search,
   Filter,
   Truck,
-  DollarSign,
   Activity,
   Lock,
   ChevronDown,
@@ -1469,14 +1468,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
                       {/* Seedlings Received - Vibrant Blue */}
                       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                          <Package className="w-16 h-16 transform rotate-12" />
-                        </div>
+
                         <div className="relative z-10">
                           <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
                             <Package className="w-6 h-6 text-white" />
                           </div>
-                          <p className="text-sm font-bold text-blue-50 uppercase tracking-widest mb-1 opacity-90">Seedlings Received</p>
+                          <p className="text-sm font-bold text-blue-50 tracking-widest mb-1 opacity-90">Seedlings received</p>
                           <h3 className="text-4xl font-black text-white mb-2 tracking-tight">{totalDistributed.toLocaleString()}</h3>
                           <p className="text-xs text-blue-100 opacity-80 flex items-center gap-1 font-medium">
                             <Package size={12} /> From MAO distributions
@@ -1486,14 +1483,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
                       {/* Seedlings Planted - Vibrant Green */}
                       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                          <Leaf className="w-16 h-16 transform rotate-12" />
-                        </div>
+
                         <div className="relative z-10">
                           <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
                             <Leaf className="w-6 h-6 text-white" />
                           </div>
-                          <p className="text-sm font-bold text-emerald-50 uppercase tracking-widest mb-1 opacity-90">Seedlings Planted</p>
+                          <p className="text-sm font-bold text-emerald-50 tracking-widest mb-1 opacity-90">Seedlings planted</p>
                           <h3 className="text-4xl font-black text-white mb-2 tracking-tight">{totalPlanted.toLocaleString()}</h3>
                           <p className="text-xs text-emerald-100 opacity-80 flex items-center gap-1 font-medium">
                             <CheckCircle size={12} /> Successfully planted
@@ -1503,14 +1498,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
                       {/* Fiber Harvested - Vibrant Orange */}
                       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                          <Activity className="w-16 h-16 transform rotate-12" />
-                        </div>
+
                         <div className="relative z-10">
                           <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
                             <Activity className="w-6 h-6 text-white" />
                           </div>
-                          <p className="text-sm font-bold text-orange-50 uppercase tracking-widest mb-1 opacity-90">Fiber Harvested</p>
+                          <p className="text-sm font-bold text-orange-50 tracking-widest mb-1 opacity-90">Fiber harvested</p>
                           <h3 className="text-4xl font-black text-white mb-2 tracking-tight">{totalFiberKg.toLocaleString()} <span className="text-xl opacity-80 font-bold">kg</span></h3>
                           <p className="text-xs text-orange-100 opacity-80 flex items-center gap-1 font-medium">
                             <TrendingUp size={12} /> Total production output
@@ -1520,17 +1513,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
                       {/* Total Revenue - Vibrant Purple */}
                       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                          <PhilippinePeso className="w-16 h-16 transform rotate-12" />
-                        </div>
+
                         <div className="relative z-10">
                           <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
                             <PhilippinePeso className="w-6 h-6 text-white" />
                           </div>
-                          <p className="text-sm font-bold text-purple-50 uppercase tracking-widest mb-1 opacity-90">Total Revenue</p>
+                          <p className="text-sm font-bold text-purple-50 tracking-widest mb-1 opacity-90">Total sales</p>
                           <h3 className="text-4xl font-black text-white mb-2 tracking-tight">₱{totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'K' : totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                           <p className="text-xs text-purple-100 opacity-80 flex items-center gap-1 font-medium">
-                            <DollarSign size={12} /> From approved sales
+                            <PhilippinePeso size={12} /> From approved sales
                           </p>
                         </div>
                       </div>
@@ -1547,14 +1538,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         const bgGradient = getStatusGradient(condition);
                         return (
                           <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${bgGradient} p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300`}>
-                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                              <CheckCircle className="w-16 h-16 transform rotate-12" />
-                            </div>
                             <div className="relative z-10">
                               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
                                 <CheckCircle className="w-6 h-6 text-white" />
                               </div>
-                              <p className="text-sm font-medium text-white/90 uppercase tracking-wider mb-1">Farm Status</p>
+                              <p className="text-sm font-medium text-white/90 tracking-wider mb-1">Farm status</p>
                               <h3 className="text-3xl font-bold text-white mb-2">{condition}</h3>
                               <p className="text-xs text-white/80 flex items-center gap-1">
                                 <Activity size={12} /> Latest monitoring report
@@ -1578,14 +1566,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
                         return (
                           <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${bgGradient} p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300`}>
-                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                              <Truck className="w-16 h-16 transform rotate-12" />
-                            </div>
                             <div className="relative z-10">
                               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
                                 <Truck className="w-6 h-6 text-white" />
                               </div>
-                              <p className="text-sm font-medium text-white/90 uppercase tracking-wider mb-1">Delivery Status</p>
+                              <p className="text-sm font-medium text-white/90 tracking-wider mb-1">Delivery status</p>
                               <h3 className="text-3xl font-bold text-white mb-2">
                                 {status === 'No Deliveries' ? 'None' : status}
                               </h3>
@@ -2049,8 +2034,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-5 md:mb-6 gap-3">
                           <div>
-                            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Sales & Revenue</h2>
-                            <p className="text-xs sm:text-sm text-gray-600">Revenue performance</p>
+                            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Sales</h2>
+                            <p className="text-xs sm:text-sm text-gray-600">Sales performance</p>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
                             <div className="inline-flex bg-gray-100 rounded-lg p-1">
@@ -2129,7 +2114,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                       padding: '16px 20px'
                                     }}
                                     labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                    formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Revenue']}
+                                    formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Sales']}
                                     itemStyle={{ fontSize: '13px', fontWeight: 600 }}
                                   />
                                   <Area
@@ -2139,7 +2124,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                     strokeWidth={4}
                                     fillOpacity={1}
                                     fill="url(#colorRevenueMonth)"
-                                    name="Revenue"
+                                    name="Sales"
                                   />
                                 </AreaChart>
                               ) : (
@@ -2172,10 +2157,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                       padding: '16px 20px'
                                     }}
                                     labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                    formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Revenue']}
+                                    formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Sales']}
                                     itemStyle={{ fontSize: '13px', fontWeight: 600 }}
                                   />
-                                  <Bar dataKey="revenue" fill="url(#colorRevenueYear)" name="Revenue" radius={[8, 8, 0, 0]} />
+                                  <Bar dataKey="revenue" fill="url(#colorRevenueYear)" name="Sales" radius={[8, 8, 0, 0]} />
                                 </BarChart>
                               )}
                             </ResponsiveContainer>

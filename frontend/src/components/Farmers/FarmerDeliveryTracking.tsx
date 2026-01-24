@@ -1,9 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import {
   Truck, Package, CheckCircle, XCircle, User,
-  DollarSign, Download, Search, Eye, Leaf, Award,
+  Download, Search, Eye, Leaf, Award,
   MapPin, Calendar, Phone, Building2
 } from 'lucide-react';
+
+const PhilippinePeso = ({ className, size = 24 }: { className?: string; size?: number | string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+  >
+    <text
+      x="12"
+      y="12"
+      dy="1"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize="20"
+      fontWeight="bold"
+      fill="currentColor"
+    >
+      ₱
+    </text>
+  </svg>
+);
 
 interface Delivery {
   delivery_id: string;
@@ -240,8 +264,8 @@ const FarmerDeliveryTracking: React.FC = () => {
                 key={status}
                 onClick={() => setStatusFilter(status)}
                 className={`px-2.5 sm:px-3 md:px-4 lg:px-5 py-1.5 sm:py-2 md:py-3 lg:py-4 text-xs sm:text-sm md:text-base rounded-lg sm:rounded-xl md:rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 whitespace-nowrap ${statusFilter === status
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
                   }`}
               >
                 {status === 'all' ? 'All' : status}
@@ -342,10 +366,10 @@ const FarmerDeliveryTracking: React.FC = () => {
                       <div className="flex-1 bg-gray-200 rounded-full h-2 w-20 overflow-hidden">
                         <div
                           className={`h-2 rounded-full transition-all duration-500 ${getStatusProgress(delivery.status) === 100
-                              ? 'bg-gradient-to-r from-emerald-500 to-green-600'
-                              : getStatusProgress(delivery.status) >= 50
-                                ? 'bg-gradient-to-r from-blue-500 to-emerald-500'
-                                : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                            ? 'bg-gradient-to-r from-emerald-500 to-green-600'
+                            : getStatusProgress(delivery.status) >= 50
+                              ? 'bg-gradient-to-r from-blue-500 to-emerald-500'
+                              : 'bg-gradient-to-r from-purple-500 to-blue-500'
                             }`}
                           style={{ width: `${getStatusProgress(delivery.status)}%` }}
                         ></div>
@@ -382,8 +406,8 @@ const FarmerDeliveryTracking: React.FC = () => {
                       setCurrentPage(1);
                     }}
                     className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${entriesPerPage === size
-                        ? 'bg-indigo-500 text-white shadow-lg'
-                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
+                      ? 'bg-indigo-500 text-white shadow-lg'
+                      : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
                       }`}
                   >
                     {size}
@@ -402,8 +426,8 @@ const FarmerDeliveryTracking: React.FC = () => {
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                   className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${currentPage === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                     }`}
                 >
                   Previous
@@ -412,8 +436,8 @@ const FarmerDeliveryTracking: React.FC = () => {
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages || totalPages === 0}
                   className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${currentPage === totalPages || totalPages === 0
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                     }`}
                 >
                   Next
@@ -583,29 +607,7 @@ const FarmerDeliveryTracking: React.FC = () => {
                 </div>
               </div>
 
-              {/* Payment Information Card */}
-              {(selectedDelivery.payment_method || selectedDelivery.payment_status) && (
-                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-5 shadow-md border border-indigo-200">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="p-2 bg-indigo-500 rounded-xl">
-                      <DollarSign className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="font-bold text-indigo-900 text-lg">Payment Information</h3>
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div className="bg-white/70 rounded-xl p-3">
-                      <p className="text-xs text-indigo-600 font-medium mb-1">Payment Method</p>
-                      <p className="text-base font-bold text-indigo-900">{selectedDelivery.payment_method}</p>
-                    </div>
-                    <div className="bg-white/70 rounded-xl p-3">
-                      <p className="text-xs text-indigo-600 font-medium mb-1">Payment Status</p>
-                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${getPaymentStatusColor(selectedDelivery.payment_status)}`}>
-                        {selectedDelivery.payment_status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+
 
               {/* Notes Card */}
               {selectedDelivery.notes && (

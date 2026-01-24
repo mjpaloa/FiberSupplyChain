@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Truck, Package, CheckCircle, XCircle, User,
-  DollarSign, Download, Search, Eye, Leaf, Award
+  Download, Search, Eye, Leaf, Award
 } from 'lucide-react';
 
 interface Delivery {
