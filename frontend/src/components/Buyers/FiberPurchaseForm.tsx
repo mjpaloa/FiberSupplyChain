@@ -133,12 +133,18 @@ const FiberPurchaseForm: React.FC = () => {
           <div className="absolute bottom-0 left-0 h-1.5 w-full bg-gradient-to-r from-blue-400 to-indigo-400 opacity-50"></div>
         </div>
 
-        {/* Success Modal Pop-up (Custom Alert Style) */}
+        {/* Success Modal Pop-up (Centered) */}
         {showSuccess && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-[#1e1f1c] text-white rounded-[2rem] shadow-2xl max-w-md w-full p-8 transform animate-in zoom-in slide-in-from-bottom-4 duration-300 border border-white/5">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
+            {/* Backdrop with slight blur */}
+            <div
+              className="fixed inset-0 bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-300 pointer-events-auto"
+              onClick={() => setShowSuccess(false)}
+            />
+
+            <div className="bg-[#1e1f1c] text-white rounded-[2rem] shadow-2xl max-w-md w-full p-6 md:p-8 transform animate-in zoom-in fade-in duration-500 border border-white/5 relative z-[101] pointer-events-auto">
               <div className="mb-6">
-                <h3 className="text-xl font-medium text-gray-200">localhost:5173 says</h3>
+                <h3 className="text-xl font-medium text-gray-400">{window.location.hostname} says</h3>
               </div>
 
               <div className="flex items-start gap-3 mb-10">

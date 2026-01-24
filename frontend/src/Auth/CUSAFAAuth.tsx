@@ -105,15 +105,15 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
       console.log('Login response data:', data);
       console.log('User isVerified:', data.data.user.isVerified);
       console.log('User verificationStatus:', data.data.user.verificationStatus);
-      
+
       // Check if the account is verified (enhanced check for both fields)
       const isVerified = data.data.user.isVerified === true;
       const verificationStatus = data.data.user.verificationStatus || 'pending';
-      
+
       console.log('Enhanced check - isVerified:', isVerified);
       console.log('Enhanced check - verificationStatus:', verificationStatus);
       console.log('Condition result (!isVerified || verificationStatus !== \'verified\'):', !isVerified || verificationStatus !== 'verified');
-      
+
       if (!isVerified || verificationStatus !== 'verified') {
         if (verificationStatus === 'rejected') {
           setError('Your account has been rejected. Reason: ' + (data.data.user.rejectionReason || 'Not specified'));
@@ -165,8 +165,8 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
       const response = await fetch('https://easyabaca-api.vercel.app/api/auth/register/officer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          ...submitData, 
+        body: JSON.stringify({
+          ...submitData,
           recaptchaToken,
           associationName: submitData.associationName || 'CUSAFA' // Ensure association name is set
         }),
@@ -241,7 +241,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ backgroundImage: 'url(/assets/images/abcafiber.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
       <div className="absolute inset-0 bg-black/45"></div>
-      
+
       <div className="max-w-md w-full relative z-10">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-green-100">
           {/* Back Button */}
@@ -270,9 +270,8 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                 setIsLogin(true);
                 setCurrentStep(1);
               }}
-              className={`flex-1 py-2 rounded-md transition-colors ${
-                isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
-              }`}
+              className={`flex-1 py-2 rounded-md transition-colors ${isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
+                }`}
             >
               Login
             </button>
@@ -281,9 +280,8 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                 setIsLogin(false);
                 setCurrentStep(1);
               }}
-              className={`flex-1 py-2 rounded-md transition-colors ${
-                !isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
-              }`}
+              className={`flex-1 py-2 rounded-md transition-colors ${!isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
+                }`}
             >
               Register
             </button>
@@ -353,40 +351,32 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
-                      currentStep >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${currentStep >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                      }`}>
                       1
                     </div>
-                    <span className={`text-xs font-medium text-center ${
-                      currentStep >= 1 ? 'text-green-700' : 'text-gray-500'
-                    }`}>Basic Info</span>
+                    <span className={`text-xs font-medium text-center ${currentStep >= 1 ? 'text-green-700' : 'text-gray-500'
+                      }`}>Basic Info</span>
                   </div>
-                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${
-                    currentStep > 1 ? 'bg-green-600' : 'bg-gray-200'
-                  }`}></div>
+                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${currentStep > 1 ? 'bg-green-600' : 'bg-gray-200'
+                    }`}></div>
                   <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
-                      currentStep >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${currentStep >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                      }`}>
                       2
                     </div>
-                    <span className={`text-xs font-medium text-center ${
-                      currentStep >= 2 ? 'text-green-700' : 'text-gray-500'
-                    }`}>Officer Details</span>
+                    <span className={`text-xs font-medium text-center ${currentStep >= 2 ? 'text-green-700' : 'text-gray-500'
+                      }`}>Officer Details</span>
                   </div>
-                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${
-                    currentStep > 2 ? 'bg-green-600' : 'bg-gray-200'
-                  }`}></div>
+                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${currentStep > 2 ? 'bg-green-600' : 'bg-gray-200'
+                    }`}></div>
                   <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
-                      currentStep >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${currentStep >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                      }`}>
                       3
                     </div>
-                    <span className={`text-xs font-medium text-center ${
-                      currentStep >= 3 ? 'text-green-700' : 'text-gray-500'
-                    }`}>Document Upload</span>
+                    <span className={`text-xs font-medium text-center ${currentStep >= 3 ? 'text-green-700' : 'text-gray-500'
+                      }`}>Document Upload</span>
                   </div>
                 </div>
               </div>
@@ -395,7 +385,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
               {currentStep === 1 && (
                 <div className="space-y-4">
                   <h3 className="font-semibold text-gray-800 mb-4">Basic Information</h3>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
                     <input
@@ -478,7 +468,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
               {currentStep === 2 && (
                 <div className="space-y-4">
                   <h3 className="font-semibold text-gray-800 mb-4">Officer Details</h3>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Position *</label>
                     <select
@@ -568,7 +558,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
               {currentStep === 3 && (
                 <div className="space-y-4">
                   <h3 className="font-semibold text-gray-800 mb-4">Document Upload</h3>
-                  
+
                   {/* Profile Photo */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">

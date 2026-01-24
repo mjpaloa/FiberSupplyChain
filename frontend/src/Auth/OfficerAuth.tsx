@@ -71,7 +71,7 @@ export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onLoginSuccess }) => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ backgroundImage: 'url(/assets/images/abcafiber.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
       <div className="absolute inset-0 bg-black/45"></div>
-      
+
       <div className="max-w-md w-full relative z-10">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-green-100">
           <div className="text-center mb-8">

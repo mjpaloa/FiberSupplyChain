@@ -433,7 +433,7 @@ const SeedlingManagement: React.FC = () => {
                   <TrendingDown className="w-3 h-3 text-red-500" />
                 )}
                 <span className={`text-xs font-medium ${calculateTrend(currentStats.total, previousMonthStats.total).startsWith('+') ? 'text-green-600' :
-                    calculateTrend(currentStats.total, previousMonthStats.total) === '0' ? 'text-gray-600' : 'text-red-600'
+                  calculateTrend(currentStats.total, previousMonthStats.total) === '0' ? 'text-gray-600' : 'text-red-600'
                   }`}>
                   {calculateTrend(currentStats.total, previousMonthStats.total)}
                 </span>
@@ -478,7 +478,7 @@ const SeedlingManagement: React.FC = () => {
                   <TrendingDown className="w-3 h-3 text-red-500" />
                 )}
                 <span className={`text-xs font-medium ${calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity).startsWith('+') ? 'text-green-600' :
-                    calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity) === '0' ? 'text-gray-600' : 'text-red-600'
+                  calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity) === '0' ? 'text-gray-600' : 'text-red-600'
                   }`}>
                   {calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity)}
                 </span>
@@ -523,7 +523,7 @@ const SeedlingManagement: React.FC = () => {
                   <TrendingDown className="w-3 h-3 text-red-500" />
                 )}
                 <span className={`text-xs font-medium ${calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth).startsWith('+') ? 'text-green-600' :
-                    calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth) === '0' ? 'text-gray-600' : 'text-red-600'
+                  calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth) === '0' ? 'text-gray-600' : 'text-red-600'
                   }`}>
                   {calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth)}
                 </span>
@@ -568,7 +568,7 @@ const SeedlingManagement: React.FC = () => {
                   <TrendingDown className="w-3 h-3 text-red-500" />
                 )}
                 <span className={`text-xs font-medium ${calculateTrend(currentStats.varieties, previousMonthStats.varieties).startsWith('+') ? 'text-green-600' :
-                    calculateTrend(currentStats.varieties, previousMonthStats.varieties) === '0' ? 'text-gray-600' : 'text-red-600'
+                  calculateTrend(currentStats.varieties, previousMonthStats.varieties) === '0' ? 'text-gray-600' : 'text-red-600'
                   }`}>
                   {calculateTrend(currentStats.varieties, previousMonthStats.varieties)}
                 </span>
@@ -677,8 +677,8 @@ const SeedlingManagement: React.FC = () => {
                       key={size}
                       onClick={() => handleItemsPerPageChange(size)}
                       className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
-                          ? 'bg-indigo-500 text-white shadow-lg'
-                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
+                        ? 'bg-indigo-500 text-white shadow-lg'
+                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
                         }`}
                     >
                       {size}
@@ -795,9 +795,9 @@ const SeedlingManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-4 py-2 rounded-full text-xs font-bold shadow-md ${seedling.status === 'planted' ? 'bg-emerald-500 text-white' :
-                          seedling.status === 'distributed' ? 'bg-blue-500 text-white' :
-                            seedling.status === 'damaged' ? 'bg-red-500 text-white' :
-                              'bg-amber-500 text-white'
+                        seedling.status === 'distributed' ? 'bg-blue-500 text-white' :
+                          seedling.status === 'damaged' ? 'bg-red-500 text-white' :
+                            'bg-amber-500 text-white'
                         }`}>
                         {seedling.status === 'planted' ? '🌱 Planted' :
                           seedling.status === 'distributed' ? '📦 Distributed' :
@@ -856,8 +856,8 @@ const SeedlingManagement: React.FC = () => {
                     key={page}
                     onClick={() => handlePageChange(page)}
                     className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === page
-                        ? 'bg-indigo-500 text-white shadow-lg'
-                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
+                      ? 'bg-indigo-500 text-white shadow-lg'
+                      : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
                       }`}
                   >
                     {page}
@@ -1173,9 +1173,9 @@ const SeedlingManagement: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-600">Status</p>
                   <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedSeedling.status === 'planted' ? 'bg-green-100 text-green-700' :
-                      selectedSeedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
-                        selectedSeedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
+                    selectedSeedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
+                      selectedSeedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
+                        'bg-yellow-100 text-yellow-700'
                     }`}>
                     {selectedSeedling.status}
                   </span>

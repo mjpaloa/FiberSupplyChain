@@ -17,9 +17,9 @@ const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 
 // ... rest of the code remains the same ...
 // Protected Route Component
-const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredUserType?: string }> = ({ 
-  children, 
-  requiredUserType 
+const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredUserType?: string }> = ({
+  children,
+  requiredUserType
 }) => {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [userType, setUserType] = React.useState<string>('');
@@ -29,7 +29,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredUserType?: s
     const token = localStorage.getItem('accessToken');
     const user = localStorage.getItem('user');
     const type = localStorage.getItem('userType');
-    
+
     if (token && user && type) {
       setIsAuthenticated(true);
       setUserType(type);
@@ -69,9 +69,9 @@ const Dashboard: React.FC = () => {
   React.useEffect(() => {
     // Use validation function to ensure auth data consistency
     const { isValid, userType: validatedUserType } = validateAuthData();
-    
+
     console.log('Dashboard - Auth validation:', { isValid, userType: validatedUserType });
-    
+
     if (isValid && validatedUserType) {
       setUserType(validatedUserType);
     } else {
@@ -83,12 +83,12 @@ const Dashboard: React.FC = () => {
   const handleLogout = () => {
     // Get user type before clearing localStorage
     const currentUserType = localStorage.getItem('userType');
-    
+
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userType');
     localStorage.removeItem('user');
-    
+
     // Redirect based on user type
     if (currentUserType === 'farmer' || currentUserType === 'buyer' || currentUserType === 'association_officer') {
       navigate('/'); // Redirect farmers, buyers, and association officers to homepage
@@ -150,70 +150,70 @@ const AppContent: React.FC = () => {
   return (
     <Routes>
       {/* Public Routes - WITH reCAPTCHA */}
-      <Route 
-        path="/" 
+      <Route
+        path="/"
         element={
           <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
             <HomePage onLoginClick={handleLoginClick} />
           </GoogleReCaptchaProvider>
-        } 
+        }
       />
-      
+
       {/* Authentication Routes - WITH reCAPTCHA */}
-      <Route 
-        path="/farmer-login" 
+      <Route
+        path="/farmer-login"
         element={
           <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
-            <FarmerAuth 
-              onBack={() => navigate('/')} 
-              onLoginSuccess={handleLoginSuccess} 
+            <FarmerAuth
+              onBack={() => navigate('/')}
+              onLoginSuccess={handleLoginSuccess}
             />
           </GoogleReCaptchaProvider>
-        } 
+        }
       />
-      
-      <Route 
-        path="/buyer-login" 
+
+      <Route
+        path="/buyer-login"
         element={
           <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
-            <BuyerAuth 
-              onBack={() => navigate('/')} 
-              onLoginSuccess={handleLoginSuccess} 
+            <BuyerAuth
+              onBack={() => navigate('/')}
+              onLoginSuccess={handleLoginSuccess}
             />
           </GoogleReCaptchaProvider>
-        } 
+        }
       />
-      
-      <Route 
-        path="/cusafa-login" 
+
+      <Route
+        path="/cusafa-login"
         element={
           <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
-            <CUSAFAAuth 
-              onBack={() => navigate('/')} 
-              onLoginSuccess={handleLoginSuccess} 
+            <CUSAFAAuth
+              onBack={() => navigate('/')}
+              onLoginSuccess={handleLoginSuccess}
             />
           </GoogleReCaptchaProvider>
-        } 
+        }
       />
 
       {/* Secure Officer Login Route - WITH reCAPTCHA */}
-      <Route 
-        path="/mao" 
+      <Route
+        path="/mao"
         element={
           <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
-            <OfficerAuth onBack={() => {}} onLoginSuccess={handleLoginSuccess} />
+            <OfficerAuth onBack={() => { }} onLoginSuccess={handleLoginSuccess} />
           </GoogleReCaptchaProvider>
-        } 
+        }
       />
 
       {/* Protected Dashboard Route - NO reCAPTCHA */}
-      <Route 
-        path="/dashboard" 
+      <Route
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
-        } 
+        }
       />
 
       {/* Catch all route - redirect to home */}
