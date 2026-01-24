@@ -460,7 +460,7 @@ const FarmerMonitoringView: React.FC = () => {
                 <tr>
                   <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Farmer</th>
                   <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Visit Date</th>
-                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Officer</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Coordinator</th>
                   <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Condition</th>
                   <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Growth Stage</th>
                   <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase">Status</th>
@@ -618,7 +618,7 @@ const FarmerMonitoringView: React.FC = () => {
                     <p className="text-sm font-bold text-gray-900">{formatDate(selectedRecord.dateOfVisit)}</p>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-gray-200">
-                    <p className="text-xs text-gray-500 mb-1 font-semibold">Monitored By (Officer)</p>
+                    <p className="text-xs text-gray-500 mb-1 font-semibold">Monitored By (Coordinator)</p>
                     <p className="text-sm font-bold text-gray-900">{selectedRecord.monitoredBy}</p>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-gray-200">

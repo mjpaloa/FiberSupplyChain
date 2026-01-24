@@ -565,7 +565,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                 <option value="all">All Status</option>
                 <option value="distributed_to_association">📦 Distributed to Association</option>
                 <option value="partially_distributed_to_farmers">🔄 Ongoing Distribution</option>
-                <option value="fully_distributed_to_farmers">✅ Fully to Farmers</option>
+                <option value="fully_distributed_to_farmers">✅ Completely Distributed</option>
                 <option value="cancelled">❌ Cancelled</option>
               </select>
             </div>
@@ -733,7 +733,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                         }`}>
                         {distribution.status?.toLowerCase() === 'distributed_to_association' || !distribution.status ? '📦 Distributed to Association' :
                           (distribution.status?.toLowerCase() === 'partially_distributed_to_farmers' || distribution.status?.toLowerCase() === 'partially_planted') ? '🔄 Ongoing Distribution' :
-                            (distribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || distribution.status?.toLowerCase() === 'fully_planted') ? '✅ Distributed to Farmers' :
+                            (distribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || distribution.status?.toLowerCase() === 'fully_planted') ? '✅ Completely Distributed' :
                               distribution.status?.toLowerCase() === 'cancelled' ? '❌ Cancelled' :
                                 `❓ ${distribution.status}`}
                       </span>
@@ -771,15 +771,25 @@ const AssociationSeedlingManagement: React.FC = () => {
                         </button>
                         <button
                           onClick={() => openEditModal(distribution)}
-                          className="p-2 bg-amber-100 text-amber-600 rounded-xl hover:bg-amber-200 hover:shadow-md transition-all duration-200"
-                          title="Edit"
+                          disabled={distribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || distribution.status?.toLowerCase() === 'fully_planted'}
+                          className={`p-2 rounded-xl transition-all duration-200 ${(distribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || distribution.status?.toLowerCase() === 'fully_planted')
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 grayscale'
+                            : 'bg-amber-100 text-amber-600 hover:bg-amber-200 hover:shadow-md'}`}
+                          title={(distribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || distribution.status?.toLowerCase() === 'fully_planted')
+                            ? 'Completed records cannot be modified'
+                            : 'Edit'}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(distribution.distribution_id)}
-                          className="p-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
-                          title="Delete"
+                          disabled={distribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || distribution.status?.toLowerCase() === 'fully_planted'}
+                          className={`p-2 rounded-xl transition-all duration-200 ${(distribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || distribution.status?.toLowerCase() === 'fully_planted')
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 grayscale'
+                            : 'bg-red-100 text-red-600 hover:bg-red-200 hover:shadow-md'}`}
+                          title={(distribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || distribution.status?.toLowerCase() === 'fully_planted')
+                            ? 'Completed records cannot be modified'
+                            : 'Delete'}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -951,7 +961,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                   >
                     <option value="distributed_to_association">📦 Distributed to Association</option>
                     <option value="partially_distributed_to_farmers">🔄 Ongoing Distribution</option>
-                    <option value="fully_distributed_to_farmers">✅ Fully Distributed to Farmers</option>
+                    <option value="fully_distributed_to_farmers">✅ Completely Distributed</option>
                     <option value="cancelled">❌ Cancelled</option>
                   </select>
                 </div>
@@ -1107,7 +1117,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                     }`}>
                     {selectedDistribution.status?.toLowerCase() === 'distributed_to_association' || !selectedDistribution.status ? '📦 Distributed to Association' :
                       (selectedDistribution.status?.toLowerCase() === 'partially_distributed_to_farmers' || selectedDistribution.status?.toLowerCase() === 'partially_planted') ? '🔄 Ongoing Distribution' :
-                        (selectedDistribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || selectedDistribution.status?.toLowerCase() === 'fully_planted') ? '✅ Distributed to Farmers' :
+                        (selectedDistribution.status?.toLowerCase() === 'fully_distributed_to_farmers' || selectedDistribution.status?.toLowerCase() === 'fully_planted') ? '✅ Completely Distributed' :
                           selectedDistribution.status?.toLowerCase() === 'cancelled' ? '❌ Cancelled' :
                             `❓ ${selectedDistribution.status}`}
                   </span>

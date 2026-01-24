@@ -61,7 +61,7 @@ interface NewFarmerDistributionForm {
 const DISTRIBUTION_STATUSES = [
   { value: 'distributed_to_association', label: '📦 Received from MAO' },
   { value: 'partially_distributed_to_farmers', label: '🔄 Ongoing Distribution' },
-  { value: 'fully_distributed_to_farmers', label: '✅ Fully Distributed' },
+  { value: 'fully_distributed_to_farmers', label: '✅ Completely Distributed' },
   { value: 'cancelled', label: '❌ Cancelled' }
 ];
 
@@ -396,7 +396,7 @@ const AssociationInventory: React.FC = () => {
               <Users size={24} />
             </div>
           </div>
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">DISTRIBUTED TO FARMERS</p>
+          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">COMPLETELY DISTRIBUTED</p>
           <p className="text-4xl font-black mb-3">{totalDistributed.toLocaleString()}</p>
           <div className="flex items-center gap-2 text-sm opacity-80">
             <Users size={16} />
@@ -443,7 +443,7 @@ const AssociationInventory: React.FC = () => {
                 <option value="all">All Status</option>
                 <option value="distributed_to_association">📦 Received</option>
                 <option value="partially_distributed_to_farmers">🔄 Ongoing Distribution</option>
-                <option value="fully_distributed_to_farmers">✅ Fully Distributed</option>
+                <option value="fully_distributed_to_farmers">✅ Completely Distributed</option>
               </select>
             </div>
           </div>
@@ -517,7 +517,7 @@ const AssociationInventory: React.FC = () => {
                         <span className={`inline-block px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-normal sm:whitespace-nowrap ${getStatusColor(dist.status)}`}>
                           {dist.status === 'distributed_to_association' ? '📦 Received' :
                             dist.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                              dist.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
+                              dist.status === 'fully_distributed_to_farmers' ? '✅ Completely Distributed' :
                                 '❌ Cancelled'}
                         </span>
                       </td>
@@ -537,8 +537,14 @@ const AssociationInventory: React.FC = () => {
                             onClick={() => {
                               handleOpenEditModal(dist);
                             }}
-                            className="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-amber-100 text-amber-700 hover:bg-amber-200"
-                            title="Edit"
+                            disabled={dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted'}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 grayscale'
+                                : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                              }`}
+                            title={(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
+                              ? 'Completed records cannot be modified'
+                              : 'Edit'}
                           >
                             <Edit size={16} />
                           </button>
@@ -547,8 +553,14 @@ const AssociationInventory: React.FC = () => {
                               setSelectedDistribution(dist);
                               setShowDeleteModal(true);
                             }}
-                            className="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-red-100 text-red-700 hover:bg-red-200"
-                            title="Delete"
+                            disabled={dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted'}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 grayscale'
+                                : 'bg-red-100 text-red-700 hover:bg-red-200'
+                              }`}
+                            title={(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
+                              ? 'Completed records cannot be modified'
+                              : 'Delete'}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -639,7 +651,7 @@ const AssociationInventory: React.FC = () => {
                   </p>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                  <p className="text-xs sm:text-sm text-purple-700 mb-1 font-medium">Distributed to Farmers</p>
+                  <p className="text-xs sm:text-sm text-purple-700 mb-1 font-medium">Completely Distributed</p>
                   <p className="font-bold text-purple-600 text-lg sm:text-xl">
                     {(selectedDistribution.distributed_to_farmers || 0).toLocaleString()}
                   </p>
@@ -655,7 +667,7 @@ const AssociationInventory: React.FC = () => {
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedDistribution.status)}`}>
                     {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
                       selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                        selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Fully Distributed' :
+                        selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Completely Distributed' :
                           '❌ Cancelled'}
                   </span>
                 </div>
@@ -763,7 +775,7 @@ const AssociationInventory: React.FC = () => {
                       <span className={`px-2 py-1 rounded-full text-[10px] md:text-xs font-bold ${getStatusColor(selectedDistribution.status)}`}>
                         {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
                           selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                            selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Full' :
+                            selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Completely Distributed' :
                               '❌ Cancelled'}
                       </span>
                     </div>

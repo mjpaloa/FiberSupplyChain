@@ -430,7 +430,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                       Visit Date
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Officer</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Coordinator</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     <div className="flex items-center gap-2">
                       <Leaf className="w-4 h-4" />
@@ -649,12 +649,12 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                     <p className="font-semibold text-gray-800">{formatDate(selectedRecord.dateOfVisit)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Monitored By (Officer)</p>
+                    <p className="text-sm text-gray-500 mb-1">Monitored By (Coordinator)</p>
                     <p className="font-semibold text-gray-800">{selectedRecord.monitoredBy}</p>
                   </div>
                   {selectedRecord.monitoredByRole && (
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">Officer Role</p>
+                      <p className="text-sm text-gray-500 mb-1">Coordinator Role</p>
                       <p className="font-semibold text-gray-800">{selectedRecord.monitoredByRole}</p>
                     </div>
                   )}

@@ -81,7 +81,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
   const handleFarmerSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedName = e.target.value;
     const farmer = farmersList?.find(f => f.name === selectedName);
-    
+
     if (farmer) {
       // Fetch full farmer details from database
       try {
@@ -96,7 +96,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
         if (response.ok) {
           const farmerData = await response.json();
           console.log('Farmer details loaded:', farmerData);
-          
+
           // Auto-fill all available farmer data
           setFormData(prev => ({
             ...prev,
@@ -184,8 +184,8 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
       console.log('  - recommendations:', submissionData.recommendations);
       console.log('  - status:', (submissionData as any).status);
       await onSubmit(submissionData);
-      setSuccessMessage(isFinalVisit ? 
-        '✅ Final monitoring visit saved! Status marked as Completed.' : 
+      setSuccessMessage(isFinalVisit ?
+        '✅ Final monitoring visit saved! Status marked as Completed.' :
         'Monitoring record saved successfully!');
       setTimeout(() => {
         onCancel();
@@ -286,11 +286,11 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                 name="monitoredBy"
                 value={formData.monitoredBy}
                 onChange={handleInputChange}
-                placeholder="Officer name"
+                placeholder="Coordinator name"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors bg-gray-50"
                 required
                 readOnly={!!currentOfficer}
-                title={currentOfficer ? "This field is automatically filled with your name" : "Enter officer name"}
+                title={currentOfficer ? "This field is automatically filled with your name" : "Enter coordinator name"}
               />
               {currentOfficer && (
                 <p className="text-xs text-gray-500 mt-1">
@@ -456,11 +456,10 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                   key={issue}
                   type="button"
                   onClick={() => handleIssueToggle(issue)}
-                  className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
-                    formData.issuesObserved.includes(issue)
+                  className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${formData.issuesObserved.includes(issue)
                       ? 'bg-emerald-100 border-emerald-500 text-emerald-700'
                       : 'bg-white border-gray-300 text-gray-700 hover:border-emerald-300'
-                  }`}
+                    }`}
                 >
                   {issue}
                 </button>
@@ -567,7 +566,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                   <span className="font-bold text-green-800">This is the Final Visit</span>
                 </div>
                 <p className="text-sm text-green-700 mt-1">
-                  Check this if the farm has reached stable condition and no more monitoring is needed. 
+                  Check this if the farm has reached stable condition and no more monitoring is needed.
                   The status will be automatically marked as <strong>Completed</strong> and no next visit will be scheduled.
                 </p>
               </div>
@@ -602,7 +601,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
               <div>
                 <p className="font-semibold text-green-800">Final Visit Confirmed</p>
                 <p className="text-sm text-green-700 mt-1">
-                  This monitoring record will be marked as <strong>Completed</strong>. 
+                  This monitoring record will be marked as <strong>Completed</strong>.
                   The farm will no longer appear in Upcoming or Overdue lists.
                 </p>
               </div>

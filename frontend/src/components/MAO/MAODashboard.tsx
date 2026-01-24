@@ -22,6 +22,7 @@ import {
   Users,
   Award,
   Eye,
+  AlertCircle,
   Clock,
   Bell,
   Coins,
@@ -395,9 +396,177 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [,] = useState<'production' | 'sales' | 'users'>('production');
   const [,] = useState('');
   const [,] = useState('');
-  const [hoveredPoint, setHoveredPoint] = useState<{ month: string, received: number, distributed: number, x: number, y: number } | null>(null);
-  const [hoveredMonitoring, setHoveredMonitoring] = useState<{ month: string, total: number, healthy: number, needsSupport: number, x: number, y: number } | null>(null);
   const [chartView, setChartView] = useState<'monthly' | 'yearly'>('monthly');
+
+  // Modern Stats Card Component - Premium Design
+  const StatsCard: React.FC<{
+    title: string;
+    value: string | number;
+    subValue: string;
+    icon: React.ReactNode;
+    gradient: string;
+    unit?: string;
+  }> = ({ title, value, subValue, icon, gradient, unit }) => (
+    <div className={`group relative bg-gradient-to-br ${gradient} rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden`}>
+      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm shadow-inner group-hover:bg-white/30 transition-all">
+            {icon}
+          </div>
+          <Activity size={20} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+        </div>
+        <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">{title}</h3>
+        <p className="text-3xl md:text-4xl font-black mb-1 drop-shadow-sm">
+          {value} {unit && <span className="text-xl md:text-2xl font-bold opacity-80">{unit}</span>}
+        </p>
+        <div className="flex items-center gap-2 text-xs opacity-80 mt-1 font-medium">
+          <Clock size={12} />
+          <span>{subValue}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Modern Animated Pie Chart Component - Same as Buyer Dashboard
+  const AnimatedPieChart: React.FC<{
+    data: { name: string; value: number; fill: string; percentage: number }[],
+    centerLabel?: string,
+    centerSubLabel?: string
+  }> = ({ data, centerLabel, centerSubLabel }) => {
+    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+    let currentAngle = -90;
+
+    // Filter out items with 0 value to avoid display issues
+    const validData = data.filter(item => item.value > 0);
+    const total = validData.reduce((sum, item) => sum + item.value, 0);
+
+    return (
+      <div className="relative w-full h-80 flex items-center justify-center">
+        <svg viewBox="0 0 240 240" className="w-64 h-64 drop-shadow-2xl" style={{ filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.15))' }}>
+          <defs>
+            {validData.map((item, idx) => (
+              <linearGradient key={`grad-${idx}`} id={`pie-grad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={item.fill} />
+                <stop offset="100%" stopColor={`${item.fill}dd`} />
+              </linearGradient>
+            ))}
+            <filter id="shadow-pie" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+              <feOffset dx="0" dy="4" result="offsetblur" />
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3" />
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <radialGradient id="gradient-center">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="#f3f4f6" />
+            </radialGradient>
+          </defs>
+
+          {validData.length === 1 ? (
+            // Full Circle special case
+            <circle
+              cx="120"
+              cy="120"
+              r={hoveredIndex === 0 ? 95 : 90}
+              fill="url(#pie-grad-0)"
+              filter="url(#shadow-pie)"
+              onMouseEnter={() => setHoveredIndex(0)}
+              onMouseLeave={() => setHoveredIndex(null)}
+              className="cursor-pointer transition-all duration-500 ease-out"
+              style={{ transformOrigin: '120px 120px' }}
+            />
+          ) : (
+            validData.map((item, index) => {
+              const percentage = (item.value / total) * 100;
+              const angle = (percentage / 100) * 360;
+              const startAngle = currentAngle;
+              const endAngle = currentAngle + angle;
+              const midAngle = (startAngle + endAngle) / 2;
+              currentAngle = endAngle;
+
+              const startRad = (startAngle * Math.PI) / 180;
+              const endRad = (endAngle * Math.PI) / 180;
+              const midRad = (midAngle * Math.PI) / 180;
+
+              const radius = hoveredIndex === index ? 95 : 90;
+              const x1 = 120 + radius * Math.cos(startRad);
+              const y1 = 120 + radius * Math.sin(startRad);
+              const x2 = 120 + radius * Math.cos(endRad);
+              const y2 = 120 + radius * Math.sin(endRad);
+
+              const labelRadius = 68;
+              const labelX = 120 + labelRadius * Math.cos(midRad);
+              const labelY = 120 + labelRadius * Math.sin(midRad);
+
+              const largeArc = angle > 180 ? 1 : 0;
+
+              return (
+                <g
+                  key={index}
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  className="cursor-pointer outline-none"
+                >
+                  <path
+                    d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                    fill={`url(#pie-grad-${index})`}
+                    filter="url(#shadow-pie)"
+                    className="transition-all duration-500 ease-out"
+                    style={{
+                      transform: hoveredIndex === index ? 'scale(1.05)' : 'scale(1)',
+                      transformOrigin: '120px 120px',
+                      opacity: hoveredIndex === null || hoveredIndex === index ? 1 : 0.7
+                    }}
+                  />
+                  {percentage > 10 && (
+                    <text
+                      x={labelX}
+                      y={labelY}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="text-[10px] font-bold fill-white"
+                      style={{ pointerEvents: 'none', textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
+                    >
+                      {percentage.toFixed(0)}%
+                    </text>
+                  )}
+                </g>
+              );
+            })
+          )}
+
+          {/* Inner Circle for Donut Effect */}
+          <circle cx="120" cy="120" r="58" fill="white" />
+          <circle cx="120" cy="120" r="55" fill="url(#gradient-center)" className="shadow-inner" />
+        </svg>
+
+        {/* Center Label */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-[110px] flex flex-col items-center justify-center">
+          {hoveredIndex !== null && validData[hoveredIndex] ? (
+            <>
+              <p className="text-2xl font-black text-gray-900 leading-none">
+                {((validData[hoveredIndex].value / total) * 100).toFixed(1)}%
+              </p>
+              <p className="text-[10px] text-gray-600 font-bold uppercase tracking-wider mt-1 break-words w-full">
+                {validData[hoveredIndex].name}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-xl font-black text-gray-800 leading-none mb-1">{centerLabel}</p>
+              <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tight leading-tight break-words w-full">{centerSubLabel}</p>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
   const [monitoringView, setMonitoringView] = useState<'monthly' | 'yearly'>('monthly');
   const [deliveryView, setDeliveryView] = useState<'monthly' | 'yearly'>('monthly');
   const [abacaSoldView, setAbacaSoldView] = useState<'monthly' | 'yearly'>('monthly');
@@ -1200,78 +1369,51 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                       </div>
 
                       {/* Top Stats Cards - Vibrant Gradient Design */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-                        {/* Received - Orange Gradient */}
-                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <Package className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Received Seedlings (Association)</p>
-                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalSeedlingsReceived || 0).toLocaleString()}</p>
-                          <p className="text-xs text-white/70">Total seedlings</p>
-                        </div>
-
-                        {/* Distributed - Blue Gradient */}
-                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <Truck className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Distributed Seedlings (Farmers)</p>
-                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalSeedlingsDistributed || 0).toLocaleString()}</p>
-                          <p className="text-xs text-white/70">To farmers</p>
-                        </div>
-
-                        {/* Total Monitoring - Blue/Indigo Gradient */}
-                        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <Eye className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Total Monitoring Visits</p>
-                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalMonitoringVisits || 0).toLocaleString()}</p>
-                          <p className="text-xs text-white/70">Monitoring records</p>
-                        </div>
-
-                        {/* Planted - Purple Gradient */}
-                        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <Sprout className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Planted</p>
-                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalSeedlingsPlanted || 0).toLocaleString()}</p>
-                          <p className="text-xs text-white/70">Seedlings planted</p>
-                        </div>
-
-                        {/* Area Planted - Green Gradient */}
-                        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <BarChart3 className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Area Planted</p>
-                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalAreaPlanted || 0).toLocaleString()} <span className="text-xl">ha</span></p>
-                          <p className="text-xs text-white/70">Total hectares</p>
-                        </div>
-
-                        {/* Harvest Fiber - Orange Gradient */}
-                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <Award className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Harvest Fiber</p>
-                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.production?.totalHarvestFiber || 0).toLocaleString()} <span className="text-xl">kg</span></p>
-                          <p className="text-xs text-white/70">Total harvested</p>
-                        </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+                        <StatsCard
+                          title="Received Seedlings (Assoc)"
+                          value={(dashboardData.production?.totalSeedlingsReceived || 0).toLocaleString()}
+                          subValue="Total seedlings"
+                          icon={<Package className="w-6 h-6 text-white" />}
+                          gradient="from-orange-500 via-orange-600 to-orange-700"
+                        />
+                        <StatsCard
+                          title="Completely Distributed"
+                          value={(dashboardData.production?.totalSeedlingsDistributed || 0).toLocaleString()}
+                          subValue="To farmers"
+                          icon={<Truck className="w-6 h-6 text-white" />}
+                          gradient="from-blue-500 via-blue-600 to-blue-700"
+                        />
+                        <StatsCard
+                          title="Total Monitoring"
+                          value={(dashboardData.production?.totalMonitoringVisits || 0).toLocaleString()}
+                          subValue="Monitoring records"
+                          icon={<Eye className="w-6 h-6 text-white" />}
+                          gradient="from-indigo-500 via-indigo-600 to-indigo-700"
+                        />
+                        <StatsCard
+                          title="Planted"
+                          value={(dashboardData.production?.totalSeedlingsPlanted || 0).toLocaleString()}
+                          subValue="Seedlings planted"
+                          icon={<Sprout className="w-6 h-6 text-white" />}
+                          gradient="from-purple-500 via-purple-600 to-purple-700"
+                        />
+                        <StatsCard
+                          title="Area Planted"
+                          value={(dashboardData.production?.totalAreaPlanted || 0).toLocaleString()}
+                          subValue="Total hectares"
+                          icon={<BarChart3 className="w-6 h-6 text-white" />}
+                          gradient="from-emerald-500 via-emerald-600 to-emerald-700"
+                          unit="ha"
+                        />
+                        <StatsCard
+                          title="Harvest Fiber"
+                          value={(dashboardData.production?.totalHarvestFiber || 0).toLocaleString()}
+                          subValue="Total harvested"
+                          icon={<Award className="w-6 h-6 text-white" />}
+                          gradient="from-orange-500 via-orange-600 to-orange-700"
+                          unit="kg"
+                        />
                       </div>
 
                       {/* Charts Row - Line Chart & Donut Chart */}
@@ -1290,7 +1432,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               </div>
                               <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-[#3b82f6]"></div>
-                                <span className="text-gray-600">Distributed (Farmers)</span>
+                                <span className="text-gray-600">Completely Distributed</span>
                               </div>
 
                               <select
@@ -1377,7 +1519,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                         <Bar
                                           dataKey="distributed"
                                           fill="#3b82f6"
-                                          name="Distributed (Farmers)"
+                                          name="Completely Distributed"
                                           radius={[4, 4, 0, 0]}
                                           barSize={chartView === 'monthly' ? 20 : 30}
                                         />
@@ -1393,120 +1535,62 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
 
                         {/* Production Overview Donut Chart - Clean Design */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">Production Overview</h3>
-                          <p className="text-xs text-gray-500 mb-6">Planted vs Harvest</p>
+                        <div className="bg-white rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col h-full">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <h3 className="text-xl font-black text-gray-900">Production Overview</h3>
+                              <p className="text-xs text-gray-500 font-medium italic">Planted Units vs Harvested Kg</p>
+                            </div>
+                            <div className="p-2 bg-emerald-50 rounded-xl">
+                              <TrendingUp className="text-emerald-500" size={24} />
+                            </div>
+                          </div>
 
                           {(() => {
-                            // Planted (Units) vs Harvested (Kg)
                             const totalPlanted = dashboardData.production.totalSeedlingsPlanted || 0;
                             const totalHarvested = dashboardData.production.totalHarvestFiber || 0;
-
-                            // Planted = Growing in field
-                            const planted = totalPlanted;
-
-                            // Pending Planting = Distributed to farmers but not yet planted
-
-
-                            // In Stock = Received by Association but not yet distributed to farmers
-
-
-                            // Create chart data array
-                            const chartData: { name: string; value: number; fill: string }[] = [];
-
-                            if (totalPlanted > 0) {
-                              chartData.push({ name: 'Planted', value: totalPlanted, fill: '#10b981' });
-                            }
-                            if (totalHarvested > 0) {
-                              chartData.push({ name: 'Harvested Total', value: totalHarvested, fill: '#f97316' });
-                            }
-
-                            // Calculate total
                             const total = totalPlanted + totalHarvested;
 
-                            // Show empty state if no data
-                            if (chartData.length === 0 || total === 0) {
+                            const chartData = [
+                              { name: 'Planted', value: totalPlanted, fill: '#10b981', percentage: total > 0 ? (totalPlanted / total) * 100 : 0 },
+                              { name: 'Harvested Total', value: totalHarvested, fill: '#fb923c', percentage: total > 0 ? (totalHarvested / total) * 100 : 0 }
+                            ];
+
+                            if (total === 0) {
                               return (
-                                <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                                  <div className="p-6 bg-gray-100 rounded-full mb-4">
-                                    <Activity className="w-12 h-12 text-gray-300" />
+                                <div className="flex flex-col items-center justify-center flex-1 text-gray-400">
+                                  <div className="p-6 bg-gray-50 rounded-full mb-4">
+                                    <Activity className="w-12 h-12 text-gray-200" />
                                   </div>
-                                  <p className="font-semibold text-gray-500">No data available</p>
-                                  <p className="text-sm text-gray-400 mt-2">Seedling data will appear here</p>
+                                  <p className="font-semibold text-gray-500">No production data</p>
                                 </div>
                               );
                             }
 
                             return (
-                              <>
-                                {/* Donut Chart - Balanced Size */}
-                                <div className="relative">
-                                  <ResponsiveContainer width="100%" height={300}>
-                                    <RechartsPieChart>
-                                      <Pie
-                                        data={chartData}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={80}
-                                        outerRadius={110}
-                                        paddingAngle={4}
-                                        dataKey="value"
-                                        cornerRadius={10}
-                                        strokeWidth={0}
-                                      >
-                                        {chartData.map((entry, index) => (
-                                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                                        ))}
-                                      </Pie>
-                                      <Tooltip
-                                        contentStyle={{
-                                          backgroundColor: '#fff',
-                                          border: 'none',
-                                          borderRadius: '12px',
-                                          fontSize: '12px',
-                                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                          padding: '8px 12px'
-                                        }}
-                                        formatter={(value: number) => {
-                                          const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                                          return [`${value.toLocaleString()} (${percentage}%)`, ''];
-                                        }}
-                                      />
-                                    </RechartsPieChart>
-                                  </ResponsiveContainer>
+                              <div className="flex-1 flex flex-col items-center justify-center p-4">
+                                <AnimatedPieChart
+                                  data={chartData}
+                                  centerLabel={totalHarvested.toLocaleString()}
+                                  centerSubLabel="Total Production (kg)"
+                                />
 
-                                  {/* Center Label */}
-                                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none" style={{ marginTop: '-20px' }}>
-                                    <div className="text-4xl font-black text-gray-900">
-                                      {totalHarvested.toLocaleString()}
+                                {/* Custom Legend */}
+                                <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                                  {chartData.map((item, idx) => (
+                                    <div key={idx} className="flex flex-col p-5 bg-gray-50 rounded-2xl border border-gray-100 transition-all hover:bg-white hover:shadow-md">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }}></div>
+                                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">{item.name}</span>
+                                      </div>
+                                      <div className="flex items-end justify-between">
+                                        <span className="text-xl font-black text-gray-900">{item.value.toLocaleString()}</span>
+                                        <span className="text-xs font-bold text-gray-400 mb-0.5">{item.percentage.toFixed(0)}%</span>
+                                      </div>
                                     </div>
-                                    <div className="text-xs text-gray-400 font-medium mt-1 uppercase tracking-wide">Total Production (kg)</div>
-                                  </div>
+                                  ))}
                                 </div>
-
-                                {/* Legend Grid - 2x2 Layout */}
-                                <div className="grid grid-cols-2 gap-3 mt-6">
-                                  {/* Planted */}
-                                  <div className="bg-green-50 rounded-xl p-4 border border-green-100">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                      <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">Planted</span>
-                                    </div>
-                                    <div className="text-2xl font-black text-green-600">{total > 0 ? ((totalPlanted / total) * 100).toFixed(0) : '0'}%</div>
-                                    <div className="text-xs text-gray-500 mt-1">{totalPlanted.toLocaleString()}</div>
-                                  </div>
-
-                                  {/* Harvested */}
-                                  <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                                      <span className="text-xs font-semibold text-orange-700 uppercase tracking-wide">Harvested Total</span>
-                                    </div>
-                                    <div className="text-2xl font-black text-orange-600">{total > 0 ? ((totalHarvested / total) * 100).toFixed(0) : '0'}%</div>
-                                    <div className="text-xs text-gray-500 mt-1">{totalHarvested.toLocaleString()}</div>
-                                  </div>
-                                </div>
-                              </>
+                              </div>
                             );
                           })()}
                         </div>
@@ -1517,54 +1601,35 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                     <div className="mb-8">
                       <h2 className="text-2xl font-semibold text-gray-900 mb-6">Field Monitoring</h2>
 
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                        {/* Total Monitoring - Blue Gradient */}
-                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <Eye className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Total Monitoring</p>
-                          <p className="text-5xl font-bold text-white mb-1">{dashboardData.production.totalMonitoringVisits}</p>
-                          <p className="text-xs text-white/70">Monitoring records</p>
-                        </div>
-
-                        {/* Healthy Farms - Green Gradient */}
-                        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <CheckCircle className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Healthy Farms</p>
-                          <p className="text-5xl font-bold text-white mb-1">{dashboardData.production.healthyFarms}</p>
-                          <p className="text-xs text-white/70">In good condition</p>
-                        </div>
-
-                        {/* Needs Support - Orange Gradient */}
-                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <Activity className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Needs Support</p>
-                          <p className="text-5xl font-bold text-white mb-1">{dashboardData.production.needsSupportFarms}</p>
-                          <p className="text-xs text-white/70">Requires attention</p>
-                        </div>
-
-                        {/* Damaged Farms - Red Gradient */}
-                        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <X className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Damaged Farms</p>
-                          <p className="text-5xl font-bold text-white mb-1">{dashboardData.production.damagedFarms}</p>
-                          <p className="text-xs text-white/70">Critical condition</p>
-                        </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <StatsCard
+                          title="Total Monitoring"
+                          value={dashboardData.production.totalMonitoringVisits}
+                          subValue="Monitoring records"
+                          icon={<Activity className="w-6 h-6 text-white" />}
+                          gradient="from-slate-500 via-slate-600 to-slate-700"
+                        />
+                        <StatsCard
+                          title="Healthy Farms"
+                          value={dashboardData.production.healthyFarms}
+                          subValue="In good condition"
+                          icon={<Sprout className="w-6 h-6 text-white" />}
+                          gradient="from-emerald-500 via-emerald-600 to-emerald-700"
+                        />
+                        <StatsCard
+                          title="Needs Support"
+                          value={dashboardData.production.needsSupportFarms}
+                          subValue="Requires attention"
+                          icon={<AlertCircle className="w-6 h-6 text-white" />}
+                          gradient="from-amber-500 via-amber-600 to-amber-700"
+                        />
+                        <StatsCard
+                          title="Damaged Farms"
+                          value={dashboardData.production.damagedFarms}
+                          subValue="Critical condition"
+                          icon={<X className="w-6 h-6 text-white" />}
+                          gradient="from-red-500 via-red-600 to-red-700"
+                        />
                       </div>
 
                       {/* Monitoring Bar Chart - Modern Recharts Design */}
@@ -1731,63 +1796,51 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                     <div>
                       <h2 className="text-2xl font-semibold text-gray-900 mb-6">Delivery Tracking Analytics</h2>
 
-                      {/* Top Statistics Cards - Vibrant Gradient Design */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        {/* In Transit Card - Blue Gradient */}
-                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <Truck className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">In Transit</p>
-                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.deliveries.inTransit}</p>
-                          <p className="text-xs text-white/70">Currently shipping</p>
-                        </div>
-
-                        {/* Delivered Card - Green Gradient */}
-                        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <Package className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Delivered</p>
-                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.deliveries.delivered}</p>
-                          <p className="text-xs text-white/70">Successfully delivered</p>
-                        </div>
-
-                        {/* Completed Card - Purple Gradient */}
-                        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <CheckCircle className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Completed</p>
-                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.deliveries.completed}</p>
-                          <p className="text-xs text-white/70">Fully completed</p>
-                        </div>
-
-                        {/* Cancelled Card - Red Gradient */}
-                        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <X className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Cancelled</p>
-                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.deliveries.cancelled || 0}</p>
-                          <p className="text-xs text-white/70">Cancelled orders</p>
-                        </div>
+                      {/* Top Stats Cards - Delivery Tracking */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <StatsCard
+                          title="In Transit"
+                          value={dashboardData.deliveries.inTransit}
+                          subValue="Currently shipping"
+                          icon={<Truck className="w-6 h-6 text-white" />}
+                          gradient="from-blue-500 via-blue-600 to-blue-700"
+                        />
+                        <StatsCard
+                          title="Delivered"
+                          value={dashboardData.deliveries.delivered}
+                          subValue="Successfully delivered"
+                          icon={<CheckCircle className="w-6 h-6 text-white" />}
+                          gradient="from-emerald-500 via-emerald-600 to-emerald-700"
+                        />
+                        <StatsCard
+                          title="Completed"
+                          value={dashboardData.deliveries.completed}
+                          subValue="Fully completed"
+                          icon={<Award className="w-6 h-6 text-white" />}
+                          gradient="from-indigo-500 via-indigo-600 to-indigo-700"
+                        />
+                        <StatsCard
+                          title="Cancelled"
+                          value={dashboardData.deliveries.cancelled}
+                          subValue="Cancelled orders"
+                          icon={<X className="w-6 h-6 text-white" />}
+                          gradient="from-red-500 via-red-600 to-red-700"
+                        />
                       </div>
 
                       {/* Charts Section - Enhanced */}
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                         {/* Delivery Status - Modern Recharts Design */}
-                        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-                          <h3 className="text-lg font-semibold text-gray-900">Delivery Status</h3>
-                          <p className="text-xs text-gray-500 font-normal mt-1">Breakdown by current status</p>
+                        <div className="bg-white rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col h-full">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <h3 className="text-xl font-black text-gray-900">Delivery Status</h3>
+                              <p className="text-xs text-gray-500 font-medium italic">Breakdown by current status</p>
+                            </div>
+                            <div className="p-2 bg-blue-50 rounded-xl">
+                              <Truck className="text-blue-500" size={24} />
+                            </div>
+                          </div>
 
                           {(() => {
                             const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
@@ -1807,125 +1860,48 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             const cancelled = filteredDeliveries.filter((d: any) => d.status === 'Cancelled').length;
                             const total = inTransit + delivered + completed + cancelled;
 
-                            // Create chart data array
-                            const chartData: { name: string; value: number; fill: string }[] = [];
+                            const chartData = [
+                              { name: 'In Transit', value: inTransit, fill: '#3b82f6', percentage: total > 0 ? (inTransit / total) * 100 : 0 },
+                              { name: 'Delivered', value: delivered, fill: '#10b981', percentage: total > 0 ? (delivered / total) * 100 : 0 },
+                              { name: 'Completed', value: completed, fill: '#8b5cf6', percentage: total > 0 ? (completed / total) * 100 : 0 },
+                              { name: 'Cancelled', value: cancelled, fill: '#ef4444', percentage: total > 0 ? (cancelled / total) * 100 : 0 }
+                            ];
 
-                            if (inTransit > 0) {
-                              chartData.push({ name: 'In Transit', value: inTransit, fill: '#3b82f6' });
-                            }
-                            if (delivered > 0) {
-                              chartData.push({ name: 'Delivered', value: delivered, fill: '#10b981' });
-                            }
-                            if (completed > 0) {
-                              chartData.push({ name: 'Completed', value: completed, fill: '#8b5cf6' });
-                            }
-                            if (cancelled > 0) {
-                              chartData.push({ name: 'Cancelled', value: cancelled, fill: '#ef4444' });
-                            }
-
-                            // Show empty state if no data
                             if (chartData.length === 0 || total === 0) {
                               return (
-                                <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                                  <div className="p-6 bg-gray-100 rounded-full mb-4">
-                                    <Activity className="w-12 h-12 text-gray-300" />
+                                <div className="flex flex-col items-center justify-center flex-1 text-gray-400">
+                                  <div className="p-6 bg-gray-50 rounded-full mb-4">
+                                    <Activity className="w-12 h-12 text-gray-200" />
                                   </div>
                                   <p className="font-semibold text-gray-500">No delivery data</p>
-                                  <p className="text-sm text-gray-400 mt-2">Delivery data will appear here</p>
                                 </div>
                               );
                             }
 
                             return (
-                              <>
-                                {/* Donut Chart - Balanced Size */}
-                                <div className="relative">
-                                  <ResponsiveContainer width="100%" height={300}>
-                                    <RechartsPieChart>
-                                      <Pie
-                                        data={chartData}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={70}
-                                        outerRadius={100}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                        cornerRadius={8}
-                                        strokeWidth={0}
-                                      >
-                                        {chartData.map((entry, index) => (
-                                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                                        ))}
-                                      </Pie>
-                                      <Tooltip
-                                        contentStyle={{
-                                          backgroundColor: '#fff',
-                                          border: 'none',
-                                          borderRadius: '12px',
-                                          fontSize: '12px',
-                                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                          padding: '8px 12px'
-                                        }}
-                                        formatter={(value: number) => {
-                                          const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                                          return [`${value.toLocaleString()} (${percentage}%)`, ''];
-                                        }}
-                                      />
-                                    </RechartsPieChart>
-                                  </ResponsiveContainer>
+                              <div className="flex-1 flex flex-col items-center justify-center p-4">
+                                <AnimatedPieChart
+                                  data={chartData}
+                                  centerLabel={total.toLocaleString()}
+                                  centerSubLabel="Total Deliveries"
+                                />
 
-                                  {/* Center Label */}
-                                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                                    <div className="text-4xl font-black text-gray-900 leading-tight">
-                                      {total}
+                                {/* Custom Legend */}
+                                <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                                  {chartData.map((item, idx) => (
+                                    <div key={idx} className="flex flex-col p-5 bg-gray-50 rounded-2xl border border-gray-100 transition-all hover:bg-white hover:shadow-md">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }}></div>
+                                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">{item.name}</span>
+                                      </div>
+                                      <div className="flex items-end justify-between">
+                                        <span className="text-xl font-black text-gray-900">{item.value.toLocaleString()}</span>
+                                        <span className="text-xs font-bold text-gray-400 mb-0.5">{item.percentage.toFixed(0)}%</span>
+                                      </div>
                                     </div>
-                                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Deliveries</div>
-                                  </div>
+                                  ))}
                                 </div>
-
-                                {/* Legend Grid - 2x2 Layout */}
-                                <div className="grid grid-cols-2 gap-3 mt-6">
-                                  {/* In Transit */}
-                                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                      <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">In Transit</span>
-                                    </div>
-                                    <div className="text-2xl font-black text-blue-600">{total > 0 ? ((inTransit / total) * 100).toFixed(0) : '0'}%</div>
-                                    <div className="text-xs text-gray-500 mt-1">{inTransit.toLocaleString()}</div>
-                                  </div>
-
-                                  {/* Delivered */}
-                                  <div className="bg-green-50 rounded-xl p-4 border border-green-100">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                      <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">Delivered</span>
-                                    </div>
-                                    <div className="text-2xl font-black text-green-600">{total > 0 ? ((delivered / total) * 100).toFixed(0) : '0'}%</div>
-                                    <div className="text-xs text-gray-500 mt-1">{delivered.toLocaleString()}</div>
-                                  </div>
-
-                                  {/* Completed */}
-                                  <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                                      <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Completed</span>
-                                    </div>
-                                    <div className="text-2xl font-black text-purple-600">{total > 0 ? ((completed / total) * 100).toFixed(0) : '0'}%</div>
-                                    <div className="text-xs text-gray-500 mt-1">{completed.toLocaleString()}</div>
-                                  </div>
-
-                                  {/* Cancelled */}
-                                  <div className="bg-red-50 rounded-xl p-4 border border-red-100">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                      <span className="text-xs font-semibold text-red-700 uppercase tracking-wide">Cancelled</span>
-                                    </div>
-                                    <div className="text-2xl font-black text-red-600">{total > 0 ? ((cancelled / total) * 100).toFixed(0) : '0'}%</div>
-                                    <div className="text-xs text-gray-500 mt-1">{cancelled.toLocaleString()}</div>
-                                  </div>
-                                </div>
-                              </>
+                              </div>
                             );
                           })()}
                         </div>
@@ -2063,131 +2039,95 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
                       {/* Stats Cards - Vibrant Gradient Design */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        {/* Sales Card - Purple Gradient */}
-                        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <CheckCircle className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Sales</p>
-                          <p className="text-4xl font-bold text-white mb-1">₱{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</p>
-                          <p className="text-xs text-white/70">Total sales amount</p>
-                        </div>
-
-                        {/* Active Farmers Card - Green Gradient */}
-                        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <User className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Active Farmers</p>
-                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.users.totalFarmers}</p>
-                          <p className="text-xs text-white/70">Registered farmers</p>
-                        </div>
-
-                        {/* Abaca Sold Card - Blue Gradient */}
-                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <Package className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Abaca Sold</p>
-                          <p className="text-4xl font-bold text-white mb-1">{(dashboardData.sales?.totalKgSold || 0).toLocaleString()} <span className="text-xl">kg</span></p>
-                          <p className="text-xs text-white/70">Total fiber sold</p>
-                        </div>
-
-                        {/* Transactions Card - Orange Gradient */}
-                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all">
-                          <div className="flex items-center mb-4">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                              <FileText className="w-6 h-6 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-white/90 mb-2">Transactions</p>
-                          <p className="text-4xl font-bold text-white mb-1">{dashboardData.sales?.recentSales?.length || 0}</p>
-                          <p className="text-xs text-white/70">Total sales records</p>
-                        </div>
+                        <StatsCard
+                          title="Sales"
+                          value={`₱${(dashboardData.sales?.totalAmount || 0).toLocaleString()}`}
+                          subValue="Total sales amount"
+                          icon={<TrendingUp className="w-6 h-6 text-white" />}
+                          gradient="from-purple-500 via-purple-600 to-purple-700"
+                        />
+                        <StatsCard
+                          title="Active Farmers"
+                          value={dashboardData.users.totalFarmers}
+                          subValue="Registered farmers"
+                          icon={<User className="w-6 h-6 text-white" />}
+                          gradient="from-emerald-500 via-emerald-600 to-emerald-700"
+                        />
+                        <StatsCard
+                          title="Abaca Sold"
+                          value={(dashboardData.sales?.totalKgSold || 0).toLocaleString()}
+                          subValue="Total fiber sold"
+                          icon={<Package className="w-6 h-6 text-white" />}
+                          gradient="from-blue-500 via-blue-600 to-blue-700"
+                          unit="kg"
+                        />
+                        <StatsCard
+                          title="Transactions"
+                          value={dashboardData.sales?.recentSales?.length || 0}
+                          subValue="Total sales records"
+                          icon={<FileText className="w-6 h-6 text-white" />}
+                          gradient="from-orange-500 via-orange-600 to-orange-700"
+                        />
                       </div>
 
                       {/* Analytics Charts */}
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                         {/* Sales Overview Donut */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 flex flex-col">
-                          <div className="mb-6">
-                            <h3 className="text-xl font-bold text-gray-900">Sales Status</h3>
-                            <p className="text-xs text-gray-500 font-normal mt-1">Status of all sales transactions</p>
+                        <div className="bg-white rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col h-full">
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <h3 className="text-xl font-black text-gray-900">Sales Status</h3>
+                              <p className="text-xs text-gray-500 font-medium italic">Approval status distribution</p>
+                            </div>
+                            <div className="p-2 bg-purple-50 rounded-xl">
+                              <TrendingUp className="text-purple-500" size={24} />
+                            </div>
                           </div>
-                          <div className="flex-1 flex flex-col justify-center items-center">
+
+                          <div className="flex-1 flex flex-col items-center justify-center">
                             {(() => {
                               const approved = dashboardData.sales?.totalAmount || 0;
                               const pending = dashboardData.sales?.pendingAmount || 0;
                               const total = approved + pending;
 
                               const chartData = [
-                                { name: 'Approved', value: approved, fill: '#10b981' },
-                                { name: 'Pending', value: pending, fill: '#fbbf24' }
+                                { name: 'Approved', value: approved, fill: '#10b981', percentage: total > 0 ? (approved / total) * 100 : 0 },
+                                { name: 'Pending', value: pending, fill: '#fbbf24', percentage: total > 0 ? (pending / total) * 100 : 0 }
                               ];
 
                               if (total === 0) {
                                 return (
-                                  <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                                  <div className="flex flex-col items-center justify-center p-8 text-gray-400">
                                     <Activity className="w-12 h-12 text-gray-200 mb-2" />
-                                    <p className="text-sm">No sales data</p>
+                                    <p className="text-sm font-semibold">No sales data</p>
                                   </div>
                                 );
                               }
 
                               return (
-                                <>
-                                  <div className="relative w-full">
-                                    <ResponsiveContainer width="100%" height={380}>
-                                      <RechartsPieChart>
-                                        <Pie
-                                          data={chartData}
-                                          cx="50%"
-                                          cy="50%"
-                                          innerRadius={75}
-                                          outerRadius={135}
-                                          paddingAngle={5}
-                                          dataKey="value"
-                                          cornerRadius={10}
-                                          strokeWidth={0}
-                                        >
-                                          {chartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                                          ))}
-                                        </Pie>
-                                        <Tooltip
-                                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                          formatter={(value: number) => [`₱${value.toLocaleString()}`, '']}
-                                        />
-                                      </RechartsPieChart>
-                                    </ResponsiveContainer>
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                                      <div className="text-3xl font-black text-gray-900">₱{Math.round(total / 1000)}k</div>
-                                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Total</div>
-                                    </div>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-3 w-full mt-8">
-                                    <div className="flex flex-col p-3 bg-emerald-50 rounded-xl border border-emerald-100 transition-all hover:shadow-sm">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">Approved</span>
+                                <div className="w-full flex-1 flex flex-col items-center">
+                                  <AnimatedPieChart
+                                    data={chartData}
+                                    centerLabel={`₱${total.toLocaleString()}`}
+                                    centerSubLabel="Total Sales Amount"
+                                  />
+
+                                  {/* Custom Legend */}
+                                  <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                                    {chartData.map((item, idx) => (
+                                      <div key={idx} className="flex flex-col p-5 bg-gray-50 rounded-2xl border border-gray-100 transition-all hover:bg-white hover:shadow-md">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }}></div>
+                                          <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">{item.name}</span>
+                                        </div>
+                                        <div className="flex items-end justify-between">
+                                          <span className="text-xl font-black text-gray-900 truncate">₱{item.value.toLocaleString()}</span>
+                                          <span className="text-xs font-bold text-gray-400 mb-0.5">{item.percentage.toFixed(0)}%</span>
+                                        </div>
                                       </div>
-                                      <span className="text-lg font-black text-emerald-700">₱{approved.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex flex-col p-3 bg-amber-50 rounded-xl border border-amber-100 transition-all hover:shadow-sm">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-                                        <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tight">Pending</span>
-                                      </div>
-                                      <span className="text-lg font-black text-amber-700">₱{pending.toLocaleString()}</span>
-                                    </div>
+                                    ))}
                                   </div>
-                                </>
+                                </div>
                               );
                             })()}
                           </div>
@@ -2382,9 +2322,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 )}
               </>
             )}
-          </div >
+          </div>
         )}
-      </main >
+      </main>
 
       {/* Profile Modal - Enhanced Professional Design */}
       {
@@ -2604,107 +2544,109 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       }
 
       {/* Change Password Modal */}
-      {showChangePasswordModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
-            <div className="bg-amber-600 px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white">
-                <Lock className="w-5 h-5" />
-                <h3 className="text-xl font-bold">Change Password</h3>
+      {
+        showChangePasswordModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+              <div className="bg-amber-600 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-white">
+                  <Lock className="w-5 h-5" />
+                  <h3 className="text-xl font-bold">Change Password</h3>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowChangePasswordModal(false);
+                    setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                  }}
+                  className="text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  setShowChangePasswordModal(false);
-                  setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
-                }}
-                className="text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <form onSubmit={_handleChangePassword} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Current Password</label>
+                  <div className="relative">
+                    <input
+                      type={showOldPassword ? "text" : "password"}
+                      required
+                      value={passwordForm.oldPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                      className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all pr-12"
+                      placeholder="Enter current password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowOldPassword(!showOldPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-600 transition-colors"
+                    >
+                      {showOldPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      required
+                      minLength={4}
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                      className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all pr-12"
+                      placeholder="Enter new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-600 transition-colors"
+                    >
+                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Confirm New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      required
+                      minLength={4}
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                      className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all pr-12"
+                      placeholder="Confirm new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-600 transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowChangePasswordModal(false)}
+                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={changingPassword}
+                    className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-colors shadow-md disabled:opacity-50"
+                  >
+                    {changingPassword ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
             </div>
-            <form onSubmit={_handleChangePassword} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Current Password</label>
-                <div className="relative">
-                  <input
-                    type={showOldPassword ? "text" : "password"}
-                    required
-                    value={passwordForm.oldPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all pr-12"
-                    placeholder="Enter current password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowOldPassword(!showOldPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-600 transition-colors"
-                  >
-                    {showOldPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">New Password</label>
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? "text" : "password"}
-                    required
-                    minLength={4}
-                    value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all pr-12"
-                    placeholder="Enter new password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-600 transition-colors"
-                  >
-                    {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Confirm New Password</label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    required
-                    minLength={4}
-                    value={passwordForm.confirmPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all pr-12"
-                    placeholder="Confirm new password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-600 transition-colors"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-              <div className="pt-4 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowChangePasswordModal(false)}
-                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={changingPassword}
-                  className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-colors shadow-md disabled:opacity-50"
-                >
-                  {changingPassword ? 'Updating...' : 'Update Password'}
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        )
+      }
     </div >
   );
 };
