@@ -215,7 +215,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
       return;
     }
     setError('');
-    setCurrentStep(prev => Math.min(prev + 1, 3));
+    setCurrentStep(prev => Math.min(prev + 1, 2));
   };
 
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
@@ -326,35 +326,36 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
           ) : (
             <form onSubmit={handleRegister}>
               {/* Progress Indicator */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${currentStep >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                      }`}>
-                      1
+              <div className="mb-8 px-4">
+                <div className="flex items-center justify-center relative">
+                  {/* Progress Line Background */}
+                  <div className="absolute top-5 left-[25%] right-[25%] h-0.5 bg-gray-200 -z-0"></div>
+                  {/* Active Progress Line */}
+                  <div
+                    className={`absolute top-5 left-[25%] h-0.5 bg-green-600 transition-all duration-500 -z-0`}
+                    style={{ width: currentStep > 1 ? '50%' : '0%' }}
+                  ></div>
+
+                  <div className="flex justify-between w-full max-w-[280px] relative z-10">
+                    {/* Step 1 */}
+                    <div className="flex flex-col items-center">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-2 transition-all duration-300 shadow-sm ${currentStep >= 1 ? 'bg-green-600 text-white ring-4 ring-green-100' : 'bg-gray-200 text-gray-500'
+                        }`}>
+                        1
+                      </div>
+                      <span className={`text-[11px] font-black uppercase tracking-tight ${currentStep >= 1 ? 'text-green-700' : 'text-gray-400'
+                        }`}>Personal Info</span>
                     </div>
-                    <span className={`text-xs font-medium text-center ${currentStep >= 1 ? 'text-green-700' : 'text-gray-500'
-                      }`}>Personal Info</span>
-                  </div>
-                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${currentStep > 1 ? 'bg-green-600' : 'bg-gray-200'
-                    }`}></div>
-                  <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${currentStep >= 2 ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-500'
-                      }`}>
-                      2
+
+                    {/* Step 2 */}
+                    <div className="flex flex-col items-center">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-2 transition-all duration-300 shadow-sm ${currentStep >= 2 ? 'bg-green-600 text-white ring-4 ring-green-100' : 'bg-gray-200 text-gray-500'
+                        }`}>
+                        2
+                      </div>
+                      <span className={`text-[11px] font-black uppercase tracking-tight ${currentStep >= 2 ? 'text-green-700' : 'text-gray-400'
+                        }`}>Account Setup</span>
                     </div>
-                    <span className={`text-xs font-medium text-center ${currentStep >= 2 ? 'text-teal-700' : 'text-gray-500'
-                      }`}>Farm Details</span>
-                  </div>
-                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${currentStep > 2 ? 'bg-teal-600' : 'bg-gray-200'
-                    }`}></div>
-                  <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${currentStep >= 3 ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-500'
-                      }`}>
-                      3
-                    </div>
-                    <span className={`text-xs font-medium text-center ${currentStep >= 3 ? 'text-teal-700' : 'text-gray-500'
-                      }`}>Account Setup</span>
                   </div>
                 </div>
               </div>
@@ -484,141 +485,8 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                 </div>
               )}
 
-              {/* Step 2: Farm Information */}
+              {/* Step 2: Account Information */}
               {currentStep === 2 && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Farm Location</label>
-                      <input
-                        type="text"
-                        value={formData.farmLocation || ''}
-                        onChange={(e) => setFormData({ ...formData, farmLocation: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Sitio Riverside"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Coordinates</label>
-                      <input
-                        type="text"
-                        value={formData.farmCoordinates || ''}
-                        onChange={(e) => setFormData({ ...formData, farmCoordinates: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="8.5167,126.0833"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Area (ha)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.farmAreaHectares || ''}
-                        onChange={(e) => setFormData({ ...formData, farmAreaHectares: parseFloat(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="2.5"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Years Farming</label>
-                      <input
-                        type="number"
-                        value={formData.yearsInFarming || ''}
-                        onChange={(e) => setFormData({ ...formData, yearsInFarming: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="15"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Abaca Type</label>
-                      <input
-                        type="text"
-                        value={formData.typeOfAbacaPlanted || ''}
-                        onChange={(e) => setFormData({ ...formData, typeOfAbacaPlanted: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Musa Textilis"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Harvest (kg/cycle)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.averageHarvestVolumeKg || ''}
-                        onChange={(e) => setFormData({ ...formData, averageHarvestVolumeKg: parseFloat(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Frequency (weeks)</label>
-                      <input
-                        type="number"
-                        value={formData.harvestFrequencyWeeks || ''}
-                        onChange={(e) => setFormData({ ...formData, harvestFrequencyWeeks: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="12"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Price (₱/kg)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.sellingPriceRangeMin || ''}
-                        onChange={(e) => setFormData({ ...formData, sellingPriceRangeMin: parseFloat(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="25.00"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Price (₱/kg)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.sellingPriceRangeMax || ''}
-                        onChange={(e) => setFormData({ ...formData, sellingPriceRangeMax: parseFloat(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="30.00"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Income (₱/cycle)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.incomePerCycle || ''}
-                        onChange={(e) => setFormData({ ...formData, incomePerCycle: parseFloat(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="15000"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Regular Buyer</label>
-                    <input
-                      type="text"
-                      value={formData.regularBuyer || ''}
-                      onChange={(e) => setFormData({ ...formData, regularBuyer: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Noy-Noy Abaca Trading"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Account Information */}
-              {currentStep === 3 && (
                 <div className="space-y-3">
                   {/* Photo Upload Section */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -776,11 +644,11 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                   </button>
                 )}
 
-                {currentStep < 3 ? (
+                {currentStep < 2 ? (
                   <button
                     type="button"
                     onClick={nextStep}
-                    disabled={(currentStep === 1 && !isStep1Valid()) || (currentStep === 2 && !isStep2Valid())}
+                    disabled={(currentStep === 1 && !isStep1Valid())}
                     className="ml-auto px-5 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition font-medium flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next

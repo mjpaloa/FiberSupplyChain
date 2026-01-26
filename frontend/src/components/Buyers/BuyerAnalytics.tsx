@@ -29,13 +29,41 @@ interface AnalyticsData {
   recentTransactions: any[];
   yearlyProfit: number;
   salesByFiberType: { type: string; quantity: number; percentage: number; sales: number }[];
+  purchasesByFiberType: { type: string; quantity: number; percentage: number; cost: number }[];
   monthlyTransactions: { month: string; count: number }[];
   yearlySpendingByYear: { year: string; amount: number }[];
   yearlySalesByYear: { year: string; amount: number }[];
   yearlyTransactionsByYear: { year: string; count: number }[];
+  // Comparison Metrics
+  spendingGrowth: number;
+  salesGrowth: number;
+  quantityGrowth: number;
+  // Decision Support
+  insights: { type: 'positive' | 'negative' | 'neutral', message: string, action: string }[];
 }
 
 const BuyerAnalytics: React.FC = () => {
+  // Reusable Chart Insight Component
+  const ChartInsight: React.FC<{ type: 'positive' | 'negative' | 'neutral', message: string }> = ({ type, message }) => {
+    const colors = {
+      positive: { bg: 'bg-emerald-50', border: 'border-emerald-100', icon: 'bg-emerald-100', text: 'text-emerald-700' },
+      negative: { bg: 'bg-rose-50', border: 'border-rose-100', icon: 'bg-rose-100', text: 'text-rose-700' },
+      neutral: { bg: 'bg-slate-50', border: 'border-slate-100', icon: 'bg-slate-100', text: 'text-slate-700' }
+    };
+    const c = colors[type];
+    return (
+      <div className={`mt-5 p-4 ${c.bg} border ${c.border} rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500`}>
+        <div className={`${c.icon} p-2 rounded-full mt-0.5 shadow-sm`}>
+          <Activity size={16} className={c.text} />
+        </div>
+        <div>
+          <h4 className={`text-xs font-black ${c.text} uppercase tracking-wider mb-1`}>Analysis & Recommendation</h4>
+          <p className="text-xs md:text-sm text-gray-700 font-medium leading-relaxed opacity-90">{message}</p>
+        </div>
+      </div>
+    );
+  };
+
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalSpent: 0,
     totalPurchases: 0,
@@ -53,10 +81,15 @@ const BuyerAnalytics: React.FC = () => {
     recentTransactions: [],
     yearlyProfit: 0,
     salesByFiberType: [],
+    purchasesByFiberType: [],
     monthlyTransactions: [],
     yearlySpendingByYear: [],
     yearlySalesByYear: [],
-    yearlyTransactionsByYear: []
+    yearlyTransactionsByYear: [],
+    spendingGrowth: 0,
+    salesGrowth: 0,
+    quantityGrowth: 0,
+    insights: []
   });
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -220,14 +253,14 @@ const BuyerAnalytics: React.FC = () => {
         count: monthlyTransactionsMap[month] || 0
       }));
 
-      // Calculate sales by fiber type (ALL TIME - not filtered by year)
+      // Calculate sales by fiber type (Filtered by selected year)
       const salesByTypeMap: { [key: string]: { quantity: number; sales: number } } = {
         'Class A': { quantity: 0, sales: 0 },
         'Class B': { quantity: 0, sales: 0 },
         'Class C': { quantity: 0, sales: 0 }
       };
 
-      sales.forEach((s: any) => {
+      filteredSales.forEach((s: any) => {
         const fiberClass = s.fiber_class || 'Class C';
         if (salesByTypeMap[fiberClass]) {
           salesByTypeMap[fiberClass].quantity += s.quantity_kg || 0;
@@ -244,6 +277,113 @@ const BuyerAnalytics: React.FC = () => {
           percentage: totalSoldQuantity > 0 ? (data.quantity / totalSoldQuantity) * 100 : 0
         }));
 
+      // Calculate purchases by fiber type (Filtered by selected year)
+      const purchasesByTypeMap: { [key: string]: { quantity: number; cost: number } } = {
+        'Class A': { quantity: 0, cost: 0 },
+        'Class B': { quantity: 0, cost: 0 },
+        'Class C': { quantity: 0, cost: 0 }
+      };
+
+      filteredPurchases.forEach((p: any) => {
+        let fiberClass = p.fiber_quality || p.grade || 'Class C';
+        // Normalize class names just in case
+        if (fiberClass.includes('A')) fiberClass = 'Class A';
+        else if (fiberClass.includes('B')) fiberClass = 'Class B';
+        else if (fiberClass.includes('C')) fiberClass = 'Class C';
+        else fiberClass = 'Class C'; // Default
+
+        if (purchasesByTypeMap[fiberClass]) {
+          purchasesByTypeMap[fiberClass].quantity += parseFloat(p.quantity || 0);
+          purchasesByTypeMap[fiberClass].cost += parseFloat(p.total_price || 0);
+        }
+      });
+
+      const totalPurchaseQuantity = Object.values(purchasesByTypeMap).reduce((sum, v) => sum + v.quantity, 0);
+      const purchasesByFiberType = Object.entries(purchasesByTypeMap)
+        .map(([type, data]) => ({
+          type,
+          quantity: data.quantity,
+          cost: data.cost,
+          percentage: totalPurchaseQuantity > 0 ? (data.quantity / totalPurchaseQuantity) * 100 : 0
+        }));
+
+      // Calculate Comparison Metrics (This Month vs Last Month)
+      const currentDate = new Date();
+      const currentMonthIndex = currentDate.getMonth();
+      const lastMonthIndex = currentMonthIndex === 0 ? 11 : currentMonthIndex - 1;
+
+      const currentMonthSpending = monthlySpending[currentMonthIndex]?.amount || 0;
+      const lastMonthSpending = monthlySpending[lastMonthIndex]?.amount || 0;
+      let spendingGrowth = 0;
+      if (lastMonthSpending > 0) {
+        spendingGrowth = ((currentMonthSpending - lastMonthSpending) / lastMonthSpending) * 100;
+      } else if (currentMonthSpending > 0) {
+        spendingGrowth = 100;
+      }
+
+      const currentMonthSales = monthlySales[currentMonthIndex]?.amount || 0;
+      const lastMonthSales = monthlySales[lastMonthIndex]?.amount || 0;
+      let salesGrowth = 0;
+      if (lastMonthSales > 0) {
+        salesGrowth = ((currentMonthSales - lastMonthSales) / lastMonthSales) * 100;
+      } else if (currentMonthSales > 0) {
+        salesGrowth = 100;
+      }
+
+      // Quantity Growth (using purchases as quantity source)
+      // We need to calculate monthly quantities first
+      const monthlyQuantityMap: { [key: string]: number } = {};
+      filteredPurchases.forEach((p: any) => {
+        const date = new Date(p.created_at);
+        const monthName = months[date.getMonth()];
+        monthlyQuantityMap[monthName] = (monthlyQuantityMap[monthName] || 0) + parseFloat(p.quantity || 0);
+      });
+      const currentMonthQuantity = monthlyQuantityMap[months[currentMonthIndex]] || 0;
+      const lastMonthQuantity = monthlyQuantityMap[months[lastMonthIndex]] || 0;
+      let quantityGrowth = 0;
+      if (lastMonthQuantity > 0) {
+        quantityGrowth = ((currentMonthQuantity - lastMonthQuantity) / lastMonthQuantity) * 100;
+      } else if (currentMonthQuantity > 0) {
+        quantityGrowth = 100; // New activity
+      }
+
+      // Decision Support / Insights - MORE ACCURATE LOGIC
+      const insights: { type: 'positive' | 'negative' | 'neutral', message: string, action: string }[] = [];
+
+      // Sales Trend Logic
+      if (salesGrowth > 15) {
+        insights.push({ type: 'positive', message: `Outstanding Sales Growth (${salesGrowth.toFixed(1)}%)`, action: 'Demand is peaking. Secure more supply immediately to avoid stockouts.' });
+      } else if (salesGrowth > 0) {
+        insights.push({ type: 'positive', message: 'Steady Sales Increase', action: 'Maintaining momentum. Great time to build loyalty with your current sellers.' });
+      } else if (salesGrowth < -20) {
+        insights.push({ type: 'negative', message: 'Critical Sales Decline', action: 'Revenue dropped significantly. Re-evaluate your fiber quality or pricing vs market rates.' });
+      } else if (salesGrowth < 0) {
+        insights.push({ type: 'negative', message: 'Slight Dip in Sales', action: 'Market activity is slow. Consider reaching out to your inactive buyers.' });
+      }
+
+      // Spending & Profitability Logic
+      if (currentMonthSpending > 0 && currentMonthSales === 0) {
+        insights.push({ type: 'neutral', message: 'Investment Phase Detected', action: 'You are currently buying without selling. Ensure your storage is adequate for this inventory.' });
+      } else if (currentMonthSpending > currentMonthSales * 2) {
+        insights.push({ type: 'negative', message: 'High Burn Rate', action: 'Your spending is double your sales. Review if you are overpaying for certain fiber classes.' });
+      }
+
+      // Inventory & Volume Logic
+      if (totalQuantity > 10000) {
+        insights.push({ type: 'positive', message: 'Strong Inventory Position', action: 'You have high volume leverage. Ideal for large-scale export or bulk selling.' });
+      } else if (totalQuantity > 0 && totalQuantity < 500) {
+        insights.push({ type: 'neutral', message: 'Low Stock Levels', action: 'Supply is dwindling. Check availability with your regular farmers before demand spikes.' });
+      }
+
+      // Default insight if none generated
+      if (insights.length === 0) {
+        if (allTimeTotalPurchases === 0) {
+          insights.push({ type: 'neutral', message: 'Account Initialized', action: 'Start by recording your first purchase to generate real-time analytics.' });
+        } else {
+          insights.push({ type: 'neutral', message: 'Stable Market Position', action: 'No significant shifts detected this month. Continue standard operations.' });
+        }
+      }
+
       setAnalytics({
         totalSpent,
         totalPurchases,
@@ -254,17 +394,22 @@ const BuyerAnalytics: React.FC = () => {
         allTimeTotalPurchases,
         allTimeTotalSales,
         allTimeTotalSalesAmount,
-        allTimeTotalQuantity,
+        allTimeTotalQuantity, // Removed hardcoded value
         allTimeYearlyProfit,
         yearlyProfit,
         monthlySpending,
         monthlySales,
         recentTransactions: filteredPurchases.slice(0, 10),
         salesByFiberType,
+        purchasesByFiberType,
         monthlyTransactions,
         yearlySpendingByYear,
         yearlySalesByYear,
-        yearlyTransactionsByYear
+        yearlyTransactionsByYear,
+        spendingGrowth,
+        salesGrowth,
+        quantityGrowth,
+        insights
       });
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -288,7 +433,12 @@ const BuyerAnalytics: React.FC = () => {
         monthlyTransactions: [],
         yearlySpendingByYear: [],
         yearlySalesByYear: [],
-        yearlyTransactionsByYear: []
+        yearlyTransactionsByYear: [],
+        purchasesByFiberType: [],
+        spendingGrowth: 0,
+        salesGrowth: 0,
+        quantityGrowth: 0,
+        insights: []
       });
     } finally {
       setLoading(false);
@@ -303,7 +453,7 @@ const BuyerAnalytics: React.FC = () => {
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 
   // Modern Animated Pie Chart Component
-  const PieChart: React.FC<{ data: { type: string; percentage: number; quantity: number; sales: number }[] }> = ({ data }) => {
+  const PieChart: React.FC<{ data: { type: string; percentage: number; quantity: number }[] }> = ({ data }) => {
     const gradients = [
       { id: 'emerald', start: '#10b981', end: '#059669' },
       { id: 'blue', start: '#3b82f6', end: '#2563eb' },
@@ -315,11 +465,11 @@ const BuyerAnalytics: React.FC = () => {
     const validData = data.filter(item => item.percentage > 0);
 
     return (
-      <div className="relative w-full h-64 flex items-center justify-center">
-        <svg viewBox="0 0 240 240" className="w-56 h-56 drop-shadow-2xl" style={{ filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.15))' }}>
+      <div className="relative w-full h-56 flex items-center justify-center">
+        <svg viewBox="0 0 240 240" className="w-48 h-48 drop-shadow-2xl" style={{ filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.15))' }}>
           <defs>
-            {gradients.map((grad) => (
-              <linearGradient key={grad.id} id={grad.id} x1="0%" y1="0%" x2="100%" y2="100%">
+            {gradients.map((grad, i) => (
+              <linearGradient key={grad.id} id={`grad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor={grad.start} />
                 <stop offset="100%" stopColor={grad.end} />
               </linearGradient>
@@ -360,7 +510,7 @@ const BuyerAnalytics: React.FC = () => {
             const largeArc = angle > 180 ? 1 : 0;
 
             return (
-              <g 
+              <g
                 key={index}
                 onMouseEnter={() => setHoveredPieSegment(index)}
                 onMouseLeave={() => setHoveredPieSegment(null)}
@@ -368,7 +518,7 @@ const BuyerAnalytics: React.FC = () => {
               >
                 <path
                   d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                  fill={`url(#${gradients[index].id})`}
+                  fill={`url(#grad-${index})`}
                   filter="url(#shadow)"
                   className="transition-all duration-300"
                   style={{
@@ -401,7 +551,7 @@ const BuyerAnalytics: React.FC = () => {
             </radialGradient>
           </defs>
         </svg>
-        
+
         {hoveredPieSegment !== null && validData[hoveredPieSegment] && (
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
             <p className="text-2xl font-bold text-gray-800">{validData[hoveredPieSegment].percentage.toFixed(1)}%</p>
@@ -432,7 +582,7 @@ const BuyerAnalytics: React.FC = () => {
     return (
       <div className="w-full h-64 sm:h-72 md:h-96 flex gap-1 sm:gap-2 md:gap-4">
         {/* Y-Axis Labels */}
-        <div className="flex flex-col justify-between h-full pb-6 sm:pb-8 md:pb-10 text-[10px] sm:text-xs text-gray-500 font-semibold min-w-[30px] sm:min-w-[35px] md:min-w-[40px]">
+        <div className="flex flex-col justify-between h-full pt-12 pb-6 sm:pb-8 md:pb-10 text-[10px] sm:text-xs text-gray-500 font-semibold min-w-[30px] sm:min-w-[35px] md:min-w-[40px]">
           {ticks.map((tick, i) => (
             <div key={i} className="h-0 flex items-center justify-end">
               {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
@@ -443,14 +593,14 @@ const BuyerAnalytics: React.FC = () => {
         {/* Chart Area with Horizontal Scroll */}
         <div className="relative flex-1 h-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           {/* Horizontal Grid Lines */}
-          <div className="absolute inset-x-0 inset-y-0 flex flex-col justify-between pb-6 sm:pb-8 md:pb-10">
+          <div className="absolute inset-x-0 top-12 bottom-0 flex flex-col justify-between pb-6 sm:pb-8 md:pb-10">
             {ticks.map((_, i) => (
               <div key={i} className="border-b border-gray-200 w-full h-0"></div>
             ))}
           </div>
 
           {/* Bars */}
-          <div className="relative h-full flex items-end gap-1 sm:gap-2 pb-6 sm:pb-8 md:pb-10 px-1 sm:px-2" style={{ minWidth: data.length > 8 ? `${data.length * 60}px` : '100%' }}>
+          <div className="relative h-full pt-12 flex items-end gap-1 sm:gap-2 pb-6 sm:pb-8 md:pb-10 px-1 sm:px-2" style={{ minWidth: data.length > 8 ? `${data.length * 60}px` : '100%' }}>
             {data.map((item, index) => (
               <div key={index} className="flex-1 flex flex-col items-center h-full justify-end group relative min-w-[20px] sm:min-w-[30px] md:min-w-[40px]">
                 <div className="w-full flex items-end justify-center h-full relative max-w-[40px] sm:max-w-[50px] md:max-w-[60px] mx-auto">
@@ -459,8 +609,11 @@ const BuyerAnalytics: React.FC = () => {
                   <div className="relative flex-1 flex flex-col justify-end h-full">
                     {/* Floating Value Label */}
                     {item.value > 0 && (
-                      <div className="absolute -top-6 sm:-top-8 left-1/2 transform -translate-x-1/2 text-[10px] sm:text-xs font-bold text-gray-700 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        {formatValue(item.value)}
+                      <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out mb-2">
+                        <div className="bg-gray-800 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md shadow-xl whitespace-nowrap relative">
+                          {formatValue(item.value)}
+                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                        </div>
                       </div>
                     )}
 
@@ -480,8 +633,11 @@ const BuyerAnalytics: React.FC = () => {
                   {showDual && item.value2 !== undefined && (
                     <div className="relative flex-1 flex flex-col justify-end h-full ml-1">
                       {item.value2 > 0 && (
-                        <div className="absolute -top-6 sm:-top-8 left-1/2 transform -translate-x-1/2 text-[10px] sm:text-xs font-bold text-gray-700 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          {formatValue(item.value2)}
+                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out mb-2">
+                          <div className="bg-gray-800 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md shadow-xl whitespace-nowrap relative">
+                            {formatValue(item.value2)}
+                            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                          </div>
                         </div>
                       )}
                       <div
@@ -528,391 +684,563 @@ const BuyerAnalytics: React.FC = () => {
   return (
     <div className="w-full max-w-full">
       <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
-        {/* Total Spent */}
-        <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-              <span className="text-2xl font-bold">₱</span>
+        {/* Dashboard Header with Year Selector */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Performance Overview</h1>
+            <p className="text-sm text-gray-500 font-medium">Real-time supply chain analytics and insights</p>
+          </div>
+          <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
+            <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+              <Calendar size={18} />
             </div>
-          </div>
-          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Spent</h3>
-          <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.allTimeTotalSpent || 0).toLocaleString()}</p>
-          <div className="flex items-center gap-1 text-xs opacity-80">
-            <span className="text-sm font-bold">₱</span>
-            <span>Total Purchases</span>
-          </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-black text-gray-400 leading-none mb-1">Select Year</span>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="bg-transparent text-sm font-bold text-gray-900 focus:outline-none cursor-pointer"
+              >
+                {years.map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* Total Sales */}
-        <div className="group relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-              <TrendingUp size={24} />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+          {/* Total Spent */}
+          <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <span className="text-2xl font-bold">₱</span>
+                </div>
+                <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
+                  {analytics.spendingGrowth >= 0 ? <ArrowUp size={14} className="text-emerald-300" /> : <ArrowDown size={14} className="text-red-300" />}
+                  <span className={`text-xs font-bold ${analytics.spendingGrowth >= 0 ? 'text-emerald-100' : 'text-red-100'}`}>
+                    {Math.abs(analytics.spendingGrowth).toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+              <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Spent</h3>
+              <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.allTimeTotalSpent || 0).toLocaleString()}</p>
+              <div className="flex items-center gap-1 text-xs opacity-80">
+                <span className="text-sm font-bold">₱</span>
+                <span>Total Purchases</span>
+              </div>
             </div>
           </div>
-          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Sales</h3>
-          {analytics.allTimeTotalSales > 0 || analytics.allTimeTotalSalesAmount > 0 ? (
-            <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.allTimeTotalSalesAmount || 0).toLocaleString()}</p>
-          ) : (
-            <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
-          )}
-          <div className="flex items-center gap-1 text-xs opacity-80">
-            <span className="text-sm font-bold">₱</span>
-            <span>Sales Revenue</span>
+
+          {/* Total Sales */}
+          <div className="group relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <TrendingUp size={24} />
+                </div>
+                <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
+                  {analytics.salesGrowth >= 0 ? <ArrowUp size={14} className="text-emerald-300" /> : <ArrowDown size={14} className="text-red-300" />}
+                  <span className={`text-xs font-bold ${analytics.salesGrowth >= 0 ? 'text-emerald-100' : 'text-red-100'}`}>
+                    {Math.abs(analytics.salesGrowth).toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+              <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Sales</h3>
+              {analytics.allTimeTotalSales > 0 || analytics.allTimeTotalSalesAmount > 0 ? (
+                <p className="text-3xl md:text-4xl font-black mb-1">₱{(analytics.allTimeTotalSalesAmount || 0).toLocaleString()}</p>
+              ) : (
+                <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
+              )}
+              <div className="flex items-center gap-1 text-xs opacity-80">
+                <span className="text-sm font-bold">₱</span>
+                <span>Sales Revenue</span>
+              </div>
+            </div>
           </div>
+
+          {/* Total Quantity */}
+          <div className="group relative bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <Package size={24} />
+                </div>
+                <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
+                  {analytics.quantityGrowth >= 0 ? <ArrowUp size={14} className="text-emerald-300" /> : <ArrowDown size={14} className="text-red-300" />}
+                  <span className={`text-xs font-bold ${analytics.quantityGrowth >= 0 ? 'text-emerald-100' : 'text-red-100'}`}>
+                    {Math.abs(analytics.quantityGrowth).toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+              <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Quantity</h3>
+              <p className="text-3xl md:text-4xl font-black mb-1">{(analytics.allTimeTotalQuantity || 0).toLocaleString()} <span className="text-xl md:text-2xl">kg</span></p>
+              <div className="flex items-center gap-2 text-xs opacity-80">
+                <Package size={14} />
+                <span>Fiber Volume</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Yearly Profit (from sales) */}
+          <div className="group relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <TrendingUp size={24} />
+                </div>
+              </div>
+              <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Net Profit</h3>
+              {analytics.allTimeTotalSales > 0 || analytics.allTimeTotalSalesAmount > 0 ? (
+                <p className="text-3xl md:text-4xl font-black mb-1">₱{Math.abs(analytics.allTimeYearlyProfit || 0).toLocaleString()}</p>
+              ) : (
+                <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
+              )}
+              <div className="flex items-center gap-2 text-xs opacity-80">
+                <TrendingUp size={14} />
+                <span>Sales Minus Purchases</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Total Quantity */}
-        <div className="group relative bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-              <Package size={24} />
-            </div>
-          </div>
-          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Quantity</h3>
-          <p className="text-3xl md:text-4xl font-black mb-1">{(analytics.allTimeTotalQuantity || 0).toLocaleString()} <span className="text-xl md:text-2xl">kg</span></p>
-          <div className="flex items-center gap-2 text-xs opacity-80">
-            <Package size={14} />
-            <span>Fiber Volume</span>
-          </div>
-          </div>
-        </div>
-
-        {/* Yearly Profit (from sales) */}
-        <div className="group relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-              <TrendingUp size={24} />
-            </div>
-          </div>
-          <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Net Profit</h3>
-          {analytics.allTimeTotalSales > 0 || analytics.allTimeTotalSalesAmount > 0 ? (
-            <p className="text-3xl md:text-4xl font-black mb-1">₱{Math.abs(analytics.allTimeYearlyProfit || 0).toLocaleString()}</p>
-          ) : (
-            <p className="text-xl md:text-2xl font-medium mb-1 opacity-70">No sales yet</p>
-          )}
-          <div className="flex items-center gap-2 text-xs opacity-80">
-            <TrendingUp size={14} />
-            <span>Sales Minus Purchases</span>
-          </div>
+        {/* Decision Support & Insights */}
+        <div className="mb-6">
+          <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-4 flex items-center gap-2">
+            <Activity className="text-blue-600" />
+            Decision Support System
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {analytics.insights.map((insight, index) => (
+              <div key={index} className={`p-4 rounded-xl border-l-4 shadow-sm bg-white ${insight.type === 'positive' ? 'border-emerald-500' :
+                insight.type === 'negative' ? 'border-red-500' : 'border-blue-500'
+                }`}>
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-full ${insight.type === 'positive' ? 'bg-emerald-100 text-emerald-600' :
+                    insight.type === 'negative' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                    }`}>
+                    <Activity size={18} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">{insight.message}</h4>
+                    <p className="text-sm text-gray-600 mt-1">{insight.action}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
-        {/* Fiber Type Sales Distribution - Pie Chart */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 h-full">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
-                <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-blue-500 rounded-full"></div>
-                Sales by Fiber Type
-              </h2>
-              <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Distribution of sold fiber classes</p>
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
+          {/* Fiber Type Analytics (Purchase & Sales) - Pie Chart */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 h-full">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
+                  <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-blue-500 rounded-full"></div>
+                  Fiber Analytics
+                </h2>
+                <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Distribution by fiber class</p>
+              </div>
+              <div className="p-3 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl">
+                <PieChartIcon className="text-blue-600" size={28} />
+              </div>
             </div>
-            <div className="p-3 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl">
-              <PieChartIcon className="text-blue-600" size={28} />
-            </div>
-          </div>
 
-          {analytics.salesByFiberType && analytics.salesByFiberType.length > 0 && analytics.salesByFiberType.some(item => item.quantity > 0) ? (
-            <>
-              <PieChart data={analytics.salesByFiberType} />
-              {/* Fiber Type Percentages */}
-              <div className="mt-8 grid grid-cols-3 gap-3">
-                {analytics.salesByFiberType.filter(item => item.percentage > 0).map((item, index) => {
-                  const colorClass = fiberColors[item.type as keyof typeof fiberColors];
-                  return (
-                    <div key={index} className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
-                      <div className={`w-4 h-4 rounded-full ${colorClass.bg} mb-2`}></div>
-                      <p className="text-xs text-gray-600 font-medium mb-1">{item.type}</p>
-                      <p className="text-2xl font-black text-gray-900">{item.percentage.toFixed(1)}%</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Purchases Breakdown */}
+              <div className="flex flex-col items-center">
+                <h3 className="text-sm font-bold text-gray-700 mb-2">My Purchases</h3>
+                {analytics.purchasesByFiberType && analytics.purchasesByFiberType.length > 0 && analytics.purchasesByFiberType.some(item => item.quantity > 0) ? (
+                  <>
+                    <PieChart data={analytics.purchasesByFiberType} />
+                    {/* Fiber Type Percentages */}
+                    <div className="mt-4 grid grid-cols-3 gap-2 w-full">
+                      {analytics.purchasesByFiberType.filter(item => item.percentage > 0).map((item, index) => {
+                        const colorClass = fiberColors[item.type as keyof typeof fiberColors];
+                        return (
+                          <div key={index} className="flex flex-col items-center p-2 bg-gray-50 rounded-lg">
+                            <div className={`w-3 h-3 rounded-full ${colorClass.bg} mb-1`}></div>
+                            <p className="text-[10px] text-gray-600 font-medium mb-0.5">{item.type}</p>
+                            <p className="text-sm font-black text-gray-900">{item.percentage.toFixed(0)}%</p>
+                          </div>
+                        );
+                      })}
                     </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                    <p className="text-xs">No purchase data yet</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Sales Breakdown */}
+              <div className="flex flex-col items-center border-l border-gray-100 md:pl-4">
+                <h3 className="text-sm font-bold text-gray-700 mb-2">My Sales</h3>
+                {analytics.salesByFiberType && analytics.salesByFiberType.length > 0 && analytics.salesByFiberType.some(item => item.quantity > 0) ? (
+                  <>
+                    <PieChart data={analytics.salesByFiberType} />
+                    {/* Fiber Type Percentages */}
+                    <div className="mt-4 grid grid-cols-3 gap-2 w-full">
+                      {analytics.salesByFiberType.filter(item => item.percentage > 0).map((item, index) => {
+                        const colorClass = fiberColors[item.type as keyof typeof fiberColors];
+                        return (
+                          <div key={index} className="flex flex-col items-center p-2 bg-gray-50 rounded-lg">
+                            <div className={`w-3 h-3 rounded-full ${colorClass.bg} mb-1`}></div>
+                            <p className="text-[10px] text-gray-600 font-medium mb-0.5">{item.type}</p>
+                            <p className="text-sm font-black text-gray-900">{item.percentage.toFixed(0)}%</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                    <p className="text-xs">No sales data yet</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Fiber Insight */}
+            <div className="col-span-1 md:col-span-2">
+              <ChartInsight
+                type={analytics.purchasesByFiberType.some(p => p.percentage > 70) ? 'neutral' : 'positive'}
+                message={
+                  analytics.purchasesByFiberType.length === 0
+                    ? "Purchase data is needed to analyze your fiber distribution."
+                    : analytics.purchasesByFiberType.some(p => p.percentage > 70)
+                      ? `Warning: Critical dependency on ${analytics.purchasesByFiberType.reduce((prev, current) => (prev.percentage > current.percentage) ? prev : current).type}. High risk if this class's market price drops.`
+                      : "Risk Diversified: Your purchase mix across Class A, B, and C is healthy and protects your profit margins."
+                }
+              />
+            </div>
+          </div>
+
+          {/* Monthly Spending Bar Chart */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 h-full">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
+                  <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
+                  Spending
+                </h2>
+                <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Purchase expenses over time</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1 bg-gray-50 border border-gray-100 p-1 rounded-xl">
+                  {spendingViewMode === 'monthly' && (
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                      className="bg-white border border-gray-100 text-[10px] font-black px-2 py-1 rounded-lg text-blue-600 focus:outline-none transition-all shadow-sm mr-1"
+                    >
+                      {years.map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    onClick={() => setSpendingViewMode('monthly')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${spendingViewMode === 'monthly'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setSpendingViewMode('yearly')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${spendingViewMode === 'yearly'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                  >
+                    Yearly
+                  </button>
+                </div>
+                <div className="hidden md:block p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl">
+                  <BarChart3 className="text-blue-600" size={28} />
+                </div>
+              </div>
+            </div>
+
+            {analytics.monthlySpending && analytics.monthlySpending.length > 0 ? (
+              <BarChart
+                data={spendingViewMode === 'monthly'
+                  ? analytics.monthlySpending.map(item => ({
+                    label: item.month,
+                    value: item.amount
+                  }))
+                  : analytics.yearlySpendingByYear.map(item => ({
+                    label: item.year,
+                    value: item.amount
+                  }))
+                }
+                color="#3b82f6"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-72 text-gray-400">
+                <div className="p-6 bg-gray-100 rounded-full mb-4">
+                  <BarChart3 size={48} className="text-gray-300" />
+                </div>
+                <p className="font-semibold text-gray-500">No spending data available</p>
+                <p className="text-sm text-gray-400 mt-2">Your purchase history will appear here</p>
+              </div>
+            )}
+            <ChartInsight
+              type={analytics.spendingGrowth > 0 ? 'neutral' : analytics.spendingGrowth < 0 ? 'positive' : 'neutral'}
+              message={analytics.spendingGrowth > 0
+                ? `Spending has increased by ${analytics.spendingGrowth.toFixed(1)}% compared to last month. Ensure your inventory turnover rate matches this increased investment.`
+                : analytics.spendingGrowth < 0
+                  ? `Spending is down by ${Math.abs(analytics.spendingGrowth).toFixed(1)}%. This improved efficiency helps maintain a better cash reserve for future bulk buys.`
+                  : `Spending is unchanged this month. Maintaining a steady procurement pace is good for supply chain relationship stability.`
+              }
+            />
+          </div>
+        </div>
+
+        {/* Sales and Transactions Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4 items-start">
+          {/* Monthly Sales Bar Chart */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 self-start">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
+                  <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
+                  Sales
+                </h2>
+                <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Revenue from fiber sales</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1 bg-gray-50 border border-gray-100 p-1 rounded-xl">
+                  {salesViewMode === 'monthly' && (
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                      className="bg-white border border-gray-100 text-[10px] font-black px-2 py-1 rounded-lg text-emerald-600 focus:outline-none transition-all shadow-sm mr-1"
+                    >
+                      {years.map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    onClick={() => setSalesViewMode('monthly')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${salesViewMode === 'monthly'
+                      ? 'bg-emerald-600 text-white shadow-md'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setSalesViewMode('yearly')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${salesViewMode === 'yearly'
+                      ? 'bg-emerald-600 text-white shadow-md'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                  >
+                    Yearly
+                  </button>
+                </div>
+                <div className="hidden md:block p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl">
+                  <TrendingUp className="text-emerald-600" size={28} />
+                </div>
+              </div>
+            </div>
+
+            {analytics.monthlySales && analytics.monthlySales.length > 0 ? (
+              <BarChart
+                data={salesViewMode === 'monthly'
+                  ? analytics.monthlySales.map(item => ({
+                    label: item.month,
+                    value: item.amount
+                  }))
+                  : analytics.yearlySalesByYear.map(item => ({
+                    label: item.year,
+                    value: item.amount
+                  }))
+                }
+                color="#10b981"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-72 text-gray-400">
+                <div className="p-6 bg-gray-100 rounded-full mb-4">
+                  <TrendingUp size={48} className="text-gray-300" />
+                </div>
+                <p className="font-semibold text-gray-500">No sales data available</p>
+                <p className="text-sm text-gray-400 mt-2">Sales revenue will be displayed here</p>
+              </div>
+            )}
+
+            <ChartInsight
+              type={analytics.salesGrowth > 0 ? 'positive' : analytics.salesGrowth < 0 ? 'negative' : 'neutral'}
+              message={analytics.salesGrowth > 0
+                ? `Strong Performance! Sales are trending up ${analytics.salesGrowth.toFixed(1)}%. Reinvest this revenue into securing high-quality fiber classes.`
+                : analytics.salesGrowth < 0
+                  ? `Sales volume has dipped by ${Math.abs(analytics.salesGrowth).toFixed(1)}% since last month. Re-evaluate your engagement with top purchasing entities.`
+                  : `Sales volume is currently stable at 0.0% change. Use this consistency to plan long-term distribution contracts.`
+              }
+            />
+          </div>
+
+          {/* Monthly Transactions Bar Chart */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 self-start">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
+                  <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-purple-500 to-indigo-500 rounded-full"></div>
+                  Transactions
+                </h2>
+                <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Number of purchases & sales</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1 bg-gray-50 border border-gray-100 p-1 rounded-xl">
+                  {transactionsViewMode === 'monthly' && (
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                      className="bg-white border border-gray-100 text-[10px] font-black px-2 py-1 rounded-lg text-purple-600 focus:outline-none transition-all shadow-sm mr-1"
+                    >
+                      {years.map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    onClick={() => setTransactionsViewMode('monthly')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${transactionsViewMode === 'monthly'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setTransactionsViewMode('yearly')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${transactionsViewMode === 'yearly'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                  >
+                    Yearly
+                  </button>
+                </div>
+                <div className="hidden md:block p-3 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl">
+                  <Activity className="text-purple-600" size={28} />
+                </div>
+              </div>
+            </div>
+
+            {analytics.monthlyTransactions && analytics.monthlyTransactions.length > 0 ? (
+              <BarChart
+                data={transactionsViewMode === 'monthly'
+                  ? analytics.monthlyTransactions.map(item => ({
+                    label: item.month,
+                    value: item.count
+                  }))
+                  : analytics.yearlyTransactionsByYear.map(item => ({
+                    label: item.year,
+                    value: item.count
+                  }))
+                }
+                color="#a855f7"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-72 text-gray-400">
+                <div className="p-6 bg-gray-100 rounded-full mb-4">
+                  <Activity size={48} className="text-gray-300" />
+                </div>
+                <p className="font-semibold text-gray-500">No transaction data available</p>
+                <p className="text-sm text-gray-400 mt-2">Transaction history will be shown here</p>
+              </div>
+            )}
+
+            <ChartInsight
+              type="neutral"
+              message={analytics.monthlyTransactions.length > 50
+                ? "High transaction volume detected. Consider grouping smaller orders or automating procurement to reduce administrative overhead."
+                : "Transaction volume is manageable. Focus on deepening relationships with your current high-value suppliers and farmers."
+              }
+            />
+          </div>
+        </div>
+
+        {/* Recent Transactions Table */}
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 lg:p-8 border border-white/60">
+          <div className="flex items-center gap-2 md:gap-3 mb-6 md:mb-8">
+            <div className="w-1 md:w-1.5 h-8 md:h-10 bg-gradient-to-b from-slate-700 to-slate-900 rounded-full"></div>
+            <h2 className="text-lg md:text-2xl font-black text-gray-900">Recent Transactions</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-slate-50 via-blue-50 to-purple-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">ID</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Date</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Quality</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Quantity</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Amount</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Variety</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {(analytics.recentTransactions || []).slice(0, 10).map((transaction, index) => {
+                  const date = new Date(transaction.created_at);
+                  const year = date.getFullYear();
+                  const month = String(date.getMonth() + 1).padStart(2, '0');
+                  const day = String(date.getDate()).padStart(2, '0');
+                  const sequentialNum = String(index + 1).padStart(4, '0');
+                  const transactionId = `ABF-${year}${month}${day}-${sequentialNum}`;
+
+                  return (
+                    <tr key={transaction.purchase_id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 border-b border-gray-100">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm font-bold text-gray-900">
+                        {transactionId}
+                      </td>
+                      <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm text-gray-700 font-medium">
+                        {new Date(transaction.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5">
+                        <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-xs md:text-sm font-medium ${fiberColors[transaction.fiber_quality as keyof typeof fiberColors]?.light || 'bg-gray-100'
+                          } ${fiberColors[transaction.fiber_quality as keyof typeof fiberColors]?.text || 'text-gray-700'
+                          }`}>
+                          {transaction.fiber_quality}
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm text-gray-900 font-bold">
+                        {transaction.quantity} kg
+                      </td>
+                      <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm font-black text-gray-900">
+                        ₱{transaction.total_price?.toLocaleString() || '0'}
+                      </td>
+                      <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5">
+                        <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full text-[9px] sm:text-xs md:text-sm font-medium">
+                          {transaction.variety}
+                        </span>
+                      </td>
+                    </tr>
                   );
                 })}
+              </tbody>
+            </table>
+            {(analytics.recentTransactions || []).length === 0 && (
+              <div className="text-center py-12">
+                <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 font-medium">No transactions yet</p>
+                <p className="text-gray-400 text-sm mt-2">Your purchase history will appear here</p>
               </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-              <div className="p-6 bg-gray-100 rounded-full mb-4">
-                <PieChartIcon size={48} className="text-gray-300" />
-              </div>
-              <p className="font-semibold text-gray-500">No sales data available</p>
-              <p className="text-sm text-gray-400 mt-2">Sales data will appear here once you make sales</p>
-            </div>
-          )}
-        </div>
-
-        {/* Monthly Spending Bar Chart */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 h-full">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
-                <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
-                Spending
-              </h2>
-              <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Purchase expenses over time</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-                <button
-                  onClick={() => setSpendingViewMode('monthly')}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${spendingViewMode === 'monthly'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setSpendingViewMode('yearly')}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${spendingViewMode === 'yearly'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  Yearly
-                </button>
-              </div>
-              <div className="hidden md:block p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl">
-                <BarChart3 className="text-blue-600" size={28} />
-              </div>
-            </div>
+            )}
           </div>
-
-          {analytics.monthlySpending && analytics.monthlySpending.length > 0 ? (
-            <BarChart
-              data={spendingViewMode === 'monthly' 
-                ? analytics.monthlySpending.map(item => ({
-                    label: item.month,
-                    value: item.amount
-                  }))
-                : analytics.yearlySpendingByYear.map(item => ({
-                    label: item.year,
-                    value: item.amount
-                  }))
-              }
-              color="#3b82f6"
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-72 text-gray-400">
-              <div className="p-6 bg-gray-100 rounded-full mb-4">
-                <BarChart3 size={48} className="text-gray-300" />
-              </div>
-              <p className="font-semibold text-gray-500">No spending data available</p>
-              <p className="text-sm text-gray-400 mt-2">Your purchase history will appear here</p>
-            </div>
-          )}
         </div>
-      </div>
-
-      {/* Sales and Transactions Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4 items-start">
-        {/* Monthly Sales Bar Chart */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 self-start">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
-                <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
-                Sales
-              </h2>
-              <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Revenue from fiber sales</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-                <button
-                  onClick={() => setSalesViewMode('monthly')}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${salesViewMode === 'monthly'
-                    ? 'bg-white text-emerald-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setSalesViewMode('yearly')}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${salesViewMode === 'yearly'
-                    ? 'bg-white text-emerald-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  Yearly
-                </button>
-              </div>
-              <div className="hidden md:block p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl">
-                <TrendingUp className="text-emerald-600" size={28} />
-              </div>
-            </div>
-          </div>
-
-          {analytics.monthlySales && analytics.monthlySales.length > 0 ? (
-            <BarChart
-              data={salesViewMode === 'monthly'
-                ? analytics.monthlySales.map(item => ({
-                    label: item.month,
-                    value: item.amount
-                  }))
-                : analytics.yearlySalesByYear.map(item => ({
-                    label: item.year,
-                    value: item.amount
-                  }))
-              }
-              color="#10b981"
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-72 text-gray-400">
-              <div className="p-6 bg-gray-100 rounded-full mb-4">
-                <TrendingUp size={48} className="text-gray-300" />
-              </div>
-              <p className="font-semibold text-gray-500">No sales data available</p>
-              <p className="text-sm text-gray-400 mt-2">Sales revenue will be displayed here</p>
-            </div>
-          )}
-        </div>
-
-        {/* Monthly Transactions Bar Chart */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 self-start">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
-                <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-purple-500 to-indigo-500 rounded-full"></div>
-                Transactions
-              </h2>
-              <p className="text-xs md:text-sm text-gray-600 mt-2 ml-5 md:ml-7 font-medium">Number of purchases & sales</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-                <button
-                  onClick={() => setTransactionsViewMode('monthly')}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${transactionsViewMode === 'monthly'
-                    ? 'bg-white text-purple-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setTransactionsViewMode('yearly')}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${transactionsViewMode === 'yearly'
-                    ? 'bg-white text-purple-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  Yearly
-                </button>
-              </div>
-              <div className="hidden md:block p-3 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl">
-                <Activity className="text-purple-600" size={28} />
-              </div>
-            </div>
-          </div>
-
-          {analytics.monthlyTransactions && analytics.monthlyTransactions.length > 0 ? (
-            <BarChart
-              data={transactionsViewMode === 'monthly'
-                ? analytics.monthlyTransactions.map(item => ({
-                    label: item.month,
-                    value: item.count
-                  }))
-                : analytics.yearlyTransactionsByYear.map(item => ({
-                    label: item.year,
-                    value: item.count
-                  }))
-              }
-              color="#a855f7"
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-72 text-gray-400">
-              <div className="p-6 bg-gray-100 rounded-full mb-4">
-                <Activity size={48} className="text-gray-300" />
-              </div>
-              <p className="font-semibold text-gray-500">No transaction data available</p>
-              <p className="text-sm text-gray-400 mt-2">Transaction history will be shown here</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Recent Transactions Table */}
-      <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 lg:p-8 border border-white/60">
-        <div className="flex items-center gap-2 md:gap-3 mb-6 md:mb-8">
-          <div className="w-1 md:w-1.5 h-8 md:h-10 bg-gradient-to-b from-slate-700 to-slate-900 rounded-full"></div>
-          <h2 className="text-lg md:text-2xl font-black text-gray-900">Recent Transactions</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gradient-to-r from-slate-50 via-blue-50 to-purple-50 border-b-2 border-gray-200">
-              <tr>
-                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">ID</th>
-                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Date</th>
-                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Quality</th>
-                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Quantity</th>
-                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Amount</th>
-                <th className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-left text-[10px] sm:text-xs font-black text-gray-700 uppercase tracking-wider">Variety</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {(analytics.recentTransactions || []).slice(0, 10).map((transaction, index) => {
-                const date = new Date(transaction.created_at);
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                const sequentialNum = String(index + 1).padStart(4, '0');
-                const transactionId = `ABF-${year}${month}${day}-${sequentialNum}`;
-                
-                return (
-                <tr key={transaction.purchase_id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 border-b border-gray-100">
-                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm font-bold text-gray-900">
-                    {transactionId}
-                  </td>
-                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm text-gray-700 font-medium">
-                    {new Date(transaction.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5">
-                    <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-xs md:text-sm font-medium ${fiberColors[transaction.fiber_quality as keyof typeof fiberColors]?.light || 'bg-gray-100'
-                      } ${fiberColors[transaction.fiber_quality as keyof typeof fiberColors]?.text || 'text-gray-700'
-                      }`}>
-                      {transaction.fiber_quality}
-                    </span>
-                  </td>
-                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm text-gray-900 font-bold">
-                    {transaction.quantity} kg
-                  </td>
-                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5 text-[10px] sm:text-xs md:text-sm font-black text-gray-900">
-                    ₱{transaction.total_price?.toLocaleString() || '0'}
-                  </td>
-                  <td className="px-3 sm:px-4 md:px-6 py-3 md:py-5">
-                    <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full text-[9px] sm:text-xs md:text-sm font-medium">
-                      {transaction.variety}
-                    </span>
-                  </td>
-                </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {(analytics.recentTransactions || []).length === 0 && (
-            <div className="text-center py-12">
-              <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 font-medium">No transactions yet</p>
-              <p className="text-gray-400 text-sm mt-2">Your purchase history will appear here</p>
-            </div>
-          )}
-        </div>
-      </div>
       </div>
     </div>
   );
