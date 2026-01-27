@@ -34,6 +34,8 @@ interface AnalyticsData {
   yearlySpendingByYear: { year: string; amount: number }[];
   yearlySalesByYear: { year: string; amount: number }[];
   yearlyTransactionsByYear: { year: string; count: number }[];
+  yearlyProfitByYear: { year: string; profit: number; margin: number; sales: number; spending: number }[];
+  availableYears: string[];
   // Comparison Metrics
   spendingGrowth: number;
   salesGrowth: number;
@@ -86,6 +88,8 @@ const BuyerAnalytics: React.FC = () => {
     yearlySpendingByYear: [],
     yearlySalesByYear: [],
     yearlyTransactionsByYear: [],
+    yearlyProfitByYear: [],
+    availableYears: [],
     spendingGrowth: 0,
     salesGrowth: 0,
     quantityGrowth: 0,
@@ -177,6 +181,18 @@ const BuyerAnalytics: React.FC = () => {
         year,
         count: yearlyTransactionsMap[year] || 0
       }));
+
+      // Calculate yearly profit & margin
+      const yearlyProfitByYear = allYears.map(year => {
+        const sales = yearlySalesMap[year] || 0;
+        const spending = yearlySpendingMap[year] || 0;
+        const profit = sales - spending;
+        const margin = sales > 0 ? (profit / sales) * 100 : 0;
+        return { year, profit, margin, sales, spending };
+      });
+
+      // Update available years based on data
+      const availableYears = allYears.length > 0 ? allYears : [new Date().getFullYear().toString()];
 
       // Calculate ALL-TIME totals (across all years) for KPI cards
       const allTimeTotalSpent = purchases.reduce((sum: number, p: any) => sum + parseFloat(p.total_price || 0), 0);
@@ -307,6 +323,9 @@ const BuyerAnalytics: React.FC = () => {
           percentage: totalPurchaseQuantity > 0 ? (data.quantity / totalPurchaseQuantity) * 100 : 0
         }));
 
+
+
+
       // Calculate Comparison Metrics (This Month vs Last Month)
       const currentDate = new Date();
       const currentMonthIndex = currentDate.getMonth();
@@ -347,18 +366,45 @@ const BuyerAnalytics: React.FC = () => {
         quantityGrowth = 100; // New activity
       }
 
-      // Decision Support / Insights - MORE ACCURATE LOGIC
+
+      // Decision Support / Insights - IMPROVED WITH CONTEXT
       const insights: { type: 'positive' | 'negative' | 'neutral', message: string, action: string }[] = [];
 
-      // Sales Trend Logic
+      // Get historical context
+      const last3YearsProfit = yearlyProfitByYear.slice(-3);
+      const currentYearData = yearlyProfitByYear.find(y => y.year === selectedYear.toString());
+      const previousYearData = yearlyProfitByYear.find(y => y.year === (selectedYear - 1).toString());
+
+      // Sales Trend Logic with Context
       if (salesGrowth > 15) {
-        insights.push({ type: 'positive', message: `Outstanding Sales Growth (${salesGrowth.toFixed(1)}%)`, action: 'Demand is peaking. Secure more supply immediately to avoid stockouts.' });
+        insights.push({
+          type: 'positive',
+          message: `Outstanding Sales Growth (+${salesGrowth.toFixed(1)}%)`,
+          action: 'Demand is peaking. Secure more supply immediately to avoid stockouts and maintain this momentum.'
+        });
       } else if (salesGrowth > 0) {
-        insights.push({ type: 'positive', message: 'Steady Sales Increase', action: 'Maintaining momentum. Great time to build loyalty with your current sellers.' });
+        insights.push({
+          type: 'positive',
+          message: 'Steady Sales Increase',
+          action: 'Maintaining momentum. Great time to build loyalty with your current sellers and explore new markets.'
+        });
       } else if (salesGrowth < -20) {
-        insights.push({ type: 'negative', message: 'Critical Sales Decline', action: 'Revenue dropped significantly. Re-evaluate your fiber quality or pricing vs market rates.' });
+        // Improved Critical Sales Decline with context
+        const yearOverYearGrowth = previousYearData && currentYearData
+          ? ((currentYearData.sales - previousYearData.sales) / previousYearData.sales * 100).toFixed(1)
+          : 'N/A';
+
+        insights.push({
+          type: 'negative',
+          message: `Sales Alert: ${months[currentMonthIndex]} ${selectedYear} Performance`,
+          action: `Recent drop: ${months[currentMonthIndex]} lower than ${months[lastMonthIndex]} peak\n\nThis is NORMAL - ${months[currentMonthIndex]} is historically a slow month\n\nWhat to do:\n1. Check with your top 3 customers if they need supply\n2. Verify you have enough Class A fiber in stock\n3. Monitor ${months[(currentMonthIndex + 1) % 12]} - if still low, consider promotions\n\nOverall business health: ${yearOverYearGrowth !== 'N/A' && parseFloat(yearOverYearGrowth) > 0 ? 'GOOD ✅' : 'MONITOR 📊'}\n${currentYearData ? `Profit margin: ${currentYearData.margin.toFixed(0)}%` : ''}`
+        });
       } else if (salesGrowth < 0) {
-        insights.push({ type: 'negative', message: 'Slight Dip in Sales', action: 'Market activity is slow. Consider reaching out to your inactive buyers.' });
+        insights.push({
+          type: 'neutral',
+          message: 'Slight Dip in Sales',
+          action: 'Market activity is slower this month. Normal seasonal variation. Consider reaching out to inactive buyers for the upcoming busy season.'
+        });
       }
 
       // Spending & Profitability Logic
@@ -369,9 +415,7 @@ const BuyerAnalytics: React.FC = () => {
       }
 
       // Inventory & Volume Logic
-      if (totalQuantity > 10000) {
-        insights.push({ type: 'positive', message: 'Strong Inventory Position', action: 'You have high volume leverage. Ideal for large-scale export or bulk selling.' });
-      } else if (totalQuantity > 0 && totalQuantity < 500) {
+      if (totalQuantity > 0 && totalQuantity < 500) {
         insights.push({ type: 'neutral', message: 'Low Stock Levels', action: 'Supply is dwindling. Check availability with your regular farmers before demand spikes.' });
       }
 
@@ -406,6 +450,8 @@ const BuyerAnalytics: React.FC = () => {
         yearlySpendingByYear,
         yearlySalesByYear,
         yearlyTransactionsByYear,
+        yearlyProfitByYear,
+        availableYears,
         spendingGrowth,
         salesGrowth,
         quantityGrowth,
@@ -434,7 +480,9 @@ const BuyerAnalytics: React.FC = () => {
         yearlySpendingByYear: [],
         yearlySalesByYear: [],
         yearlyTransactionsByYear: [],
+        yearlyProfitByYear: [],
         purchasesByFiberType: [],
+        availableYears: [],
         spendingGrowth: 0,
         salesGrowth: 0,
         quantityGrowth: 0,
@@ -450,7 +498,6 @@ const BuyerAnalytics: React.FC = () => {
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 
   // Modern Animated Pie Chart Component
   const PieChart: React.FC<{ data: { type: string; percentage: number; quantity: number }[] }> = ({ data }) => {
@@ -690,22 +737,21 @@ const BuyerAnalytics: React.FC = () => {
             <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Performance Overview</h1>
             <p className="text-sm text-gray-500 font-medium">Real-time supply chain analytics and insights</p>
           </div>
-          <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-            <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
-              <Calendar size={18} />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase font-black text-gray-400 leading-none mb-1">Select Year</span>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="bg-transparent text-sm font-bold text-gray-900 focus:outline-none cursor-pointer"
-              >
-                {years.map(y => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </div>
+          <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Year</span>
+            <select
+              value={String(selectedYear)}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="bg-gray-50 border-none text-gray-900 text-sm font-black rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1 md:p-1.5 cursor-pointer outline-none"
+            >
+              {analytics.availableYears.length > 0 ? (
+                analytics.availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))
+              ) : (
+                <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
+              )}
+            </select>
           </div>
         </div>
 
@@ -810,35 +856,11 @@ const BuyerAnalytics: React.FC = () => {
           </div>
         </div>
 
-        {/* Decision Support & Insights */}
-        <div className="mb-6">
-          <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-4 flex items-center gap-2">
-            <Activity className="text-blue-600" />
-            Decision Support System
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {analytics.insights.map((insight, index) => (
-              <div key={index} className={`p-4 rounded-xl border-l-4 shadow-sm bg-white ${insight.type === 'positive' ? 'border-emerald-500' :
-                insight.type === 'negative' ? 'border-red-500' : 'border-blue-500'
-                }`}>
-                <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-full ${insight.type === 'positive' ? 'bg-emerald-100 text-emerald-600' :
-                    insight.type === 'negative' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
-                    }`}>
-                    <Activity size={18} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900">{insight.message}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{insight.action}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
+          {/* Fiber Type Analytics (Purchase & Sales) - Pie Chart */}
           {/* Fiber Type Analytics (Purchase & Sales) - Pie Chart */}
           <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 h-full">
             <div className="flex items-center justify-between mb-4">
@@ -912,14 +934,42 @@ const BuyerAnalytics: React.FC = () => {
             {/* Fiber Insight */}
             <div className="col-span-1 md:col-span-2">
               <ChartInsight
-                type={analytics.purchasesByFiberType.some(p => p.percentage > 70) ? 'neutral' : 'positive'}
-                message={
-                  analytics.purchasesByFiberType.length === 0
-                    ? "Purchase data is needed to analyze your fiber distribution."
-                    : analytics.purchasesByFiberType.some(p => p.percentage > 70)
-                      ? `Warning: Critical dependency on ${analytics.purchasesByFiberType.reduce((prev, current) => (prev.percentage > current.percentage) ? prev : current).type}. High risk if this class's market price drops.`
-                      : "Risk Diversified: Your purchase mix across Class A, B, and C is healthy and protects your profit margins."
-                }
+                type={(() => {
+                  if (analytics.purchasesByFiberType.length === 0) return 'neutral';
+                  const dominant = analytics.purchasesByFiberType.reduce((prev, current) =>
+                    (prev.percentage > current.percentage) ? prev : current
+                  );
+                  if (dominant.percentage > 70) return 'negative';
+                  return 'positive';
+                })()}
+                message={(() => {
+                  if (analytics.purchasesByFiberType.length === 0) {
+                    return "No purchase data available yet. Start recording your fiber purchases to get intelligent insights on your sourcing strategy.";
+                  }
+
+                  const dominant = analytics.purchasesByFiberType.reduce((prev, current) =>
+                    (prev.percentage > current.percentage) ? prev : current
+                  );
+
+                  const classA = analytics.purchasesByFiberType.find(p => p.type === 'Class A');
+                  const classB = analytics.purchasesByFiberType.find(p => p.type === 'Class B');
+
+                  // Critical dependency scenario
+                  if (dominant.percentage > 70) {
+                    return `⚠️ High Concentration Risk: ${dominant.percentage.toFixed(0)}% of your purchases are ${dominant.type}. If ${dominant.type} prices spike or supply becomes scarce, your entire operation is at risk. Recommendation: Diversify by sourcing at least 20-30% from other fiber classes to build resilience.`;
+                  }
+
+                  // Balanced portfolio scenario
+                  if (classA && classB && classA.percentage > 0 && classB.percentage > 0) {
+                    const balance = Math.abs(classA.percentage - classB.percentage);
+                    if (balance < 30) {
+                      return `✅ Well-Balanced Portfolio: Your ${classA.percentage.toFixed(0)}% Class A and ${classB.percentage.toFixed(0)}% Class B split shows smart risk management. This diversification protects you from price volatility in any single fiber grade. Continue this strategy to maintain stable profit margins.`;
+                    }
+                  }
+
+                  // Default positive message
+                  return `✅ Healthy Diversification: Your fiber sourcing is spread across multiple classes (${analytics.purchasesByFiberType.filter(p => p.percentage > 10).map(p => `${p.type}: ${p.percentage.toFixed(0)}%`).join(', ')}). This balanced approach minimizes supply chain risk and gives you flexibility to respond to market price changes.`;
+                })()}
               />
             </div>
           </div>
@@ -936,17 +986,6 @@ const BuyerAnalytics: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex gap-1 bg-gray-50 border border-gray-100 p-1 rounded-xl">
-                  {spendingViewMode === 'monthly' && (
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                      className="bg-white border border-gray-100 text-[10px] font-black px-2 py-1 rounded-lg text-blue-600 focus:outline-none transition-all shadow-sm mr-1"
-                    >
-                      {years.map(y => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                  )}
                   <button
                     onClick={() => setSpendingViewMode('monthly')}
                     className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${spendingViewMode === 'monthly'
@@ -997,20 +1036,35 @@ const BuyerAnalytics: React.FC = () => {
             )}
             <ChartInsight
               type={analytics.spendingGrowth > 0 ? 'neutral' : analytics.spendingGrowth < 0 ? 'positive' : 'neutral'}
-              message={analytics.spendingGrowth > 0
-                ? `Spending has increased by ${analytics.spendingGrowth.toFixed(1)}% compared to last month. Ensure your inventory turnover rate matches this increased investment.`
-                : analytics.spendingGrowth < 0
-                  ? `Spending is down by ${Math.abs(analytics.spendingGrowth).toFixed(1)}%. This improved efficiency helps maintain a better cash reserve for future bulk buys.`
-                  : `Spending is unchanged this month. Maintaining a steady procurement pace is good for supply chain relationship stability.`
+              message={spendingViewMode === 'monthly'
+                ? (analytics.spendingGrowth > 0
+                  ? `Monthly spending increased by ${analytics.spendingGrowth.toFixed(1)}% vs last month. Ensure your inventory turnover rate matches this increased investment to avoid cash flow issues.`
+                  : analytics.spendingGrowth < 0
+                    ? `Monthly spending decreased by ${Math.abs(analytics.spendingGrowth).toFixed(1)}%. This improved efficiency helps maintain better cash reserves for future bulk purchases.`
+                    : `Monthly spending is stable (0% change). Consistent procurement pace strengthens supplier relationships and ensures predictable cash flow.`)
+                : (analytics.yearlySpendingByYear.length >= 2
+                  ? (() => {
+                    const currentYear = analytics.yearlySpendingByYear[analytics.yearlySpendingByYear.length - 1];
+                    const previousYear = analytics.yearlySpendingByYear[analytics.yearlySpendingByYear.length - 2];
+                    const yearlyGrowth = previousYear.amount > 0
+                      ? ((currentYear.amount - previousYear.amount) / previousYear.amount * 100)
+                      : 0;
+                    return yearlyGrowth > 10
+                      ? `Year-over-year spending up ${yearlyGrowth.toFixed(1)}%. Scaling operations requires capital, but verify this aligns with proportional sales growth to maintain profitability.`
+                      : yearlyGrowth < -10
+                        ? `Year-over-year spending down ${Math.abs(yearlyGrowth).toFixed(1)}%. Strong cost control detected. Monitor if this affects your ability to meet customer demand.`
+                        : `Year-over-year spending is stable (${yearlyGrowth.toFixed(1)}% change). Consistent annual procurement indicates mature business operations.`;
+                  })()
+                  : `Viewing yearly trends. Switch to monthly view for detailed month-to-month spending analysis.`)
               }
             />
           </div>
         </div>
 
         {/* Sales and Transactions Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
           {/* Monthly Sales Bar Chart */}
-          <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 self-start">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 flex flex-col h-full">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
@@ -1021,17 +1075,6 @@ const BuyerAnalytics: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex gap-1 bg-gray-50 border border-gray-100 p-1 rounded-xl">
-                  {salesViewMode === 'monthly' && (
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                      className="bg-white border border-gray-100 text-[10px] font-black px-2 py-1 rounded-lg text-emerald-600 focus:outline-none transition-all shadow-sm mr-1"
-                    >
-                      {years.map(y => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                  )}
                   <button
                     onClick={() => setSalesViewMode('monthly')}
                     className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${salesViewMode === 'monthly'
@@ -1081,19 +1124,38 @@ const BuyerAnalytics: React.FC = () => {
               </div>
             )}
 
-            <ChartInsight
-              type={analytics.salesGrowth > 0 ? 'positive' : analytics.salesGrowth < 0 ? 'negative' : 'neutral'}
-              message={analytics.salesGrowth > 0
-                ? `Strong Performance! Sales are trending up ${analytics.salesGrowth.toFixed(1)}%. Reinvest this revenue into securing high-quality fiber classes.`
-                : analytics.salesGrowth < 0
-                  ? `Sales volume has dipped by ${Math.abs(analytics.salesGrowth).toFixed(1)}% since last month. Re-evaluate your engagement with top purchasing entities.`
-                  : `Sales volume is currently stable at 0.0% change. Use this consistency to plan long-term distribution contracts.`
-              }
-            />
+            <div className="mt-auto">
+              <ChartInsight
+                type={analytics.salesGrowth > 0 ? 'positive' : analytics.salesGrowth < 0 ? 'negative' : 'neutral'}
+                message={salesViewMode === 'monthly'
+                  ? (analytics.salesGrowth > 0
+                    ? `Strong Monthly Performance! Sales up ${analytics.salesGrowth.toFixed(1)}% vs last month. Reinvest this revenue into securing premium fiber inventory to capitalize on demand.`
+                    : analytics.salesGrowth < 0
+                      ? `Monthly sales dipped ${Math.abs(analytics.salesGrowth).toFixed(1)}%. Re-engage your top 5 customers and verify you have adequate Class A stock to meet their needs.`
+                      : `Monthly sales stable (0% change). Consistent revenue stream enables predictable planning for long-term distribution contracts.`)
+                  : (analytics.yearlySalesByYear.length >= 2
+                    ? (() => {
+                      const currentYear = analytics.yearlySalesByYear[analytics.yearlySalesByYear.length - 1];
+                      const previousYear = analytics.yearlySalesByYear[analytics.yearlySalesByYear.length - 2];
+                      const yearlyGrowth = previousYear.amount > 0
+                        ? ((currentYear.amount - previousYear.amount) / previousYear.amount * 100)
+                        : 0;
+                      return yearlyGrowth > 15
+                        ? `Exceptional year-over-year growth: +${yearlyGrowth.toFixed(1)}%! Your market position is strengthening. Consider expanding your buyer network to sustain this momentum.`
+                        : yearlyGrowth > 0
+                          ? `Solid annual growth: +${yearlyGrowth.toFixed(1)}%. Steady upward trajectory indicates healthy business expansion and strong customer retention.`
+                          : yearlyGrowth < -10
+                            ? `Year-over-year sales declined ${Math.abs(yearlyGrowth).toFixed(1)}%. Analyze if this is due to market conditions, pricing strategy, or customer churn. Action needed.`
+                            : `Annual sales relatively flat (${yearlyGrowth.toFixed(1)}% change). Market maturity detected. Focus on margin optimization and customer loyalty programs.`;
+                    })()
+                    : `Viewing yearly trends. Switch to monthly view for detailed month-to-month sales performance analysis.`)
+                }
+              />
+            </div>
           </div>
 
           {/* Monthly Transactions Bar Chart */}
-          <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 self-start">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300 flex flex-col h-full">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3">
@@ -1104,17 +1166,6 @@ const BuyerAnalytics: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex gap-1 bg-gray-50 border border-gray-100 p-1 rounded-xl">
-                  {transactionsViewMode === 'monthly' && (
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                      className="bg-white border border-gray-100 text-[10px] font-black px-2 py-1 rounded-lg text-purple-600 focus:outline-none transition-all shadow-sm mr-1"
-                    >
-                      {years.map(y => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                  )}
                   <button
                     onClick={() => setTransactionsViewMode('monthly')}
                     className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${transactionsViewMode === 'monthly'
@@ -1164,14 +1215,141 @@ const BuyerAnalytics: React.FC = () => {
               </div>
             )}
 
-            <ChartInsight
-              type="neutral"
-              message={analytics.monthlyTransactions.length > 50
-                ? "High transaction volume detected. Consider grouping smaller orders or automating procurement to reduce administrative overhead."
-                : "Transaction volume is manageable. Focus on deepening relationships with your current high-value suppliers and farmers."
-              }
-            />
+            <div className="mt-auto">
+              <ChartInsight
+                type="neutral"
+                message={transactionsViewMode === 'monthly'
+                  ? (() => {
+                    const totalMonthlyCount = analytics.monthlyTransactions.reduce((acc, curr) => acc + curr.count, 0);
+                    return totalMonthlyCount > 50
+                      ? `⚙️ Smart Logistics Optimization: With ${totalMonthlyCount} transactions processed in ${selectedYear}, your operational tempo is high. Recommendation: Batch payments for repeat fiber loads to reduce administrative overhead and improve cash flow visibility.`
+                      : `⚙️ Operational Efficiency: In ${selectedYear}, you processed ${totalMonthlyCount} transactions. Volume is stable. This is an ideal time to conduct quality audits on your incoming Class A supply to ensure your high-margin standards are being maintained.`;
+                  })()
+                  : (analytics.yearlyTransactionsByYear.length >= 2
+                    ? (() => {
+                      const currentYear = analytics.yearlyTransactionsByYear[analytics.yearlyTransactionsByYear.length - 1];
+                      const previousYear = analytics.yearlyTransactionsByYear[analytics.yearlyTransactionsByYear.length - 2];
+                      const growth = previousYear.count > 0 ? ((currentYear.count - previousYear.count) / previousYear.count * 100) : 0;
+                      return growth > 15
+                        ? `🚀 Strategic Scaling Analysis: Your annual transaction volume has expanded by ${growth.toFixed(1)}%. This indicates strong market penetration. Next Step: Formalize long-term fulfillment contracts with your top 5 suppliers to secure volume discounts.`
+                        : `📊 Market Stability Report: Annual transaction volume is ${Math.abs(growth) < 5 ? 'highly consistent' : growth > 0 ? 'showing healthy organic growth' : 'in a consolidation phase'}. Recommendation: Focus on increasing the average value per load from existing suppliers rather than quantity.`
+                    })()
+                    : "📊 Supply Chain Connectivity: Your transaction patterns indicate a mature procurement network. Consistency in these cycles is the strongest predictor of long-term business stability.")
+                }
+              />
+            </div>
           </div>
+        </div>
+
+        {/* Profit Overview Section */}
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 lg:p-8 border border-white/60 hover:shadow-3xl transition-shadow duration-300">
+          <div className="flex items-center gap-2 md:gap-3 mb-6">
+            <div className="w-1 md:w-1.5 h-8 md:h-10 bg-gradient-to-b from-emerald-500 to-blue-500 rounded-full"></div>
+            <div>
+              <h2 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2">
+                <TrendingUp className="text-emerald-500" strokeWidth={3} size={24} />
+                Profit & Margin Overview
+              </h2>
+              <p className="text-xs md:text-sm text-gray-600 mt-1 font-medium">Yearly profit analysis (Sales - Spending)</p>
+            </div>
+          </div>
+
+          {analytics.yearlyProfitByYear && analytics.yearlyProfitByYear.length > 0 ? (
+            <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-xl bg-white">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b-2 border-slate-100">
+                      <th className="px-6 py-5 text-left text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">Year</th>
+                      <th className="px-6 py-5 text-right text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">Sales Revenue</th>
+                      <th className="px-6 py-5 text-right text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">Op. Spending</th>
+                      <th className="px-6 py-5 text-right text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">Net Profit</th>
+                      <th className="px-6 py-5 text-right text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">Margin</th>
+                      <th className="px-6 py-5 text-center text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">YoY Trend</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {analytics.yearlyProfitByYear.map((yearData, index) => {
+                      const previousYear = index > 0 ? analytics.yearlyProfitByYear[index - 1] : null;
+                      const profitChange = previousYear
+                        ? ((yearData.profit - previousYear.profit) / Math.abs(previousYear.profit) * 100)
+                        : 0;
+                      const isPositive = profitChange > 0;
+                      const isNeutral = Math.abs(profitChange) < 5;
+                      const currentYear = new Date().getFullYear();
+                      const isCurrentYear = parseInt(yearData.year) === currentYear;
+                      const isPartialYear = isCurrentYear && new Date().getMonth() < 11;
+
+                      return (
+                        <tr key={yearData.year} className="group hover:bg-blue-50/40 transition-all duration-200">
+                          <td className="px-6 py-5 text-sm font-black text-slate-900">
+                            <div className="flex items-center gap-2">
+                              {yearData.year}
+                              {isPartialYear && (
+                                <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-black rounded tracking-widest leading-none">
+                                  YTD
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-sm font-bold text-slate-600 text-right tabular-nums">
+                            ₱{yearData.sales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-6 py-5 text-sm font-bold text-slate-600 text-right tabular-nums">
+                            ₱{yearData.spending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-6 py-5 text-sm font-black text-right tabular-nums">
+                            <span className={`${yearData.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                              ₱{yearData.profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-sm font-black text-right tabular-nums">
+                            <div className="flex justify-end">
+                              <span className={`px-3 py-1.5 rounded-xl text-[11px] font-black shadow-sm border ${yearData.margin >= 70 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                yearData.margin >= 50 ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                  yearData.margin >= 30 ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                                    'bg-rose-50 text-rose-700 border-rose-100'
+                                }`}>
+                                {yearData.margin.toFixed(1)}%
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-center">
+                            <div className="flex justify-center">
+                              {index === 0 ? (
+                                <span className="text-slate-300 text-lg font-black tracking-widest">---</span>
+                              ) : isNeutral ? (
+                                <div title="Neutral growth" className="p-2 bg-slate-100 rounded-xl text-slate-500 shadow-sm border border-slate-200">
+                                  <Activity size={12} strokeWidth={4} />
+                                </div>
+                              ) : isPositive ? (
+                                <div title="Positive growth" className="p-2 bg-emerald-100 rounded-xl text-emerald-600 shadow-sm border border-emerald-200">
+                                  <ArrowUp size={12} strokeWidth={4} />
+                                </div>
+                              ) : (
+                                <div title="Negative growth" className="p-2 bg-rose-100 rounded-xl text-rose-600 shadow-sm border border-rose-200">
+                                  <ArrowDown size={12} strokeWidth={4} />
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+
+            <div className="text-center py-12">
+              <div className="p-6 bg-emerald-50 rounded-full inline-block mb-4">
+                <TrendingUp className="w-12 h-12 text-emerald-400" />
+              </div>
+              <p className="text-gray-600 font-medium">No profit data available</p>
+              <p className="text-gray-400 text-sm mt-2">Complete some sales to see your profit analysis</p>
+            </div>
+          )}
         </div>
 
         {/* Recent Transactions Table */}
@@ -1241,8 +1419,8 @@ const BuyerAnalytics: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 
