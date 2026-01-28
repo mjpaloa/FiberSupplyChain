@@ -28,7 +28,8 @@ import {
   Coins,
   Upload,
   Lock,
-  EyeOff
+  EyeOff,
+  History
 } from 'lucide-react';
 import {
   PieChart as RechartsPieChart,
@@ -88,15 +89,68 @@ import BuyerPriceListingsViewer from '../Shared/BuyerPriceListingsViewer';
 import DeliveryTrackingMonitor from './DeliveryTrackingMonitor';
 import ActivityLogsManagement from './ActivityLogsManagement';
 import UserAnalyticsDashboard from './UserAnalyticsDashboard';
+import SalesAnalyticsDashboard from './SalesAnalyticsDashboard';
+
 
 interface MAODashboardProps {
   onLogout: () => void;
 }
 
+interface DashboardState {
+  production: {
+    totalSeedlingsReceived: number;
+    totalSeedlingsDistributed: number;
+    totalSeedlingsPlanted: number;
+    totalAreaPlanted: number;
+    totalHarvestFiber: number;
+    actualHarvested: number;
+    averageQualityGrade: string;
+    totalMonitoringVisits: number;
+    farmsMonitored: number;
+    recentMonitoringVisits: number;
+    healthyFarms: number;
+    needsSupportFarms: number;
+    damagedFarms: number;
+    monthlyMonitoring: number[];
+    monthlyHealthy: number[];
+    monthlyNeedsSupport: number[];
+    monthlyDamaged: number[];
+    monthlyReceived: number[];
+    monthlyDistributed: number[];
+    monthlyHarvest?: number[]; // Added for compatibility
+    monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[] } };
+    yearlyReceived: { [year: number]: number };
+    yearlyDistributed: { [year: number]: number };
+    yearlyHarvest: { [year: number]: number };
+    yearlyMonitoring: { [year: number]: number };
+    yearlyHealthy: { [year: number]: number };
+    yearlyNeedsSupport: { [year: number]: number };
+    yearlyDamaged: { [year: number]: number };
+    monitoringStatsByYear: { [year: number]: { total: number[], healthy: number[], needsSupport: number[], damaged: number[] } };
+  };
+  sales: any;
+  users: any;
+  deliveries: {
+    totalDeliveries: number;
+    inTransit: number;
+    delivered: number;
+    completed: number;
+    cancelled: number;
+    totalFiberKg: number;
+    deliveredFiberKg: number;
+    cancelledFiberKg: number;
+    classA_Kg: number;
+    classB_Kg: number;
+    classC_Kg: number;
+    totalValue: number;
+    rawDeliveries: any[];
+  };
+}
+
 const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'users' | 'officers' | 'maintenance' | 'seedlings' | 'seedlings-overview' | 'monitoring' | 'content' | 'harvests' | 'sales-analytics' | 'buyer-prices' | 'delivery-tracking' | 'activity-logs'>('dashboard');
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'users' | 'officers' | 'maintenance' | 'seedlings' | 'seedlings-overview' | 'monitoring' | 'content' | 'harvests' | 'sales-analytics' | 'sales-performance' | 'buyer-prices' | 'delivery-tracking' | 'activity-logs'>('dashboard');
   const [contentTab, setContentTab] = useState<'articles' | 'team'>('articles');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -343,7 +397,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   };
 
   // Dashboard data states
-  const [dashboardData, setDashboardData] = useState({
+  const [dashboardData, setDashboardData] = useState<DashboardState>({
     production: {
       totalSeedlingsReceived: 0,
       totalSeedlingsDistributed: 0,
@@ -363,7 +417,17 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       monthlyNeedsSupport: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       monthlyDamaged: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       monthlyReceived: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      monthlyDistributed: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      monthlyDistributed: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      monthlyHarvest: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      monthlyStatsByYear: {},
+      yearlyReceived: {},
+      yearlyDistributed: {},
+      yearlyHarvest: {},
+      yearlyMonitoring: {},
+      yearlyHealthy: {},
+      yearlyNeedsSupport: {},
+      yearlyDamaged: {},
+      monitoringStatsByYear: {}
     },
     sales: {
       totalKgSold: 0,
@@ -388,21 +452,34 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       completed: 0,
       cancelled: 0,
       totalFiberKg: 0,
+      deliveredFiberKg: 0,
+      cancelledFiberKg: 0,
+      classA_Kg: 0,
+      classB_Kg: 0,
+      classC_Kg: 0,
       totalValue: 0,
-      rawDeliveries: [] as any[]
+      rawDeliveries: []
     }
   });
   const [loadingDashboard, setLoadingDashboard] = useState(true);
-  const [,] = useState<'production' | 'sales' | 'users'>('production');
-  const [,] = useState('');
-  const [,] = useState('');
+  const [dashboardSection, setDashboardSection] = useState<'production' | 'sales' | 'users' | 'reports'>('production');
   const [chartView, setChartView] = useState<'monthly' | 'yearly'>('monthly');
+  const [seedlingMonthYear, setSeedlingMonthYear] = useState(new Date().getFullYear());
+  const [monitoringMonthYear, setMonitoringMonthYear] = useState(new Date().getFullYear());
+  const [deliveryMonthYear, setDeliveryMonthYear] = useState(new Date().getFullYear());
+  const [monitoringView, setMonitoringView] = useState<'monthly' | 'yearly'>('monthly');
+  const [deliveryView, setDeliveryView] = useState<'monthly' | 'yearly'>('monthly');
+  const [abacaSoldView, setAbacaSoldView] = useState<'monthly' | 'yearly'>('monthly');
+  const [salesMonthYear, setSalesMonthYear] = useState(new Date().getFullYear());
+  const [salesChartView, setSalesChartView] = useState<'monthly' | 'yearly'>('yearly');
+  const [deliveryStatusView, setDeliveryStatusView] = useState<'monthly' | 'yearly'>('yearly');
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
 
   // Modern Stats Card Component - Premium Design
   const StatsCard: React.FC<{
     title: string;
     value: string | number;
-    subValue: string;
+    subValue: string | React.ReactNode;
     icon: React.ReactNode;
     gradient: string;
     unit?: string;
@@ -547,7 +624,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         </svg>
 
         {/* Center Label */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-[110px] flex flex-col items-center justify-center">
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full max-w-[100px] flex flex-col items-center justify-center">
           {hoveredIndex !== null && validData[hoveredIndex] ? (
             <>
               <p className="text-2xl font-black text-gray-900 leading-none">
@@ -559,21 +636,18 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             </>
           ) : (
             <>
-              <p className="text-xl font-black text-gray-800 leading-none mb-1">{centerLabel}</p>
-              <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tight leading-tight break-words w-full">{centerSubLabel}</p>
+              <p className={`${(centerLabel?.length || 0) > 12 ? 'text-base' : (centerLabel?.length || 0) > 8 ? 'text-lg' : 'text-xl'} font-black text-gray-800 leading-tight mb-0.5 px-1`}>
+                {centerLabel}
+              </p>
+              <p className="text-[8px] text-gray-500 font-bold uppercase tracking-tight leading-tight break-words w-full">{centerSubLabel}</p>
             </>
           )}
         </div>
       </div>
     );
   };
-  const [monitoringView, setMonitoringView] = useState<'monthly' | 'yearly'>('monthly');
-  const [deliveryView, setDeliveryView] = useState<'monthly' | 'yearly'>('monthly');
-  const [abacaSoldView, setAbacaSoldView] = useState<'monthly' | 'yearly'>('monthly');
-  const [salesChartView, setSalesChartView] = useState<'monthly' | 'yearly'>('yearly');
-  const [deliveryStatusView, setDeliveryStatusView] = useState<'monthly' | 'yearly'>('yearly');
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
-  const [dashboardSection, setDashboardSection] = useState<'production' | 'reports' | 'users'>('production');
+  // Dashboard data loading helpers
+  // (State removal of duplicates below)
 
   // Fetch dashboard data
   const fetchDashboardData = async () => {
@@ -613,6 +687,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         completed: deliveries.filter((d: any) => d.status === 'Completed').length,
         cancelled: deliveries.filter((d: any) => d.status === 'Cancelled').length,
         totalFiberKg: deliveries.reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+        deliveredFiberKg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status)).reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+        cancelledFiberKg: deliveries.filter((d: any) => d.status === 'Cancelled').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+        classA_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && d.grade === 'Class A').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+        classB_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && d.grade === 'Class B').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+        classC_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && d.grade === 'Class C').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
         totalValue: deliveries.filter((d: any) => d.status === 'Completed').reduce((sum: number, d: any) => sum + parseFloat(d.total_amount || 0), 0),
         rawDeliveries: deliveries // Store raw deliveries for filtering
       };
@@ -623,12 +702,36 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       let monthlyDistributed = new Array(12).fill(0);
       let monthlyHarvest = new Array(12).fill(0);
 
+      // Seedling / Production maps
+      const monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[] } } = {};
+      const yearlyReceived: { [year: number]: number } = {};
+      const yearlyDistributed: { [year: number]: number } = {};
+      const yearlyHarvest: { [year: number]: number } = {};
+
+      const ensureYearInStats = (year: number) => {
+        if (!monthlyStatsByYear[year]) {
+          monthlyStatsByYear[year] = {
+            received: new Array(12).fill(0),
+            distributed: new Array(12).fill(0),
+            harvested: new Array(12).fill(0)
+          };
+        }
+        if (!yearlyReceived[year]) yearlyReceived[year] = 0;
+        if (!yearlyDistributed[year]) yearlyDistributed[year] = 0;
+        if (!yearlyHarvest[year]) yearlyHarvest[year] = 0;
+      };
+
       // Process deliveries for monthly harvest (production)
       deliveries.forEach((d: any) => {
-        const date = new Date(d.created_at);
-        if (date.getFullYear() === currentYear && (d.status === 'Completed' || d.status === 'Delivered')) {
+        const date = new Date(d.created_at || d.delivery_date);
+        if (d.status === 'Completed' || d.status === 'Delivered') {
+          const year = date.getFullYear();
           const monthIndex = date.getMonth();
-          monthlyHarvest[monthIndex] += parseFloat(d.quantity_kg || 0);
+          const quantity = parseFloat(d.quantity_kg || 0);
+
+          ensureYearInStats(year);
+          monthlyStatsByYear[year].harvested[monthIndex] += quantity;
+          yearlyHarvest[year] += quantity;
         }
       });
 
@@ -646,12 +749,16 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           console.log('📦 Processing association distributions (Received):', distributions.length, 'records');
 
           distributions.forEach((dist: any) => {
-            const date = new Date(dist.date_distributed);
-            if (date.getFullYear() === currentYear) {
-              const monthIndex = date.getMonth();
-              const quantity = parseInt(dist.quantity_distributed || 0);
-              monthlyReceived[monthIndex] += quantity;
-            }
+            const dateStr = dist.date_distributed || dist.created_at;
+            if (!dateStr) return;
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const monthIndex = date.getMonth();
+            const quantity = parseInt(dist.quantity_distributed || 0);
+
+            ensureYearInStats(year);
+            monthlyStatsByYear[year].received[monthIndex] += quantity;
+            yearlyReceived[year] += quantity;
           });
         }
 
@@ -669,12 +776,16 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             console.log('🚜 Processing farmer distributions (Distributed):', farmerDists.length, 'records');
 
             farmerDists.forEach((dist: any) => {
-              const date = new Date(dist.date_distributed);
-              if (date.getFullYear() === currentYear) {
-                const monthIndex = date.getMonth();
-                const quantity = parseInt(dist.quantity_distributed || 0);
-                monthlyDistributed[monthIndex] += quantity;
-              }
+              const dateStr = dist.date_distributed || dist.created_at;
+              if (!dateStr) return;
+              const date = new Date(dateStr);
+              const year = date.getFullYear();
+              const monthIndex = date.getMonth();
+              const quantity = parseInt(dist.quantity_distributed || 0);
+
+              ensureYearInStats(year);
+              monthlyStatsByYear[year].distributed[monthIndex] += quantity;
+              yearlyDistributed[year] += quantity;
             });
           }
         } catch (err) {
@@ -694,6 +805,12 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       let damagedFarms = 0;
       let totalMonitoring = 0;
 
+      // Yearly aggregation objects
+      const yearlyMonitoringData: { [year: number]: number } = {};
+      const yearlyHealthyData: { [year: number]: number } = {};
+      const yearlyNeedsSupportData: { [year: number]: number } = {};
+      const yearlyDamagedData: { [year: number]: number } = {};
+
       try {
         const monitoringRes = await fetch('https://easyabaca-api.vercel.app/api/mao/monitoring', {
           headers: { Authorization: `Bearer ${token}` }
@@ -703,33 +820,65 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           const monitoringData = await monitoringRes.json();
           const records = Array.isArray(monitoringData) ? monitoringData : (monitoringData.records || monitoringData.data || []);
 
+          // Monitoring maps
+          const monitoringStatsByYear: { [year: number]: { total: number[], healthy: number[], needsSupport: number[], damaged: number[] } } = {};
+
+          const ensureYearInMonitoring = (year: number) => {
+            if (!monitoringStatsByYear[year]) {
+              monitoringStatsByYear[year] = {
+                total: new Array(12).fill(0),
+                healthy: new Array(12).fill(0),
+                needsSupport: new Array(12).fill(0),
+                damaged: new Array(12).fill(0)
+              };
+            }
+            if (!yearlyMonitoringData[year]) {
+              yearlyMonitoringData[year] = 0;
+              yearlyHealthyData[year] = 0;
+              yearlyNeedsSupportData[year] = 0;
+              yearlyDamagedData[year] = 0;
+            }
+          };
+
           records.forEach((record: any) => {
-            const date = new Date(record.date_of_visit);
+            const dateStr = record.date_of_visit || record.created_at;
+            if (!dateStr) return;
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const monthIndex = date.getMonth();
             totalMonitoring++;
 
-            // Count for current year monthly data
-            if (date.getFullYear() === currentYear) {
-              const monthIndex = date.getMonth();
-              monthlyMonitoring[monthIndex]++;
+            ensureYearInMonitoring(year);
 
-              if (record.farm_condition === 'Healthy') {
-                monthlyHealthy[monthIndex]++;
-              } else if (record.farm_condition === 'Needs Support') {
-                monthlyNeedsSupport[monthIndex]++;
-              } else if (record.farm_condition === 'Damaged') {
-                monthlyDamaged[monthIndex]++;
-              }
-            }
+            // Aggregate yearly totals
+            yearlyMonitoringData[year]++;
+            monitoringStatsByYear[year].total[monthIndex]++;
 
-            // Count overall totals (not just current year)
             if (record.farm_condition === 'Healthy') {
+              yearlyHealthyData[year]++;
+              monitoringStatsByYear[year].healthy[monthIndex]++;
               healthyFarms++;
             } else if (record.farm_condition === 'Needs Support') {
+              yearlyNeedsSupportData[year]++;
+              monitoringStatsByYear[year].needsSupport[monthIndex]++;
               needsSupportFarms++;
             } else if (record.farm_condition === 'Damaged') {
+              yearlyDamagedData[year]++;
+              monitoringStatsByYear[year].damaged[monthIndex]++;
               damagedFarms++;
             }
           });
+
+          // Pass monitoring results back to production object
+          productionData.monitoringStatsByYear = monitoringStatsByYear;
+
+          // Update current year monthly variables for fallback/backward compat
+          if (monitoringStatsByYear[currentYear]) {
+            monthlyMonitoring = monitoringStatsByYear[currentYear].total;
+            monthlyHealthy = monitoringStatsByYear[currentYear].healthy;
+            monthlyNeedsSupport = monitoringStatsByYear[currentYear].needsSupport;
+            monthlyDamaged = monitoringStatsByYear[currentYear].damaged;
+          }
         }
       } catch (err) {
         console.log('Could not fetch monitoring data', err);
@@ -755,20 +904,29 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             // Reset to fill with real data
             monthlyHarvest = new Array(12).fill(0);
             harvests.forEach((h: any) => {
-              // Use harvest_date or created_at
               const dateStr = h.harvest_date || h.created_at;
               if (!dateStr) return;
 
               const date = new Date(dateStr);
-              if (date.getFullYear() === currentYear) {
-                // Sum up dry fiber output
-                monthlyHarvest[date.getMonth()] += parseFloat(h.dry_fiber_output_kg || 0);
-              }
+              const year = date.getFullYear();
+              const monthIndex = date.getMonth();
+              const quantity = parseFloat(h.dry_fiber_output_kg || 0);
+
+              ensureYearInStats(year);
+              monthlyStatsByYear[year].harvested[monthIndex] += quantity;
+              yearlyHarvest[year] += quantity;
             });
           }
         }
       } catch (e) {
         console.warn('Failed to fetch harvest breakdown:', e);
+      }
+
+      // Sync monthly variables with current year stats map
+      if (monthlyStatsByYear[currentYear]) {
+        monthlyReceived = monthlyStatsByYear[currentYear].received;
+        monthlyDistributed = monthlyStatsByYear[currentYear].distributed;
+        monthlyHarvest = monthlyStatsByYear[currentYear].harvested;
       }
 
       // 2. Apply "Dump in Jan" Fallbacks if arrays are empty but totals exist
@@ -794,17 +952,26 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       setDashboardData({
         production: {
           ...productionData,
-          monthlyReceived,
-          monthlyDistributed,
-          monthlyHarvest, // Add monthly harvest data
+          monthlyStatsByYear,
+          yearlyReceived,
+          yearlyDistributed,
+          yearlyHarvest,
+          yearlyMonitoring: yearlyMonitoringData,
+          yearlyHealthy: yearlyHealthyData,
+          yearlyNeedsSupport: yearlyNeedsSupportData,
+          yearlyDamaged: yearlyDamagedData,
           healthyFarms,
           needsSupportFarms,
           damagedFarms,
           totalMonitoringVisits: totalMonitoring || productionData.totalMonitoringVisits,
-          monthlyMonitoring,
-          monthlyHealthy,
-          monthlyNeedsSupport,
-          monthlyDamaged
+          // Support old variables for backward compatibility if needed, but using currentYear
+          monthlyReceived: monthlyStatsByYear[currentYear]?.received || new Array(12).fill(0),
+          monthlyDistributed: monthlyStatsByYear[currentYear]?.distributed || new Array(12).fill(0),
+          monthlyHarvest: monthlyStatsByYear[currentYear]?.harvested || new Array(12).fill(0),
+          monthlyMonitoring: (productionData.monitoringStatsByYear as any)?.[currentYear]?.total || new Array(12).fill(0),
+          monthlyHealthy: (productionData.monitoringStatsByYear as any)?.[currentYear]?.healthy || new Array(12).fill(0),
+          monthlyNeedsSupport: (productionData.monitoringStatsByYear as any)?.[currentYear]?.needsSupport || new Array(12).fill(0),
+          monthlyDamaged: (productionData.monitoringStatsByYear as any)?.[currentYear]?.damaged || new Array(12).fill(0)
         },
         sales: salesData,
         users: usersData,
@@ -873,7 +1040,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
-        />
+        ></div>
       )}
 
       {/* Sidebar */}
@@ -978,6 +1145,15 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           </button>
 
           <button
+            onClick={() => setCurrentPage('sales-performance')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${currentPage === 'sales-performance' ? 'bg-emerald-600' : 'hover:bg-slate-700'
+              } ${!sidebarOpen && 'justify-center'}`}
+          >
+            <BarChart3 className="w-5 h-5 flex-shrink-0" />
+            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Sales Performance</span>
+          </button>
+
+          <button
             onClick={() => setCurrentPage('buyer-prices')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'buyer-prices' ? 'bg-emerald-600' : 'hover:bg-slate-700'
               } ${!sidebarOpen && 'justify-center'}`}
@@ -1074,13 +1250,14 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         currentPage === 'monitoring' ? 'Field Monitoring' :
                           currentPage === 'harvests' ? 'Harvest Management' :
                             currentPage === 'sales-analytics' ? 'Sales Management' :
-                              currentPage === 'buyer-prices' ? 'Buyer Price Listings' :
-                                currentPage === 'delivery-tracking' ? 'Delivery Tracking Monitor' :
-                                  currentPage === 'officers' ? 'Staff Management' :
-                                    currentPage === 'activity-logs' ? 'Activity Logs & Security' :
-                                      currentPage === 'maintenance' ? 'Maintenance Mode' :
-                                        currentPage === 'content' ? 'Content Management' :
-                                          'Dashboard'}
+                              currentPage === 'sales-performance' ? 'Sales Performance Analytics' :
+                                currentPage === 'buyer-prices' ? 'Buyer Price Listings' :
+                                  currentPage === 'delivery-tracking' ? 'Delivery Tracking Monitor' :
+                                    currentPage === 'officers' ? 'Staff Management' :
+                                      currentPage === 'activity-logs' ? 'Activity Logs & Security' :
+                                        currentPage === 'maintenance' ? 'Maintenance Mode' :
+                                          currentPage === 'content' ? 'Content Management' :
+                                            'Dashboard'}
               </h2>
               <p className="text-xs md:text-sm text-gray-600 hidden sm:block">
                 Welcome back, {isSuperAdmin ? 'Super Admin' : 'Admin'}
@@ -1264,6 +1441,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           <MAOHarvestVerificationPage />
         ) : currentPage === 'sales-analytics' ? (
           <UnifiedSalesManagement />
+        ) : currentPage === 'sales-performance' ? (
+          <SalesAnalyticsDashboard />
         ) : currentPage === 'buyer-prices' ? (
           <BuyerPriceListingsViewer userRole="mao" />
         ) : currentPage === 'delivery-tracking' ? (
@@ -1355,7 +1534,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 {/* Abaca Production Section */}
                 {dashboardSection === 'production' && (
                   <>
-                    {/* ?? SEEDLING ANALYTICS - Next-Gen Modern Design */}
+                    {/* 📊 SEEDLING ANALYTICS - Next-Gen Modern Design */}
                     <div className="mb-6">
                       <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-semibold text-gray-900">Seedling Analytics</h2>
@@ -1419,30 +1598,64 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                       {/* Charts Row - Line Chart & Donut Chart */}
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                         {/* Seedling Analytics Line Chart - Enhanced */}
-                        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                          <div className="flex items-center justify-between mb-8">
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900">Seedling Distribution Overview</h3>
-                              <p className="text-sm text-gray-500 font-normal mt-1">Monthly seedling distribution statistics</p>
+                        <div className="lg:col-span-2 bg-white rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                            <div className="flex items-center gap-4">
+                              <div className="w-1.5 h-10 bg-gradient-to-b from-orange-400 to-orange-600 rounded-full shadow-lg shadow-orange-200"></div>
+                              <div>
+                                <h3 className="text-xl font-black text-gray-900 tracking-tight">Seedling Distribution Overview</h3>
+                                <p className="text-sm text-gray-500 font-medium mt-0.5">Monthly seedling distribution statistics</p>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-4 text-sm">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#fb923c]"></div>
-                                <span className="text-gray-600">Received (Assoc)</span>
+                            <div className="flex items-center gap-3">
+                              {chartView === 'monthly' && (
+                                <select
+                                  className="text-gray-700 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-xl px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                  value={seedlingMonthYear}
+                                  onChange={(e) => setSeedlingMonthYear(parseInt(e.target.value))}
+                                >
+                                  {Array.from(new Set([
+                                    new Date().getFullYear(),
+                                    ...Object.keys(dashboardData.production.monthlyStatsByYear || {}).map(Number)
+                                  ])).sort((a, b) => b - a).map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                  ))}
+                                </select>
+                              )}
+                              <div className="flex gap-1 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-100">
+                                <button
+                                  onClick={() => setChartView('monthly')}
+                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${chartView === 'monthly'
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                    }`}
+                                >
+                                  Monthly
+                                </button>
+                                <button
+                                  onClick={() => setChartView('yearly')}
+                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${chartView === 'yearly'
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                    }`}
+                                >
+                                  Yearly
+                                </button>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#3b82f6]"></div>
-                                <span className="text-gray-600">Completely Distributed</span>
-                              </div>
+                            </div>
+                          </div>
 
-                              <select
-                                className="text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                                value={chartView}
-                                onChange={(e) => setChartView(e.target.value as 'monthly' | 'yearly')}
-                              >
-                                <option value="monthly">Monthly</option>
-                                <option value="yearly">Yearly</option>
-                              </select>
+                          {/* Premium Legend Badges with Icons */}
+                          <div className="flex flex-wrap items-center gap-3 mb-8">
+                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-50 to-orange-100/50 rounded-xl border border-orange-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                              <Package className="w-3.5 h-3.5 text-orange-600" />
+                              <span className="text-xs font-black text-orange-700 uppercase tracking-wider">Received (Assoc)</span>
+                            </div>
+                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                              <Truck className="w-3.5 h-3.5 text-blue-600" />
+                              <span className="text-xs font-black text-blue-700 uppercase tracking-wider">Completely Distributed</span>
                             </div>
                           </div>
 
@@ -1452,78 +1665,100 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               const prodData: any = dashboardData.production;
 
                               if (chartView === 'yearly') {
-                                const currentYear = new Date().getFullYear();
-                                const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
-                                const yearlyTotal = prodData.totalSeedlingsReceived || 0;
-                                const yearlyDistTotal = prodData.totalSeedlingsDistributed || 0;
-                                const yearlyHarvestTotal = prodData.totalHarvestFiber || 0;
+                                const yearlyReceived = prodData.yearlyReceived || {};
+                                const yearlyDistributed = prodData.yearlyDistributed || {};
+                                const yearlyHarvest = prodData.yearlyHarvest || {};
+
+                                // Get all unique years from data
+                                const years = Array.from(new Set([
+                                  new Date().getFullYear(),
+                                  ...Object.keys(yearlyReceived).map(Number),
+                                  ...Object.keys(yearlyDistributed).map(Number),
+                                  ...Object.keys(yearlyHarvest).map(Number)
+                                ])).sort((a, b) => a - b);
 
                                 chartData = years.map(year => ({
                                   period: year.toString(),
-                                  received: year === currentYear ? yearlyTotal : 0,
-                                  distributed: year === currentYear ? yearlyDistTotal : 0,
-                                  harvested: year === currentYear ? yearlyHarvestTotal : 0
+                                  received: yearlyReceived[year] || 0,
+                                  distributed: yearlyDistributed[year] || 0
                                 }));
                               } else {
-                                const dataReceived = prodData.monthlyReceived || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                                const dataDistributed = prodData.monthlyDistributed || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                                const dataHarvested = prodData.monthlyHarvest || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                                const stats = prodData.monthlyStatsByYear?.[seedlingMonthYear] || {
+                                  received: new Array(12).fill(0),
+                                  distributed: new Array(12).fill(0)
+                                };
                                 const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
                                 chartData = labels.map((label, i) => ({
                                   period: label,
-                                  received: dataReceived[i],
-                                  distributed: dataDistributed[i],
-                                  harvested: dataHarvested[i]
+                                  received: stats.received[i],
+                                  distributed: stats.distributed[i]
                                 }));
                               }
 
                               return (
-                                <div className="overflow-x-auto">
-                                  <div style={{ minWidth: chartView === 'monthly' ? '600px' : '100%', width: '100%' }}>
-                                    <ResponsiveContainer width="100%" height={380}>
-                                      <RechartsBarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }} barGap={8}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                <div className="overflow-x-auto rounded-3xl bg-white/50 backdrop-blur-sm p-4 border border-white/60 shadow-inner">
+                                  <div style={{ minWidth: chartView === 'monthly' ? '700px' : '100%', width: '100%' }}>
+                                    <ResponsiveContainer width="100%" height={420}>
+                                      <RechartsBarChart
+                                        data={chartData}
+                                        margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                                        barGap={6}
+                                        barCategoryGap={chartData.length < 5 ? "30%" : "15%"}
+                                      >
+                                        <defs>
+                                          <linearGradient id="receivedGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#fb923c" stopOpacity={0.9} />
+                                            <stop offset="100%" stopColor="#f97316" stopOpacity={0.7} />
+                                          </linearGradient>
+                                          <linearGradient id="distributedGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
+                                            <stop offset="100%" stopColor="#2563eb" stopOpacity={0.7} />
+                                          </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
                                         <XAxis
                                           dataKey="period"
-                                          stroke="#374151"
-                                          style={{ fontSize: '12px', fontWeight: 500 }}
+                                          stroke="#6b7280"
+                                          style={{ fontSize: '13px', fontWeight: 600 }}
                                           axisLine={false}
                                           tickLine={false}
-                                          dy={5}
+                                          dy={10}
                                         />
                                         <YAxis
-                                          stroke="#374151"
-                                          style={{ fontSize: '12px', fontWeight: 500 }}
+                                          stroke="#6b7280"
+                                          style={{ fontSize: '13px', fontWeight: 600 }}
                                           axisLine={false}
                                           tickLine={false}
+                                          dx={-5}
                                         />
                                         <Tooltip
                                           contentStyle={{
-                                            backgroundColor: '#fff',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                                            backdropFilter: 'blur(10px)',
                                             border: 'none',
-                                            borderRadius: '12px',
-                                            fontSize: '12px',
-                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                                            borderRadius: '16px',
+                                            padding: '12px 16px',
+                                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                                            fontWeight: 600
                                           }}
-                                          cursor={{ fill: '#f9fafb' }}
+                                          itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
+                                          cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
                                         />
-
                                         <Bar
                                           dataKey="received"
-                                          fill="#fb923c"
-                                          name="Received (Association)"
-                                          radius={[4, 4, 0, 0]}
-                                          barSize={chartView === 'monthly' ? 20 : 30}
+                                          name="Received (Assoc)"
+                                          fill="url(#receivedGradient)"
+                                          radius={[8, 8, 0, 0]}
+                                          barSize={chartData.length < 5 ? 60 : 35}
                                         />
                                         <Bar
                                           dataKey="distributed"
-                                          fill="#3b82f6"
                                           name="Completely Distributed"
-                                          radius={[4, 4, 0, 0]}
-                                          barSize={chartView === 'monthly' ? 20 : 30}
+                                          fill="url(#distributedGradient)"
+                                          radius={[8, 8, 0, 0]}
+                                          barSize={chartData.length < 5 ? 60 : 35}
                                         />
-
                                       </RechartsBarChart>
                                     </ResponsiveContainer>
                                   </div>
@@ -1632,29 +1867,46 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         />
                       </div>
 
-                      {/* Monitoring Bar Chart - Modern Recharts Design */}
-                      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                      {/* Monitoring Bar Chart - Enhanced Modern Design */}
+                      <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 rounded-2xl shadow-xl p-6 sm:p-8 border border-white/60 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                           <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Monitoring Status Overview</h3>
-                            <p className="text-xs text-gray-500 mt-1">Track farm health and monitoring visits</p>
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-1.5 h-8 bg-gradient-to-b from-blue-500 via-purple-500 to-pink-500 rounded-full"></div>
+                              <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">Monitoring Status Overview</h3>
+                            </div>
+                            <p className="text-xs sm:text-sm text-gray-600 ml-6 font-medium">Track farm health and monitoring visits</p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            {monitoringView === 'monthly' && (
+                              <select
+                                className="text-gray-700 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                value={monitoringMonthYear}
+                                onChange={(e) => setMonitoringMonthYear(parseInt(e.target.value))}
+                              >
+                                {Array.from(new Set([
+                                  new Date().getFullYear(),
+                                  ...Object.keys((dashboardData.production as any).monitoringStatsByYear || {}).map(Number)
+                                ])).sort((a, b) => b - a).map(year => (
+                                  <option key={year} value={year}>{year}</option>
+                                ))}
+                              </select>
+                            )}
+                            <div className="flex gap-1 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-200">
                               <button
                                 onClick={() => setMonitoringView('monthly')}
-                                className={`px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 ${monitoringView === 'monthly'
-                                  ? 'bg-white text-blue-600 shadow-sm'
-                                  : 'text-gray-600 hover:text-gray-900'
+                                className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${monitoringView === 'monthly'
+                                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
+                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                   }`}
                               >
                                 Monthly
                               </button>
                               <button
                                 onClick={() => setMonitoringView('yearly')}
-                                className={`px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 ${monitoringView === 'yearly'
-                                  ? 'bg-white text-blue-600 shadow-sm'
-                                  : 'text-gray-600 hover:text-gray-900'
+                                className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${monitoringView === 'yearly'
+                                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
+                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                   }`}
                               >
                                 Yearly
@@ -1663,23 +1915,27 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           </div>
                         </div>
 
-                        {/* Data Insights Badges */}
-                        <div className="flex flex-wrap items-center gap-2 mb-6">
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
-                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                            <span className="text-xs font-semibold text-blue-700">Total</span>
+                        {/* Enhanced Legend Badges with Icons */}
+                        <div className="flex flex-wrap items-center gap-3 mb-8">
+                          <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                            <Activity className="w-3.5 h-3.5 text-blue-600" />
+                            <span className="text-xs font-black text-blue-700">Total</span>
                           </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg">
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            <span className="text-xs font-semibold text-green-700">Healthy</span>
+                          <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                            <Sprout className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-xs font-black text-emerald-700">Healthy</span>
                           </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-lg">
-                            <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                            <span className="text-xs font-semibold text-amber-700">Needs Support</span>
+                          <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-xl border border-amber-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                            <span className="text-xs font-black text-amber-700">Needs Support</span>
                           </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-lg">
-                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                            <span className="text-xs font-semibold text-red-700">Damaged</span>
+                          <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-50 to-red-100/50 rounded-xl border border-red-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                            <X className="w-3.5 h-3.5 text-red-600" />
+                            <span className="text-xs font-black text-red-700">Damaged</span>
                           </div>
                         </div>
 
@@ -1688,94 +1944,132 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             let chartData: any[] = [];
 
                             if (monitoringView === 'yearly') {
-                              const currentYear = new Date().getFullYear();
-                              const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
-                              const yearlyTotal = dashboardData.production.totalMonitoringVisits || 0;
-                              const yearlyHealthy = dashboardData.production.healthyFarms || 0;
-                              const yearlyNeeds = dashboardData.production.needsSupportFarms || 0;
-                              const yearlyDamaged = dashboardData.production.damagedFarms || 0;
+                              const yearlyMonitoring = (dashboardData.production as any).yearlyMonitoring || {};
+                              const yearlyHealthy = (dashboardData.production as any).yearlyHealthy || {};
+                              const yearlyNeedsSupport = (dashboardData.production as any).yearlyNeedsSupport || {};
+                              const yearlyDamaged = (dashboardData.production as any).yearlyDamaged || {};
+
+                              // Get all unique years
+                              const years = Array.from(new Set([
+                                new Date().getFullYear(),
+                                ...Object.keys(yearlyMonitoring).map(Number)
+                              ])).sort((a, b) => a - b);
 
                               chartData = years.map(year => ({
                                 period: year.toString(),
-                                total: year === currentYear ? yearlyTotal : 0,
-                                healthy: year === currentYear ? yearlyHealthy : 0,
-                                needsSupport: year === currentYear ? yearlyNeeds : 0,
-                                damaged: year === currentYear ? yearlyDamaged : 0
+                                total: yearlyMonitoring[year] || 0,
+                                healthy: yearlyHealthy[year] || 0,
+                                needsSupport: yearlyNeedsSupport[year] || 0,
+                                damaged: yearlyDamaged[year] || 0
                               }));
                             } else {
-                              const dataTotal = dashboardData.production.monthlyMonitoring || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                              const dataHealthy = dashboardData.production.monthlyHealthy || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                              const dataNeedsSupport = dashboardData.production.monthlyNeedsSupport || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                              const dataDamaged = dashboardData.production.monthlyDamaged || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                              const stats = ((dashboardData.production as any).monitoringStatsByYear)?.[monitoringMonthYear] || {
+                                total: new Array(12).fill(0),
+                                healthy: new Array(12).fill(0),
+                                needsSupport: new Array(12).fill(0),
+                                damaged: new Array(12).fill(0)
+                              };
                               const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
                               chartData = labels.map((label, i) => ({
                                 period: label,
-                                total: dataTotal[i],
-                                healthy: dataHealthy[i],
-                                needsSupport: dataNeedsSupport[i],
-                                damaged: dataDamaged[i]
+                                total: stats.total[i],
+                                healthy: stats.healthy[i],
+                                needsSupport: stats.needsSupport[i],
+                                damaged: stats.damaged[i]
                               }));
                             }
 
                             return (
-                              <div className="overflow-x-auto">
-                                <div style={{ minWidth: monitoringView === 'monthly' ? '600px' : '100%', width: '100%' }}>
-                                  <ResponsiveContainer width="100%" height={380}>
-                                    <RechartsBarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                              <div className="overflow-x-auto rounded-xl bg-white/50 backdrop-blur-sm p-4">
+                                <div style={{ minWidth: monitoringView === 'monthly' ? '700px' : '100%', width: '100%' }}>
+                                  <ResponsiveContainer width="100%" height={420}>
+                                    <RechartsBarChart
+                                      data={chartData}
+                                      margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                                      barGap={6}
+                                      barCategoryGap={chartData.length < 5 ? "35%" : "15%"}
+                                    >
+                                      <defs>
+                                        <linearGradient id="totalGradient" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
+                                          <stop offset="100%" stopColor="#2563eb" stopOpacity={0.7} />
+                                        </linearGradient>
+                                        <linearGradient id="healthyGradient" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
+                                          <stop offset="100%" stopColor="#059669" stopOpacity={0.7} />
+                                        </linearGradient>
+                                        <linearGradient id="supportGradient" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.9} />
+                                          <stop offset="100%" stopColor="#d97706" stopOpacity={0.7} />
+                                        </linearGradient>
+                                        <linearGradient id="damagedGradient" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9} />
+                                          <stop offset="100%" stopColor="#dc2626" stopOpacity={0.7} />
+                                        </linearGradient>
+                                      </defs>
+                                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
                                       <XAxis
                                         dataKey="period"
-                                        stroke="#374151"
-                                        style={{ fontSize: '12px', fontWeight: 500 }}
+                                        stroke="#6b7280"
+                                        style={{ fontSize: '13px', fontWeight: 600 }}
                                         axisLine={false}
                                         tickLine={false}
-                                        dy={5}
+                                        dy={10}
                                       />
                                       <YAxis
-                                        stroke="#374151"
-                                        style={{ fontSize: '12px', fontWeight: 500 }}
+                                        stroke="#6b7280"
+                                        style={{ fontSize: '13px', fontWeight: 600 }}
                                         axisLine={false}
                                         tickLine={false}
+                                        dx={-5}
                                       />
                                       <Tooltip
                                         contentStyle={{
-                                          backgroundColor: '#fff',
+                                          backgroundColor: 'rgba(255, 255, 255, 0.98)',
                                           border: 'none',
-                                          borderRadius: '12px',
-                                          fontSize: '12px',
-                                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                                          borderRadius: '16px',
+                                          fontSize: '13px',
+                                          fontWeight: 600,
+                                          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                                          padding: '12px 16px',
+                                          backdropFilter: 'blur(10px)'
                                         }}
-                                        cursor={{ fill: '#f9fafb' }}
+                                        cursor={{ fill: 'rgba(59, 130, 246, 0.05)', radius: 8 }}
+                                        labelStyle={{ fontWeight: 700, color: '#111827', marginBottom: '8px' }}
                                       />
 
                                       <Bar
                                         dataKey="total"
-                                        fill="#3b82f6"
+                                        fill="url(#totalGradient)"
                                         name="Total Monitoring"
-                                        radius={[6, 6, 0, 0]}
-                                        barSize={monitoringView === 'monthly' ? 20 : 30}
+                                        radius={[8, 8, 0, 0]}
+                                        barSize={chartData.length < 5 ? 55 : 24}
+                                        animationDuration={800}
                                       />
                                       <Bar
                                         dataKey="healthy"
-                                        fill="#10b981"
+                                        fill="url(#healthyGradient)"
                                         name="Healthy Farms"
-                                        radius={[6, 6, 0, 0]}
-                                        barSize={monitoringView === 'monthly' ? 20 : 30}
+                                        radius={[8, 8, 0, 0]}
+                                        barSize={chartData.length < 5 ? 55 : 24}
+                                        animationDuration={1000}
                                       />
                                       <Bar
                                         dataKey="needsSupport"
-                                        fill="#f59e0b"
+                                        fill="url(#supportGradient)"
                                         name="Needs Support"
-                                        radius={[6, 6, 0, 0]}
-                                        barSize={monitoringView === 'monthly' ? 20 : 30}
+                                        radius={[8, 8, 0, 0]}
+                                        barSize={chartData.length < 5 ? 55 : 24}
+                                        animationDuration={1200}
                                       />
                                       <Bar
                                         dataKey="damaged"
-                                        fill="#ef4444"
+                                        fill="url(#damagedGradient)"
                                         name="Damaged Farms"
-                                        radius={[6, 6, 0, 0]}
-                                        barSize={monitoringView === 'monthly' ? 20 : 30}
+                                        radius={[8, 8, 0, 0]}
+                                        barSize={chartData.length < 5 ? 55 : 24}
+                                        animationDuration={1400}
                                       />
                                     </RechartsBarChart>
                                   </ResponsiveContainer>
@@ -1797,34 +2091,52 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                       <h2 className="text-2xl font-semibold text-gray-900 mb-6">Delivery Tracking Analytics</h2>
 
                       {/* Top Stats Cards - Delivery Tracking */}
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <StatsCard
-                          title="In Transit"
-                          value={dashboardData.deliveries.inTransit}
-                          subValue="Currently shipping"
-                          icon={<Truck className="w-6 h-6 text-white" />}
+                          title="Total Deliveries"
+                          value={dashboardData.deliveries.totalDeliveries}
+                          subValue="records (overall count)"
+                          icon={<Package className="w-6 h-6 text-white" />}
                           gradient="from-blue-500 via-blue-600 to-blue-700"
                         />
                         <StatsCard
-                          title="Delivered"
-                          value={dashboardData.deliveries.delivered}
-                          subValue="Successfully delivered"
+                          title="Abaca Delivered (kg)"
+                          value={dashboardData.deliveries.deliveredFiberKg.toLocaleString()}
+                          subValue="Total fiber successfully delivered"
                           icon={<CheckCircle className="w-6 h-6 text-white" />}
                           gradient="from-emerald-500 via-emerald-600 to-emerald-700"
+                          unit="kg"
                         />
                         <StatsCard
-                          title="Completed"
-                          value={dashboardData.deliveries.completed}
-                          subValue="Fully completed"
-                          icon={<Award className="w-6 h-6 text-white" />}
+                          title="Total Value"
+                          value={`₱${dashboardData.deliveries.totalValue.toLocaleString()}`}
+                          subValue={
+                            <div className="flex flex-col gap-1 mt-1 text-[10px] w-full">
+                              <div className="flex justify-between items-center border-b border-indigo-400/30 pb-0.5">
+                                <span className="opacity-80">Class A:</span>
+                                <span className="font-bold">{dashboardData.deliveries.classA_Kg.toLocaleString()} kg</span>
+                              </div>
+                              <div className="flex justify-between items-center border-b border-indigo-400/30 pb-0.5">
+                                <span className="opacity-80">Class C:</span>
+                                <span className="font-bold">{dashboardData.deliveries.classC_Kg.toLocaleString()} kg</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="opacity-80">Class B:</span>
+                                <span className="font-bold">{dashboardData.deliveries.classB_Kg.toLocaleString()} kg</span>
+                              </div>
+                            </div>
+                          }
+                          icon={<Coins className="w-6 h-6 text-white" />}
                           gradient="from-indigo-500 via-indigo-600 to-indigo-700"
                         />
                         <StatsCard
-                          title="Cancelled"
-                          value={dashboardData.deliveries.cancelled}
-                          subValue="Cancelled orders"
+                          title="Cancelled Abaca (kg)"
+                          value={dashboardData.deliveries.cancelledFiberKg.toLocaleString()}
+                          subValue="Total fiber cancelled into this"
                           icon={<X className="w-6 h-6 text-white" />}
                           gradient="from-red-500 via-red-600 to-red-700"
+                          unit="kg"
                         />
                       </div>
 
@@ -1837,8 +2149,33 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               <h3 className="text-xl font-black text-gray-900">Delivery Status</h3>
                               <p className="text-xs text-gray-500 font-medium italic">Breakdown by current status</p>
                             </div>
-                            <div className="p-2 bg-blue-50 rounded-xl">
-                              <Truck className="text-blue-500" size={24} />
+                            <div className="flex items-center gap-2">
+                              {deliveryStatusView === 'monthly' && (
+                                <select
+                                  className="text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  value={selectedMonth}
+                                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                                >
+                                  {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, i) => (
+                                    <option key={month} value={i}>{month}</option>
+                                  ))}
+                                </select>
+                              )}
+                              <select
+                                className="text-gray-700 bg-gray-100 border-none rounded-lg px-2 py-1 text-xs font-bold focus:ring-2 focus:ring-blue-500"
+                                value={deliveryMonthYear}
+                                onChange={(e) => setDeliveryMonthYear(parseInt(e.target.value))}
+                              >
+                                {Array.from(new Set([
+                                  new Date().getFullYear(),
+                                  ...Object.keys(dashboardData.deliveries.rawDeliveries || {}).map(d => new Date((dashboardData.deliveries.rawDeliveries as any)[d].created_at).getFullYear())
+                                ])).sort((a, b) => b - a).map(year => (
+                                  <option key={year} value={year}>{year}</option>
+                                ))}
+                              </select>
+                              <div className="p-2 bg-blue-50 rounded-xl">
+                                <Truck className="text-blue-500" size={24} />
+                              </div>
                             </div>
                           </div>
 
@@ -1848,22 +2185,18 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             const filteredDeliveries = rawDeliveries.filter((d: any) => {
                               const deliveryDate = new Date(d.created_at || d.delivery_date);
                               if (deliveryStatusView === 'monthly') {
-                                return deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === currentYear;
+                                return deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === deliveryMonthYear;
                               } else {
-                                return deliveryDate.getFullYear() === currentYear;
+                                return deliveryDate.getFullYear() === deliveryMonthYear;
                               }
                             });
 
-                            const inTransit = filteredDeliveries.filter((d: any) => d.status === 'In Transit').length;
-                            const delivered = filteredDeliveries.filter((d: any) => d.status === 'Delivered').length;
                             const completed = filteredDeliveries.filter((d: any) => d.status === 'Completed').length;
                             const cancelled = filteredDeliveries.filter((d: any) => d.status === 'Cancelled').length;
-                            const total = inTransit + delivered + completed + cancelled;
+                            const total = completed + cancelled;
 
                             const chartData = [
-                              { name: 'In Transit', value: inTransit, fill: '#3b82f6', percentage: total > 0 ? (inTransit / total) * 100 : 0 },
-                              { name: 'Delivered', value: delivered, fill: '#10b981', percentage: total > 0 ? (delivered / total) * 100 : 0 },
-                              { name: 'Completed', value: completed, fill: '#8b5cf6', percentage: total > 0 ? (completed / total) * 100 : 0 },
+                              { name: 'Completed', value: completed, fill: '#10b981', percentage: total > 0 ? (completed / total) * 100 : 0 },
                               { name: 'Cancelled', value: cancelled, fill: '#ef4444', percentage: total > 0 ? (cancelled / total) * 100 : 0 }
                             ];
 
@@ -1907,20 +2240,67 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         </div>
 
                         {/* Fiber Delivery Analytics - Enhanced Bar Chart */}
-                        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-                          <div className="flex items-center justify-between mb-6">
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900">Delivery Analytics</h3>
-                              <p className="text-xs text-gray-500 font-normal mt-1">Fiber quantity (kg) over time</p>
+                        <div className="lg:col-span-2 bg-gradient-to-br from-white via-emerald-50/30 to-blue-50/30 rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                            <div className="flex items-center gap-4">
+                              <div className="w-1.5 h-10 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full shadow-lg shadow-emerald-200"></div>
+                              <div>
+                                <h3 className="text-xl font-black text-gray-900 tracking-tight">Delivery Analytics</h3>
+                                <p className="text-sm text-gray-500 font-medium mt-0.5">Fiber quantity (kg) over time</p>
+                              </div>
                             </div>
-                            <select
-                              value={deliveryView}
-                              onChange={(e) => setDeliveryView(e.target.value as 'monthly' | 'yearly')}
-                              className="text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                            >
-                              <option value="monthly">Monthly</option>
-                              <option value="yearly">Yearly</option>
-                            </select>
+                            <div className="flex items-center gap-3">
+                              {deliveryView === 'monthly' && (
+                                <select
+                                  className="text-gray-700 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-xl px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                  value={deliveryMonthYear}
+                                  onChange={(e) => setDeliveryMonthYear(parseInt(e.target.value))}
+                                >
+                                  {Array.from(new Set([
+                                    new Date().getFullYear(),
+                                    ...dashboardData.deliveries?.rawDeliveries?.map((d: any) => new Date(d.created_at).getFullYear()) || []
+                                  ])).sort((a, b) => b - a).map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                  ))}
+                                </select>
+                              )}
+                              <div className="flex gap-1 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-100">
+                                <button
+                                  onClick={() => setDeliveryView('monthly')}
+                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${deliveryView === 'monthly'
+                                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 scale-105'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                    }`}
+                                >
+                                  Monthly
+                                </button>
+                                <button
+                                  onClick={() => setDeliveryView('yearly')}
+                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${deliveryView === 'yearly'
+                                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 scale-105'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                    }`}
+                                >
+                                  Yearly
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Premium Legend Badges - Serving as Custom Legend */}
+                          <div className="flex flex-wrap items-center gap-3 mb-8">
+                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                              <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">Class A</span>
+                            </div>
+                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                              <span className="text-xs font-black text-blue-700 uppercase tracking-wider">Class B</span>
+                            </div>
+                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-xl border border-amber-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                              <span className="text-xs font-black text-amber-700 uppercase tracking-wider">Class C</span>
+                            </div>
                           </div>
 
                           <div className="w-full">
@@ -1931,96 +2311,132 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
                               if (deliveryView === 'monthly') {
                                 const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                const monthlyData = new Array(12).fill(0);
+                                const monthlyA = new Array(12).fill(0);
+                                const monthlyB = new Array(12).fill(0);
+                                const monthlyC = new Array(12).fill(0);
 
                                 rawDists.forEach((d: any) => {
-                                  const date = new Date(d.created_at);
-                                  if (date.getFullYear() === currentYear) {
-                                    monthlyData[date.getMonth()] += parseFloat(d.quantity_kg || 0);
+                                  // Use consistent date parsing
+                                  const date = new Date(d.created_at || d.delivery_date);
+                                  if (date.getFullYear() === deliveryMonthYear) {
+                                    const month = date.getMonth();
+                                    const qty = parseFloat(d.quantity_kg || 0);
+
+                                    // Aggregate by class
+                                    if (d.grade === 'Class A') monthlyA[month] += qty;
+                                    else if (d.grade === 'Class B') monthlyB[month] += qty;
+                                    else if (d.grade === 'Class C') monthlyC[month] += qty;
                                   }
                                 });
-
-                                // Fallback: If all months are 0 but we have total, put it in current month
-                                const totalFromRaw = monthlyData.reduce((a, b) => a + b, 0);
-                                if (totalFromRaw === 0 && (dashboardData.deliveries?.totalFiberKg || 0) > 0) {
-                                  monthlyData[new Date().getMonth()] = dashboardData.deliveries.totalFiberKg;
-                                }
 
                                 chartData = labels.map((label, i) => ({
                                   period: label,
-                                  quantity: monthlyData[i]
+                                  classA: monthlyA[i],
+                                  classB: monthlyB[i],
+                                  classC: monthlyC[i]
                                 }));
                               } else {
-                                const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
-                                const yearlyData = new Array(5).fill(0);
+                                const years = Array.from(new Set([
+                                  currentYear,
+                                  ...rawDists.map((d: any) => new Date(d.created_at || d.delivery_date).getFullYear())
+                                ])).sort((a, b) => a - b);
 
-                                rawDists.forEach((d: any) => {
-                                  const date = new Date(d.created_at);
-                                  const year = date.getFullYear();
-                                  const index = years.indexOf(year);
-                                  if (index !== -1) {
-                                    yearlyData[index] += parseFloat(d.quantity_kg || 0);
-                                  }
+                                // Group by Year and Class
+                                chartData = years.map(year => {
+                                  const yearDeliveries = rawDists.filter((d: any) => new Date(d.created_at || d.delivery_date).getFullYear() === year);
+
+                                  const classA = yearDeliveries.filter((d: any) => d.grade === 'Class A').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0);
+                                  const classB = yearDeliveries.filter((d: any) => d.grade === 'Class B').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0);
+                                  const classC = yearDeliveries.filter((d: any) => d.grade === 'Class C').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0);
+
+                                  return {
+                                    period: year.toString(),
+                                    classA,
+                                    classB,
+                                    classC
+                                  };
                                 });
-
-                                // Fallback
-                                const totalFromRaw = yearlyData.reduce((a, b) => a + b, 0);
-                                if (totalFromRaw === 0 && (dashboardData.deliveries?.totalFiberKg || 0) > 0) {
-                                  yearlyData[4] = dashboardData.deliveries.totalFiberKg;
-                                }
-
-                                chartData = years.map((year, i) => ({
-                                  period: year.toString(),
-                                  quantity: yearlyData[i]
-                                }));
                               }
 
                               return (
-                                <div className="overflow-x-auto">
-                                  <div style={{ minWidth: deliveryView === 'monthly' ? '600px' : '100%', width: '100%' }}>
-                                    <ResponsiveContainer width="100%" height={500}>
-                                      <RechartsBarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 10 }}>
+                                <div className="overflow-x-auto rounded-3xl bg-white/50 backdrop-blur-sm p-4 border border-white/60 shadow-inner">
+                                  <div style={{ minWidth: deliveryView === 'monthly' ? '700px' : '100%', width: '100%' }}>
+                                    <ResponsiveContainer width="100%" height={450}>
+                                      <RechartsBarChart
+                                        data={chartData}
+                                        margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                                        barGap={6}
+                                        barCategoryGap={chartData.length < 5 ? "35%" : "15%"}
+                                      >
                                         <defs>
-                                          <linearGradient id="deliveryGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#10b981" stopOpacity={1} />
-                                            <stop offset="95%" stopColor="#34d399" stopOpacity={0.8} />
+                                          <linearGradient id="classAGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
+                                            <stop offset="100%" stopColor="#059669" stopOpacity={0.7} />
+                                          </linearGradient>
+                                          <linearGradient id="classBGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
+                                            <stop offset="100%" stopColor="#2563eb" stopOpacity={0.7} />
+                                          </linearGradient>
+                                          <linearGradient id="classCGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.9} />
+                                            <stop offset="100%" stopColor="#d97706" stopOpacity={0.7} />
                                           </linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e1e8ed" vertical={false} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
                                         <XAxis
                                           dataKey="period"
-                                          stroke="#64748b"
-                                          style={{ fontSize: '11px', fontWeight: 500 }}
+                                          stroke="#6b7280"
+                                          style={{ fontSize: '13px', fontWeight: 600 }}
                                           axisLine={false}
                                           tickLine={false}
                                           dy={10}
                                         />
                                         <YAxis
-                                          stroke="#64748b"
-                                          style={{ fontSize: '11px', fontWeight: 500 }}
+                                          stroke="#6b7280"
+                                          style={{ fontSize: '13px', fontWeight: 600 }}
                                           axisLine={false}
                                           tickLine={false}
-                                          tickCount={8}
+                                          dx={-5}
                                           tickFormatter={(value) => `${value}`}
                                         />
+                                        {/* Legend removed as requested, using custom badges above */}
                                         <Tooltip
                                           contentStyle={{
-                                            backgroundColor: '#fff',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                                            backdropFilter: 'blur(10px)',
                                             border: 'none',
-                                            borderRadius: '12px',
-                                            fontSize: '11px',
-                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                            padding: '8px 12px'
+                                            borderRadius: '16px',
+                                            padding: '12px 16px',
+                                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                                            fontWeight: 600
                                           }}
-                                          cursor={{ fill: '#f8fafc' }}
-                                          formatter={(value: number) => [`${value.toFixed(2)} kg`, 'Fiber Delivered']}
+                                          itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
+                                          cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
+                                          formatter={(value: any) => `${Math.round(value)} kg`}
                                         />
                                         <Bar
-                                          dataKey="quantity"
-                                          fill="url(#deliveryGradient)"
+                                          dataKey="classA"
+                                          name="Class A"
+                                          fill="url(#classAGradient)"
                                           radius={[6, 6, 0, 0]}
-                                          barSize={deliveryView === 'monthly' ? 30 : 60}
+                                          barSize={deliveryView === 'monthly' ? 24 : 40}
                                           animationDuration={1500}
+                                        />
+                                        <Bar
+                                          dataKey="classB"
+                                          name="Class B"
+                                          fill="url(#classBGradient)"
+                                          radius={[6, 6, 0, 0]}
+                                          barSize={deliveryView === 'monthly' ? 24 : 40}
+                                          animationDuration={1700}
+                                        />
+                                        <Bar
+                                          dataKey="classC"
+                                          name="Class C"
+                                          fill="url(#classCGradient)"
+                                          radius={[6, 6, 0, 0]}
+                                          barSize={deliveryView === 'monthly' ? 24 : 40}
+                                          animationDuration={1900}
                                         />
                                       </RechartsBarChart>
                                     </ResponsiveContainer>
@@ -2113,16 +2529,23 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   />
 
                                   {/* Custom Legend */}
-                                  <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mt-4">
                                     {chartData.map((item, idx) => (
-                                      <div key={idx} className="flex flex-col p-5 bg-gray-50 rounded-2xl border border-gray-100 transition-all hover:bg-white hover:shadow-md">
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }}></div>
-                                          <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">{item.name}</span>
+                                      <div key={idx} className="flex flex-col p-4 bg-gray-50/50 rounded-2xl border border-gray-100/80 transition-all hover:bg-white hover:shadow-lg hover:border-purple-200 group">
+                                        <div className="flex items-center justify-between mb-3">
+                                          <div className="flex items-center gap-2">
+                                            <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.fill }}></div>
+                                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{item.name}</span>
+                                          </div>
+                                          <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                                            {item.percentage.toFixed(0)}%
+                                          </span>
                                         </div>
-                                        <div className="flex items-end justify-between">
-                                          <span className="text-xl font-black text-gray-900 truncate">₱{item.value.toLocaleString()}</span>
-                                          <span className="text-xs font-bold text-gray-400 mb-0.5">{item.percentage.toFixed(0)}%</span>
+                                        <div className="flex flex-col">
+                                          <span className={`${item.value > 1000000 ? 'text-lg' : 'text-xl'} font-black text-gray-900 tracking-tight`}>
+                                            ₱{item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                          </span>
+                                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mt-0.5">Contribution Amount</span>
                                         </div>
                                       </div>
                                     ))}
@@ -2133,178 +2556,293 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           </div>
                         </div>
 
-                        {/* Unified Sales Performance Analytics */}
-                        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                          <div className="flex items-center justify-between mb-8">
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900">Sales Performance Analytics</h3>
-                              <p className="text-sm text-gray-500 font-normal mt-1">Comparison of Abaca Volume (kg) vs Sales (₱)</p>
+                        {/* Unified Sales Performance Analytics - Redesigned */}
+                        <div className="lg:col-span-2 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col hover:shadow-purple-500/10 transition-all duration-500">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                            <div className="flex items-center gap-4">
+                              <div className="w-1.5 h-10 bg-gradient-to-b from-purple-400 to-purple-600 rounded-full shadow-lg shadow-purple-200"></div>
+                              <div>
+                                <h3 className="text-xl font-black text-gray-900 tracking-tight">Sales Performance Analytics</h3>
+                                <p className="text-sm text-gray-500 font-medium mt-0.5">Fiber Sales (₱) by Class A, B, and C</p>
+                              </div>
                             </div>
                             <div className="flex items-center gap-3">
-                              <select
-                                value={abacaSoldView}
-                                onChange={(e) => {
-                                  const val = e.target.value as 'monthly' | 'yearly';
-                                  setAbacaSoldView(val);
-                                  setSalesChartView(val);
-                                }}
-                                className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                              >
-                                <option value="monthly">Monthly Overview</option>
-                                <option value="yearly">Yearly Overview</option>
-                              </select>
+                              {abacaSoldView === 'monthly' && (
+                                <select
+                                  className="text-gray-700 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-xl px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 hover:border-purple-200 transition-colors"
+                                  value={salesMonthYear}
+                                  onChange={(e) => setSalesMonthYear(parseInt(e.target.value))}
+                                >
+                                  {Array.from(new Set([
+                                    new Date().getFullYear(),
+                                    ...(dashboardData.sales?.recentSales || []).map((s: any) => new Date(s.sale_date).getFullYear())
+                                  ])).sort((a, b) => b - a).map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                  ))}
+                                </select>
+                              )}
+                              <div className="flex gap-1 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-100">
+                                <button
+                                  onClick={() => {
+                                    setAbacaSoldView('monthly');
+                                    setSalesChartView('monthly');
+                                  }}
+                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${abacaSoldView === 'monthly'
+                                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30 scale-105'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                    }`}
+                                >
+                                  Monthly
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setAbacaSoldView('yearly');
+                                    setSalesChartView('yearly');
+                                  }}
+                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${abacaSoldView === 'yearly'
+                                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30 scale-105'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                    }`}
+                                >
+                                  Yearly
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Premium Legend Badges with Icons */}
+                          <div className="flex flex-wrap items-center gap-3 mb-8">
+                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                              <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">Class A</span>
+                            </div>
+                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                              <span className="text-xs font-black text-blue-700 uppercase tracking-wider">Class B</span>
+                            </div>
+                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-xl border border-purple-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                              <span className="text-xs font-black text-purple-700 uppercase tracking-wider">Class C</span>
                             </div>
                           </div>
 
                           <div className="w-full">
                             {(() => {
-                              const recentSales = dashboardData.sales?.recentSales || [];
+                              const allSales = dashboardData.sales?.allSales || dashboardData.sales?.recentSales || [];
                               const currentYear = new Date().getFullYear();
                               let chartData = [];
 
                               if (abacaSoldView === 'monthly') {
                                 const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                const volData = Array(12).fill(0);
-                                const revData = Array(12).fill(0);
+                                const salesA = Array(12).fill(0);
+                                const salesB = Array(12).fill(0);
+                                const salesC = Array(12).fill(0);
 
-                                recentSales.forEach((sale: any) => {
+                                allSales.forEach((sale: any) => {
                                   const saleDate = new Date(sale.sale_date);
-                                  if (saleDate.getFullYear() === currentYear) {
-                                    volData[saleDate.getMonth()] += (sale.quantity_sold || 0);
-                                    revData[saleDate.getMonth()] += (sale.total_amount || 0);
+                                  if (saleDate.getFullYear() === salesMonthYear) {
+                                    const month = saleDate.getMonth();
+                                    const amount = (sale.total_amount || 0);
+                                    const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
+
+                                    if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1/i)) salesA[month] += amount;
+                                    else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[month] += amount;
+                                    else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[month] += amount;
                                   }
                                 });
 
                                 chartData = labels.map((l, i) => ({
                                   period: l,
-                                  volume: volData[i],
-                                  revenue: revData[i]
+                                  salesA: salesA[i],
+                                  salesB: salesB[i],
+                                  salesC: salesC[i]
                                 }));
                               } else {
-                                const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
-                                const volData = Array(5).fill(0);
-                                const revData = Array(5).fill(0);
+                                const years = Array.from(new Set([
+                                  currentYear,
+                                  ...allSales.map((s: any) => new Date(s.sale_date).getFullYear())
+                                ])).sort((a, b) => a - b);
 
-                                recentSales.forEach((sale: any) => {
+                                const salesA = Array(years.length).fill(0);
+                                const salesB = Array(years.length).fill(0);
+                                const salesC = Array(years.length).fill(0);
+
+                                allSales.forEach((sale: any) => {
                                   const saleDate = new Date(sale.sale_date);
                                   const yearIdx = years.indexOf(saleDate.getFullYear());
                                   if (yearIdx !== -1) {
-                                    volData[yearIdx] += (sale.quantity_sold || 0);
-                                    revData[yearIdx] += (sale.total_amount || 0);
+                                    const amount = (sale.total_amount || 0);
+                                    const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
+
+                                    if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1/i)) salesA[yearIdx] += amount;
+                                    else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[yearIdx] += amount;
+                                    else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[yearIdx] += amount;
                                   }
                                 });
 
                                 chartData = years.map((y, i) => ({
                                   period: y.toString(),
-                                  volume: volData[i],
-                                  revenue: revData[i]
+                                  salesA: salesA[i],
+                                  salesB: salesB[i],
+                                  salesC: salesC[i]
                                 }));
                               }
 
                               return (
-                                <ResponsiveContainer width="100%" height={450}>
-                                  <RechartsBarChart
-                                    data={chartData}
-                                    margin={{ top: 10, right: 30, left: 10, bottom: 20 }}
-                                    barGap={18}
-                                    barCategoryGap="25%"
-                                  >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                    <XAxis
-                                      dataKey="period"
-                                      axisLine={false}
-                                      tickLine={false}
-                                      style={{ fontSize: '12px', fontWeight: 500, fill: '#64748b' }}
-                                      dy={15}
-                                    />
-                                    {/* Primary Y-Axis (Volume) */}
-                                    <YAxis
-                                      yAxisId="left"
-                                      orientation="left"
-                                      axisLine={false}
-                                      tickLine={false}
-                                      style={{ fontSize: '11px', fontWeight: 500, fill: '#8b5cf6' }}
-                                      tickFormatter={(value) => `${value}kg`}
-                                    />
-                                    {/* Secondary Y-Axis (Sales) */}
-                                    <YAxis
-                                      yAxisId="right"
-                                      orientation="right"
-                                      axisLine={false}
-                                      tickLine={false}
-                                      style={{ fontSize: '11px', fontWeight: 500, fill: '#3b82f6' }}
-                                      tickFormatter={(value) => `₱${Math.round(value / 1000)}k`}
-                                    />
-                                    <Tooltip
-                                      contentStyle={{
-                                        borderRadius: '16px',
-                                        border: 'none',
-                                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                                        padding: '12px'
-                                      }}
-                                      cursor={{ fill: '#f8fafc' }}
-                                    />
-                                    <Legend
-                                      verticalAlign="top"
-                                      align="right"
-                                      height={50}
-                                      iconType="circle"
-                                      wrapperStyle={{ paddingBottom: '20px', fontSize: '12px', fontWeight: 600 }}
-                                    />
-                                    <Bar
-                                      yAxisId="left"
-                                      name="Abaca Volume (kg)"
-                                      dataKey="volume"
-                                      fill="#8b5cf6"
-                                      radius={[6, 6, 0, 0]}
-                                      animationDuration={1500}
-                                      barSize={abacaSoldView === 'monthly' ? 24 : 48}
-                                    />
-                                    <Bar
-                                      yAxisId="right"
-                                      name="Sales (₱)"
-                                      dataKey="revenue"
-                                      fill="#3b82f6"
-                                      radius={[6, 6, 0, 0]}
-                                      animationDuration={2000}
-                                      barSize={abacaSoldView === 'monthly' ? 24 : 48}
-                                    />
-                                  </RechartsBarChart>
-                                </ResponsiveContainer>
+                                <div className="overflow-x-auto rounded-3xl bg-white/50 backdrop-blur-sm p-4 border border-white/60 shadow-inner">
+                                  <div style={{ minWidth: abacaSoldView === 'monthly' ? '700px' : '100%', width: '100%' }}>
+                                    <ResponsiveContainer width="100%" height={450}>
+                                      <RechartsBarChart
+                                        data={chartData}
+                                        margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                                        barGap={6}
+                                        barCategoryGap={chartData.length < 5 ? "35%" : "15%"}
+                                      >
+                                        <defs>
+                                          <linearGradient id="salesAGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
+                                            <stop offset="100%" stopColor="#059669" stopOpacity={0.7} />
+                                          </linearGradient>
+                                          <linearGradient id="salesBGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
+                                            <stop offset="100%" stopColor="#2563eb" stopOpacity={0.7} />
+                                          </linearGradient>
+                                          <linearGradient id="salesCGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#a855f7" stopOpacity={0.9} />
+                                            <stop offset="100%" stopColor="#9333ea" stopOpacity={0.7} />
+                                          </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
+                                        <XAxis
+                                          dataKey="period"
+                                          stroke="#6b7280"
+                                          style={{ fontSize: '13px', fontWeight: 600 }}
+                                          axisLine={false}
+                                          tickLine={false}
+                                          dy={10}
+                                        />
+                                        <YAxis
+                                          stroke="#6b7280"
+                                          style={{ fontSize: '13px', fontWeight: 600 }}
+                                          axisLine={false}
+                                          tickLine={false}
+                                          dx={-5}
+                                          tickFormatter={(value) => `₱${Math.round(value / 1000)}k`}
+                                        />
+                                        <Tooltip
+                                          contentStyle={{
+                                            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                                            backdropFilter: 'blur(10px)',
+                                            border: 'none',
+                                            borderRadius: '16px',
+                                            padding: '12px 16px',
+                                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                                            fontWeight: 600
+                                          }}
+                                          itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
+                                          cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
+                                          formatter={(value: any) => `₱${Math.round(value).toLocaleString()}`}
+                                        />
+                                        <Bar
+                                          name="Class A"
+                                          dataKey="salesA"
+                                          fill="url(#salesAGradient)"
+                                          radius={[6, 6, 0, 0]}
+                                          animationDuration={1500}
+                                          barSize={abacaSoldView === 'monthly' ? 20 : 35}
+                                        />
+                                        <Bar
+                                          name="Class B"
+                                          dataKey="salesB"
+                                          fill="url(#salesBGradient)"
+                                          radius={[6, 6, 0, 0]}
+                                          animationDuration={1800}
+                                          barSize={abacaSoldView === 'monthly' ? 20 : 35}
+                                        />
+                                        <Bar
+                                          name="Class C"
+                                          dataKey="salesC"
+                                          fill="url(#salesCGradient)"
+                                          radius={[6, 6, 0, 0]}
+                                          animationDuration={2100}
+                                          barSize={abacaSoldView === 'monthly' ? 20 : 35}
+                                        />
+                                      </RechartsBarChart>
+                                    </ResponsiveContainer>
+                                  </div>
+                                </div>
                               );
                             })()}
                           </div>
                         </div>
                       </div>
 
-                      {/* Sales Table */}
-                      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Sales</h3>
-                        <div className="overflow-x-auto">
+                      {/* Recent Sales Table - Premium Style */}
+                      <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 border border-white/60 hover:shadow-emerald-500/5 transition-all duration-500">
+                        <div className="flex items-center justify-between mb-8">
+                          <div className="flex items-center gap-4">
+                            <div className="w-1.5 h-10 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full shadow-lg shadow-emerald-200"></div>
+                            <div>
+                              <h3 className="text-2xl font-black text-gray-900 tracking-tight">Recent Sales Transactions</h3>
+                              <p className="text-sm text-gray-500 font-medium">Detailed log of approved fiber sales</p>
+                            </div>
+                          </div>
+                          <div className="p-3 bg-emerald-50 rounded-2xl">
+                            <TrendingUp className="text-emerald-500 w-6 h-6" />
+                          </div>
+                        </div>
+                        <div className="overflow-x-auto rounded-2xl border border-gray-100 shadow-sm bg-gray-50/30">
                           <table className="w-full">
                             <thead>
-                              <tr className="border-b border-gray-100">
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Farmer</th>
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Buyer</th>
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Amount</th>
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Quantity</th>
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Date</th>
+                              <tr className="bg-white/80">
+                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Farmer</th>
+                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Buyer</th>
+                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Amount</th>
+                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Quantity</th>
+                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Status</th>
+                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Date</th>
                               </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-gray-100">
                               {(dashboardData.sales?.recentSales || []).map((sale: any, index: number) => (
-                                <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                                  <td className="py-3 px-4 text-sm font-medium text-gray-900">{sale.farmer_name || 'N/A'}</td>
-                                  <td className="py-3 px-4 text-sm text-gray-600">{sale.buyer_company_name || sale.buyer_name || 'N/A'}</td>
-                                  <td className="py-3 px-4 text-sm font-semibold text-gray-900">₱{sale.total_amount?.toLocaleString() || '0'}</td>
-                                  <td className="py-3 px-4 text-sm text-gray-600">{sale.quantity_sold || 0} kg</td>
-                                  <td className="py-3 px-4">
-                                    <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-semibold">
+                                <tr key={index} className="hover:bg-white transition-all duration-200 group">
+                                  <td className="py-5 px-6">
+                                    <div className="flex items-center gap-4">
+                                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center text-emerald-700 font-black text-sm shadow-sm group-hover:scale-110 transition-transform">
+                                        {sale.farmer_name?.charAt(0) || 'F'}
+                                      </div>
+                                      <span className="text-sm font-bold text-gray-900">{sale.farmer_name || 'N/A'}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-5 px-6">
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-bold text-gray-900 truncate max-w-[150px]">{sale.buyer_company_name || sale.buyer_name || 'N/A'}</span>
+                                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Verified Buyer</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-5 px-6">
+                                    <div className="flex flex-col">
+                                      <span className="text-base font-black text-gray-900 tracking-tight">₱{sale.total_amount?.toLocaleString() || '0'}</span>
+                                      <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter">Total Gross</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-5 px-6">
+                                    <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-black shadow-sm border border-blue-100">
+                                      {sale.quantity_sold || 0} kg
+                                    </span>
+                                  </td>
+                                  <td className="py-5 px-6">
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                       Approved
                                     </span>
                                   </td>
-                                  <td className="py-3 px-4 text-sm text-gray-500">{new Date(sale.sale_date).toLocaleDateString()}</td>
+                                  <td className="py-5 px-6">
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-bold text-gray-700">{new Date(sale.sale_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                      <span className="text-[10px] text-gray-400 font-bold uppercase">Sale Date</span>
+                                    </div>
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
@@ -2315,235 +2853,230 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   </div>
                 )}
 
-
-
                 {dashboardSection === 'users' && (
                   <UserAnalyticsDashboard />
                 )}
               </>
             )}
           </div>
-        )}
-      </main>
+        )
+        }
+      </main >
 
-      {/* Profile Modal - Enhanced Professional Design */}
-      {
-        showProfileModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-              {/* Modal Header - Enhanced */}
-              <div className="bg-emerald-600 px-8 py-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/10 rounded-xl">
-                    <User className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">
-                      {isEditMode ? 'Edit Profile' : 'My Profile'}
-                    </h2>
-                    <p className="text-emerald-50 text-sm opacity-90">Manage your account information</p>
-                  </div>
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-emerald-600 px-8 py-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/10 rounded-xl">
+                  <User className="w-6 h-6 text-white" />
                 </div>
-                <button
-                  onClick={() => {
-                    setShowProfileModal(false);
-                    setIsEditMode(false);
-                  }}
-                  className="text-white hover:bg-white/10 rounded-xl p-2 transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    {isEditMode ? 'Edit Profile' : 'My Profile'}
+                  </h2>
+                  <p className="text-emerald-50 text-sm opacity-90">Manage your account information</p>
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  setShowProfileModal(false);
+                  setIsEditMode(false);
+                }}
+                className="text-white hover:bg-white/10 rounded-xl p-2 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
-              {/* Modal Body */}
-              <div className="p-8 bg-white overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
-                {loadingProfile ? (
-                  <div className="flex justify-center items-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-                  </div>
-                ) : (
-                  <div className="space-y-8">
-                    {/* Profile Picture Section - Enhanced */}
-                    <div className="flex flex-col items-center mb-8 pb-8 border-b-2 border-gray-200">
-                      <div className="relative">
-                        {profilePhoto ? (
-                          <img
-                            src={profilePhoto}
-                            alt="Profile"
-                            className="w-40 h-40 rounded-full object-cover border-4 border-emerald-500 shadow-2xl"
-                          />
-                        ) : (
-                          <div className="w-40 h-40 rounded-full bg-emerald-500 flex items-center justify-center text-white text-5xl font-bold border-4 border-gray-50 shadow-md">
-                            {user?.fullName?.charAt(0) || 'A'}
-                          </div>
-                        )}
-                        {isEditMode && (
-                          <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-lg">
-                            <label className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-full transition-colors flex items-center justify-center shadow-lg">
-                              <Upload className="w-5 h-5" />
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={_handlePhotoUpload}
-                                className="hidden"
-                                disabled={uploadingPhoto}
-                              />
-                            </label>
-                          </div>
-                        )}
-                      </div>
-                      <h3 className="text-2xl font-bold text-gray-800 mt-4">{editFormData.full_name || user?.fullName || 'MAO Coordinator'}</h3>
-                      <p className="text-emerald-600 font-semibold">{editFormData.position || 'Municipal Agriculture Officer'}</p>
-                      {uploadingPhoto && (
-                        <p className="text-sm text-emerald-600 mt-2 flex items-center gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
-                          Uploading photo...
-                        </p>
+            {/* Modal Body */}
+            <div className="p-8 bg-white overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
+              {loadingProfile ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Profile Picture Section */}
+                  <div className="flex flex-col items-center mb-8 pb-8 border-b-2 border-gray-200">
+                    <div className="relative">
+                      {profilePhoto ? (
+                        <img
+                          src={profilePhoto}
+                          alt="Profile"
+                          className="w-40 h-40 rounded-full object-cover border-4 border-emerald-500 shadow-2xl"
+                        />
+                      ) : (
+                        <div className="w-40 h-40 rounded-full bg-emerald-500 flex items-center justify-center text-white text-5xl font-bold border-4 border-gray-50 shadow-md">
+                          {user?.fullName?.charAt(0) || 'A'}
+                        </div>
+                      )}
+                      {isEditMode && (
+                        <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-lg">
+                          <label className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-full transition-colors flex items-center justify-center shadow-lg">
+                            <Upload className="w-5 h-5" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={_handlePhotoUpload}
+                              className="hidden"
+                              disabled={uploadingPhoto}
+                            />
+                          </label>
+                        </div>
                       )}
                     </div>
+                    <h3 className="text-2xl font-bold text-gray-800 mt-4">{editFormData.full_name || user?.fullName || 'MAO Coordinator'}</h3>
+                    <p className="text-emerald-600 font-semibold">{editFormData.position || 'Municipal Agriculture Officer'}</p>
+                    {uploadingPhoto && (
+                      <p className="text-sm text-emerald-600 mt-2 flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
+                        Uploading photo...
+                      </p>
+                    )}
+                  </div>
 
-                    {/* Profile Information Section */}
-                    <div>
-                      <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                        <div className="p-2 bg-emerald-100 rounded-lg">
-                          <User className="w-5 h-5 text-emerald-600" />
-                        </div>
-                        Personal & Professional Information
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Full Name */}
-                        <div>
-                          <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Full Name</label>
-                          <input
-                            type="text"
-                            value={editFormData.full_name || ''}
-                            onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
-                            disabled={!isEditMode}
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
-                            placeholder="Enter your full name"
-                          />
-                        </div>
+                  {/* Profile Information Section */}
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                      <div className="p-2 bg-emerald-100 rounded-lg">
+                        <User className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      Personal & Professional Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Full Name */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Full Name</label>
+                        <input
+                          type="text"
+                          value={editFormData.full_name || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
+                          disabled={!isEditMode}
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          placeholder="Enter your full name"
+                        />
+                      </div>
 
-                        {/* Email */}
-                        <div>
-                          <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Email Address</label>
-                          <input
-                            type="email"
-                            value={editFormData.email || ''}
-                            disabled={true}
-                            className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-gray-700 font-medium"
-                          />
-                        </div>
+                      {/* Email */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Email Address</label>
+                        <input
+                          type="email"
+                          value={editFormData.email || ''}
+                          disabled={true}
+                          className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-gray-700 font-medium"
+                        />
+                      </div>
 
-                        {/* Position */}
-                        <div>
-                          <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Position / Role</label>
-                          <input
-                            type="text"
-                            value={editFormData.position || ''}
-                            onChange={(e) => setEditFormData({ ...editFormData, position: e.target.value })}
-                            disabled={!isEditMode}
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
-                            placeholder="e.g., Municipal Agriculturist"
-                          />
-                        </div>
+                      {/* Position */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Position / Role</label>
+                        <input
+                          type="text"
+                          value={editFormData.position || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, position: e.target.value })}
+                          disabled={!isEditMode}
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          placeholder="e.g., Municipal Agriculturist"
+                        />
+                      </div>
 
-                        {/* Organization */}
-                        <div>
-                          <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Organization</label>
-                          <input
-                            type="text"
-                            value={editFormData.association_name || ''}
-                            onChange={(e) => setEditFormData({ ...editFormData, association_name: e.target.value })}
-                            disabled={!isEditMode}
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
-                            placeholder="e.g., Municipal Agriculture Office"
-                          />
-                        </div>
+                      {/* Organization */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Organization</label>
+                        <input
+                          type="text"
+                          value={editFormData.association_name || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, association_name: e.target.value })}
+                          disabled={!isEditMode}
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          placeholder="e.g., Municipal Agriculture Office"
+                        />
+                      </div>
 
-                        {/* Contact Number */}
-                        <div>
-                          <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Contact Number</label>
-                          <input
-                            type="tel"
-                            value={editFormData.contact_number || ''}
-                            onChange={(e) => setEditFormData({ ...editFormData, contact_number: e.target.value })}
-                            disabled={!isEditMode}
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
-                            placeholder="e.g., 09171234567"
-                          />
-                        </div>
+                      {/* Contact Number */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Contact Number</label>
+                        <input
+                          type="tel"
+                          value={editFormData.contact_number || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, contact_number: e.target.value })}
+                          disabled={!isEditMode}
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          placeholder="e.g., 09171234567"
+                        />
+                      </div>
 
-                        {/* Address */}
-                        <div className="md:col-span-2">
-                          <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Complete Address</label>
-                          <textarea
-                            value={editFormData.address || ''}
-                            onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
-                            disabled={!isEditMode}
-                            rows={3}
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium resize-none transition-all"
-                            placeholder="Enter your complete address (Purok, Barangay, Municipality)"
-                          />
-                        </div>
+                      {/* Address */}
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Complete Address</label>
+                        <textarea
+                          value={editFormData.address || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                          disabled={!isEditMode}
+                          rows={3}
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium resize-none transition-all"
+                          placeholder="Enter your complete address (Purok, Barangay, Municipality)"
+                        />
                       </div>
                     </div>
+                  </div>
 
-                    {/* Action Buttons - Enhanced */}
-                    <div className="flex justify-between items-center pt-6 mt-6 border-t-2 border-gray-200">
-                      {!isEditMode && (
+                  {/* Action Buttons */}
+                  <div className="flex justify-between items-center pt-6 mt-6 border-t-2 border-gray-200">
+                    {!isEditMode && (
+                      <button
+                        onClick={() => setShowChangePasswordModal(true)}
+                        className="flex items-center gap-2 px-6 py-3 bg-amber-50 text-amber-700 rounded-xl hover:bg-amber-100 transition-colors font-bold border border-amber-200 shadow-sm"
+                      >
+                        <Lock className="w-5 h-5" />
+                        Change Password
+                      </button>
+                    )}
+                    <div className="flex gap-3 ml-auto">
+                      {isEditMode ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              setIsEditMode(false);
+                              fetchOfficerProfile();
+                            }}
+                            className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-bold shadow-md hover:shadow-lg"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={_handleSaveProfile}
+                            disabled={savingProfile}
+                            className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {savingProfile ? (
+                              <span className="flex items-center gap-2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Saving...
+                              </span>
+                            ) : 'Save Changes'}
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={() => setShowChangePasswordModal(true)}
-                          className="flex items-center gap-2 px-6 py-3 bg-amber-50 text-amber-700 rounded-xl hover:bg-amber-100 transition-colors font-bold border border-amber-200 shadow-sm"
+                          onClick={() => setIsEditMode(true)}
+                          className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-bold shadow-md"
                         >
-                          <Lock className="w-5 h-5" />
-                          Change Password
+                          Edit Profile
                         </button>
                       )}
-                      <div className="flex gap-3 ml-auto">
-                        {isEditMode ? (
-                          <>
-                            <button
-                              onClick={() => {
-                                setIsEditMode(false);
-                                fetchOfficerProfile();
-                              }}
-                              className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-bold shadow-md hover:shadow-lg"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={_handleSaveProfile}
-                              disabled={savingProfile}
-                              className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {savingProfile ? (
-                                <span className="flex items-center gap-2">
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                  Saving...
-                                </span>
-                              ) : 'Save Changes'}
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => setIsEditMode(true)}
-                            className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-bold shadow-md"
-                          >
-                            Edit Profile
-                          </button>
-                        )}
-                      </div>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
 
-      {/* Change Password Modal */}
       {
         showChangePasswordModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
@@ -2645,9 +3178,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               </form>
             </div>
           </div>
-        )
-      }
-    </div >
+        )}
+    </div>
   );
 };
 

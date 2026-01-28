@@ -142,7 +142,8 @@ export class AdminReportsController {
           quantity_sold,
           unit_price,
           total_amount,
-          farmer_id
+          farmer_id,
+          abaca_type
         `)
         .eq('status', 'approved')
         .order('sale_date', { ascending: false });
@@ -159,7 +160,8 @@ export class AdminReportsController {
           quantity_sold,
           unit_price,
           total_amount,
-          farmer_id
+          farmer_id,
+          abaca_type
         `)
         .eq('status', 'pending')
         .order('sale_date', { ascending: false });
@@ -200,14 +202,15 @@ export class AdminReportsController {
       const uniqueBuyers = new Set(salesReports?.map(s => s.buyer_company_name) || []);
       const numberOfBuyers = uniqueBuyers.size;
 
-      // Format recent sales (last 10)
-      const recentSales = (salesReports || []).slice(0, 10).map(sale => ({
+      // Format all sales for processing
+      const allSales = (salesReports || []).map(sale => ({
         sale_date: sale.sale_date,
         farmer_name: farmerMap.get(sale.farmer_id) || 'Unknown',
         buyer_company_name: sale.buyer_company_name,
         quantity_sold: parseFloat(sale.quantity_sold),
         unit_price: parseFloat(sale.unit_price),
-        total_amount: parseFloat(sale.total_amount)
+        total_amount: parseFloat(sale.total_amount),
+        abaca_type: sale.abaca_type
       }));
 
       res.status(200).json({
@@ -217,11 +220,117 @@ export class AdminReportsController {
         pendingAmount: Math.round(pendingAmount * 100) / 100,
         averagePricePerKg: Math.round(averagePricePerKg * 100) / 100,
         numberOfBuyers,
-        recentSales
+        recentSales: allSales.slice(0, 10),
+        allSales
       });
     } catch (error) {
       console.error('Error fetching sales report:', error);
       res.status(500).json({ error: 'Failed to fetch sales report' });
+    }
+  }
+
+  /**
+   * GET /api/admin/sales-performance
+   * Get sales performance analytics with fiber class breakdown
+   */
+  static async getSalesPerformanceReport(req: Request, res: Response) {
+    try {
+      // Fetch all approved sales reports with fiber class info
+      const { data: salesReports, error: salesError } = await supabase
+        .from('sales_reports')
+        .select('report_id, sale_date, abaca_type, quantity_sold, total_amount, status')
+        .eq('status', 'approved')
+        .order('sale_date', { ascending: false });
+
+      if (salesError) throw salesError;
+
+      const currentYear = new Date().getFullYear();
+
+      // Initialize data structures for monthly and yearly tracking
+      const monthlyStatsByYear: {
+        [year: number]: {
+          volumeA: number[], volumeB: number[], volumeC: number[],
+          salesA: number[], salesB: number[], salesC: number[]
+        }
+      } = {};
+
+      const yearlyStats: {
+        [year: number]: {
+          volumeA: number, volumeB: number, volumeC: number,
+          salesA: number, salesB: number, salesC: number
+        }
+      } = {};
+
+      // Process each sales report
+      (salesReports || []).forEach((report: any) => {
+        const date = new Date(report.sale_date);
+        const year = date.getFullYear();
+        const monthIndex = date.getMonth();
+        const quantity = parseFloat(report.quantity_sold || 0);
+        const amount = parseFloat(report.total_amount || 0);
+        const fiberClass = (report.abaca_type || '').toLowerCase().trim();
+
+        // Initialize year if not exists
+        if (!monthlyStatsByYear[year]) {
+          monthlyStatsByYear[year] = {
+            volumeA: new Array(12).fill(0),
+            volumeB: new Array(12).fill(0),
+            volumeC: new Array(12).fill(0),
+            salesA: new Array(12).fill(0),
+            salesB: new Array(12).fill(0),
+            salesC: new Array(12).fill(0)
+          };
+        }
+        if (!yearlyStats[year]) {
+          yearlyStats[year] = {
+            volumeA: 0, volumeB: 0, volumeC: 0,
+            salesA: 0, salesB: 0, salesC: 0
+          };
+        }
+
+        // Categorize by fiber class - extremely robust matching
+        // Matches: "A", "Class A", "Grade A", "Fiber A", "Class-A", "Grade 1", etc.
+        if (fiberClass.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1/i)) {
+          monthlyStatsByYear[year].volumeA[monthIndex] += quantity;
+          monthlyStatsByYear[year].salesA[monthIndex] += amount;
+          yearlyStats[year].volumeA += quantity;
+          yearlyStats[year].salesA += amount;
+        } else if (fiberClass.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) {
+          monthlyStatsByYear[year].volumeB[monthIndex] += quantity;
+          monthlyStatsByYear[year].salesB[monthIndex] += amount;
+          yearlyStats[year].volumeB += quantity;
+          yearlyStats[year].salesB += amount;
+        } else if (fiberClass.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) {
+          monthlyStatsByYear[year].volumeC[monthIndex] += quantity;
+          monthlyStatsByYear[year].salesC[monthIndex] += amount;
+          yearlyStats[year].volumeC += quantity;
+          yearlyStats[year].salesC += amount;
+        }
+      });
+
+      // Calculate totals
+      const totalVolumeA = Object.values(yearlyStats).reduce((sum, y) => sum + y.volumeA, 0);
+      const totalVolumeB = Object.values(yearlyStats).reduce((sum, y) => sum + y.volumeB, 0);
+      const totalVolumeC = Object.values(yearlyStats).reduce((sum, y) => sum + y.volumeC, 0);
+      const totalSalesA = Object.values(yearlyStats).reduce((sum, y) => sum + y.salesA, 0);
+      const totalSalesB = Object.values(yearlyStats).reduce((sum, y) => sum + y.salesB, 0);
+      const totalSalesC = Object.values(yearlyStats).reduce((sum, y) => sum + y.salesC, 0);
+
+      res.status(200).json({
+        totalVolumeA: Math.round(totalVolumeA * 100) / 100,
+        totalVolumeB: Math.round(totalVolumeB * 100) / 100,
+        totalVolumeC: Math.round(totalVolumeC * 100) / 100,
+        totalSalesA: Math.round(totalSalesA * 100) / 100,
+        totalSalesB: Math.round(totalSalesB * 100) / 100,
+        totalSalesC: Math.round(totalSalesC * 100) / 100,
+        totalVolume: Math.round((totalVolumeA + totalVolumeB + totalVolumeC) * 100) / 100,
+        totalSales: Math.round((totalSalesA + totalSalesB + totalSalesC) * 100) / 100,
+        monthlyStatsByYear,
+        yearlyStats
+      });
+    } catch (error) {
+      console.error('Error fetching sales performance report:', error);
+      res.status(500).json({ error: 'Failed to fetch sales performance report' });
     }
   }
 

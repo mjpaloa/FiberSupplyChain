@@ -60,8 +60,10 @@ interface NewFarmerDistributionForm {
 
 const DISTRIBUTION_STATUSES = [
   { value: 'distributed_to_association', label: '📦 Received from MAO' },
-  { value: 'partially_distributed_to_farmers', label: '🔄 Ongoing Distribution' },
-  { value: 'fully_distributed_to_farmers', label: '✅ Completely Distributed' },
+  { value: 'partially_distributed_to_farmers', label: '🔄 Distributed to Farmers (Ongoing)' },
+  { value: 'fully_distributed_to_farmers', label: '✅ Distributed to Farmers (Complete)' },
+  { value: 'partially_planted', label: '🌱 Partially Planted' },
+  { value: 'fully_planted', label: '🌳 Fully Planted' },
   { value: 'cancelled', label: '❌ Cancelled' }
 ];
 
@@ -353,13 +355,19 @@ const AssociationInventory: React.FC = () => {
   const verifiedFarmers = farmers.filter(f => f.is_verified && f.is_active);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'distributed_to_association':
         return 'bg-blue-100 text-blue-800';
       case 'partially_distributed_to_farmers':
         return 'bg-amber-100 text-amber-800';
       case 'fully_distributed_to_farmers':
         return 'bg-green-100 text-green-800';
+      case 'partially_planted':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'fully_planted':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -444,6 +452,9 @@ const AssociationInventory: React.FC = () => {
                 <option value="distributed_to_association">📦 Received</option>
                 <option value="partially_distributed_to_farmers">🔄 Ongoing Distribution</option>
                 <option value="fully_distributed_to_farmers">✅ Completely Distributed</option>
+                <option value="partially_planted">🌱 Partially Planted</option>
+                <option value="fully_planted">🌳 Fully Planted</option>
+                <option value="cancelled">❌ Cancelled</option>
               </select>
             </div>
           </div>
@@ -516,9 +527,10 @@ const AssociationInventory: React.FC = () => {
                       <td className="px-3 sm:px-4 py-3 border-b border-gray-100">
                         <span className={`inline-block px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-normal sm:whitespace-nowrap ${getStatusColor(dist.status)}`}>
                           {dist.status === 'distributed_to_association' ? '📦 Received' :
-                            dist.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                              dist.status === 'fully_distributed_to_farmers' ? '✅ Completely Distributed' :
-                                '❌ Cancelled'}
+                            (dist.status === 'partially_distributed_to_farmers' || dist.status === 'partially_planted') ? '🔄 Ongoing Distribution' :
+                              (dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted') ? '✅ Completely Distributed' :
+                                dist.status === 'cancelled' ? '❌ Cancelled' :
+                                  '❓ Unknown'}
                         </span>
                       </td>
                       <td className="px-3 sm:px-4 py-3 border-b border-gray-100">
@@ -539,8 +551,8 @@ const AssociationInventory: React.FC = () => {
                             }}
                             disabled={dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted'}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 grayscale'
-                                : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 grayscale'
+                              : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                               }`}
                             title={(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
                               ? 'Completed records cannot be modified'
@@ -555,8 +567,8 @@ const AssociationInventory: React.FC = () => {
                             }}
                             disabled={dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted'}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 grayscale'
-                                : 'bg-red-100 text-red-700 hover:bg-red-200'
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 grayscale'
+                              : 'bg-red-100 text-red-700 hover:bg-red-200'
                               }`}
                             title={(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
                               ? 'Completed records cannot be modified'
@@ -666,9 +678,10 @@ const AssociationInventory: React.FC = () => {
                   <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Status</p>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedDistribution.status)}`}>
                     {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
-                      selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                        selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Completely Distributed' :
-                          '❌ Cancelled'}
+                      (selectedDistribution.status === 'partially_distributed_to_farmers' || selectedDistribution.status === 'partially_planted') ? '🔄 Ongoing Distribution' :
+                        (selectedDistribution.status === 'fully_distributed_to_farmers' || selectedDistribution.status === 'fully_planted') ? '✅ Completely Distributed' :
+                          selectedDistribution.status === 'cancelled' ? '❌ Cancelled' :
+                            '❓ Unknown Status'}
                   </span>
                 </div>
               </div>
@@ -774,9 +787,10 @@ const AssociationInventory: React.FC = () => {
                       <p className="text-[10px] md:text-xs text-gray-500 font-semibold uppercase mb-1">Status</p>
                       <span className={`px-2 py-1 rounded-full text-[10px] md:text-xs font-bold ${getStatusColor(selectedDistribution.status)}`}>
                         {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
-                          selectedDistribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
-                            selectedDistribution.status === 'fully_distributed_to_farmers' ? '✅ Completely Distributed' :
-                              '❌ Cancelled'}
+                          (selectedDistribution.status === 'partially_distributed_to_farmers' || selectedDistribution.status === 'partially_planted') ? '🔄 Ongoing Distribution' :
+                            (selectedDistribution.status === 'fully_distributed_to_farmers' || selectedDistribution.status === 'fully_planted') ? '✅ Completely Distributed' :
+                              selectedDistribution.status === 'cancelled' ? '❌ Cancelled' :
+                                '❓ Unknown Status'}
                       </span>
                     </div>
                   </div>

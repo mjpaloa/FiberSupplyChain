@@ -577,18 +577,47 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                   Previous
                 </button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === page
-                      ? 'bg-indigo-500 text-white shadow-lg'
-                      : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                      }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {(() => {
+                  const pages = [];
+                  if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    if (currentPage <= 4) {
+                      for (let i = 1; i <= 5; i++) pages.push(i);
+                      pages.push('...');
+                      pages.push(totalPages);
+                    } else if (currentPage >= totalPages - 3) {
+                      pages.push(1);
+                      pages.push('...');
+                      for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+                    } else {
+                      pages.push(1);
+                      pages.push('...');
+                      pages.push(currentPage - 1);
+                      pages.push(currentPage);
+                      pages.push(currentPage + 1);
+                      pages.push('...');
+                      pages.push(totalPages);
+                    }
+                  }
+
+                  return pages.map((page, index) => (
+                    page === '...' ? (
+                      <span key={`ellipsis-${index}`} className="px-2 text-gray-500 font-bold">...</span>
+                    ) : (
+                      <button
+                        key={`page-${page}`}
+                        onClick={() => handlePageChange(page as number)}
+                        className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === page
+                          ? 'bg-indigo-500 text-white shadow-lg'
+                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  ));
+                })()}
 
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}

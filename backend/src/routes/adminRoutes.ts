@@ -1,8 +1,8 @@
 // routes/adminRoutes.ts - Admin routes for system monitoring and management
 import { Router } from 'express';
-import { 
-  getCaptchaStatistics, 
-  unblockIP 
+import {
+  getCaptchaStatistics,
+  unblockIP
 } from '../middleware/captchaMiddleware';
 import { authenticate, authorizeMAO } from '../middleware/auth';
 import { AdminReportsController } from '../controllers/AdminReportsController';
@@ -86,5 +86,18 @@ router.get(
   authorizeMAO,
   AdminReportsController.getUsersReport
 );
+
+/**
+ * GET /api/admin/sales-performance
+ * Get sales performance analytics with fiber class breakdown
+ * Returns: Volume and sales data for Class A, B, C fibers
+ */
+router.get(
+  '/sales-performance',
+  authenticate,
+  authorizeMAO,
+  AdminReportsController.getSalesPerformanceReport
+);
+
 
 export default router;

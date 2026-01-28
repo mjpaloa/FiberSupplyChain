@@ -138,8 +138,8 @@ export class SeedlingController {
 
       // Validate required fields
       if (!seedlingData.variety || !seedlingData.quantity_distributed) {
-        res.status(400).json({ 
-          error: 'Variety and quantity are required' 
+        res.status(400).json({
+          error: 'Variety and quantity are required'
         });
         return;
       }
@@ -155,9 +155,9 @@ export class SeedlingController {
 
       if (error) throw error;
 
-      res.status(201).json({ 
-        message: 'Seedling distribution recorded successfully', 
-        seedling: data 
+      res.status(201).json({
+        message: 'Seedling distribution recorded successfully',
+        seedling: data
       });
     } catch (error) {
       console.error('Error creating seedling:', error);
@@ -182,9 +182,9 @@ export class SeedlingController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
-        message: 'Seedling updated successfully', 
-        seedling: data 
+      res.status(200).json({
+        message: 'Seedling updated successfully',
+        seedling: data
       });
     } catch (error) {
       console.error('Error updating seedling:', error);
@@ -239,7 +239,7 @@ export class SeedlingController {
       if (allError) throw allError;
 
       const totalQuantity = allSeedlings?.reduce(
-        (sum, s) => sum + (s.quantity_distributed || 0), 
+        (sum, s) => sum + (s.quantity_distributed || 0),
         0
       ) || 0;
 
@@ -395,9 +395,9 @@ export class SeedlingController {
 
       if (error) throw error;
 
-      res.status(200).json({ 
-        message: 'Seedling marked as planted successfully', 
-        seedling: data 
+      res.status(200).json({
+        message: 'Seedling marked as planted successfully',
+        seedling: data
       });
     } catch (error) {
       console.error('Error marking seedling as planted:', error);
