@@ -15,7 +15,8 @@ export class AdminReportsController {
       // 1. Total Seedlings Received (from association_seedling_distributions)
       const { data: associationDistributions, error: assocError } = await supabase
         .from('association_seedling_distributions')
-        .select('quantity_distributed, date_distributed');
+        .select('quantity_distributed, date_distributed')
+        .range(0, 9999);
 
       const totalSeedlingsReceived = associationDistributions?.reduce(
         (sum, d) => sum + (d.quantity_distributed || 0), 0
@@ -24,7 +25,8 @@ export class AdminReportsController {
       // 2. Total Seedlings Distributed to Farmers (from farmer_seedling_distributions)
       const { data: farmerDistributions, error: farmerError } = await supabase
         .from('farmer_seedling_distributions')
-        .select('quantity_distributed, date_distributed');
+        .select('quantity_distributed, date_distributed')
+        .range(0, 9999);
 
       const totalSeedlingsDistributed = farmerDistributions?.reduce(
         (sum, d) => sum + (d.quantity_distributed || 0), 0
@@ -34,7 +36,8 @@ export class AdminReportsController {
       const { data: plantedSeedlings, error: plantedError } = await supabase
         .from('farmer_seedling_distributions')
         .select('quantity_distributed')
-        .eq('status', 'planted');
+        .eq('status', 'planted')
+        .range(0, 9999);
 
       const totalSeedlingsPlanted = plantedSeedlings?.reduce(
         (sum, d) => sum + (d.quantity_distributed || 0), 0
@@ -43,7 +46,8 @@ export class AdminReportsController {
       // 4. Total Area Planted (from harvests)
       const { data: harvests, error: harvestsError } = await supabase
         .from('harvests')
-        .select('area_hectares');
+        .select('area_hectares')
+        .range(0, 9999);
 
       const totalAreaPlanted = harvests?.reduce(
         (sum, h) => sum + (parseFloat(h.area_hectares) || 0), 0
@@ -52,7 +56,8 @@ export class AdminReportsController {
       // 5. Total Harvest Fiber (ALL harvests regardless of status)
       const { data: allHarvests, error: allHarvestsError } = await supabase
         .from('harvests')
-        .select('dry_fiber_output_kg, harvest_date');
+        .select('dry_fiber_output_kg, harvest_date')
+        .range(0, 9999);
 
       const totalHarvestFiber = allHarvests?.reduce(
         (sum, h) => sum + (parseFloat(h.dry_fiber_output_kg) || 0), 0
@@ -62,7 +67,8 @@ export class AdminReportsController {
       const { data: verifiedHarvests, error: verifiedError } = await supabase
         .from('harvests')
         .select('dry_fiber_output_kg')
-        .in('status', ['Verified', 'In Inventory', 'Delivered', 'Sold']);
+        .in('status', ['Verified', 'In Inventory', 'Delivered', 'Sold'])
+        .range(0, 9999);
 
       const actualHarvested = verifiedHarvests?.reduce(
         (sum, h) => sum + (parseFloat(h.dry_fiber_output_kg) || 0), 0
@@ -76,7 +82,8 @@ export class AdminReportsController {
       // Count farms monitored (unique farmer_ids)
       const { data: monitoredFarms } = await supabase
         .from('monitoring_records')
-        .select('farmer_id');
+        .select('farmer_id')
+        .range(0, 9999);
 
       const uniqueFarmsMonitored = new Set(monitoredFarms?.map(m => m.farmer_id) || []).size;
 
@@ -92,7 +99,8 @@ export class AdminReportsController {
       // 8. Farm Condition Breakdown
       const { data: allMonitoringRecords } = await supabase
         .from('monitoring_records')
-        .select('farm_condition');
+        .select('farm_condition')
+        .range(0, 9999);
 
       let healthyFarms = 0;
       let needsSupportFarms = 0;
