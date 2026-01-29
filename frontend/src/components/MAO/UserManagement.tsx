@@ -1581,6 +1581,27 @@ const UserManagement: React.FC = () => {
                           </div>
 
                           <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Farm Location</label>
+                            <input
+                              type="text"
+                              value={editFormData.farm_location || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, farm_location: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Farm Coordinates</label>
+                            <input
+                              type="text"
+                              value={editFormData.farm_coordinates || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, farm_coordinates: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Lat, Long"
+                            />
+                          </div>
+
+                          <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Farm Area (hectares)</label>
                             <input
                               type="number"
@@ -1588,6 +1609,100 @@ const UserManagement: React.FC = () => {
                               value={editFormData.farm_area_hectares || ''}
                               onChange={(e) => setEditFormData({ ...editFormData, farm_area_hectares: e.target.value })}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Years in Farming</label>
+                            <input
+                              type="number"
+                              value={editFormData.years_in_farming || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, years_in_farming: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Type of Abaca Planted</label>
+                            <input
+                              type="text"
+                              value={editFormData.type_of_abaca_planted || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, type_of_abaca_planted: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Average Harvest (kg)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editFormData.average_harvest_volume_kg || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, average_harvest_volume_kg: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Harvest Frequency (weeks)</label>
+                            <input
+                              type="number"
+                              value={editFormData.harvest_frequency_weeks || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, harvest_frequency_weeks: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Min Selling Price (₱/kg)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editFormData.selling_price_range_min || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, selling_price_range_min: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Max Selling Price (₱/kg)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editFormData.selling_price_range_max || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, selling_price_range_max: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Regular Buyer</label>
+                            <input
+                              type="text"
+                              value={editFormData.regular_buyer || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, regular_buyer: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Income per Cycle (₱)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editFormData.income_per_cycle || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, income_per_cycle: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+                            <textarea
+                              value={editFormData.remarks || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              rows={3}
                             />
                           </div>
                         </>

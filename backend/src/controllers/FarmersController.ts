@@ -161,7 +161,7 @@ export class FarmersController {
         address
       });
 
-      // Update farmer profile
+      // Update farmer profile (Personal details only)
       const { data, error } = await supabase
         .from('farmers')
         .update({
@@ -170,13 +170,7 @@ export class FarmersController {
           address,
           sex,
           age: age ? parseInt(age) : null,
-          barangay,
-          municipality,
-          association_name,
           profile_photo: profilePhoto || null,
-          farm_location,
-          farm_coordinates,
-          farm_area_hectares: farm_area_hectares ? parseFloat(farm_area_hectares) : null,
           updated_at: new Date().toISOString()
         })
         .eq('farmer_id', userId)

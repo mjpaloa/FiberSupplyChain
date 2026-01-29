@@ -273,102 +273,11 @@ const EditFarmerProfile: React.FC<EditFarmerProfileProps> = ({ onBack }) => {
               <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5" /> Location
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Address</label>
-                  <textarea name="address" value={formData.address} onChange={handleInputChange} required rows={2}
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none" />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Barangay</label>
-                  <input type="text" name="barangay" value={formData.barangay} onChange={handleInputChange} required
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Municipality</label>
-                  <input type="text" name="municipality" value={formData.municipality} onChange={handleInputChange} required
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
-              </div>
-            </div>
-
-            {/* Association */}
-            <div className="p-4 sm:p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
-              <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Building2 className="w-4 h-4 sm:w-5 sm:h-5" /> Association
-              </h3>
               <div>
-                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Association Name</label>
-                <input type="text" name="association_name" value={formData.association_name} onChange={handleInputChange} required
-                  className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-              </div>
-            </div>
-
-            {/* Farm Information */}
-            <div className="p-4 sm:p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
-              <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Tractor className="w-4 h-4 sm:w-5 sm:h-5" /> Farm Information
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Farm Location</label>
-                  <textarea name="farm_location" value={formData.farm_location} onChange={handleInputChange} required rows={2}
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none" />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Farm Area (hectares)</label>
-                  <input type="number" name="farm_area_hectares" value={formData.farm_area_hectares} onChange={handleInputChange} required min="0" step="0.01"
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Years in Farming</label>
-                  <input type="number" name="years_in_farming" value={formData.years_in_farming} onChange={handleInputChange} required min="0"
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Type of Abaca Planted</label>
-                  <input type="text" name="type_of_abaca_planted" value={formData.type_of_abaca_planted} onChange={handleInputChange} required
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Average Harvest (kg)</label>
-                  <input type="number" name="average_harvest_volume_kg" value={formData.average_harvest_volume_kg} onChange={handleInputChange} required min="0" step="0.01"
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Harvest Frequency (weeks)</label>
-                  <input type="number" name="harvest_frequency_weeks" value={formData.harvest_frequency_weeks} onChange={handleInputChange} required min="0"
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
-              </div>
-            </div>
-
-            {/* Sales Information */}
-            <div className="p-4 sm:p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200">
-              <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <PhilippinePeso className="w-4 h-4 sm:w-5 sm:h-5" /> Sales Information
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Min Price (₱/kg)</label>
-                  <input type="number" name="selling_price_range_min" value={formData.selling_price_range_min} onChange={handleInputChange} required min="0" step="0.01"
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Max Price (₱/kg)</label>
-                  <input type="number" name="selling_price_range_max" value={formData.selling_price_range_max} onChange={handleInputChange} required min="0" step="0.01"
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Regular Buyer</label>
-                  <input type="text" name="regular_buyer" value={formData.regular_buyer} onChange={handleInputChange}
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Income per Cycle (₱)</label>
-                  <input type="number" name="income_per_cycle" value={formData.income_per_cycle} onChange={handleInputChange} required min="0" step="0.01"
-                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
-                </div>
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Address</label>
+                <textarea name="address" value={formData.address} onChange={handleInputChange} required rows={2}
+                  className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                  placeholder="Purok, Barangay, Municipality" />
               </div>
             </div>
 
