@@ -19,7 +19,11 @@ import {
   AlertCircle,
   TrendingUp,
   UserX,
-  RotateCcw
+  RotateCcw,
+  User,
+  DollarSign,
+  Briefcase,
+  Shield
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -1437,9 +1441,11 @@ const UserManagement: React.FC = () => {
               <div className="p-6">
                 <form onSubmit={(e) => { e.preventDefault(); handleUpdateUser(); }}>
                   {/* Personal Information */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <User className="w-5 h-5 text-blue-600" /> Personal Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           {activeTab === 'buyers' ? 'Owner Name' : 'Full Name'} *
@@ -1542,14 +1548,15 @@ const UserManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Farm/Business Information */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                      {activeTab === 'farmers' ? 'Farm Information' : 'Business Information'}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {activeTab === 'farmers' ? (
-                        <>
+                  {/* Farm & Sales Information */}
+                  {activeTab === 'farmers' ? (
+                    <div className="space-y-6">
+                      {/* Location & Association */}
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                          <MapPin className="w-5 h-5 text-orange-600" /> Location & Association
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
                             <input
@@ -1559,7 +1566,6 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Municipality</label>
                             <input
@@ -1569,7 +1575,6 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Barangay</label>
                             <input
@@ -1579,9 +1584,8 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Farm Location</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Farm Location (Specific Address)</label>
                             <input
                               type="text"
                               value={editFormData.farm_location || ''}
@@ -1589,18 +1593,25 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
-                          <div>
+                          <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Farm Coordinates</label>
                             <input
                               type="text"
                               value={editFormData.farm_coordinates || ''}
                               onChange={(e) => setEditFormData({ ...editFormData, farm_coordinates: e.target.value })}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="Lat, Long"
+                              placeholder="Latitude, Longitude"
                             />
                           </div>
+                        </div>
+                      </div>
 
+                      {/* Farm Details */}
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-purple-600" /> Farm Details
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Farm Area (hectares)</label>
                             <input
@@ -1611,7 +1622,6 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Years in Farming</label>
                             <input
@@ -1621,8 +1631,7 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
-                          <div>
+                          <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Type of Abaca Planted</label>
                             <input
                               type="text"
@@ -1631,7 +1640,15 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
+                        </div>
+                      </div>
 
+                      {/* Sales & Productivity */}
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                          <DollarSign className="w-5 h-5 text-emerald-600" /> Sales & Productivity
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Average Harvest (kg)</label>
                             <input
@@ -1642,7 +1659,6 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Harvest Frequency (weeks)</label>
                             <input
@@ -1652,7 +1668,6 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Min Selling Price (₱/kg)</label>
                             <input
@@ -1663,7 +1678,6 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Max Selling Price (₱/kg)</label>
                             <input
@@ -1674,7 +1688,6 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
                           <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Regular Buyer</label>
                             <input
@@ -1684,7 +1697,6 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Income per Cycle (₱)</label>
                             <input
@@ -1695,85 +1707,93 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
+                        </div>
+                      </div>
 
-                          <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-                            <textarea
-                              value={editFormData.remarks || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              rows={3}
-                            />
-                          </div>
-                        </>
-                      ) : activeTab === 'buyers' ? (
-                        <>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
-                            <input
-                              type="text"
-                              value={editFormData.business_name || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, business_name: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Business Address</label>
-                            <input
-                              type="text"
-                              value={editFormData.business_address || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, business_address: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">License/Accreditation</label>
-                            <input
-                              type="text"
-                              value={editFormData.license_or_accreditation || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, license_or_accreditation: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Buying Schedule</label>
-                            <input
-                              type="text"
-                              value={editFormData.buying_schedule || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, buying_schedule: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
-                            <input
-                              type="text"
-                              value={editFormData.association_name || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, association_name: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                            <input
-                              type="text"
-                              value={editFormData.position || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, position: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                          </div>
-                        </>
-                      )}
+                      {/* Remarks */}
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Remarks</label>
+                        <textarea
+                          value={editFormData.remarks || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          rows={3}
+                          placeholder="General observations or monitoring notes..."
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : activeTab === 'buyers' ? (
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <Briefcase className="w-5 h-5 text-indigo-600" /> Business Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
+                          <input
+                            type="text"
+                            value={editFormData.business_name || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, business_name: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Business Address</label>
+                          <input
+                            type="text"
+                            value={editFormData.business_address || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, business_address: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">License/Accreditation</label>
+                          <input
+                            type="text"
+                            value={editFormData.license_or_accreditation || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, license_or_accreditation: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Buying Schedule</label>
+                          <input
+                            type="text"
+                            value={editFormData.buying_schedule || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, buying_schedule: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <Shield className="w-5 h-5 text-red-600" /> Member Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
+                          <input
+                            type="text"
+                            value={editFormData.association_name || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, association_name: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                          <input
+                            type="text"
+                            value={editFormData.position || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, position: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
@@ -1797,8 +1817,8 @@ const UserManagement: React.FC = () => {
                 </form>
               </div>
             ) : (
-              <div className="p-12 text-center">
-                <p className="text-gray-600">No data available</p>
+              <div className="p-12 text-center text-gray-500">
+                No data available
               </div>
             )}
           </div>
@@ -1806,95 +1826,99 @@ const UserManagement: React.FC = () => {
       )}
 
       {/* Rejection Modal */}
-      {showRejectModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <AlertCircle className="w-6 h-6 text-red-600" />
-                Reject Application
-              </h2>
-              <p className="text-sm text-gray-600 mt-2">
-                Please provide a reason for rejecting this {activeTab === 'farmers' ? 'farmer' : 'buyer'} application.
-                This will be sent to the applicant.
-              </p>
-            </div>
-
-            <div className="p-6">
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">Applicant</p>
-                <p className="font-semibold text-gray-900">{selectedUser.name}</p>
-                <p className="text-sm text-gray-600">{selectedUser.email}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rejection Reason *
-                </label>
-                <textarea
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="e.g., Incomplete documents, Invalid ID, Business permit expired..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                  rows={4}
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Be specific and professional. This helps the applicant understand what needs to be corrected.
+      {
+        showRejectModal && selectedUser && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-lg w-full">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                  Reject Application
+                </h2>
+                <p className="text-sm text-gray-600 mt-2">
+                  Please provide a reason for rejecting this {activeTab === 'farmers' ? 'farmer' : 'buyer'} application.
+                  This will be sent to the applicant.
                 </p>
               </div>
-            </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setRejectionReason('');
-                  setSelectedUser(null);
-                }}
-                className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleReject}
-                disabled={!rejectionReason.trim()}
-                className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                <XCircle className="w-5 h-5" />
-                Reject Application
-              </button>
+              <div className="p-6">
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">Applicant</p>
+                  <p className="font-semibold text-gray-900">{selectedUser.name}</p>
+                  <p className="text-sm text-gray-600">{selectedUser.email}</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rejection Reason *
+                  </label>
+                  <textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="e.g., Incomplete documents, Invalid ID, Business permit expired..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    rows={4}
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Be specific and professional. This helps the applicant understand what needs to be corrected.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setRejectionReason('');
+                    setSelectedUser(null);
+                  }}
+                  className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleReject}
+                  disabled={!rejectionReason.trim()}
+                  className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <XCircle className="w-5 h-5" />
+                  Reject Application
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Fullscreen Image Modal */}
-      {fullscreenImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
-          onClick={() => setFullscreenImage(null)}
-        >
-          <button
+      {
+        fullscreenImage && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
             onClick={() => setFullscreenImage(null)}
-            className="absolute top-4 right-4 text-white bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full p-3 transition-all"
           >
-            <XCircle className="w-8 h-8" />
-          </button>
-          <div className="max-w-7xl max-h-full flex items-center justify-center">
-            <img
-              src={fullscreenImage}
-              alt="Fullscreen view"
-              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <button
+              onClick={() => setFullscreenImage(null)}
+              className="absolute top-4 right-4 text-white bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full p-3 transition-all"
+            >
+              <XCircle className="w-8 h-8" />
+            </button>
+            <div className="max-w-7xl max-h-full flex items-center justify-center">
+              <img
+                src={fullscreenImage}
+                alt="Fullscreen view"
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            <p className="absolute bottom-4 text-white text-sm bg-black bg-opacity-50 px-4 py-2 rounded-full">
+              Click anywhere to close
+            </p>
           </div>
-          <p className="absolute bottom-4 text-white text-sm bg-black bg-opacity-50 px-4 py-2 rounded-full">
-            Click anywhere to close
-          </p>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
