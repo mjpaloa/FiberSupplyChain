@@ -165,7 +165,8 @@ export class MAOController {
       let query = supabase
         .from('monitoring_records')
         .select('*')
-        .order('date_of_visit', { ascending: false });
+        .order('date_of_visit', { ascending: false })
+        .range(0, 9999);
 
       // If user is a regular officer (not super admin), show records they created
       // If user is a regular officer (not super admin), show records they created
