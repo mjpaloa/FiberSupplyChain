@@ -689,10 +689,10 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         totalFiberKg: deliveries.reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
         deliveredFiberKg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status)).reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
         cancelledFiberKg: deliveries.filter((d: any) => d.status === 'Cancelled').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
-        classA_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && d.grade === 'Class A').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
-        classB_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && d.grade === 'Class B').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
-        classC_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && d.grade === 'Class C').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
-        totalValue: deliveries.filter((d: any) => d.status === 'Completed').reduce((sum: number, d: any) => sum + parseFloat(d.total_amount || 0), 0),
+        classA_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && (d.grade || '').match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)).reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+        classB_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && (d.grade || '').match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)).reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+        classC_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && (d.grade || '').match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)).reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+        totalValue: deliveries.filter((d: any) => d.status === 'Completed' || d.status === 'Delivered').reduce((sum: number, d: any) => sum + parseFloat(d.total_amount || 0), 0),
         rawDeliveries: deliveries // Store raw deliveries for filtering
       };
 
@@ -990,6 +990,41 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     fetchDashboardData();
     fetchNotifications();
   }, []);
+
+  // Sync selected years to latest available data when dashboard data loads
+  useEffect(() => {
+    if (!loadingDashboard && dashboardData) {
+      // 1. Seedlings / Production latest year
+      const prodYears = Object.keys(dashboardData.production.monthlyStatsByYear || {}).map(Number);
+      if (prodYears.length > 0) {
+        const latest = Math.max(...prodYears);
+        setSeedlingMonthYear(latest);
+      }
+
+      // 2. Monitoring latest year
+      const monYears = Object.keys((dashboardData.production as any).monitoringStatsByYear || {}).map(Number);
+      if (monYears.length > 0) {
+        const latest = Math.max(...monYears);
+        setMonitoringMonthYear(latest);
+      }
+
+      // 3. Sales & Deliveries latest year
+      const allSalesData = [
+        ...(dashboardData.sales?.allSales || dashboardData.sales?.recentSales || []),
+        ...(dashboardData.deliveries?.rawDeliveries || []).filter((d: any) => d.status === 'Completed' || d.status === 'Delivered')
+      ];
+
+      const salesYears = Array.from(new Set(
+        allSalesData.map((s: any) => new Date(s.sale_date || s.delivery_date || s.created_at).getFullYear())
+      )).filter(y => !isNaN(y) && y > 2000);
+
+      if (salesYears.length > 0) {
+        const latest = Math.max(...salesYears);
+        setSalesMonthYear(latest);
+        setDeliveryMonthYear(latest);
+      }
+    }
+  }, [loadingDashboard]);
 
   // Fetch notifications for MAO officer
   const fetchNotifications = async () => {
@@ -1616,8 +1651,10 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 >
                                   {Array.from(new Set([
                                     new Date().getFullYear(),
-                                    ...Object.keys(dashboardData.production.monthlyStatsByYear || {}).map(Number)
-                                  ])).sort((a, b) => b - a).map(year => (
+                                    ...Object.keys(dashboardData.production.monthlyStatsByYear || {}).map(Number),
+                                    ...Object.keys(dashboardData.production.yearlyReceived || {}).map(Number),
+                                    ...Object.keys(dashboardData.production.yearlyDistributed || {}).map(Number)
+                                  ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
                                     <option key={year} value={year}>{year}</option>
                                   ))}
                                 </select>
@@ -1669,13 +1706,14 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 const yearlyDistributed = prodData.yearlyDistributed || {};
                                 const yearlyHarvest = prodData.yearlyHarvest || {};
 
-                                // Get all unique years from data
+                                // Get all unique years from all data sources
                                 const years = Array.from(new Set([
                                   new Date().getFullYear(),
-                                  ...Object.keys(yearlyReceived).map(Number),
-                                  ...Object.keys(yearlyDistributed).map(Number),
-                                  ...Object.keys(yearlyHarvest).map(Number)
-                                ])).sort((a, b) => a - b);
+                                  ...Object.keys(yearlyReceived || {}).map(Number),
+                                  ...Object.keys(yearlyDistributed || {}).map(Number),
+                                  ...Object.keys(yearlyHarvest || {}).map(Number),
+                                  ...Object.keys(prodData.monthlyStatsByYear || {}).map(Number)
+                                ])).filter(y => y > 2000).sort((a, b) => a - b);
 
                                 chartData = years.map(year => ({
                                   period: year.toString(),
@@ -1886,8 +1924,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               >
                                 {Array.from(new Set([
                                   new Date().getFullYear(),
-                                  ...Object.keys((dashboardData.production as any).monitoringStatsByYear || {}).map(Number)
-                                ])).sort((a, b) => b - a).map(year => (
+                                  ...Object.keys((dashboardData.production as any).monitoringStatsByYear || {}).map(Number),
+                                  ...Object.keys((dashboardData.production as any).yearlyMonitoring || {}).map(Number)
+                                ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
                                   <option key={year} value={year}>{year}</option>
                                 ))}
                               </select>
@@ -1949,11 +1988,12 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               const yearlyNeedsSupport = (dashboardData.production as any).yearlyNeedsSupport || {};
                               const yearlyDamaged = (dashboardData.production as any).yearlyDamaged || {};
 
-                              // Get all unique years
+                              // Get all unique years from both stats sources
                               const years = Array.from(new Set([
                                 new Date().getFullYear(),
-                                ...Object.keys(yearlyMonitoring).map(Number)
-                              ])).sort((a, b) => a - b);
+                                ...Object.keys(yearlyMonitoring || {}).map(Number),
+                                ...Object.keys((dashboardData.production as any).monitoringStatsByYear || {}).map(Number)
+                              ])).filter(y => y > 2000).sort((a, b) => a - b);
 
                               chartData = years.map(year => ({
                                 period: year.toString(),
@@ -2109,34 +2149,23 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           unit="kg"
                         />
                         <StatsCard
-                          title="Total Value"
-                          value={`₱${dashboardData.deliveries.totalValue.toLocaleString()}`}
-                          subValue={
-                            <div className="flex flex-col gap-1 mt-1 text-[10px] w-full">
-                              <div className="flex justify-between items-center border-b border-indigo-400/30 pb-0.5">
-                                <span className="opacity-80">Class A:</span>
-                                <span className="font-bold">{dashboardData.deliveries.classA_Kg.toLocaleString()} kg</span>
-                              </div>
-                              <div className="flex justify-between items-center border-b border-indigo-400/30 pb-0.5">
-                                <span className="opacity-80">Class C:</span>
-                                <span className="font-bold">{dashboardData.deliveries.classC_Kg.toLocaleString()} kg</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="opacity-80">Class B:</span>
-                                <span className="font-bold">{dashboardData.deliveries.classB_Kg.toLocaleString()} kg</span>
-                              </div>
-                            </div>
-                          }
-                          icon={<Coins className="w-6 h-6 text-white" />}
-                          gradient="from-indigo-500 via-indigo-600 to-indigo-700"
-                        />
-                        <StatsCard
-                          title="Cancelled Abaca (kg)"
-                          value={dashboardData.deliveries.cancelledFiberKg.toLocaleString()}
-                          subValue="Total fiber cancelled into this"
+                          title="Cancelled Deliveries"
+                          value={dashboardData.deliveries.cancelled || 0}
+                          subValue="total cancelled delivery transactions"
                           icon={<X className="w-6 h-6 text-white" />}
                           gradient="from-red-500 via-red-600 to-red-700"
-                          unit="kg"
+                        />
+                        <StatsCard
+                          title="Delivery Completion Rate"
+                          value={`${(((dashboardData.deliveries.completed || 0) + (dashboardData.deliveries.delivered || 0)) / (dashboardData.deliveries.totalDeliveries || 1) * 100).toFixed(0)}%`}
+                          subValue={
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-bold text-white uppercase tracking-tighter text-[10px]">Completion Rate</span>
+                              <span className="opacity-80 text-[10px] mt-0.5">{dashboardData.deliveries.cancelled || 0} cancelled records</span>
+                            </div>
+                          }
+                          icon={<TrendingUp className="w-6 h-6 text-white" />}
+                          gradient="from-amber-500 via-amber-600 to-amber-700"
                         />
                       </div>
 
@@ -2258,8 +2287,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 >
                                   {Array.from(new Set([
                                     new Date().getFullYear(),
-                                    ...dashboardData.deliveries?.rawDeliveries?.map((d: any) => new Date(d.created_at).getFullYear()) || []
-                                  ])).sort((a, b) => b - a).map(year => (
+                                    ...(dashboardData.deliveries?.rawDeliveries || []).map((d: any) => new Date(d.created_at || d.delivery_date).getFullYear())
+                                  ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
                                     <option key={year} value={year}>{year}</option>
                                   ))}
                                 </select>
@@ -2575,8 +2604,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 >
                                   {Array.from(new Set([
                                     new Date().getFullYear(),
-                                    ...(dashboardData.sales?.recentSales || []).map((s: any) => new Date(s.sale_date).getFullYear())
-                                  ])).sort((a, b) => b - a).map(year => (
+                                    ...(dashboardData.sales?.allSales || dashboardData.sales?.recentSales || []).map((s: any) => new Date(s.sale_date).getFullYear()),
+                                    ...(dashboardData.deliveries?.rawDeliveries || []).filter((d: any) => d.status === 'Completed' || d.status === 'Delivered').map((d: any) => new Date(d.delivery_date).getFullYear())
+                                  ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
                                     <option key={year} value={year}>{year}</option>
                                   ))}
                                 </select>
@@ -2628,7 +2658,15 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
                           <div className="w-full">
                             {(() => {
-                              const allSales = dashboardData.sales?.allSales || dashboardData.sales?.recentSales || [];
+                              const allSales = [
+                                ...(dashboardData.sales?.allSales || dashboardData.sales?.recentSales || []),
+                                ...(dashboardData.deliveries?.rawDeliveries?.filter((d: any) => d.status === 'Completed' || d.status === 'Delivered') || []).map((d: any) => ({
+                                  ...d,
+                                  sale_date: d.delivery_date,
+                                  total_amount: parseFloat(d.total_amount || 0),
+                                  abaca_type: d.grade || d.fiber_class
+                                }))
+                              ];
                               const currentYear = new Date().getFullYear();
                               let chartData = [];
 
@@ -2645,7 +2683,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                     const amount = (sale.total_amount || 0);
                                     const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
 
-                                    if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1/i)) salesA[month] += amount;
+                                    if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) salesA[month] += amount;
                                     else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[month] += amount;
                                     else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[month] += amount;
                                   }
@@ -2674,7 +2712,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                     const amount = (sale.total_amount || 0);
                                     const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
 
-                                    if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1/i)) salesA[yearIdx] += amount;
+                                    if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) salesA[yearIdx] += amount;
                                     else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[yearIdx] += amount;
                                     else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[yearIdx] += amount;
                                   }

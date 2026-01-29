@@ -168,8 +168,28 @@ export class AdminReportsController {
 
       if (pendingError) throw pendingError;
 
-      // Get farmer names separately
-      const farmerIds = [...new Set((salesReports || []).map(s => s.farmer_id))];
+      // NEW: Also get completed fiber deliveries (which are also sales)
+      const { data: deliveries, error: deliveriesError } = await supabase
+        .from('fiber_deliveries')
+        .select(`
+          id,
+          delivery_date,
+          grade,
+          quantity_kg,
+          total_amount,
+          farmer_id,
+          status
+        `)
+        .eq('status', 'Completed');
+
+      if (deliveriesError) console.error('Error fetching deliveries for sales report:', deliveriesError);
+
+      // Get farmer names for everyone
+      const farmerIds = [...new Set([
+        ...(salesReports || []).map(s => s.farmer_id),
+        ...(deliveries || []).map(d => d.farmer_id)
+      ])].filter(Boolean);
+
       const { data: farmers } = await supabase
         .from('farmers')
         .select('farmer_id, full_name')
@@ -177,14 +197,22 @@ export class AdminReportsController {
 
       const farmerMap = new Map(farmers?.map(f => [f.farmer_id, f.full_name]) || []);
 
-      // Calculate approved totals
-      const totalKgSold = salesReports?.reduce(
+      // Calculate approved totals (Reports + Completed Deliveries)
+      const totalKgSoldFromReports = salesReports?.reduce(
         (sum, s) => sum + (parseFloat(s.quantity_sold) || 0), 0
       ) || 0;
+      const totalKgSoldFromDeliveries = deliveries?.reduce(
+        (sum, d) => sum + (parseFloat(d.quantity_kg) || 0), 0
+      ) || 0;
+      const totalKgSold = totalKgSoldFromReports + totalKgSoldFromDeliveries;
 
-      const totalAmount = salesReports?.reduce(
+      const totalAmountFromReports = salesReports?.reduce(
         (sum, s) => sum + (parseFloat(s.total_amount) || 0), 0
       ) || 0;
+      const totalAmountFromDeliveries = deliveries?.reduce(
+        (sum, d) => sum + (parseFloat(d.total_amount) || 0), 0
+      ) || 0;
+      const totalAmount = totalAmountFromReports + totalAmountFromDeliveries;
 
       // Calculate pending totals
       const pendingKgSold = pendingSalesReports?.reduce(
@@ -203,15 +231,28 @@ export class AdminReportsController {
       const numberOfBuyers = uniqueBuyers.size;
 
       // Format all sales for processing
-      const allSales = (salesReports || []).map(sale => ({
-        sale_date: sale.sale_date,
-        farmer_name: farmerMap.get(sale.farmer_id) || 'Unknown',
-        buyer_company_name: sale.buyer_company_name,
-        quantity_sold: parseFloat(sale.quantity_sold),
-        unit_price: parseFloat(sale.unit_price),
-        total_amount: parseFloat(sale.total_amount),
-        abaca_type: sale.abaca_type
-      }));
+      const allSales = [
+        ...(salesReports || []).map(sale => ({
+          sale_date: sale.sale_date,
+          farmer_name: farmerMap.get(sale.farmer_id) || 'Unknown',
+          buyer_company_name: sale.buyer_company_name,
+          quantity_sold: parseFloat(sale.quantity_sold),
+          unit_price: parseFloat(sale.unit_price),
+          total_amount: parseFloat(sale.total_amount),
+          abaca_type: sale.abaca_type,
+          source: 'report'
+        })),
+        ...(deliveries || []).map(d => ({
+          sale_date: d.delivery_date,
+          farmer_name: farmerMap.get(d.farmer_id) || 'Unknown Farmer',
+          buyer_company_name: 'Association/Buyer',
+          quantity_sold: parseFloat(d.quantity_kg),
+          unit_price: d.quantity_kg > 0 ? d.total_amount / d.quantity_kg : 0,
+          total_amount: parseFloat(d.total_amount),
+          abaca_type: d.grade,
+          source: 'delivery'
+        }))
+      ].sort((a, b) => new Date(b.sale_date).getTime() - new Date(a.sale_date).getTime());
 
       res.status(200).json({
         totalKgSold: Math.round(totalKgSold * 100) / 100,
@@ -244,6 +285,31 @@ export class AdminReportsController {
 
       if (salesError) throw salesError;
 
+      // NEW: Also fetch completed fiber deliveries (which are also sales)
+      const { data: deliveries, error: deliveriesError } = await supabase
+        .from('fiber_deliveries')
+        .select('id, delivery_date, grade, quantity_kg, total_amount, status')
+        .eq('status', 'Completed')
+        .order('delivery_date', { ascending: false });
+
+      if (deliveriesError) throw deliveriesError;
+
+      // Combine both sources of sales data
+      const unifiedSales = [
+        ...(salesReports || []).map(r => ({
+          date: r.sale_date,
+          type: r.abaca_type,
+          quantity: parseFloat(r.quantity_sold || 0),
+          amount: parseFloat(r.total_amount || 0)
+        })),
+        ...(deliveries || []).map(d => ({
+          date: d.delivery_date,
+          type: d.grade,
+          quantity: parseFloat(d.quantity_kg || 0),
+          amount: parseFloat(d.total_amount || 0)
+        }))
+      ];
+
       const currentYear = new Date().getFullYear();
 
       // Initialize data structures for monthly and yearly tracking
@@ -261,14 +327,14 @@ export class AdminReportsController {
         }
       } = {};
 
-      // Process each sales report
-      (salesReports || []).forEach((report: any) => {
-        const date = new Date(report.sale_date);
+      // Process each unified sale record
+      unifiedSales.forEach((sale: any) => {
+        const date = new Date(sale.date);
         const year = date.getFullYear();
         const monthIndex = date.getMonth();
-        const quantity = parseFloat(report.quantity_sold || 0);
-        const amount = parseFloat(report.total_amount || 0);
-        const fiberClass = (report.abaca_type || '').toLowerCase().trim();
+        const quantity = sale.quantity;
+        const amount = sale.amount;
+        const fiberClass = (sale.type || '').toLowerCase().trim();
 
         // Initialize year if not exists
         if (!monthlyStatsByYear[year]) {
@@ -289,8 +355,8 @@ export class AdminReportsController {
         }
 
         // Categorize by fiber class - extremely robust matching
-        // Matches: "A", "Class A", "Grade A", "Fiber A", "Class-A", "Grade 1", etc.
-        if (fiberClass.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1/i)) {
+        // Matches: "A", "Class A", "Grade A", "Fiber A", "Class-A", "Grade 1", "Superior", etc.
+        if (fiberClass.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) {
           monthlyStatsByYear[year].volumeA[monthIndex] += quantity;
           monthlyStatsByYear[year].salesA[monthIndex] += amount;
           yearlyStats[year].volumeA += quantity;

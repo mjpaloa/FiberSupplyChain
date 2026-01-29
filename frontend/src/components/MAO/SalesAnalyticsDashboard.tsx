@@ -143,7 +143,7 @@ const SalesAnalyticsDashboard: React.FC = () => {
 
                     const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
 
-                    if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1/i)) {
+                    if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) {
                         monthlyStatsByYear[year].volumeA[month] += qty;
                         monthlyStatsByYear[year].salesA[month] += amt;
                         yearlyStats[year].volumeA += qty;

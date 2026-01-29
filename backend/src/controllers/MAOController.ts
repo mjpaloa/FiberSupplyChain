@@ -168,11 +168,12 @@ export class MAOController {
         .order('date_of_visit', { ascending: false });
 
       // If user is a regular officer (not super admin), show records they created
-      if (!isSuperAdmin) {
-        // Show all records created by this officer
-        query = query.eq('created_by', userId);
-        console.log('🔍 Filtering by created_by:', userId);
-      }
+      // If user is a regular officer (not super admin), show records they created
+      // if (!isSuperAdmin) {
+      //   // Show all records created by this officer
+      //   query = query.eq('created_by', userId);
+      //   console.log('🔍 Filtering by created_by:', userId);
+      // }
 
       const { data, error } = await query;
 
