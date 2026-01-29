@@ -185,7 +185,11 @@ export class MAOController {
       }
 
       console.log(`✅ Found ${data?.length || 0} monitoring records`);
-      res.status(200).json({ records: data || [] });
+      res.status(200).json({
+        records: data || [],
+        serverTime: new Date().toISOString(),
+        limit: 10000
+      });
     } catch (error) {
       console.error('❌ Error in getMonitoringRecords:', error);
       res.status(500).json({ error: 'Failed to fetch monitoring records' });
