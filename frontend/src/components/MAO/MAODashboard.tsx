@@ -1543,7 +1543,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                       : 'text-gray-600 hover:text-gray-800'
                       }`}
                   >
-                    <span className="hidden sm:inline">Sales & Delivery Reports</span>
+                    <span className="hidden sm:inline">Sales & Delivery</span>
                     <span className="sm:hidden">Sales & Delivery</span>
                   </button>
                   <button
