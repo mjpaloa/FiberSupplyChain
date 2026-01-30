@@ -474,6 +474,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [salesChartView, setSalesChartView] = useState<'monthly' | 'yearly'>('yearly');
   const [deliveryStatusView, setDeliveryStatusView] = useState<'monthly' | 'yearly'>('yearly');
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  const [trendsView, setTrendsView] = useState<'monthly' | 'yearly'>('monthly');
+  const [trendsYear, setTrendsYear] = useState(new Date().getFullYear());
 
   // Modern Stats Card Component - Premium Design
   const StatsCard: React.FC<{
@@ -703,22 +705,25 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       let monthlyHarvest = new Array(12).fill(0);
 
       // Seedling / Production maps
-      const monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[] } } = {};
+      const monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[], planted: number[] } } = {};
       const yearlyReceived: { [year: number]: number } = {};
       const yearlyDistributed: { [year: number]: number } = {};
       const yearlyHarvest: { [year: number]: number } = {};
+      const yearlyPlanted: { [year: number]: number } = {};
 
       const ensureYearInStats = (year: number) => {
         if (!monthlyStatsByYear[year]) {
           monthlyStatsByYear[year] = {
             received: new Array(12).fill(0),
             distributed: new Array(12).fill(0),
-            harvested: new Array(12).fill(0)
+            harvested: new Array(12).fill(0),
+            planted: new Array(12).fill(0)
           };
         }
         if (!yearlyReceived[year]) yearlyReceived[year] = 0;
         if (!yearlyDistributed[year]) yearlyDistributed[year] = 0;
         if (!yearlyHarvest[year]) yearlyHarvest[year] = 0;
+        if (!yearlyPlanted[year]) yearlyPlanted[year] = 0;
       };
 
       // Process deliveries for monthly harvest (production)
@@ -776,16 +781,30 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             console.log('🚜 Processing farmer distributions (Distributed):', farmerDists.length, 'records');
 
             farmerDists.forEach((dist: any) => {
+              // Process Distributed
               const dateStr = dist.date_distributed || dist.created_at;
-              if (!dateStr) return;
-              const date = new Date(dateStr);
-              const year = date.getFullYear();
-              const monthIndex = date.getMonth();
-              const quantity = parseInt(dist.quantity_distributed || 0);
+              if (dateStr) {
+                const date = new Date(dateStr);
+                const year = date.getFullYear();
+                const monthIndex = date.getMonth();
+                const quantity = parseInt(dist.quantity_distributed || 0);
 
-              ensureYearInStats(year);
-              monthlyStatsByYear[year].distributed[monthIndex] += quantity;
-              yearlyDistributed[year] += quantity;
+                ensureYearInStats(year);
+                monthlyStatsByYear[year].distributed[monthIndex] += quantity;
+                yearlyDistributed[year] += quantity;
+              }
+
+              // Process Planted (Only if status is planted)
+              if (dist.status === 'planted' && dist.planting_date) {
+                const plantingDate = new Date(dist.planting_date);
+                const pYear = plantingDate.getFullYear();
+                const pMonth = plantingDate.getMonth();
+                const pQuantity = parseInt(dist.quantity_distributed || 0);
+
+                ensureYearInStats(pYear);
+                monthlyStatsByYear[pYear].planted[pMonth] += pQuantity;
+                yearlyPlanted[pYear] += pQuantity;
+              }
             });
           }
         } catch (err) {
@@ -956,6 +975,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           yearlyReceived,
           yearlyDistributed,
           yearlyHarvest,
+          yearlyPlanted,
           yearlyMonitoring: yearlyMonitoringData,
           yearlyHealthy: yearlyHealthyData,
           yearlyNeedsSupport: yearlyNeedsSupportData,
@@ -1870,8 +1890,179 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                       </div>
                     </div>
 
+                    {/* Planted vs Harvested Trend Chart - New Addition */}
+                    <div className="bg-white rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col mt-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-1.5 h-10 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full shadow-lg shadow-emerald-200"></div>
+                          <div>
+                            <h3 className="text-xl font-black text-gray-900 tracking-tight">Production Trends</h3>
+                            <p className="text-sm text-gray-500 font-medium mt-0.5">Planted vs Harvested Comparative Analysis</p>
+                          </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex items-center gap-3">
+                          {trendsView === 'monthly' && (
+                            <select
+                              className="text-gray-700 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-xl px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              value={trendsYear}
+                              onChange={(e) => setTrendsYear(parseInt(e.target.value))}
+                            >
+                              {Array.from(new Set([
+                                new Date().getFullYear(),
+                                ...Object.keys(dashboardData.production.monthlyStatsByYear || {}).map(Number),
+                                ...Object.keys(dashboardData.production.yearlyDistributed || {}).map(Number)
+                              ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
+                                <option key={year} value={year}>{year}</option>
+                              ))}
+                            </select>
+                          )}
+                          <div className="flex gap-1 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-100">
+                            <button
+                              onClick={() => setTrendsView('monthly')}
+                              className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${trendsView === 'monthly'
+                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                }`}
+                            >
+                              Monthly
+                            </button>
+                            <button
+                              onClick={() => setTrendsView('yearly')}
+                              className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${trendsView === 'yearly'
+                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                }`}
+                            >
+                              Yearly
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Legend */}
+                      <div className="flex flex-wrap items-center gap-3 mb-6">
+                        <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                          <Sprout className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">Planted</span>
+                        </div>
+                        <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-50 to-orange-100/50 rounded-xl border border-orange-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                          <Award className="w-3.5 h-3.5 text-orange-600" />
+                          <span className="text-xs font-black text-orange-700 uppercase tracking-wider">Harvested</span>
+                        </div>
+                      </div>
+
+                      <div className="w-full">
+                        {(() => {
+                          let chartData: any[] = [];
+                          const prodData: any = dashboardData.production;
+
+                          if (trendsView === 'yearly') {
+                            const yearlyPlanted = prodData.yearlyPlanted || {};
+                            const yearlyHarvest = prodData.yearlyHarvest || {};
+
+                            const years = Array.from(new Set([
+                              new Date().getFullYear(),
+                              ...Object.keys(yearlyPlanted || {}).map(Number),
+                              ...Object.keys(yearlyHarvest || {}).map(Number)
+                            ])).filter(y => y > 2000).sort((a, b) => a - b);
+
+                            chartData = years.map(year => ({
+                              period: year.toString(),
+                              planted: yearlyPlanted[year] || 0,
+                              harvested: yearlyHarvest[year] || 0
+                            }));
+                          } else {
+                            const stats = prodData.monthlyStatsByYear?.[trendsYear] || {
+                              planted: new Array(12).fill(0),
+                              harvested: new Array(12).fill(0)
+                            };
+                            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                            chartData = labels.map((label, i) => ({
+                              period: label,
+                              planted: stats.planted ? stats.planted[i] : (stats.distributed ? stats.distributed[i] : 0), // Fallback if planted missing during transition
+                              harvested: stats.harvested[i]
+                            }));
+                          }
+
+                          return (
+                            <div className="overflow-x-auto rounded-3xl bg-white/50 backdrop-blur-sm p-4 border border-white/60 shadow-inner">
+                              <div style={{ minWidth: trendsView === 'monthly' ? '700px' : '100%', width: '100%' }}>
+                                <ResponsiveContainer width="100%" height={420}>
+                                  <RechartsBarChart
+                                    data={chartData}
+                                    margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                                    barGap={6}
+                                    barCategoryGap={chartData.length < 5 ? "30%" : "15%"}
+                                  >
+                                    <defs>
+                                      <linearGradient id="plantedGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
+                                        <stop offset="100%" stopColor="#059669" stopOpacity={0.7} />
+                                      </linearGradient>
+                                      <linearGradient id="harvestedGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#fb923c" stopOpacity={0.9} />
+                                        <stop offset="100%" stopColor="#f97316" stopOpacity={0.7} />
+                                      </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
+                                    <XAxis
+                                      dataKey="period"
+                                      stroke="#6b7280"
+                                      style={{ fontSize: '13px', fontWeight: 600 }}
+                                      axisLine={false}
+                                      tickLine={false}
+                                      dy={10}
+                                    />
+                                    <YAxis
+                                      stroke="#6b7280"
+                                      style={{ fontSize: '13px', fontWeight: 600 }}
+                                      axisLine={false}
+                                      tickLine={false}
+                                      dx={-5}
+                                    />
+                                    <Tooltip
+                                      contentStyle={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                                        backdropFilter: 'blur(10px)',
+                                        border: 'none',
+                                        borderRadius: '16px',
+                                        padding: '12px 16px',
+                                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                                        fontWeight: 600
+                                      }}
+                                      itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
+                                      cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
+                                    />
+                                    <Bar
+                                      dataKey="planted"
+                                      name="Planted"
+                                      fill="url(#plantedGradient)"
+                                      radius={[8, 8, 0, 0]}
+                                      barSize={chartData.length < 5 ? 60 : 35}
+                                    />
+                                    <Bar
+                                      dataKey="harvested"
+                                      name="Harvested"
+                                      fill="url(#harvestedGradient)"
+                                      radius={[8, 8, 0, 0]}
+                                      barSize={chartData.length < 5 ? 60 : 35}
+                                    />
+                                  </RechartsBarChart>
+                                </ResponsiveContainer>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
                     {/* FIELD MONITORING - Simple */}
-                    <div className="mb-8">
+                    <div className="mt-16 mb-8">
                       <h2 className="text-2xl font-semibold text-gray-900 mb-6">Field Monitoring</h2>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -3216,8 +3407,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               </form>
             </div>
           </div>
-        )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
