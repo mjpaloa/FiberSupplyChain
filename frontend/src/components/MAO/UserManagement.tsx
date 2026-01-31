@@ -21,7 +21,7 @@ import {
   UserX,
   RotateCcw,
   User,
-  DollarSign,
+  Coins,
   Briefcase,
   Shield
 } from 'lucide-react';
@@ -343,7 +343,7 @@ const UserManagement: React.FC = () => {
           'Years in Farming',
           'Type of Abaca Planted',
           'Average Harvest Volume (kg)',
-          'Harvest Frequency (weeks)',
+          'Harvest Cycle Duration (Weeks)',
           'Selling Price Min (₱/kg)',
           'Selling Price Max (₱/kg)',
           'Regular Buyer',
@@ -1266,7 +1266,7 @@ const UserManagement: React.FC = () => {
                           <p className="font-semibold text-gray-900">{selectedUserDetails.average_harvest_volume_kg || 'Not provided'}</p>
                         </div>
                         <div className="bg-white p-4 rounded-lg shadow-sm">
-                          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Harvest Frequency (weeks)</p>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Harvest Cycle Duration (Weeks)</p>
                           <p className="font-medium text-gray-900">{selectedUserDetails.harvest_frequency_weeks || 'Not provided'}</p>
                         </div>
                         <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -1646,7 +1646,7 @@ const UserManagement: React.FC = () => {
                       {/* Sales & Productivity */}
                       <div>
                         <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                          <DollarSign className="w-5 h-5 text-emerald-600" /> Sales & Productivity
+                          <Coins className="w-5 h-5 text-emerald-600" /> Sales & Productivity
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                           <div>
@@ -1660,7 +1660,7 @@ const UserManagement: React.FC = () => {
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Harvest Frequency (weeks)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Harvest Cycle Duration (Weeks)</label>
                             <input
                               type="number"
                               value={editFormData.harvest_frequency_weeks || ''}

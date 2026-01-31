@@ -1802,6 +1802,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                           }}
                                           itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
                                           cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
+                                          formatter={(value: any) => `${Math.round(Number(value)).toLocaleString()} seedlings`}
                                         />
                                         <Bar
                                           dataKey="received"
@@ -2037,6 +2038,15 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                       }}
                                       itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
                                       cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
+                                      formatter={(value: any, name: string) => {
+                                        const formattedValue = Math.round(Number(value)).toLocaleString();
+                                        if (name === 'Planted') {
+                                          return `${formattedValue} seedlings`;
+                                        } else if (name === 'Harvested') {
+                                          return `${formattedValue} kg`;
+                                        }
+                                        return formattedValue;
+                                      }}
                                     />
                                     <Bar
                                       dataKey="planted"
@@ -2268,6 +2278,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                         }}
                                         cursor={{ fill: 'rgba(59, 130, 246, 0.05)', radius: 8 }}
                                         labelStyle={{ fontWeight: 700, color: '#111827', marginBottom: '8px' }}
+                                        formatter={(value: any) => Math.round(Number(value)).toLocaleString()}
                                       />
 
                                       <Bar
