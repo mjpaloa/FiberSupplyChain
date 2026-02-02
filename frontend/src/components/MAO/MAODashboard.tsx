@@ -118,10 +118,11 @@ interface DashboardState {
     monthlyReceived: number[];
     monthlyDistributed: number[];
     monthlyHarvest?: number[]; // Added for compatibility
-    monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[] } };
+    monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[], planted: number[] } };
     yearlyReceived: { [year: number]: number };
     yearlyDistributed: { [year: number]: number };
     yearlyHarvest: { [year: number]: number };
+    yearlyPlanted: { [year: number]: number };
     yearlyMonitoring: { [year: number]: number };
     yearlyHealthy: { [year: number]: number };
     yearlyNeedsSupport: { [year: number]: number };
@@ -423,6 +424,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       yearlyReceived: {},
       yearlyDistributed: {},
       yearlyHarvest: {},
+      yearlyPlanted: {},
       yearlyMonitoring: {},
       yearlyHealthy: {},
       yearlyNeedsSupport: {},
@@ -476,6 +478,399 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
   const [trendsView, setTrendsView] = useState<'monthly' | 'yearly'>('monthly');
   const [trendsYear, setTrendsYear] = useState(new Date().getFullYear());
+
+  // Insight Modal States
+  const [showInsightModal, setShowInsightModal] = useState(false);
+  const [currentInsight, setCurrentInsight] = useState<{
+    title: string;
+    insights: string[];
+    view: 'monthly' | 'yearly';
+  } | null>(null);
+
+  // Insight Modal Component
+  const InsightModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    title: string;
+    insights: string[];
+    view: 'monthly' | 'yearly';
+  }> = ({ isOpen, onClose, title, insights, view }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+        <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 rounded-t-3xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <Eye className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-white">{title}</h3>
+                  <p className="text-sm text-white/80 font-medium">
+                    {view === 'monthly' ? 'Monthly' : 'Yearly'} Insights
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-white/20 rounded-xl transition-all"
+              >
+                <X className="w-6 h-6 text-white" />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-4">
+            {insights.map((insight, idx) => (
+              <div
+                key={idx}
+                className="flex gap-4 p-4 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200/50 hover:shadow-md transition-all"
+              >
+                <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg">
+                  {idx + 1}
+                </div>
+                <p className="text-gray-700 font-medium leading-relaxed flex-1">
+                  {insight}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="sticky bottom-0 bg-gray-50 p-4 rounded-b-3xl border-t border-gray-200">
+            <button
+              onClick={onClose}
+              className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg"
+            >
+              Close Insights
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Helper functions to generate insights
+  const generateSeedlingInsights = (view: 'monthly' | 'yearly', year?: number): string[] => {
+    const insights: string[] = [];
+    const prodData = dashboardData.production;
+
+    if (view === 'monthly' && year) {
+      const stats = prodData.monthlyStatsByYear?.[year] || { received: new Array(12).fill(0), distributed: new Array(12).fill(0) };
+      const totalReceived = stats.received.reduce((a, b) => a + b, 0);
+      const totalDistributed = stats.distributed.reduce((a, b) => a + b, 0);
+      const maxReceivedMonth = stats.received.indexOf(Math.max(...stats.received));
+      const maxDistributedMonth = stats.distributed.indexOf(Math.max(...stats.distributed));
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+      // Summary Statistics
+      insights.push(`📊 SUMMARY: In ${year}, you received ${totalReceived.toLocaleString()} seedlings and distributed ${totalDistributed.toLocaleString()} seedlings to farmers.`);
+
+      // Distribution Efficiency with Performance Rating
+      const distributionRate = totalReceived > 0 ? ((totalDistributed / totalReceived) * 100).toFixed(1) : '0';
+      const remaining = totalReceived - totalDistributed;
+      if (parseFloat(distributionRate) >= 90) {
+        insights.push(`✅ EXCELLENT: ${distributionRate}% distribution efficiency! Outstanding job getting seedlings to farmers.`);
+      } else if (parseFloat(distributionRate) >= 70) {
+        insights.push(`⚠️ GOOD: ${distributionRate}% efficiency. ${remaining.toLocaleString()} seedlings still available for distribution.`);
+      } else if (totalReceived > 0) {
+        insights.push(`🔴 ATTENTION NEEDED: Only ${distributionRate}% distributed. ${remaining.toLocaleString()} seedlings need urgent distribution.`);
+      }
+
+      // Peak Performance Analysis
+      if (totalReceived > 0) {
+        const peakReceived = stats.received[maxReceivedMonth];
+        const avgReceived = totalReceived / 12;
+        const peakVsAvg = ((peakReceived / avgReceived - 1) * 100).toFixed(0);
+        insights.push(`📈 PEAK RECEIVING: ${months[maxReceivedMonth]} - ${peakReceived.toLocaleString()} seedlings (${peakVsAvg}% above average).`);
+      }
+
+      if (totalDistributed > 0) {
+        insights.push(`🚚 PEAK DISTRIBUTION: ${months[maxDistributedMonth]} with ${stats.distributed[maxDistributedMonth].toLocaleString()} seedlings.`);
+      }
+
+      // Trend Analysis
+      const firstHalf = stats.distributed.slice(0, 6).reduce((a: number, b: number) => a + b, 0);
+      const secondHalf = stats.distributed.slice(6, 12).reduce((a: number, b: number) => a + b, 0);
+      if (secondHalf > firstHalf && firstHalf > 0) {
+        const growth = ((secondHalf / firstHalf - 1) * 100).toFixed(1);
+        insights.push(`📊 POSITIVE TREND: Distribution increased ${growth}% in H2. Keep the momentum!`);
+      } else if (firstHalf > secondHalf && secondHalf > 0) {
+        const decline = ((1 - secondHalf / firstHalf) * 100).toFixed(1);
+        insights.push(`⚠️ DECLINING TREND: Distribution decreased ${decline}% in H2. Review strategies.`);
+      }
+
+      // Recommendations
+      if (remaining > 0) {
+        insights.push(`💡 ACTION: Prioritize distributing ${remaining.toLocaleString()} remaining seedlings to maximize farmer support.`);
+      }
+    } else {
+      const yearlyReceived = prodData.yearlyReceived || {};
+      const yearlyDistributed = prodData.yearlyDistributed || {};
+      const years = Object.keys(yearlyReceived).map(Number).sort((a, b) => b - a);
+
+      if (years.length > 0) {
+        const latestYear = years[0];
+        const latestReceived = yearlyReceived[latestYear] || 0;
+        const latestDistributed = yearlyDistributed[latestYear] || 0;
+
+        insights.push(`📊 ${latestYear}: Received ${latestReceived.toLocaleString()} seedlings, distributed ${latestDistributed.toLocaleString()}.`);
+
+        // Year-over-Year Comparison
+        if (years.length > 1) {
+          const prevYear = years[1];
+          const prevReceived = yearlyReceived[prevYear] || 0;
+          const prevDistributed = yearlyDistributed[prevYear] || 0;
+
+          const receivedGrowth = prevReceived > 0 ? ((latestReceived - prevReceived) / prevReceived * 100).toFixed(1) : '0';
+          const distributedGrowth = prevDistributed > 0 ? ((latestDistributed - prevDistributed) / prevDistributed * 100).toFixed(1) : '0';
+
+          if (parseFloat(receivedGrowth) > 0) {
+            insights.push(`📈 RECEIVING: +${receivedGrowth}% vs ${prevYear} (+${(latestReceived - prevReceived).toLocaleString()} seedlings).`);
+          } else if (parseFloat(receivedGrowth) < 0) {
+            insights.push(`📉 RECEIVING: ${receivedGrowth}% vs ${prevYear}. Consider increasing procurement.`);
+          }
+
+          if (parseFloat(distributedGrowth) > 0) {
+            insights.push(`✅ DISTRIBUTION: +${distributedGrowth}% vs ${prevYear}. Excellent farmer support growth!`);
+          } else if (parseFloat(distributedGrowth) < 0) {
+            insights.push(`⚠️ DISTRIBUTION: ${distributedGrowth}% vs ${prevYear}. Review distribution strategies.`);
+          }
+        }
+
+        // Historical Performance
+        const totalAllYears = Object.values(yearlyReceived).reduce((a: number, b: number) => a + b, 0) as number;
+        const totalDistributedAllYears = Object.values(yearlyDistributed).reduce((a: number, b: number) => a + b, 0) as number;
+        const overallEfficiency = totalAllYears > 0 ? ((totalDistributedAllYears / totalAllYears) * 100).toFixed(1) : '0';
+
+        insights.push(`📊 HISTORICAL: ${totalAllYears.toLocaleString()} total seedlings across ${years.length} year(s), ${overallEfficiency}% efficiency.`);
+
+        // Best Year
+        const bestYearEntries = Object.entries(yearlyDistributed).sort((a: [string, any], b: [string, any]) => (b[1] as number) - (a[1] as number));
+        if (bestYearEntries.length > 0) {
+          const bestYear = bestYearEntries[0];
+          insights.push(`🏆 BEST YEAR: ${bestYear[0]} with ${(bestYear[1] as number).toLocaleString()} seedlings distributed!`);
+        }
+
+        // Projection
+        if (years.length >= 2) {
+          const avgGrowth = years.slice(0, -1).reduce((sum, year, idx) => {
+            const nextYear = years[idx + 1];
+            if (nextYear && yearlyReceived[nextYear] > 0) {
+              return sum + ((yearlyReceived[year] - yearlyReceived[nextYear]) / yearlyReceived[nextYear]);
+            }
+            return sum;
+          }, 0) / (years.length - 1);
+
+          if (avgGrowth > 0) {
+            const projected = Math.round(latestReceived * (1 + avgGrowth));
+            insights.push(`🔮 PROJECTION: Expect ~${projected.toLocaleString()} seedlings next year (${(avgGrowth * 100).toFixed(1)}% growth).`);
+          }
+        }
+      } else {
+        insights.push('📊 No yearly data available. Start tracking to see insights!');
+      }
+    }
+
+    return insights.length > 0 ? insights : ['No data available for insights'];
+  };
+
+  const generateProductionTrendsInsights = (view: 'monthly' | 'yearly', year?: number): string[] => {
+    const insights: string[] = [];
+    const prodData = dashboardData.production;
+
+    if (view === 'monthly' && year) {
+      const stats = prodData.monthlyStatsByYear?.[year] || { planted: new Array(12).fill(0), harvested: new Array(12).fill(0) };
+      const totalPlanted = stats.planted?.reduce((a: number, b: number) => a + b, 0) || 0;
+      const totalHarvested = stats.harvested?.reduce((a: number, b: number) => a + b, 0) || 0;
+
+      insights.push(`Total planted in ${year}: ${totalPlanted.toLocaleString()} seedlings`);
+      insights.push(`Total harvested in ${year}: ${totalHarvested.toLocaleString()} kg`);
+
+      if (totalPlanted > 0 && totalHarvested > 0) {
+        const yieldPerSeedling = (totalHarvested / totalPlanted).toFixed(2);
+        insights.push(`Average yield: ${yieldPerSeedling} kg per seedling planted`);
+      }
+    } else {
+      const yearlyPlanted = prodData.yearlyPlanted || {};
+      const yearlyHarvest = prodData.yearlyHarvest || {};
+      const years = Object.keys(yearlyHarvest).map(Number).sort((a: number, b: number) => b - a);
+
+      if (years.length > 0) {
+        const latestYear = years[0];
+        insights.push(`Latest year (${latestYear}): ${(yearlyHarvest[latestYear] || 0).toLocaleString()} kg harvested`);
+
+        const totalHarvest = Object.values(yearlyHarvest).reduce((a: number, b: number) => a + b, 0);
+        insights.push(`Total harvest across all years: ${totalHarvest.toLocaleString()} kg`);
+      }
+    }
+
+    return insights.length > 0 ? insights : ['No data available for insights'];
+  };
+
+  const generateMonitoringInsights = (view: 'monthly' | 'yearly', year?: number): string[] => {
+    const insights: string[] = [];
+    const prodData = dashboardData.production as any;
+
+    if (view === 'monthly' && year) {
+      const stats = prodData.monitoringStatsByYear?.[year] || { total: new Array(12).fill(0), healthy: new Array(12).fill(0), needsSupport: new Array(12).fill(0), damaged: new Array(12).fill(0) };
+      const totalMonitoring = stats.total.reduce((a: number, b: number) => a + b, 0);
+      const totalHealthy = stats.healthy.reduce((a: number, b: number) => a + b, 0);
+      const totalNeedsSupport = stats.needsSupport.reduce((a: number, b: number) => a + b, 0);
+      const totalDamaged = stats.damaged.reduce((a: number, b: number) => a + b, 0);
+
+      insights.push(`Total monitoring visits in ${year}: ${totalMonitoring.toLocaleString()}`);
+      if (totalMonitoring > 0) {
+        const healthyPercent = ((totalHealthy / totalMonitoring) * 100).toFixed(1);
+        insights.push(`Healthy farms: ${healthyPercent}% (${totalHealthy} visits)`);
+        insights.push(`Farms needing support: ${totalNeedsSupport} visits`);
+        insights.push(`Damaged farms: ${totalDamaged} visits`);
+      }
+    } else {
+      const yearlyMonitoring = prodData.yearlyMonitoring || {};
+      const yearlyHealthy = prodData.yearlyHealthy || {};
+      const years = Object.keys(yearlyMonitoring).map(Number).sort((a, b) => b - a);
+
+      if (years.length > 0) {
+        const latestYear = years[0];
+        const total = yearlyMonitoring[latestYear] || 0;
+        const healthy = yearlyHealthy[latestYear] || 0;
+        insights.push(`Latest year (${latestYear}): ${total.toLocaleString()} monitoring visits`);
+        if (total > 0) {
+          const healthyPercent = ((healthy / total) * 100).toFixed(1);
+          insights.push(`Farm health rate: ${healthyPercent}% healthy`);
+        }
+      }
+    }
+
+    return insights.length > 0 ? insights : ['No data available for insights'];
+  };
+
+  const generateDeliveryInsights = (view: 'monthly' | 'yearly', year?: number): string[] => {
+    const insights: string[] = [];
+    const rawDeliveries = dashboardData.deliveries?.rawDeliveries || [];
+
+    if (view === 'monthly' && year) {
+      const yearDeliveries = rawDeliveries.filter((d: any) => new Date(d.created_at || d.delivery_date).getFullYear() === year);
+      const totalKg = yearDeliveries.reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0);
+      const classAKg = yearDeliveries.filter((d: any) => d.grade === 'Class A').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0);
+      const classBKg = yearDeliveries.filter((d: any) => d.grade === 'Class B').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0);
+      const classCKg = yearDeliveries.filter((d: any) => d.grade === 'Class C').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0);
+
+      insights.push(`Total fiber delivered in ${year}: ${totalKg.toLocaleString()} kg`);
+      insights.push(`Class A: ${classAKg.toLocaleString()} kg (${totalKg > 0 ? ((classAKg / totalKg) * 100).toFixed(1) : 0}%)`);
+      insights.push(`Class B: ${classBKg.toLocaleString()} kg (${totalKg > 0 ? ((classBKg / totalKg) * 100).toFixed(1) : 0}%)`);
+      insights.push(`Class C: ${classCKg.toLocaleString()} kg (${totalKg > 0 ? ((classCKg / totalKg) * 100).toFixed(1) : 0}%)`);
+    } else {
+      const yearlyData: { [year: number]: { total: number, classA: number, classB: number, classC: number } } = {};
+      rawDeliveries.forEach((d: any) => {
+        const year = new Date(d.created_at || d.delivery_date).getFullYear();
+        if (!yearlyData[year]) yearlyData[year] = { total: 0, classA: 0, classB: 0, classC: 0 };
+        const kg = parseFloat(d.quantity_kg || 0);
+        yearlyData[year].total += kg;
+        if (d.grade === 'Class A') yearlyData[year].classA += kg;
+        else if (d.grade === 'Class B') yearlyData[year].classB += kg;
+        else if (d.grade === 'Class C') yearlyData[year].classC += kg;
+      });
+
+      const years = Object.keys(yearlyData).map(Number).sort((a, b) => b - a);
+      if (years.length > 0) {
+        const latestYear = years[0];
+        const data = yearlyData[latestYear];
+        insights.push(`Latest year (${latestYear}): ${data.total.toLocaleString()} kg delivered`);
+        insights.push(`Quality distribution: Class A ${((data.classA / data.total) * 100).toFixed(1)}%, Class B ${((data.classB / data.total) * 100).toFixed(1)}%, Class C ${((data.classC / data.total) * 100).toFixed(1)}%`);
+      }
+    }
+
+    return insights.length > 0 ? insights : ['No data available for insights'];
+  };
+
+  const generateSalesPerformanceInsights = (view: 'monthly' | 'yearly', year?: number): string[] => {
+    const insights: string[] = [];
+    // Combine sales and completed deliveries
+    const allSales = [
+      ...(dashboardData.sales?.allSales || dashboardData.sales?.recentSales || []),
+      ...(dashboardData.deliveries?.rawDeliveries?.filter((d: any) => d.status === 'Completed' || d.status === 'Delivered') || []).map((d: any) => ({
+        ...d,
+        sale_date: d.delivery_date,
+        total_amount: d.total_amount || (parseFloat(d.quantity_kg || 0) * (d.grade === 'Class A' ? 550 : d.grade === 'Class B' ? 450 : 350))
+      }))
+    ];
+
+    if (view === 'monthly' && year) {
+      const yearlySales = allSales.filter((s: any) => new Date(s.sale_date).getFullYear() === year);
+      const totalSales = yearlySales.reduce((sum: number, s: any) => sum + parseFloat(s.total_amount || 0), 0);
+
+      const classASales = yearlySales.filter((s: any) => s.grade === 'Class A').reduce((sum: number, s: any) => sum + parseFloat(s.total_amount || 0), 0);
+      const classBSales = yearlySales.filter((s: any) => s.grade === 'Class B').reduce((sum: number, s: any) => sum + parseFloat(s.total_amount || 0), 0);
+      const classCSales = yearlySales.filter((s: any) => s.grade === 'Class C').reduce((sum: number, s: any) => sum + parseFloat(s.total_amount || 0), 0);
+
+      insights.push(`📊 SUMMARY: In ${year}, total fiber sales generated ₱${totalSales.toLocaleString()}.`);
+
+      if (totalSales > 0) {
+        const topClass = classASales > classBSales && classASales > classCSales ? 'Class A' : classBSales > classCSales ? 'Class B' : 'Class C';
+        const topAmount = Math.max(classASales, classBSales, classCSales);
+        const topPercent = ((topAmount / totalSales) * 100).toFixed(1);
+
+        insights.push(`🏆 TOP PERFORMER: ${topClass} contributed ₱${topAmount.toLocaleString()} (${topPercent}% of total sales).`);
+
+        insights.push(`💰 Class A: ₱${classASales.toLocaleString()} (${((classASales / totalSales) * 100).toFixed(1)}%)`);
+        insights.push(`💰 Class B: ₱${classBSales.toLocaleString()} (${((classBSales / totalSales) * 100).toFixed(1)}%)`);
+        insights.push(`💰 Class C: ₱${classCSales.toLocaleString()} (${((classCSales / totalSales) * 100).toFixed(1)}%)`);
+      }
+
+      // Monthly Trend
+      const salesByMonth = new Array(12).fill(0);
+      yearlySales.forEach((s: any) => {
+        const month = new Date(s.sale_date).getMonth();
+        salesByMonth[month] += parseFloat(s.total_amount || 0);
+      });
+
+      const maxMonthIdx = salesByMonth.indexOf(Math.max(...salesByMonth));
+      if (salesByMonth[maxMonthIdx] > 0) {
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        insights.push(`📈 PEAK MONTH: ${months[maxMonthIdx]} generated the highest sales of ₱${salesByMonth[maxMonthIdx].toLocaleString()}.`);
+      }
+
+    } else {
+      const salesByYear: { [key: number]: number } = {};
+      const classAByYear: { [key: number]: number } = {};
+
+      allSales.forEach((s: any) => {
+        const y = new Date(s.sale_date).getFullYear();
+        const amount = parseFloat(s.total_amount || 0);
+        salesByYear[y] = (salesByYear[y] || 0) + amount;
+        if (s.grade === 'Class A') classAByYear[y] = (classAByYear[y] || 0) + amount;
+      });
+
+      const years = Object.keys(salesByYear).map(Number).sort((a, b) => b - a);
+
+      if (years.length > 0) {
+        const latestYear = years[0];
+        const latestTotal = salesByYear[latestYear];
+
+        insights.push(`📊 ${latestYear}: Total sales reached ₱${latestTotal.toLocaleString()}.`);
+
+        if (years.length > 1) {
+          const prevYear = years[1];
+          const growth = latestTotal - salesByYear[prevYear];
+          const growthPercent = ((growth / salesByYear[prevYear]) * 100).toFixed(1);
+
+          if (growth > 0) {
+            insights.push(`📈 GROWTH: Sales increased by ${growthPercent}% (+₱${growth.toLocaleString()}) compared to ${prevYear}.`);
+          } else {
+            insights.push(`📉 DECLINE: Sales decreased by ${Math.abs(parseFloat(growthPercent))}% compared to ${prevYear}.`);
+          }
+        }
+
+        const totalAllTime = Object.values(salesByYear).reduce((a, b) => a + b, 0);
+        insights.push(`💰 LIFETIME SALES: ₱${totalAllTime.toLocaleString()} generated across all years.`);
+      }
+    }
+
+    return insights.length > 0 ? insights : ['No data available for insights'];
+  };
 
   // Modern Stats Card Component - Premium Design
   const StatsCard: React.FC<{
@@ -1699,6 +2094,20 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   Yearly
                                 </button>
                               </div>
+                              <button
+                                onClick={() => {
+                                  setCurrentInsight({
+                                    title: 'Seedling Distribution Overview',
+                                    insights: generateSeedlingInsights(chartView, chartView === 'monthly' ? seedlingMonthYear : undefined),
+                                    view: chartView
+                                  });
+                                  setShowInsightModal(true);
+                                }}
+                                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-black hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                              >
+                                <Eye className="w-4 h-4" />
+                                Insights
+                              </button>
                             </div>
                           </div>
 
@@ -1761,8 +2170,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                       <RechartsBarChart
                                         data={chartData}
                                         margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-                                        barGap={6}
-                                        barCategoryGap={chartData.length < 5 ? "30%" : "15%"}
+                                        barGap={chartView === 'monthly' ? 12 : 4}
+                                        barCategoryGap={chartData.length < 5 ? "30%" : "20%"}
                                       >
                                         <defs>
                                           <linearGradient id="receivedGradient" x1="0" y1="0" x2="0" y2="1">
@@ -1809,14 +2218,18 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                           name="Received (Assoc)"
                                           fill="url(#receivedGradient)"
                                           radius={[8, 8, 0, 0]}
-                                          barSize={chartData.length < 5 ? 60 : 35}
+                                          barSize={chartData.length < 5 ? 55 : 38}
+                                          stroke="#fff"
+                                          strokeWidth={4}
                                         />
                                         <Bar
                                           dataKey="distributed"
                                           name="Completely Distributed"
                                           fill="url(#distributedGradient)"
                                           radius={[8, 8, 0, 0]}
-                                          barSize={chartData.length < 5 ? 60 : 35}
+                                          barSize={chartData.length < 5 ? 55 : 38}
+                                          stroke="#fff"
+                                          strokeWidth={4}
                                         />
                                       </RechartsBarChart>
                                     </ResponsiveContainer>
@@ -1939,6 +2352,20 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               Yearly
                             </button>
                           </div>
+                          <button
+                            onClick={() => {
+                              setCurrentInsight({
+                                title: 'Production Trends',
+                                insights: generateProductionTrendsInsights(trendsView, trendsView === 'monthly' ? trendsYear : undefined),
+                                view: trendsView
+                              });
+                              setShowInsightModal(true);
+                            }}
+                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-black hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Insights
+                          </button>
                         </div>
                       </div>
 
@@ -2152,6 +2579,20 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 Yearly
                               </button>
                             </div>
+                            <button
+                              onClick={() => {
+                                setCurrentInsight({
+                                  title: 'Monitoring Status Overview',
+                                  insights: generateMonitoringInsights(monitoringView, monitoringView === 'monthly' ? monitoringMonthYear : undefined),
+                                  view: monitoringView
+                                });
+                                setShowInsightModal(true);
+                              }}
+                              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-black hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              Insights
+                            </button>
                           </div>
                         </div>
 
@@ -2515,6 +2956,20 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   Yearly
                                 </button>
                               </div>
+                              <button
+                                onClick={() => {
+                                  setCurrentInsight({
+                                    title: 'Delivery Analytics',
+                                    insights: generateDeliveryInsights(deliveryView, deliveryView === 'monthly' ? deliveryMonthYear : undefined),
+                                    view: deliveryView
+                                  });
+                                  setShowInsightModal(true);
+                                }}
+                                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-black hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                              >
+                                <Eye className="w-4 h-4" />
+                                Insights
+                              </button>
                             </div>
                           </div>
 
@@ -2596,8 +3051,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                       <RechartsBarChart
                                         data={chartData}
                                         margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-                                        barGap={6}
-                                        barCategoryGap={chartData.length < 5 ? "35%" : "15%"}
+                                        barGap={deliveryView === 'monthly' ? 12 : 4}
+                                        barCategoryGap={chartData.length < 5 ? "35%" : "20%"}
                                       >
                                         <defs>
                                           <linearGradient id="classAGradient" x1="0" y1="0" x2="0" y2="1">
@@ -2650,7 +3105,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                           name="Class A"
                                           fill="url(#classAGradient)"
                                           radius={[6, 6, 0, 0]}
-                                          barSize={deliveryView === 'monthly' ? 24 : 40}
+                                          barSize={deliveryView === 'monthly' ? 32 : 50}
+                                          stroke="#fff"
+                                          strokeWidth={4}
                                           animationDuration={1500}
                                         />
                                         <Bar
@@ -2658,7 +3115,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                           name="Class B"
                                           fill="url(#classBGradient)"
                                           radius={[6, 6, 0, 0]}
-                                          barSize={deliveryView === 'monthly' ? 24 : 40}
+                                          barSize={deliveryView === 'monthly' ? 32 : 50}
+                                          stroke="#fff"
+                                          strokeWidth={4}
                                           animationDuration={1700}
                                         />
                                         <Bar
@@ -2666,7 +3125,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                           name="Class C"
                                           fill="url(#classCGradient)"
                                           radius={[6, 6, 0, 0]}
-                                          barSize={deliveryView === 'monthly' ? 24 : 40}
+                                          barSize={deliveryView === 'monthly' ? 32 : 50}
+                                          stroke="#fff"
+                                          strokeWidth={4}
                                           animationDuration={1900}
                                         />
                                       </RechartsBarChart>
@@ -2839,6 +3300,20 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   Yearly
                                 </button>
                               </div>
+                              <button
+                                onClick={() => {
+                                  setCurrentInsight({
+                                    title: 'Sales Performance Analytics',
+                                    insights: generateSalesPerformanceInsights(salesChartView, salesChartView === 'monthly' ? salesMonthYear : undefined),
+                                    view: salesChartView
+                                  });
+                                  setShowInsightModal(true);
+                                }}
+                                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-black hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                              >
+                                <Eye className="w-4 h-4" />
+                                Insights
+                              </button>
                             </div>
                           </div>
 
@@ -2935,8 +3410,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                       <RechartsBarChart
                                         data={chartData}
                                         margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-                                        barGap={6}
-                                        barCategoryGap={chartData.length < 5 ? "35%" : "15%"}
+                                        barGap={abacaSoldView === 'monthly' ? 12 : 4}
+                                        barCategoryGap={chartData.length < 5 ? "35%" : "20%"}
                                       >
                                         <defs>
                                           <linearGradient id="salesAGradient" x1="0" y1="0" x2="0" y2="1">
@@ -2989,7 +3464,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                           fill="url(#salesAGradient)"
                                           radius={[6, 6, 0, 0]}
                                           animationDuration={1500}
-                                          barSize={abacaSoldView === 'monthly' ? 20 : 35}
+                                          barSize={abacaSoldView === 'monthly' ? 32 : 50}
+                                          stroke="#fff"
+                                          strokeWidth={4}
                                         />
                                         <Bar
                                           name="Class B"
@@ -2997,7 +3474,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                           fill="url(#salesBGradient)"
                                           radius={[6, 6, 0, 0]}
                                           animationDuration={1800}
-                                          barSize={abacaSoldView === 'monthly' ? 20 : 35}
+                                          barSize={abacaSoldView === 'monthly' ? 32 : 50}
+                                          stroke="#fff"
+                                          strokeWidth={4}
                                         />
                                         <Bar
                                           name="Class C"
@@ -3005,7 +3484,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                           fill="url(#salesCGradient)"
                                           radius={[6, 6, 0, 0]}
                                           animationDuration={2100}
-                                          barSize={abacaSoldView === 'monthly' ? 20 : 35}
+                                          barSize={abacaSoldView === 'monthly' ? 32 : 50}
+                                          stroke="#fff"
+                                          strokeWidth={4}
                                         />
                                       </RechartsBarChart>
                                     </ResponsiveContainer>
@@ -3420,6 +3901,20 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           </div>
         )
       }
+
+      {/* Insight Modal */}
+      {currentInsight && (
+        <InsightModal
+          isOpen={showInsightModal}
+          onClose={() => {
+            setShowInsightModal(false);
+            setCurrentInsight(null);
+          }}
+          title={currentInsight.title}
+          insights={currentInsight.insights}
+          view={currentInsight.view}
+        />
+      )}
     </div >
   );
 };
