@@ -9,6 +9,8 @@ interface PlantedSeedling {
   distribution_id: string;
   variety: string;
   quantity_distributed: number;
+  planted_quantity?: number;
+  damaged_quantity?: number;
   planting_date: string;
   planting_location: string;
   planting_notes: string;
@@ -34,7 +36,7 @@ const PlantedSeedlings: React.FC = () => {
   const [municipalityFilter, setMunicipalityFilter] = useState('all');
   const [selectedSeedling, setSelectedSeedling] = useState<PlantedSeedling | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -56,11 +58,13 @@ const PlantedSeedlings: React.FC = () => {
 
       const result = await response.json();
       const plantedOnly = result.farmer_distributions?.filter((d: any) => d.status === 'planted') || [];
-      
+
       const transformedData = plantedOnly.map((d: any) => ({
         distribution_id: d.distribution_id,
         variety: d.variety,
         quantity_distributed: d.quantity_distributed,
+        planted_quantity: d.planted_quantity,
+        damaged_quantity: d.damaged_quantity,
         planting_date: d.planting_date,
         planting_location: d.planting_location,
         planting_notes: d.planting_notes,
@@ -75,7 +79,7 @@ const PlantedSeedlings: React.FC = () => {
         association_name: d.association_officers?.association_name || '',
         date_distributed: d.date_distributed
       }));
-      
+
       setPlantedSeedlings(transformedData);
       setFilteredSeedlings(transformedData);
     } catch (err) {
@@ -118,7 +122,7 @@ const PlantedSeedlings: React.FC = () => {
   const varieties = Array.from(new Set(plantedSeedlings.map(s => s.variety)));
   const municipalities = Array.from(new Set(plantedSeedlings.map(s => s.farmer_municipality)));
 
-  const totalPlanted = filteredSeedlings.reduce((sum, s) => sum + s.quantity_distributed, 0);
+  const totalPlanted = filteredSeedlings.reduce((sum, s) => sum + (s.planted_quantity || s.quantity_distributed), 0);
 
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -254,148 +258,150 @@ const PlantedSeedlings: React.FC = () => {
       {/* Table Card */}
       <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden">
 
-      {/* Table */}
-      {filteredSeedlings.length === 0 ? (
-        <div className="bg-white rounded-b-2xl shadow-lg p-12 text-center">
-          <Sprout className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">No planted seedlings found</p>
-          <p className="text-gray-500 text-sm mt-2">Try adjusting your filters</p>
-        </div>
-      ) : (
-        <>
-          <div className="bg-white/90 backdrop-blur-sm shadow-lg overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Farmer</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Variety</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Quantity</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Planting Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Association</th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Photos</th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {currentItems.map((seedling) => (
-                  <tr key={seedling.distribution_id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-semibold text-gray-900">{seedling.farmer_name}</p>
-                        <p className="text-sm text-gray-600">{seedling.farmer_barangay}, {seedling.farmer_municipality}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
-                        {seedling.variety}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="font-semibold text-gray-900">{seedling.quantity_distributed}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(seedling.planting_date).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <MapPin className="w-4 h-4" />
-                        {seedling.planting_location || 'N/A'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-600">{seedling.association_name}</span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {(seedling.planting_photo_1 || seedling.planting_photo_2 || seedling.planting_photo_3) ? (
-                        <div className="flex items-center justify-center gap-1">
-                          <Camera className="w-4 h-4 text-emerald-600" />
-                          <span className="text-sm text-emerald-600 font-medium">
-                            {[seedling.planting_photo_1, seedling.planting_photo_2, seedling.planting_photo_3].filter(Boolean).length}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">No photos</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => setSelectedSeedling(seedling)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Table */}
+        {filteredSeedlings.length === 0 ? (
+          <div className="bg-white rounded-b-2xl shadow-lg p-12 text-center">
+            <Sprout className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg">No planted seedlings found</p>
+            <p className="text-gray-500 text-sm mt-2">Try adjusting your filters</p>
           </div>
+        ) : (
+          <>
+            <div className="bg-white/90 backdrop-blur-sm shadow-lg overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Farmer</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Variety</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Quantity</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Planting Date</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Association</th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Photos</th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {currentItems.map((seedling) => (
+                    <tr key={seedling.distribution_id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-semibold text-gray-900">{seedling.farmer_name}</p>
+                          <p className="text-sm text-gray-600">{seedling.farmer_barangay}, {seedling.farmer_municipality}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
+                          {seedling.variety}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-gray-900">{seedling.planted_quantity || seedling.quantity_distributed} / {seedling.quantity_distributed}</span>
+                          {seedling.damaged_quantity !== undefined && seedling.damaged_quantity > 0 && (
+                            <span className="text-xs text-red-500 font-medium">{seedling.damaged_quantity} loss</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(seedling.planting_date).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <MapPin className="w-4 h-4" />
+                          {seedling.planting_location || 'N/A'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-600">{seedling.association_name}</span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {(seedling.planting_photo_1 || seedling.planting_photo_2 || seedling.planting_photo_3) ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <Camera className="w-4 h-4 text-emerald-600" />
+                            <span className="text-sm text-emerald-600 font-medium">
+                              {[seedling.planting_photo_1, seedling.planting_photo_2, seedling.planting_photo_3].filter(Boolean).length}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">No photos</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => setSelectedSeedling(seedling)}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Pagination Footer - Matching User Management */}
-          <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-6 py-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              {/* Items per page selector */}
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700">Show entries:</span>
-                <div className="flex gap-2">
-                  {[10, 20, 50].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => {
-                        setItemsPerPage(size);
-                        setCurrentPage(1);
-                      }}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
+            {/* Pagination Footer - Matching User Management */}
+            <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-6 py-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                {/* Items per page selector */}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-700">Show entries:</span>
+                  <div className="flex gap-2">
+                    {[10, 20, 50].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => {
+                          setItemsPerPage(size);
+                          setCurrentPage(1);
+                        }}
+                        className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
                           ? 'bg-emerald-500 text-white shadow-lg'
                           : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                          }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Page info and navigation */}
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">
-                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredSeedlings.length)} of {filteredSeedlings.length} entries
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === 1
+                {/* Page info and navigation */}
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-600">
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredSeedlings.length)} of {filteredSeedlings.length} entries
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                    }`}
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === totalPages
+                        }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                    }`}
-                  >
-                    Next
-                  </button>
+                        }`}
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
       </div>
 
       {/* View Details Modal */}
@@ -406,7 +412,7 @@ const PlantedSeedlings: React.FC = () => {
             <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-green-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold">Planting Details</h2>
-                <p className="text-emerald-100 text-sm mt-1">{selectedSeedling.variety} - {selectedSeedling.quantity_distributed} seedlings</p>
+                <p className="text-emerald-100 text-sm mt-1">{selectedSeedling.variety} - {selectedSeedling.planted_quantity || selectedSeedling.quantity_distributed} / {selectedSeedling.quantity_distributed} planted</p>
               </div>
               <button
                 onClick={() => setSelectedSeedling(null)}
@@ -440,10 +446,21 @@ const PlantedSeedlings: React.FC = () => {
                       <p className="font-semibold text-gray-900">{selectedSeedling.variety}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Quantity</p>
+                      <p className="text-sm text-gray-600 mb-1">Quantity Distributed</p>
                       <p className="font-semibold text-gray-900">{selectedSeedling.quantity_distributed}</p>
                     </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Actual Planted</p>
+                      <p className="font-semibold text-gray-900 text-emerald-600">{selectedSeedling.planted_quantity || selectedSeedling.quantity_distributed}</p>
+                    </div>
                   </div>
+
+                  {selectedSeedling.damaged_quantity !== undefined && selectedSeedling.damaged_quantity > 0 && (
+                    <div>
+                      <p className="text-sm text-red-600 mb-1">Damaged/Died</p>
+                      <p className="font-semibold text-red-600">{selectedSeedling.damaged_quantity}</p>
+                    </div>
+                  )}
 
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Planting Date</p>

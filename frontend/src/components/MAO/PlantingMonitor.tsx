@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Sprout, 
-  Search, 
+import {
+  Sprout,
+  Search,
   Eye,
   Calendar,
   MapPin,
@@ -18,6 +18,8 @@ interface PlantedSeedling {
   seedling_id: string;
   variety: string;
   quantity_distributed: number;
+  planted_quantity?: number;
+  damaged_quantity?: number;
   date_distributed: string;
   planting_date?: string;
   planting_location?: string;
@@ -39,7 +41,7 @@ const PlantingMonitor: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSeedling, setSelectedSeedling] = useState<PlantedSeedling | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState<{[key: string]: number}>({});
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState<{ [key: string]: number }>({});
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>('');
 
@@ -62,7 +64,7 @@ const PlantingMonitor: React.FC = () => {
             seedling.planting_photo_2,
             seedling.planting_photo_3
           ].filter(Boolean);
-          
+
           if (photos.length > 1) {
             const currentIdx = prev[seedling.seedling_id] || 0;
             updated[seedling.seedling_id] = (currentIdx + 1) % photos.length;
@@ -82,13 +84,13 @@ const PlantingMonitor: React.FC = () => {
       const response = await fetch('https://easyabaca-api.vercel.app/api/seedlings/all?status=planted', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (Array.isArray(data)) {
         setPlantedSeedlings(data);
       } else {
@@ -119,7 +121,7 @@ const PlantingMonitor: React.FC = () => {
 
   const stats = {
     totalPlanted: plantedSeedlings.length,
-    totalQuantity: plantedSeedlings.reduce((sum, s) => sum + s.quantity_distributed, 0),
+    totalQuantity: plantedSeedlings.reduce((sum, s) => sum + (s.planted_quantity || s.quantity_distributed), 0),
     thisWeek: plantedSeedlings.filter(s => {
       if (!s.planted_at) return false;
       const plantedDate = new Date(s.planted_at);
@@ -127,7 +129,7 @@ const PlantingMonitor: React.FC = () => {
       weekAgo.setDate(weekAgo.getDate() - 7);
       return plantedDate >= weekAgo;
     }).length,
-    withPhotos: plantedSeedlings.filter(s => 
+    withPhotos: plantedSeedlings.filter(s =>
       s.planting_photo_1 || s.planting_photo_2 || s.planting_photo_3
     ).length
   };
@@ -139,12 +141,13 @@ const PlantingMonitor: React.FC = () => {
     }
 
     const headers = ['Variety', 'Farmer', 'Association', 'Quantity', 'Planting Date', 'Location', 'Planting Method'];
-    
+
     const rows = filteredSeedlings.map(s => [
       s.variety,
       s.farmers?.full_name || 'N/A',
       s.farmers?.association_name || 'N/A',
-      s.quantity_distributed,
+      s.planted_quantity || s.quantity_distributed,
+      s.damaged_quantity || 0,
       s.planting_date ? new Date(s.planting_date).toLocaleDateString() : 'N/A',
       s.planting_location || 'N/A',
       s.planting_notes || 'N/A'
@@ -282,14 +285,14 @@ const PlantingMonitor: React.FC = () => {
                       seedling.planting_photo_2,
                       seedling.planting_photo_3
                     ].filter(Boolean);
-                    
+
                     const currentIndex = currentPhotoIndex[seedling.seedling_id] || 0;
                     const currentPhoto = photos[currentIndex];
 
                     return currentPhoto ? (
                       <>
-                        <img 
-                          src={currentPhoto} 
+                        <img
+                          src={currentPhoto}
                           alt={`Planting ${currentIndex + 1}`}
                           className="w-full h-full object-cover cursor-pointer"
                           onClick={() => {
@@ -303,9 +306,8 @@ const PlantingMonitor: React.FC = () => {
                             {photos.map((_, idx) => (
                               <div
                                 key={idx}
-                                className={`w-2 h-2 rounded-full ${
-                                  idx === currentIndex ? 'bg-white' : 'bg-white/50'
-                                }`}
+                                className={`w-2 h-2 rounded-full ${idx === currentIndex ? 'bg-white' : 'bg-white/50'
+                                  }`}
                               />
                             ))}
                           </div>
@@ -327,25 +329,28 @@ const PlantingMonitor: React.FC = () => {
                 {/* Info */}
                 <div className="p-4">
                   <h3 className="font-bold text-lg text-gray-900 mb-2">{seedling.variety}</h3>
-                  
+
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-gray-600">
                       <User className="w-4 h-4" />
                       <span>{seedling.farmers?.full_name || 'N/A'}</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 text-gray-600">
                       <Sprout className="w-4 h-4" />
-                      <span>{seedling.quantity_distributed} seedlings</span>
+                      <span>{seedling.planted_quantity || seedling.quantity_distributed} / {seedling.quantity_distributed} planted</span>
+                      {seedling.damaged_quantity !== undefined && seedling.damaged_quantity > 0 && (
+                        <span className="text-red-500 font-medium">( {seedling.damaged_quantity} loss )</span>
+                      )}
                     </div>
-                    
+
                     {seedling.planting_date && (
                       <div className="flex items-center gap-2 text-gray-600">
                         <Calendar className="w-4 h-4" />
                         <span>{new Date(seedling.planting_date).toLocaleDateString()}</span>
                       </div>
                     )}
-                    
+
                     {seedling.planting_location && (
                       <div className="flex items-center gap-2 text-gray-600">
                         <MapPin className="w-4 h-4" />
@@ -395,9 +400,19 @@ const PlantingMonitor: React.FC = () => {
                     <span className="ml-2 font-medium text-green-900">{selectedSeedling.variety}</span>
                   </div>
                   <div>
-                    <span className="text-green-700">Quantity:</span>
+                    <span className="text-green-700">Quantity Distributed:</span>
                     <span className="ml-2 font-medium text-green-900">{selectedSeedling.quantity_distributed}</span>
                   </div>
+                  <div>
+                    <span className="text-green-700">Actual Planted:</span>
+                    <span className="ml-2 font-medium text-green-900">{selectedSeedling.planted_quantity || selectedSeedling.quantity_distributed}</span>
+                  </div>
+                  {selectedSeedling.damaged_quantity !== undefined && selectedSeedling.damaged_quantity > 0 && (
+                    <div>
+                      <span className="text-red-700">Damaged/Died:</span>
+                      <span className="ml-2 font-medium text-red-900">{selectedSeedling.damaged_quantity}</span>
+                    </div>
+                  )}
                   <div>
                     <span className="text-green-700">Farmer:</span>
                     <span className="ml-2 font-medium text-green-900">{selectedSeedling.farmers?.full_name}</span>
@@ -446,23 +461,23 @@ const PlantingMonitor: React.FC = () => {
                   <h3 className="font-semibold text-gray-800 mb-3">Planting Photos</h3>
                   <div className="grid grid-cols-3 gap-4">
                     {selectedSeedling.planting_photo_1 && (
-                      <img 
-                        src={selectedSeedling.planting_photo_1} 
-                        alt="Planting 1" 
+                      <img
+                        src={selectedSeedling.planting_photo_1}
+                        alt="Planting 1"
                         className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
                       />
                     )}
                     {selectedSeedling.planting_photo_2 && (
-                      <img 
-                        src={selectedSeedling.planting_photo_2} 
-                        alt="Planting 2" 
+                      <img
+                        src={selectedSeedling.planting_photo_2}
+                        alt="Planting 2"
                         className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
                       />
                     )}
                     {selectedSeedling.planting_photo_3 && (
-                      <img 
-                        src={selectedSeedling.planting_photo_3} 
-                        alt="Planting 3" 
+                      <img
+                        src={selectedSeedling.planting_photo_3}
+                        alt="Planting 3"
                         className="w-full h-48 object-cover rounded-lg border-2 border-green-200"
                       />
                     )}
@@ -476,7 +491,7 @@ const PlantingMonitor: React.FC = () => {
 
       {/* Image Modal */}
       {showImageModal && selectedImage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
           onClick={() => setShowImageModal(false)}
         >
@@ -487,9 +502,9 @@ const PlantingMonitor: React.FC = () => {
             >
               <X className="w-8 h-8" />
             </button>
-            <img 
-              src={selectedImage} 
-              alt="Planting Photo" 
+            <img
+              src={selectedImage}
+              alt="Planting Photo"
               className="max-w-full max-h-[90vh] object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
             />

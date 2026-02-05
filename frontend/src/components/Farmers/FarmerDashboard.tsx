@@ -95,6 +95,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [plantingData, setPlantingData] = useState({
     planting_date: new Date().toISOString().split('T')[0],
     planting_quantity: 0,
+    damaged_quantity: 0,
     planting_location: '',
     planting_notes: '',
     planting_photo_1: '',
@@ -1048,6 +1049,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       const response = await apiPut(`/api/association-seedlings/farmer/${selectedSeedling.distribution_id}/mark-planted`, {
         planting_date: plantingData.planting_date,
         planted_quantity: plantingData.planting_quantity,
+        damaged_quantity: plantingData.damaged_quantity,
         planting_location: plantingData.planting_location,
         planting_notes: plantingData.planting_notes,
         planting_photo_1: plantingData.planting_photo_1,
@@ -1061,6 +1063,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         setPlantingData({
           planting_date: new Date().toISOString().split('T')[0],
           planting_quantity: 0,
+          damaged_quantity: 0,
           planting_location: '',
           planting_notes: '',
           planting_photo_1: '',
@@ -2480,6 +2483,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                     <button
                                       onClick={() => {
                                         setSelectedSeedling(seedling);
+                                        setPlantingData({
+                                          ...plantingData,
+                                          planting_quantity: seedling.quantity_distributed,
+                                          damaged_quantity: 0
+                                        });
                                         setShowPlantingModal(true);
                                       }}
                                       className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
@@ -2617,6 +2625,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   setPlantingData({
                     planting_date: new Date().toISOString().split('T')[0],
                     planting_quantity: 0,
+                    damaged_quantity: 0,
                     planting_location: '',
                     planting_notes: '',
                     planting_photo_1: '',
@@ -2649,15 +2658,56 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
               {/* Planting Form */}
               <form onSubmit={(e) => { e.preventDefault(); handleMarkAsPlanted(); }}>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Planting Date *</label>
-                    <input
-                      type="date"
-                      required
-                      value={plantingData.planting_date}
-                      onChange={(e) => setPlantingData({ ...plantingData, planting_date: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Planting Date *</label>
+                      <input
+                        type="date"
+                        required
+                        value={plantingData.planting_date}
+                        onChange={(e) => setPlantingData({ ...plantingData, planting_date: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Actual Planted *</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        max={selectedSeedling.quantity_distributed}
+                        value={plantingData.planting_quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setPlantingData({
+                            ...plantingData,
+                            planting_quantity: val,
+                            damaged_quantity: Math.max(0, selectedSeedling.quantity_distributed - val)
+                          });
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Damaged/Died</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max={selectedSeedling.quantity_distributed}
+                        value={plantingData.damaged_quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setPlantingData({
+                            ...plantingData,
+                            damaged_quantity: val,
+                            planting_quantity: Math.max(0, selectedSeedling.quantity_distributed - val)
+                          });
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -2734,6 +2784,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       setPlantingData({
                         planting_date: new Date().toISOString().split('T')[0],
                         planting_quantity: 0,
+                        damaged_quantity: 0,
                         planting_location: '',
                         planting_notes: '',
                         planting_photo_1: '',
@@ -2875,6 +2926,20 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         <div>
                           <p className="text-sm text-green-700">Planting Date</p>
                           <p className="font-medium text-green-900">{new Date(selectedSeedling.planting_date).toLocaleDateString()}</p>
+                        </div>
+                      )}
+                      {selectedSeedling.planted_quantity !== undefined && (
+                        <div>
+                          <p className="text-sm text-green-700">Quantity Planted</p>
+                          <p className="font-medium text-green-900">
+                            {selectedSeedling.planted_quantity} / {selectedSeedling.quantity_distributed}
+                          </p>
+                        </div>
+                      )}
+                      {selectedSeedling.damaged_quantity > 0 && (
+                        <div>
+                          <p className="text-sm text-red-700">Damaged/Died</p>
+                          <p className="font-medium text-red-900">{selectedSeedling.damaged_quantity}</p>
                         </div>
                       )}
                       {selectedSeedling.planting_location && (

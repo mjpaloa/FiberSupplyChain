@@ -756,6 +756,8 @@ export class AssociationSeedlingController {
       const updateData: any = {
         status: 'planted',
         planting_date: plantingData.planting_date || null,
+        planted_quantity: plantingData.planted_quantity || null,
+        damaged_quantity: plantingData.damaged_quantity || null,
         planting_location: plantingData.planting_location || null,
         planting_photo_1: plantingData.planting_photo_1 || null,
         planting_photo_2: plantingData.planting_photo_2 || null,
