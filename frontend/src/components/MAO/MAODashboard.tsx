@@ -1533,8 +1533,20 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
       if (response.ok) {
         const data = await response.json();
-        setNotifications(data || []);
-        setUnreadCount((data || []).length);
+
+        // Get the last time the user checked notifications
+        const lastRead = localStorage.getItem('mao_last_read_at');
+        const lastReadDate = lastRead ? new Date(lastRead) : new Date(0);
+
+        // Mark as unread only if the notification is newer than lastRead
+        const notificationsWithStatus = (data || []).map((n: any) => ({
+          ...n,
+          unread: new Date(n.date) > lastReadDate
+        }));
+
+        const count = notificationsWithStatus.filter((n: any) => n.unread).length;
+        setNotifications(notificationsWithStatus);
+        setUnreadCount(count);
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -1677,15 +1689,6 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           </button>
 
           <button
-            onClick={() => setCurrentPage('sales-performance')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${currentPage === 'sales-performance' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <BarChart3 className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Sales Performance</span>
-          </button>
-
-          <button
             onClick={() => setCurrentPage('buyer-prices')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'buyer-prices' ? 'bg-emerald-600' : 'hover:bg-slate-700'
               } ${!sidebarOpen && 'justify-center'}`}
@@ -1801,7 +1804,13 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               <button
                 onClick={() => {
                   setShowNotifications(!showNotifications);
-                  if (!showNotifications) setUnreadCount(0);
+                  if (!showNotifications) {
+                    setUnreadCount(0);
+                    // Update current list to show as read
+                    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+                    // Save timestamp of when we opened the dropdown
+                    localStorage.setItem('mao_last_read_at', new Date().toISOString());
+                  }
                 }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition relative"
               >

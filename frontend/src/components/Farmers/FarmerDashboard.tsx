@@ -94,8 +94,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [selectedPhoto, setSelectedPhoto] = useState<string>('');
   const [plantingData, setPlantingData] = useState({
     planting_date: new Date().toISOString().split('T')[0],
-    planting_quantity: 0,
-    damaged_quantity: 0,
+    planting_quantity: '' as string | number,
+    damaged_quantity: '' as string | number,
     planting_location: '',
     planting_notes: '',
     planting_photo_1: '',
@@ -1070,8 +1070,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     try {
       const response = await apiPut(`/api/association-seedlings/farmer/${selectedSeedling.distribution_id}/mark-planted`, {
         planting_date: plantingData.planting_date,
-        planted_quantity: plantingData.planting_quantity,
-        damaged_quantity: plantingData.damaged_quantity,
+        planted_quantity: parseInt(plantingData.planting_quantity.toString()) || 0,
+        damaged_quantity: parseInt(plantingData.damaged_quantity.toString()) || 0,
         planting_location: plantingData.planting_location,
         planting_notes: plantingData.planting_notes,
         planting_photo_1: plantingData.planting_photo_1,
@@ -1084,8 +1084,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         setShowPlantingModal(false);
         setPlantingData({
           planting_date: new Date().toISOString().split('T')[0],
-          planting_quantity: 0,
-          damaged_quantity: 0,
+          planting_quantity: '',
+          damaged_quantity: '',
           planting_location: '',
           planting_notes: '',
           planting_photo_1: '',
@@ -2510,11 +2510,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                   ) : (
                                     <button
                                       onClick={() => {
+                                        const defaultLocation = farmerData ?
+                                          `${farmerData.barangay || ''}, ${farmerData.municipality || ''}`.trim().replace(/^, |, $/g, '') :
+                                          '';
                                         setSelectedSeedling(seedling);
                                         setPlantingData({
                                           ...plantingData,
                                           planting_quantity: seedling.quantity_distributed,
-                                          damaged_quantity: 0
+                                          damaged_quantity: 0,
+                                          planting_location: defaultLocation || ''
                                         });
                                         setShowPlantingModal(true);
                                       }}
@@ -2652,8 +2656,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   setShowPlantingModal(false);
                   setPlantingData({
                     planting_date: new Date().toISOString().split('T')[0],
-                    planting_quantity: 0,
-                    damaged_quantity: 0,
+                    planting_quantity: '',
+                    damaged_quantity: '',
                     planting_location: '',
                     planting_notes: '',
                     planting_photo_1: '',
@@ -2707,11 +2711,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         max={selectedSeedling.quantity_distributed}
                         value={plantingData.planting_quantity}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value) || 0;
+                          const valStr = e.target.value;
+                          const val = valStr === '' ? '' : parseInt(valStr);
+                          const numVal = typeof val === 'number' ? val : 0;
+
                           setPlantingData({
                             ...plantingData,
                             planting_quantity: val,
-                            damaged_quantity: Math.max(0, selectedSeedling.quantity_distributed - val)
+                            damaged_quantity: Math.max(0, selectedSeedling.quantity_distributed - numVal)
                           });
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -2726,11 +2733,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         max={selectedSeedling.quantity_distributed}
                         value={plantingData.damaged_quantity}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value) || 0;
+                          const valStr = e.target.value;
+                          const val = valStr === '' ? '' : parseInt(valStr);
+                          const numVal = typeof val === 'number' ? val : 0;
+
                           setPlantingData({
                             ...plantingData,
                             damaged_quantity: val,
-                            planting_quantity: Math.max(0, selectedSeedling.quantity_distributed - val)
+                            planting_quantity: Math.max(0, selectedSeedling.quantity_distributed - numVal)
                           });
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
