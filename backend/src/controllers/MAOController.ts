@@ -424,4 +424,140 @@ export class MAOController {
       res.status(500).json({ error: 'Failed to delete monitoring record' });
     }
   }
+  // Get recent notifications/updates for MAO
+  static async getNotifications(req: Request, res: Response) {
+    try {
+      const { limit = 15 } = req.query;
+
+      // 1. Fetch recent seedling plantings (from both tables)
+      const [plantedFarmerRes, plantedDirectRes] = await Promise.all([
+        supabase
+          .from('farmer_seedling_distributions')
+          .select('recipient_farmer_id, quantity_distributed, planting_date, created_at, status, farmers:recipient_farmer_id(full_name)')
+          .eq('status', 'planted')
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('seedlings')
+          .select('recipient_farmer_id, variety, quantity_distributed, planting_date, created_at, status, farmers:recipient_farmer_id(full_name)')
+          .eq('status', 'planted')
+          .order('created_at', { ascending: false })
+          .limit(10)
+      ]);
+
+      console.log('🔔 Notification Fetch - Plantings (Farmer):', plantedFarmerRes.data?.length || 0);
+      console.log('🔔 Notification Fetch - Plantings (Direct):', plantedDirectRes.data?.length || 0);
+
+      // 2. Fetch recent association distributions
+      const { data: recentAssocDist } = await supabase
+        .from('association_seedling_distributions')
+        .select('recipient_association_name, quantity_distributed, date_distributed, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      console.log('🔔 Notification Fetch - Assoc Dists:', recentAssocDist?.length || 0);
+
+      // 3. Fetch recent monitoring records
+      const { data: recentMonitoring } = await supabase
+        .from('monitoring_records')
+        .select('farmer_name, farm_condition, date_of_visit, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      console.log('🔔 Notification Fetch - Monitoring:', recentMonitoring?.length || 0);
+
+      // 4. Fetch recent harvests
+      const { data: recentHarvests } = await supabase
+        .from('harvests')
+        .select('farmer_name, dry_fiber_output_kg, harvest_date, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      console.log('🔔 Notification Fetch - Harvests:', recentHarvests?.length || 0);
+
+      const notifications: any[] = [];
+
+      // Process plantings from farmer_seedling_distributions
+      plantedFarmerRes.data?.forEach((p: any) => {
+        const farmerName = (p.farmers as any)?.full_name || 'A farmer';
+        notifications.push({
+          id: `planted-f-${p.created_at}-${p.recipient_farmer_id}`,
+          type: 'planting',
+          icon: '🌱',
+          color: 'emerald',
+          title: 'Seedlings Planted',
+          message: `${farmerName} finished planting ${p.quantity_distributed} seedlings.`,
+          date: p.created_at,
+          unread: true
+        });
+      });
+
+      // Process plantings from direct seedlings
+      plantedDirectRes.data?.forEach((p: any) => {
+        const farmerName = (p.farmers as any)?.full_name || 'A farm';
+        notifications.push({
+          id: `planted-d-${p.created_at}-${p.recipient_farmer_id}`,
+          type: 'planting',
+          icon: '🌱',
+          color: 'emerald',
+          title: 'Direct Distribution Planted',
+          message: `${farmerName} has planted ${p.quantity_distributed} units of ${p.variety || 'seedlings'}.`,
+          date: p.created_at,
+          unread: true
+        });
+      });
+
+      // Process association distributions
+      recentAssocDist?.forEach((d: any) => {
+        notifications.push({
+          id: `assoc-${d.created_at}`,
+          type: 'distribution',
+          icon: '📦',
+          color: 'blue',
+          title: 'Association Allocation',
+          message: `${d.recipient_association_name} received ${d.quantity_distributed} seedlings for distribution.`,
+          date: d.created_at,
+          unread: true
+        });
+      });
+
+      // Process monitoring
+      recentMonitoring?.forEach((m: any) => {
+        notifications.push({
+          id: `mon-${m.created_at}`,
+          type: 'monitoring',
+          icon: '🔍',
+          color: 'amber',
+          title: 'Farm Visit Recorded',
+          message: `Monitoring visit to ${m.farmer_name}. Condition is ${m.farm_condition}.`,
+          date: m.created_at,
+          unread: true
+        });
+      });
+
+      // Process harvests
+      recentHarvests?.forEach((h: any) => {
+        notifications.push({
+          id: `harv-${h.created_at}`,
+          type: 'harvest',
+          icon: '🌾',
+          color: 'purple',
+          title: 'Production Update',
+          message: `${h.farmer_name} reported a harvest of ${h.dry_fiber_output_kg}kg dry fiber.`,
+          date: h.created_at,
+          unread: true
+        });
+      });
+
+      // Sort by date and limit
+      const sortedNotifs = notifications
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, Number(limit));
+
+      res.status(200).json(sortedNotifs);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+  }
 }

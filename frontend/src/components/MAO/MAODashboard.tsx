@@ -118,11 +118,12 @@ interface DashboardState {
     monthlyReceived: number[];
     monthlyDistributed: number[];
     monthlyHarvest?: number[]; // Added for compatibility
-    monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[], planted: number[] } };
+    monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[], planted: number[], unplanted: number[] } };
     yearlyReceived: { [year: number]: number };
     yearlyDistributed: { [year: number]: number };
     yearlyHarvest: { [year: number]: number };
     yearlyPlanted: { [year: number]: number };
+    yearlyUnplanted: { [year: number]: number };
     yearlyMonitoring: { [year: number]: number };
     yearlyHealthy: { [year: number]: number };
     yearlyNeedsSupport: { [year: number]: number };
@@ -207,7 +208,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     setLoadingProfile(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/auth/me`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -273,7 +274,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         profilePicture: profilePhoto
       });
 
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/mao/complete-profile`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/mao/complete-profile`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -330,7 +331,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         setProfilePhoto(base64String);
 
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(`https://easyabaca-api.vercel.app/api/mao/complete-profile`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/mao/complete-profile`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -369,7 +370,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     setChangingPassword(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/auth/change-password`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -425,6 +426,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       yearlyDistributed: {},
       yearlyHarvest: {},
       yearlyPlanted: {},
+      yearlyUnplanted: {},
       yearlyMonitoring: {},
       yearlyHealthy: {},
       yearlyNeedsSupport: {},
@@ -681,12 +683,17 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     const prodData = dashboardData.production;
 
     if (view === 'monthly' && year) {
-      const stats = prodData.monthlyStatsByYear?.[year] || { planted: new Array(12).fill(0), harvested: new Array(12).fill(0) };
-      const totalPlanted = stats.planted?.reduce((a: number, b: number) => a + b, 0) || 0;
-      const totalHarvested = stats.harvested?.reduce((a: number, b: number) => a + b, 0) || 0;
+      const stats = prodData.monthlyStatsByYear?.[year] || { planted: new Array(12).fill(0), harvested: new Array(12).fill(0), unplanted: new Array(12).fill(0) };
+      const totalPlanted = stats.planted?.reduce((a: number, b: any) => a + Number(b || 0), 0) || 0;
+      const totalHarvested = stats.harvested?.reduce((a: number, b: any) => a + Number(b || 0), 0) || 0;
+      const totalUnplanted = stats.unplanted?.reduce((a: number, b: any) => a + Number(b || 0), 0) || 0;
 
       insights.push(`Total planted in ${year}: ${totalPlanted.toLocaleString()} seedlings`);
       insights.push(`Total harvested in ${year}: ${totalHarvested.toLocaleString()} kg`);
+
+      if (totalUnplanted > 0) {
+        insights.push(`Unplanted or damaged units in ${year}: ${totalUnplanted.toLocaleString()}`);
+      }
 
       if (totalPlanted > 0 && totalHarvested > 0) {
         const yieldPerSeedling = (totalHarvested / totalPlanted).toFixed(2);
@@ -701,8 +708,15 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         const latestYear = years[0];
         insights.push(`Latest year (${latestYear}): ${(yearlyHarvest[latestYear] || 0).toLocaleString()} kg harvested`);
 
-        const totalHarvest = Object.values(yearlyHarvest).reduce((a: number, b: number) => a + b, 0);
+        const totalHarvest = Object.values(yearlyHarvest).reduce((a: number, b: any) => a + Number(b || 0), 0);
+        const totalPlanted = Object.values(yearlyPlanted).reduce((a: number, b: any) => a + Number(b || 0), 0);
+        const totalUnplanted = Object.values(prodData.yearlyUnplanted || {}).reduce((a: number, b: any) => a + Number(b || 0), 0);
+
         insights.push(`Total harvest across all years: ${totalHarvest.toLocaleString()} kg`);
+        insights.push(`Total seedlings planted: ${totalPlanted.toLocaleString()}`);
+        if (totalUnplanted > 0) {
+          insights.push(`Total unplanted/losses: ${totalUnplanted.toLocaleString()}`);
+        }
       }
     }
 
@@ -1053,25 +1067,25 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
 
       // Fetch production data
-      const productionRes = await fetch('https://easyabaca-api.vercel.app/api/admin/production-report', {
+      const productionRes = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/production-report`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const productionData = await productionRes.json();
 
       // Fetch sales data
-      const salesRes = await fetch('https://easyabaca-api.vercel.app/api/admin/sales-report', {
+      const salesRes = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/sales-report`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const salesData = await salesRes.json();
 
       // Fetch users data
-      const usersRes = await fetch('https://easyabaca-api.vercel.app/api/admin/users-report', {
+      const usersRes = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users-report`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const usersData = await usersRes.json();
 
       // Fetch delivery data
-      const deliveriesRes = await fetch('https://easyabaca-api.vercel.app/api/fiber-deliveries/all', {
+      const deliveriesRes = await fetch(`${import.meta.env.VITE_API_URL}/api/fiber-deliveries/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const deliveriesData = await deliveriesRes.json();
@@ -1100,11 +1114,12 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       let monthlyHarvest = new Array(12).fill(0);
 
       // Seedling / Production maps
-      const monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[], planted: number[] } } = {};
+      const monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[], planted: number[], unplanted: number[] } } = {};
       const yearlyReceived: { [year: number]: number } = {};
       const yearlyDistributed: { [year: number]: number } = {};
       const yearlyHarvest: { [year: number]: number } = {};
       const yearlyPlanted: { [year: number]: number } = {};
+      const yearlyUnplanted: { [year: number]: number } = {};
 
       const ensureYearInStats = (year: number) => {
         if (!monthlyStatsByYear[year]) {
@@ -1112,13 +1127,15 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             received: new Array(12).fill(0),
             distributed: new Array(12).fill(0),
             harvested: new Array(12).fill(0),
-            planted: new Array(12).fill(0)
+            planted: new Array(12).fill(0),
+            unplanted: new Array(12).fill(0)
           };
         }
         if (!yearlyReceived[year]) yearlyReceived[year] = 0;
         if (!yearlyDistributed[year]) yearlyDistributed[year] = 0;
         if (!yearlyHarvest[year]) yearlyHarvest[year] = 0;
         if (!yearlyPlanted[year]) yearlyPlanted[year] = 0;
+        if (!yearlyUnplanted[year]) yearlyUnplanted[year] = 0;
       };
 
       // Process deliveries for monthly harvest (production)
@@ -1137,7 +1154,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
       try {
         // Fetch seedling distributions for monthly data
-        const associationDistRes = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/mao/associations', {
+        const associationDistRes = await fetch(`${import.meta.env.VITE_API_URL}/api/association-seedlings/mao/associations`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -1164,7 +1181,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
         // For distributed data, fetch from CUSAFA endpoint which has all farmer distributions
         try {
-          const farmerDistRes = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/cusafa/all-distributions', {
+          const farmerDistRes = await fetch(`${import.meta.env.VITE_API_URL}/api/association-seedlings/cusafa/all-distributions`, {
             headers: { Authorization: `Bearer ${token}` }
           });
 
@@ -1187,14 +1204,26 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 ensureYearInStats(year);
                 monthlyStatsByYear[year].distributed[monthIndex] += quantity;
                 yearlyDistributed[year] += quantity;
+
+                // Process Unplanted/Damage (Combined losses and pending)
+                // If planted, unplanted/damage is the diff between distributed and planted qty
+                // If not planted yet, everything counts as unplanted/damage until planted
+                const pQuantity = dist.status === 'planted' ? parseInt(dist.planted_quantity ?? dist.quantity_distributed ?? 0) : 0;
+                const unplantedQty = Math.max(0, quantity - pQuantity);
+
+                if (unplantedQty > 0) {
+                  monthlyStatsByYear[year].unplanted[monthIndex] += unplantedQty;
+                  yearlyUnplanted[year] += unplantedQty;
+                }
               }
 
               // Process Planted (Only if status is planted)
-              if (dist.status === 'planted' && dist.planting_date) {
-                const plantingDate = new Date(dist.planting_date);
+              if (dist.status === 'planted') {
+                const plantingDateStr = dist.planting_date || dist.planted_at || dist.date_distributed || dist.created_at;
+                const plantingDate = new Date(plantingDateStr);
                 const pYear = plantingDate.getFullYear();
                 const pMonth = plantingDate.getMonth();
-                const pQuantity = parseInt(dist.quantity_distributed || 0);
+                const pQuantity = parseInt(dist.planted_quantity ?? dist.quantity_distributed ?? 0);
 
                 ensureYearInStats(pYear);
                 monthlyStatsByYear[pYear].planted[pMonth] += pQuantity;
@@ -1204,6 +1233,55 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           }
         } catch (err) {
           console.log('Could not fetch distributed data:', err);
+        }
+
+        // NEW: Fetch direct MAO distributions (from the 'seedlings' table)
+        try {
+          const directSeedlingsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/seedlings/all`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          if (directSeedlingsRes.ok) {
+            const directSeedlings = await directSeedlingsRes.json();
+            const seedlingsList = Array.isArray(directSeedlings) ? directSeedlings : (directSeedlings.data || []);
+            console.log('🌱 Processing direct MAO distributions:', seedlingsList.length, 'records');
+
+            seedlingsList.forEach((dist: any) => {
+              const dateStr = dist.date_distributed || dist.created_at;
+              if (dateStr) {
+                const date = new Date(dateStr);
+                const year = date.getFullYear();
+                const monthIndex = date.getMonth();
+                const quantity = parseInt(dist.quantity_distributed || 0);
+
+                ensureYearInStats(year);
+                // Also counts as received and distributed for the overview
+                monthlyStatsByYear[year].received[monthIndex] += quantity;
+                monthlyStatsByYear[year].distributed[monthIndex] += quantity;
+                yearlyReceived[year] += quantity;
+                yearlyDistributed[year] += quantity;
+
+                // Process Planted status
+                if (dist.status === 'planted' || dist.status === 'harvested' || (dist.planted_at && !dist.status?.includes('cancelled'))) {
+                  const pDateStr = dist.planting_date || dist.planted_at || dateStr;
+                  const pDate = new Date(pDateStr);
+                  const pYear = pDate.getFullYear();
+                  const pMonth = pDate.getMonth();
+                  const pQuantity = parseInt(dist.planted_quantity ?? dist.quantity_distributed ?? 0);
+
+                  ensureYearInStats(pYear);
+                  monthlyStatsByYear[pYear].planted[pMonth] += pQuantity;
+                  yearlyPlanted[pYear] += pQuantity;
+                } else {
+                  // If not planted, it's pending/unplanted
+                  monthlyStatsByYear[year].unplanted[monthIndex] += quantity;
+                  yearlyUnplanted[year] += quantity;
+                }
+              }
+            });
+          }
+        } catch (err) {
+          console.log('Could not fetch direct seedling data:', err);
         }
       } catch (err) {
         console.log('Using fallback monthly data calculation', err);
@@ -1226,7 +1304,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       const yearlyDamagedData: { [year: number]: number } = {};
 
       try {
-        const monitoringRes = await fetch('https://easyabaca-api.vercel.app/api/mao/monitoring', {
+        const monitoringRes = await fetch(`${import.meta.env.VITE_API_URL}/api/mao/monitoring`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -1304,7 +1382,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
       // 1. Try to fetch raw harvest data for accurate monthly breakdown
       try {
-        const harvestsRes = await fetch('https://easyabaca-api.vercel.app/api/admin/harvests/all', {
+        const harvestsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/harvests/all`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -1371,6 +1449,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           yearlyDistributed,
           yearlyHarvest,
           yearlyPlanted,
+          yearlyUnplanted,
           yearlyMonitoring: yearlyMonitoringData,
           yearlyHealthy: yearlyHealthyData,
           yearlyNeedsSupport: yearlyNeedsSupportData,
@@ -1379,6 +1458,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           needsSupportFarms,
           damagedFarms,
           totalMonitoringVisits: totalMonitoring || productionData.totalMonitoringVisits,
+          // Use calculated total planted for more accuracy
+          totalSeedlingsPlanted: Object.values(yearlyPlanted).reduce((a, b) => a + b, 0) || productionData.totalSeedlingsPlanted,
+          totalHarvestFiber: Object.values(yearlyHarvest).reduce((a, b) => a + b, 0) || productionData.totalHarvestFiber,
           // Support old variables for backward compatibility if needed, but using currentYear
           monthlyReceived: monthlyStatsByYear[currentYear]?.received || new Array(12).fill(0),
           monthlyDistributed: monthlyStatsByYear[currentYear]?.distributed || new Array(12).fill(0),
@@ -1445,15 +1527,15 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/mao/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-      // Create notifications array
-      const notifs: any[] = [];
-
-      // Note: Notification fetching is disabled for now
-      // Can be re-enabled by implementing proper notification endpoints
-
-      setNotifications(notifs);
-      setUnreadCount(0);
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data || []);
+        setUnreadCount((data || []).length);
+      }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -1717,7 +1799,10 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             {/* Notification Bell with Dropdown */}
             <div className="relative mr-2 md:mr-4">
               <button
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  if (!showNotifications) setUnreadCount(0);
+                }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition relative"
               >
                 <Bell className="w-5 h-5 md:w-6 md:h-6 text-gray-600" />
@@ -1772,10 +1857,15 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 {notif.icon}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 mb-1">
-                                  {notif.title}
-                                </p>
-                                <p className="text-xs text-gray-600 mb-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="text-sm font-black text-gray-900 leading-tight">
+                                    {notif.title}
+                                  </p>
+                                  {notif.unread && (
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                  )}
+                                </div>
+                                <p className="text-xs text-gray-600 mb-1 leading-relaxed">
                                   {notif.message}
                                 </p>
                                 <p className="text-xs text-gray-400">
@@ -2279,20 +2369,22 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 <AnimatedPieChart
                                   data={chartData}
                                   centerLabel={totalHarvested.toLocaleString()}
-                                  centerSubLabel="Total Production (kg)"
+                                  centerSubLabel="Fiber Harvested (Kg)"
                                 />
 
                                 {/* Custom Legend */}
-                                <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                                <div className="grid grid-cols-1 gap-3 w-full mt-4">
                                   {chartData.map((item, idx) => (
-                                    <div key={idx} className="flex flex-col p-5 bg-gray-50 rounded-2xl border border-gray-100 transition-all hover:bg-white hover:shadow-md">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }}></div>
-                                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">{item.name}</span>
+                                    <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 transition-all hover:bg-white hover:shadow-md">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: item.fill }}></div>
+                                        <div className="flex flex-col">
+                                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.name}</span>
+                                          <span className="text-lg font-black text-gray-900 leading-tight">{item.value.toLocaleString()}</span>
+                                        </div>
                                       </div>
-                                      <div className="flex items-end justify-between">
-                                        <span className="text-xl font-black text-gray-900">{item.value.toLocaleString()}</span>
-                                        <span className="text-xs font-bold text-gray-400 mb-0.5">{item.percentage.toFixed(0)}%</span>
+                                      <div className="px-3 py-1 bg-white border border-gray-100 rounded-lg shadow-sm">
+                                        <span className="text-xs font-black text-emerald-600 block">{item.name === 'Planted' ? 'seedlings' : 'kg fiber'}</span>
                                       </div>
                                     </div>
                                   ))}
@@ -2381,6 +2473,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           <Award className="w-3.5 h-3.5 text-orange-600" />
                           <span className="text-xs font-black text-orange-700 uppercase tracking-wider">Harvested</span>
                         </div>
+                        <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-50 to-red-100/50 rounded-xl border border-red-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow-md group-hover:scale-110 transition-transform"></div>
+                          <Clock className="w-3.5 h-3.5 text-red-600" />
+                          <span className="text-xs font-black text-red-700 uppercase tracking-wider">Unplanted/Damage</span>
+                        </div>
                       </div>
 
                       <div className="w-full">
@@ -2401,25 +2498,28 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             chartData = years.map(year => ({
                               period: year.toString(),
                               planted: yearlyPlanted[year] || 0,
-                              harvested: yearlyHarvest[year] || 0
+                              harvested: yearlyHarvest[year] || 0,
+                              unplanted: prodData.yearlyUnplanted?.[year] || 0
                             }));
                           } else {
                             const stats = prodData.monthlyStatsByYear?.[trendsYear] || {
                               planted: new Array(12).fill(0),
-                              harvested: new Array(12).fill(0)
+                              harvested: new Array(12).fill(0),
+                              unplanted: new Array(12).fill(0)
                             };
                             const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
                             chartData = labels.map((label, i) => ({
                               period: label,
-                              planted: stats.planted ? stats.planted[i] : (stats.distributed ? stats.distributed[i] : 0), // Fallback if planted missing during transition
-                              harvested: stats.harvested[i]
+                              planted: stats.planted ? stats.planted[i] : (stats.distributed ? stats.distributed[i] : 0),
+                              harvested: stats.harvested[i],
+                              unplanted: stats.unplanted ? stats.unplanted[i] : 0
                             }));
                           }
 
                           return (
                             <div className="overflow-x-auto rounded-3xl bg-white/50 backdrop-blur-sm p-4 border border-white/60 shadow-inner">
-                              <div style={{ minWidth: trendsView === 'monthly' ? '700px' : '100%', width: '100%' }}>
+                              <div style={{ minWidth: trendsView === 'monthly' ? '800px' : '100%', width: '100%' }}>
                                 <ResponsiveContainer width="100%" height={420}>
                                   <RechartsBarChart
                                     data={chartData}
@@ -2435,6 +2535,10 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                       <linearGradient id="harvestedGradient" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="0%" stopColor="#fb923c" stopOpacity={0.9} />
                                         <stop offset="100%" stopColor="#f97316" stopOpacity={0.7} />
+                                      </linearGradient>
+                                      <linearGradient id="unplantedGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9} />
+                                        <stop offset="100%" stopColor="#dc2626" stopOpacity={0.7} />
                                       </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
@@ -2467,7 +2571,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                       cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
                                       formatter={(value: any, name: string) => {
                                         const formattedValue = Math.round(Number(value)).toLocaleString();
-                                        if (name === 'Planted') {
+                                        if (name === 'Planted' || name === 'Unplanted/Damage') {
                                           return `${formattedValue} seedlings`;
                                         } else if (name === 'Harvested') {
                                           return `${formattedValue} kg`;
@@ -2480,14 +2584,21 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                       name="Planted"
                                       fill="url(#plantedGradient)"
                                       radius={[8, 8, 0, 0]}
-                                      barSize={chartData.length < 5 ? 60 : 35}
+                                      barSize={chartData.length < 5 ? 60 : 30}
                                     />
                                     <Bar
                                       dataKey="harvested"
                                       name="Harvested"
                                       fill="url(#harvestedGradient)"
                                       radius={[8, 8, 0, 0]}
-                                      barSize={chartData.length < 5 ? 60 : 35}
+                                      barSize={chartData.length < 5 ? 60 : 30}
+                                    />
+                                    <Bar
+                                      dataKey="unplanted"
+                                      name="Unplanted/Damage"
+                                      fill="url(#unplantedGradient)"
+                                      radius={[8, 8, 0, 0]}
+                                      barSize={chartData.length < 5 ? 60 : 30}
                                     />
                                   </RechartsBarChart>
                                 </ResponsiveContainer>

@@ -15,6 +15,7 @@ router.use(authorizeMAO);
 
 // Define MAO routes
 router.get('/dashboard', MAOController.getDashboardData);
+router.get('/notifications', MAOController.getNotifications);
 router.get('/buyers', MAOController.getVerifiedBuyers);
 
 /**

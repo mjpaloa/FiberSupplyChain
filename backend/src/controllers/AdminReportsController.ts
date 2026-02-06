@@ -32,16 +32,23 @@ export class AdminReportsController {
         (sum, d) => sum + (d.quantity_distributed || 0), 0
       ) || 0;
 
-      // 3. Total Seedlings Planted (status = 'planted')
-      const { data: plantedSeedlings, error: plantedError } = await supabase
+      // 3. Total Seedlings Planted (status = 'planted' across all sources)
+      const { data: plantedFarmerSeedlings } = await supabase
         .from('farmer_seedling_distributions')
-        .select('quantity_distributed')
+        .select('quantity_distributed, planted_quantity')
         .eq('status', 'planted')
         .range(0, 9999);
 
-      const totalSeedlingsPlanted = plantedSeedlings?.reduce(
-        (sum, d) => sum + (d.quantity_distributed || 0), 0
-      ) || 0;
+      const { data: plantedDirectSeedlings } = await supabase
+        .from('seedlings')
+        .select('quantity_distributed, planted_quantity')
+        .eq('status', 'planted')
+        .range(0, 9999);
+
+      const totalSeedlingsPlanted = (
+        (plantedFarmerSeedlings?.reduce((sum, d) => sum + (d.planted_quantity ?? d.quantity_distributed ?? 0), 0) || 0) +
+        (plantedDirectSeedlings?.reduce((sum, d) => sum + (d.planted_quantity ?? d.quantity_distributed ?? 0), 0) || 0)
+      );
 
       // 4. Total Area Planted (from harvests)
       const { data: harvests, error: harvestsError } = await supabase
@@ -126,7 +133,11 @@ export class AdminReportsController {
         // Monthly breakdowns for charts
         monthlyReceived: calculateMonthlySums(associationDistributions || [], 'date_distributed', 'quantity_distributed'),
         monthlyDistributed: calculateMonthlySums(farmerDistributions || [], 'date_distributed', 'quantity_distributed'),
-        monthlyHarvest: calculateMonthlySums(allHarvests || [], 'harvest_date', 'dry_fiber_output_kg')
+        monthlyHarvest: calculateMonthlySums(allHarvests || [], 'harvest_date', 'dry_fiber_output_kg'),
+        monthlyPlanted: calculateMonthlySums([
+          ...(plantedFarmerSeedlings || []),
+          ...(plantedDirectSeedlings || [])
+        ], 'planting_date', 'quantity_distributed')
       });
     } catch (error) {
       console.error('Error fetching production report:', error);
