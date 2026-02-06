@@ -293,22 +293,43 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     const totalBatches = seedlings.length;
     const totalUnits = seedlings.reduce((sum, s) => sum + (s.quantity_distributed || 0), 0);
 
-    const plantedSeedlings = seedlings.filter(s => s.status === 'planted');
-    const plantedBatches = plantedSeedlings.length;
-    const plantedUnits = plantedSeedlings.reduce((sum, s) => sum + (s.quantity_distributed || 0), 0);
+    // Planted units should come from planted_quantity field, but fallback to quantity_distributed if null for old records
+    const plantedUnits = seedlings.reduce((sum, s) => {
+      if (s.status === 'planted') {
+        const val = (s.planted_quantity !== null && s.planted_quantity !== undefined)
+          ? Number(s.planted_quantity)
+          : Number(s.quantity_distributed) || 0;
+        return sum + val;
+      }
+      return sum;
+    }, 0);
+
+    const damagedUnits = seedlings.reduce((sum, s) => sum + (Number(s.damaged_quantity) || 0), 0);
+    const plantedBatches = seedlings.filter(s => s.status === 'planted').length;
 
     const notPlantedSeedlings = seedlings.filter(s => s.status !== 'planted');
     const notPlantedBatches = notPlantedSeedlings.length;
-    const notPlantedUnits = notPlantedSeedlings.reduce((sum, s) => sum + (s.quantity_distributed || 0), 0);
 
-    return {
+    // Remaining units to be planted: only those NOT marked as planted
+    const notPlantedUnits = seedlings.reduce((sum, s) => {
+      if (s.status !== 'planted') {
+        return sum + (Number(s.quantity_distributed) || 0);
+      }
+      return sum;
+    }, 0);
+
+    const stats = {
       totalBatches,
       totalUnits,
       plantedBatches,
       plantedUnits,
+      damagedUnits,
       notPlantedBatches,
       notPlantedUnits
     };
+
+    console.log("📊 COMPUTED SEEDLING STATS:", stats);
+    return stats;
   }, [seedlings]);
 
   // Filter seedlings based on search and status
@@ -946,6 +967,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("📤 FRONTEND RECEIVED:", data); // Added console.log as per instruction
         console.log('✅ Farmer profile loaded:', data);
         setFarmerData(data);
         setEditFormData({
@@ -2196,18 +2218,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   </div>
                 </div>
 
-                {/* Total Batches Card */}
-                <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                {/* Damaged Seedlings Card */}
+                <div className="group relative bg-gradient-to-br from-red-500 to-rose-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
                   <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
                   <div className="relative">
                     <div className="flex items-center justify-between mb-2 sm:mb-3">
                       <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
-                        <Package className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                        <X className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
-                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Batches</span>
+                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Losses</span>
                     </div>
-                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Total Batches</p>
-                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.totalBatches} batches</p>
+                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Damaged Seedlings</p>
+                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.damagedUnits} units</p>
                   </div>
                 </div>
 
@@ -2223,7 +2245,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     </div>
                     <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Planted</p>
                     <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.plantedUnits} units</p>
-                    <p className="text-white/80 text-xs sm:text-sm mt-1">({seedlingStats.plantedBatches} batches)</p>
                   </div>
                 </div>
 
@@ -2239,7 +2260,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     </div>
                     <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Not Yet Planted</p>
                     <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.notPlantedUnits} units</p>
-                    <p className="text-white/80 text-xs sm:text-sm mt-1">({seedlingStats.notPlantedBatches} batches)</p>
                   </div>
                 </div>
               </div>
@@ -2425,7 +2445,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
                               {/* Quantity */}
                               <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600">
-                                <div className="font-medium text-gray-900">{seedling.quantity_distributed} seedlings</div>
+                                <div className="font-medium text-gray-900 group">
+                                  {seedling.status === 'planted'
+                                    ? <>{seedling.planted_quantity ?? seedling.quantity_distributed} / {seedling.quantity_distributed} units</>
+                                    : <>{seedling.quantity_distributed} units</>
+                                  }
+                                </div>
+                                {seedling.damaged_quantity > 0 && (
+                                  <div className="text-xs text-red-500 font-medium">({seedling.damaged_quantity} loss)</div>
+                                )}
                               </td>
 
                               {/* Source */}
@@ -2932,16 +2960,16 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         <div>
                           <p className="text-sm text-green-700">Quantity Planted</p>
                           <p className="font-medium text-green-900">
-                            {selectedSeedling.planted_quantity} / {selectedSeedling.quantity_distributed}
+                            {selectedSeedling.planted_quantity ?? selectedSeedling.quantity_distributed} units
                           </p>
                         </div>
                       )}
-                      {selectedSeedling.damaged_quantity > 0 && (
-                        <div>
-                          <p className="text-sm text-red-700">Damaged/Died</p>
-                          <p className="font-medium text-red-900">{selectedSeedling.damaged_quantity}</p>
-                        </div>
-                      )}
+                      <div>
+                        <p className="text-sm text-red-700">Damaged Quantity</p>
+                        <p className="font-medium text-red-900">
+                          {selectedSeedling.damaged_quantity ?? 0} units
+                        </p>
+                      </div>
                       {selectedSeedling.planting_location && (
                         <div>
                           <p className="text-sm text-green-700">Location</p>

@@ -35,6 +35,8 @@ export class SeedlingController {
           planting_photo_2,
           planting_photo_3,
           planting_notes,
+          planted_quantity,
+          damaged_quantity,
           planted_by,
           planted_at,
           created_at,
@@ -386,6 +388,8 @@ export class SeedlingController {
           planting_photo_2: plantingData.planting_photo_2,
           planting_photo_3: plantingData.planting_photo_3,
           planting_notes: plantingData.planting_notes,
+          planted_quantity: plantingData.planted_quantity,
+          damaged_quantity: plantingData.damaged_quantity,
           planted_by: farmerId,
           planted_at: new Date().toISOString(),
         })

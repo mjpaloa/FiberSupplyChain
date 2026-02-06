@@ -122,7 +122,7 @@ const PlantedSeedlings: React.FC = () => {
   const varieties = Array.from(new Set(plantedSeedlings.map(s => s.variety)));
   const municipalities = Array.from(new Set(plantedSeedlings.map(s => s.farmer_municipality)));
 
-  const totalPlanted = filteredSeedlings.reduce((sum, s) => sum + (s.planted_quantity || s.quantity_distributed), 0);
+  const totalPlanted = filteredSeedlings.reduce((sum, s) => sum + (s.planted_quantity ?? s.quantity_distributed), 0);
 
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -174,7 +174,7 @@ const PlantedSeedlings: React.FC = () => {
                 Active
               </span>
             </div>
-            <p className="text-white/80 text-sm font-medium mb-1">Total Planted</p>
+            <p className="text-white/80 text-sm font-medium mb-1">Total Planted Units</p>
             <p className="text-4xl font-bold text-white">{totalPlanted.toLocaleString()}</p>
           </div>
         </div>
@@ -297,9 +297,9 @@ const PlantedSeedlings: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-gray-900">{seedling.planted_quantity || seedling.quantity_distributed} / {seedling.quantity_distributed}</span>
+                          <span className="font-semibold text-gray-900">{seedling.planted_quantity ?? seedling.quantity_distributed} / {seedling.quantity_distributed}</span>
                           {seedling.damaged_quantity !== undefined && seedling.damaged_quantity > 0 && (
-                            <span className="text-xs text-red-500 font-medium">{seedling.damaged_quantity} loss</span>
+                            <span className="text-xs text-red-500 font-medium">{seedling.damaged_quantity} units loss</span>
                           )}
                         </div>
                       </td>
@@ -412,7 +412,7 @@ const PlantedSeedlings: React.FC = () => {
             <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-green-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold">Planting Details</h2>
-                <p className="text-emerald-100 text-sm mt-1">{selectedSeedling.variety} - {selectedSeedling.planted_quantity || selectedSeedling.quantity_distributed} / {selectedSeedling.quantity_distributed} planted</p>
+                <p className="text-emerald-100 text-sm mt-1">{selectedSeedling.variety} - {selectedSeedling.planted_quantity ?? selectedSeedling.quantity_distributed} / {selectedSeedling.quantity_distributed} planted</p>
               </div>
               <button
                 onClick={() => setSelectedSeedling(null)}
@@ -451,14 +451,14 @@ const PlantedSeedlings: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Actual Planted</p>
-                      <p className="font-semibold text-gray-900 text-emerald-600">{selectedSeedling.planted_quantity || selectedSeedling.quantity_distributed}</p>
+                      <p className="font-semibold text-gray-900 text-emerald-600">{selectedSeedling.planted_quantity ?? selectedSeedling.quantity_distributed} units</p>
                     </div>
                   </div>
 
                   {selectedSeedling.damaged_quantity !== undefined && selectedSeedling.damaged_quantity > 0 && (
                     <div>
-                      <p className="text-sm text-red-600 mb-1">Damaged/Died</p>
-                      <p className="font-semibold text-red-600">{selectedSeedling.damaged_quantity}</p>
+                      <p className="text-sm text-red-600 mb-1">Damaged/Losses</p>
+                      <p className="font-semibold text-red-600">{selectedSeedling.damaged_quantity} units</p>
                     </div>
                   )}
 

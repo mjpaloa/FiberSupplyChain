@@ -565,6 +565,8 @@ export class AssociationSeedlingController {
           status,
           planting_date,
           planting_location,
+          planted_quantity,
+          damaged_quantity,
           planted_at,
           created_at,
           farmers:recipient_farmer_id (
@@ -659,6 +661,8 @@ export class AssociationSeedlingController {
           planting_photo_2,
           planting_photo_3,
           planting_notes,
+          planted_quantity,
+          damaged_quantity,
           planted_at,
           created_at,
           association_officers:distributed_by_association (
@@ -685,6 +689,13 @@ export class AssociationSeedlingController {
         .range(parseInt(offset as string), parseInt(offset as string) + parseInt(limit as string) - 1);
 
       if (error) throw error;
+
+      console.log("📥 DATABASE RESPONSE:", data?.map(d => ({
+        id: d.distribution_id,
+        status: d.status,
+        planted: d.planted_quantity,
+        damaged: d.damaged_quantity
+      })));
 
       res.status(200).json(data);
     } catch (error) {
@@ -847,6 +858,8 @@ export class AssociationSeedlingController {
           planting_photo_1,
           planting_photo_2,
           planting_photo_3,
+          planted_quantity,
+          damaged_quantity,
           planted_at,
           created_at,
           farmers:recipient_farmer_id (

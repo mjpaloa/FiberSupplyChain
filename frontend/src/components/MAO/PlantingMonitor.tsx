@@ -120,8 +120,10 @@ const PlantingMonitor: React.FC = () => {
   };
 
   const stats = {
-    totalPlanted: plantedSeedlings.length,
-    totalQuantity: plantedSeedlings.reduce((sum, s) => sum + (s.planted_quantity || s.quantity_distributed), 0),
+    totalReports: plantedSeedlings.length,
+    totalPlantedUnits: plantedSeedlings.reduce((sum, s) => sum + (s.planted_quantity ?? s.quantity_distributed), 0),
+    totalDamagedUnits: plantedSeedlings.reduce((sum, s) => sum + (s.damaged_quantity ?? 0), 0),
+    totalDistributedUnits: plantedSeedlings.reduce((sum, s) => sum + (s.quantity_distributed ?? 0), 0),
     thisWeek: plantedSeedlings.filter(s => {
       if (!s.planted_at) return false;
       const plantedDate = new Date(s.planted_at);
@@ -182,8 +184,8 @@ const PlantingMonitor: React.FC = () => {
               </div>
               <TrendingUp className="w-5 h-5 text-white/60" />
             </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Total Planted</p>
-            <p className="text-4xl font-bold text-white">{stats.totalPlanted}</p>
+            <p className="text-white/90 text-sm font-medium mb-1">Total Planted Units</p>
+            <p className="text-4xl font-bold text-white">{stats.totalPlantedUnits.toLocaleString()}</p>
           </div>
         </div>
 
@@ -196,8 +198,8 @@ const PlantingMonitor: React.FC = () => {
               </div>
               <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Total</span>
             </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Total Seedlings</p>
-            <p className="text-4xl font-bold text-white">{stats.totalQuantity.toLocaleString()}</p>
+            <p className="text-white/90 text-sm font-medium mb-1">Total Distributed</p>
+            <p className="text-4xl font-bold text-white">{stats.totalDistributedUnits.toLocaleString()}</p>
           </div>
         </div>
 
@@ -223,8 +225,8 @@ const PlantingMonitor: React.FC = () => {
                 <Camera className="w-6 h-6 text-white" />
               </div>
             </div>
-            <p className="text-white/90 text-sm font-medium mb-1">With Photos</p>
-            <p className="text-4xl font-bold text-white">{stats.withPhotos}</p>
+            <p className="text-white/90 text-sm font-medium mb-1">Total Losses/Damaged</p>
+            <p className="text-4xl font-bold text-white">{stats.totalDamagedUnits.toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -338,9 +340,9 @@ const PlantingMonitor: React.FC = () => {
 
                     <div className="flex items-center gap-2 text-gray-600">
                       <Sprout className="w-4 h-4" />
-                      <span>{seedling.planted_quantity || seedling.quantity_distributed} / {seedling.quantity_distributed} planted</span>
+                      <span>{seedling.planted_quantity ?? seedling.quantity_distributed} / {seedling.quantity_distributed} units planted</span>
                       {seedling.damaged_quantity !== undefined && seedling.damaged_quantity > 0 && (
-                        <span className="text-red-500 font-medium">( {seedling.damaged_quantity} loss )</span>
+                        <span className="text-red-500 font-medium ml-1">({seedling.damaged_quantity} loss)</span>
                       )}
                     </div>
 
@@ -405,12 +407,12 @@ const PlantingMonitor: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-green-700">Actual Planted:</span>
-                    <span className="ml-2 font-medium text-green-900">{selectedSeedling.planted_quantity || selectedSeedling.quantity_distributed}</span>
+                    <span className="ml-2 font-medium text-green-900">{selectedSeedling.planted_quantity ?? selectedSeedling.quantity_distributed} units</span>
                   </div>
                   {selectedSeedling.damaged_quantity !== undefined && selectedSeedling.damaged_quantity > 0 && (
                     <div>
-                      <span className="text-red-700">Damaged/Died:</span>
-                      <span className="ml-2 font-medium text-red-900">{selectedSeedling.damaged_quantity}</span>
+                      <span className="text-red-700">Damaged/Losses:</span>
+                      <span className="ml-2 font-medium text-red-900">{selectedSeedling.damaged_quantity} units</span>
                     </div>
                   )}
                   <div>
