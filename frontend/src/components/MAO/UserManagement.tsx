@@ -1697,16 +1697,7 @@ const UserManagement: React.FC = () => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Income per Cycle (₱)</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={editFormData.income_per_cycle || ''}
-                              onChange={(e) => setEditFormData({ ...editFormData, income_per_cycle: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                          </div>
+
                         </div>
                       </div>
 
