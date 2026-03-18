@@ -99,12 +99,14 @@ const PlantedSeedlings: React.FC = () => {
     let filtered = plantedSeedlings;
 
     if (searchTerm) {
-      filtered = filtered.filter(s =>
-        s.farmer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.variety.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.planting_location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.association_name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter(s => {
+      const matchesSearch = 
+        (s.farmer_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (s.variety?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (s.planting_location?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (s.association_name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+        return matchesSearch;
+      });
     }
 
     if (varietyFilter !== 'all') {

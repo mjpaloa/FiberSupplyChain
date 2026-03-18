@@ -340,9 +340,9 @@ export default function MAOHarvestVerificationPage() {
   };
 
   const filteredHarvests = harvests.filter(harvest =>
-    harvest.farmer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    harvest.municipality.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    harvest.barangay.toLowerCase().includes(searchTerm.toLowerCase())
+    (harvest.farmer_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (harvest.municipality?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (harvest.barangay?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   // Calculate pagination

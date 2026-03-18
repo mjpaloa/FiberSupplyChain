@@ -110,10 +110,10 @@ export default function MAOInventoryPage() {
   };
 
   const filteredInventory = inventory.filter(item =>
-    item.harvests?.farmer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.harvests?.municipality.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.storage_location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.mao_name && item.mao_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    (item.harvests?.farmer_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (item.harvests?.municipality?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (item.storage_location?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (item.mao_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   const exportToCSV = () => {

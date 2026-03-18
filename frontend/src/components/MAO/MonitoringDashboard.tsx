@@ -65,9 +65,9 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
 
     if (searchQuery) {
       filtered = filtered.filter(record =>
-        record.farmerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        record.monitoredBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        record.monitoringId.toLowerCase().includes(searchQuery.toLowerCase())
+        (record.farmerName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (record.monitoredBy?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (record.monitoringId?.toLowerCase() || '').includes(searchQuery.toLowerCase())
       );
     }
 

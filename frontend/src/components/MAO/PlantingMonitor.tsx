@@ -110,9 +110,9 @@ const PlantingMonitor: React.FC = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(s =>
-        s.variety.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.farmers?.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.planting_location?.toLowerCase().includes(searchTerm.toLowerCase())
+        (s.variety?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (s.farmers?.full_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (s.planting_location?.toLowerCase() || '').includes(searchTerm.toLowerCase())
       );
     }
 

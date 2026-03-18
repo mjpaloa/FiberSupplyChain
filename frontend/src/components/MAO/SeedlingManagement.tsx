@@ -183,10 +183,10 @@ const SeedlingManagement: React.FC = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(s =>
-        s.variety.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.source_supplier?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.recipient_association?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.farmers?.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+        (s.variety?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (s.source_supplier?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (s.recipient_association?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (s.farmers?.full_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
       );
     }
 
