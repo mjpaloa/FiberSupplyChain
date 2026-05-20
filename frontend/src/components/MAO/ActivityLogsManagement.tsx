@@ -13,7 +13,7 @@ const ActivityLogsManagement: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalLogs, setTotalLogs] = useState(0);
 
-  const API_URL = 'https://easyabaca-api.vercel.app/api';
+  const API_URL = 'https://server.easyabaca.site/api';
 
   useEffect(() => {
     fetchActivityLogs();

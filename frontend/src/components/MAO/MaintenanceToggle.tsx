@@ -14,7 +14,7 @@ const MaintenanceToggle: React.FC = () => {
 
   const fetchMaintenanceStatus = async () => {
     try {
-      const response = await fetch('https://easyabaca-api.vercel.app/api/maintenance/status');
+      const response = await fetch('https://server.easyabaca.site/api/maintenance/status');
       const data = await response.json();
       setIsMaintenanceMode(data.maintenanceMode);
       setLoading(false);
@@ -33,7 +33,7 @@ const MaintenanceToggle: React.FC = () => {
     setToggling(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/maintenance/toggle', {
+      const response = await fetch('https://server.easyabaca.site/api/maintenance/toggle', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

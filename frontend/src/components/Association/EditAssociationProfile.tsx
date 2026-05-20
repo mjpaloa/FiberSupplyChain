@@ -57,7 +57,7 @@ const EditAssociationProfile: React.FC<EditAssociationProfileProps> = ({ onBack 
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/association/profile', {
+      const response = await fetch('https://server.easyabaca.site/api/association/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -109,7 +109,7 @@ const EditAssociationProfile: React.FC<EditAssociationProfileProps> = ({ onBack 
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/association/profile/upload-picture', {
+      const response = await fetch('https://server.easyabaca.site/api/association/profile/upload-picture', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -145,7 +145,7 @@ const EditAssociationProfile: React.FC<EditAssociationProfileProps> = ({ onBack 
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/association/profile/upload-id', {
+      const response = await fetch('https://server.easyabaca.site/api/association/profile/upload-id', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -172,7 +172,7 @@ const EditAssociationProfile: React.FC<EditAssociationProfileProps> = ({ onBack 
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/association/profile', {
+      const response = await fetch('https://server.easyabaca.site/api/association/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

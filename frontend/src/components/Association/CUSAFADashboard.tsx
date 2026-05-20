@@ -174,7 +174,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   const fetchOfficerProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/association/profile', {
+      const response = await fetch('https://server.easyabaca.site/api/association/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -210,10 +210,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       }
 
       const [associationRes, farmerRes] = await Promise.all([
-        fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/received', {
+        fetch('https://server.easyabaca.site/api/association-seedlings/association/received', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/farmer-distributions', {
+        fetch('https://server.easyabaca.site/api/association-seedlings/association/farmer-distributions', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -283,7 +283,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
       const notifs: Notification[] = [];
 
-      const seedlingRes = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/farmer-distributions', {
+      const seedlingRes = await fetch('https://server.easyabaca.site/api/association-seedlings/association/farmer-distributions', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -315,7 +315,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      const response = await fetch('https://easyabaca-api.vercel.app/api/fiber-deliveries/all', {
+      const response = await fetch('https://server.easyabaca.site/api/fiber-deliveries/all', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -365,7 +365,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       let receivedData: any = [];
 
       try {
-        const seedlingRes = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/farmer-distributions', {
+        const seedlingRes = await fetch('https://server.easyabaca.site/api/association-seedlings/association/farmer-distributions', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (seedlingRes.ok) {
@@ -376,7 +376,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       }
 
       try {
-        const receivedRes = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/received', {
+        const receivedRes = await fetch('https://server.easyabaca.site/api/association-seedlings/association/received', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (receivedRes.ok) {

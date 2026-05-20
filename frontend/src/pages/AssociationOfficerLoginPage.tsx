@@ -32,7 +32,7 @@ export const AssociationOfficerLoginPage: React.FC<AssociationOfficerLoginPagePr
       // Get reCAPTCHA v3 token
       const recaptchaToken = await executeRecaptcha('association_officer_login');
 
-      const response = await fetch('https://easyabaca-api.vercel.app/api/auth/login', {
+      const response = await fetch('https://server.easyabaca.site/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

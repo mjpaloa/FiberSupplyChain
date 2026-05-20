@@ -83,7 +83,7 @@ const FarmerDeliveryTracking: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const statusParam = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
       // Use farmer-specific endpoint to get only their deliveries
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/fiber-deliveries/farmer/my-deliveries${statusParam}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/fiber-deliveries/farmer/my-deliveries${statusParam}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();

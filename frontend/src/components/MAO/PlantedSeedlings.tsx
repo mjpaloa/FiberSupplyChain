@@ -46,7 +46,7 @@ const PlantedSeedlings: React.FC = () => {
     setError(null);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/cusafa/all-distributions', {
+      const response = await fetch('https://server.easyabaca.site/api/association-seedlings/cusafa/all-distributions', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

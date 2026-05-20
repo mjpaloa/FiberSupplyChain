@@ -71,7 +71,7 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
       }
       
       console.log('✅ Using farmer ID:', farmerId);
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://server.easyabaca.site';
       const response = await fetch(`${apiUrl}/api/sales/farmer-reports/${farmerId}`);
       
       if (!response.ok) {

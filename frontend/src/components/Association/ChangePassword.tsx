@@ -84,7 +84,7 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ onBack }) => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/association/profile/change-password', {
+      const response = await fetch('https://server.easyabaca.site/api/association/profile/change-password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

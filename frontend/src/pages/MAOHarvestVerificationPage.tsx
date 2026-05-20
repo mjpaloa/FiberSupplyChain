@@ -165,7 +165,7 @@ export default function MAOHarvestVerificationPage() {
       const statusParam = filter !== 'all' ? `?status=${encodeURIComponent(filter)}` : '';
 
       // Use the correct endpoint for MAO officers
-      const endpoint = `https://easyabaca-api.vercel.app/api/harvests/mao/harvests${statusParam}`;
+      const endpoint = `https://server.easyabaca.site/api/harvests/mao/harvests${statusParam}`;
 
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -185,7 +185,7 @@ export default function MAOHarvestVerificationPage() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/harvests/mao/harvests/statistics', {
+      const response = await fetch('https://server.easyabaca.site/api/harvests/mao/harvests/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -234,7 +234,7 @@ export default function MAOHarvestVerificationPage() {
 
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/harvests/mao/harvests/${selectedHarvest.harvest_id}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/harvests/mao/harvests/${selectedHarvest.harvest_id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -270,7 +270,7 @@ export default function MAOHarvestVerificationPage() {
 
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/harvests/${harvestId}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/harvests/${harvestId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -299,7 +299,7 @@ export default function MAOHarvestVerificationPage() {
       const endpoint = actionType === 'verify' ? 'verify' : 'reject';
 
       const response = await fetch(
-        `https://easyabaca-api.vercel.app/api/harvests/mao/harvests/${selectedHarvest.harvest_id}/${endpoint}`,
+        `https://server.easyabaca.site/api/harvests/mao/harvests/${selectedHarvest.harvest_id}/${endpoint}`,
         {
           method: 'POST',
           headers: {

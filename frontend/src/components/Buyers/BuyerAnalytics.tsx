@@ -113,7 +113,7 @@ const BuyerAnalytics: React.FC = () => {
 
       // Fetch purchases data
       const purchasesResponse = await fetch(
-        'https://easyabaca-api.vercel.app/api/buyer-purchases',
+        'https://server.easyabaca.site/api/buyer-purchases',
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -129,7 +129,7 @@ const BuyerAnalytics: React.FC = () => {
       let totalSalesAmount = 0;
       try {
         const salesResponse = await fetch(
-          'https://easyabaca-api.vercel.app/api/buyer-purchases/sales',
+          'https://server.easyabaca.site/api/buyer-purchases/sales',
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (salesResponse.ok) {

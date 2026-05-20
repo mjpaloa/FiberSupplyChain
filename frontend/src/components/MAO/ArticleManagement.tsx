@@ -43,7 +43,7 @@ const ArticleManagement: React.FC = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('https://easyabaca-api.vercel.app/api/articles');
+      const response = await fetch('https://server.easyabaca.site/api/articles');
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (error) {
@@ -115,8 +115,8 @@ const ArticleManagement: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const url = editingArticle
-        ? `https://easyabaca-api.vercel.app/api/articles/${editingArticle.article_id}`
-        : 'https://easyabaca-api.vercel.app/api/articles';
+        ? `https://server.easyabaca.site/api/articles/${editingArticle.article_id}`
+        : 'https://server.easyabaca.site/api/articles';
       
       const method = editingArticle ? 'PUT' : 'POST';
 
@@ -148,7 +148,7 @@ const ArticleManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/articles/${id}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/articles/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

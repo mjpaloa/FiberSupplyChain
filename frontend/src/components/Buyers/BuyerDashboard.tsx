@@ -128,7 +128,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
       
       // Try to fetch recent purchases (handle 404/500 gracefully)
       try {
-        const purchasesRes = await fetch('https://easyabaca-api.vercel.app/api/buyer-purchases', {
+        const purchasesRes = await fetch('https://server.easyabaca.site/api/buyer-purchases', {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -155,7 +155,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
       
       // Try to fetch recent sales (handle 404 gracefully)
       try {
-        const salesRes = await fetch('https://easyabaca-api.vercel.app/api/buyer-sales', {
+        const salesRes = await fetch('https://server.easyabaca.site/api/buyer-sales', {
           headers: { Authorization: `Bearer ${token}` }
         });
         

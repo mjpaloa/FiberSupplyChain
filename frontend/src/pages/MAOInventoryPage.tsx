@@ -55,8 +55,8 @@ export default function MAOInventoryPage() {
       
       // Use different endpoint based on view mode
       const endpoint = (isSuperAdmin && viewMode === 'all')
-        ? `https://easyabaca-api.vercel.app/api/inventory/admin/inventory/all${statusParam}`
-        : `https://easyabaca-api.vercel.app/api/inventory/inventory${statusParam}`;
+        ? `https://server.easyabaca.site/api/inventory/admin/inventory/all${statusParam}`
+        : `https://server.easyabaca.site/api/inventory/inventory${statusParam}`;
       
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -76,7 +76,7 @@ export default function MAOInventoryPage() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/inventory/inventory/statistics', {
+      const response = await fetch('https://server.easyabaca.site/api/inventory/inventory/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

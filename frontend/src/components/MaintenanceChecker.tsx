@@ -28,7 +28,7 @@ const MaintenanceChecker: React.FC<MaintenanceCheckerProps> = ({ children }) => 
       setIsSuperAdmin(superAdmin);
 
       // Check maintenance status from API
-      const response = await fetch('https://easyabaca-api.vercel.app/api/maintenance/status');
+      const response = await fetch('https://server.easyabaca.site/api/maintenance/status');
       const data = await response.json();
       
       setIsMaintenanceMode(data.maintenanceMode);

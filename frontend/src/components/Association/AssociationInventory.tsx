@@ -104,7 +104,7 @@ const AssociationInventory: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/received', {
+      const response = await fetch('https://server.easyabaca.site/api/association-seedlings/association/received', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -138,7 +138,7 @@ const AssociationInventory: React.FC = () => {
         throw new Error('Authentication token missing');
       }
 
-      const response = await fetch('https://easyabaca-api.vercel.app/api/association-seedlings/association/farmers', {
+      const response = await fetch('https://server.easyabaca.site/api/association-seedlings/association/farmers', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -255,7 +255,7 @@ const AssociationInventory: React.FC = () => {
       }
 
       const response = await fetch(
-        'https://easyabaca-api.vercel.app/api/association-seedlings/association/distribute-to-farmers',
+        'https://server.easyabaca.site/api/association-seedlings/association/distribute-to-farmers',
         {
           method: 'POST',
           headers: {
@@ -296,7 +296,7 @@ const AssociationInventory: React.FC = () => {
       }
 
       const response = await fetch(
-        `https://easyabaca-api.vercel.app/api/association-seedlings/association/received/${selectedDistribution.distribution_id}`,
+        `https://server.easyabaca.site/api/association-seedlings/association/received/${selectedDistribution.distribution_id}`,
         {
           method: 'PUT',
           headers: {
@@ -1044,7 +1044,7 @@ const AssociationInventory: React.FC = () => {
                   try {
                     const token = localStorage.getItem('accessToken');
                     const response = await fetch(
-                      `https://easyabaca-api.vercel.app/api/association-seedlings/association/received/${selectedDistribution.distribution_id}`,
+                      `https://server.easyabaca.site/api/association-seedlings/association/received/${selectedDistribution.distribution_id}`,
                       {
                         method: 'DELETE',
                         headers: { 'Authorization': `Bearer ${token}` }

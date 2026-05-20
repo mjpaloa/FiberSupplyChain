@@ -32,7 +32,7 @@ const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ onClose, onSucc
     try {
       const token = localStorage.getItem('accessToken');
 
-      const response = await fetch('https://easyabaca-api.vercel.app/api/mao/create-officer', {
+      const response = await fetch('https://server.easyabaca.site/api/mao/create-officer', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

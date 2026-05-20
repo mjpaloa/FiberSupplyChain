@@ -5,7 +5,7 @@
 
 import { checkAndRefreshToken, getAuthToken, clearAuthData } from './authToken';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
+const API_URL = import.meta.env.VITE_API_URL || 'https://server.easyabaca.site';
 
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean;

@@ -72,7 +72,7 @@ const CUSAFAInventory: React.FC = () => {
   const fetchInventory = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/cusafa-inventory', {
+      const response = await fetch('https://server.easyabaca.site/api/cusafa-inventory', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -94,7 +94,7 @@ const CUSAFAInventory: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       console.log('🔍 Fetching buyers from API...');
       
-      const response = await fetch('https://easyabaca-api.vercel.app/api/buyers/all', {
+      const response = await fetch('https://server.easyabaca.site/api/buyers/all', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -125,7 +125,7 @@ const CUSAFAInventory: React.FC = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/fiber-deliveries/create', {
+      const response = await fetch('https://server.easyabaca.site/api/fiber-deliveries/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -382,7 +382,7 @@ const CUSAFAInventory: React.FC = () => {
                         const token = localStorage.getItem('accessToken');
                         
                         // First, try to get from farmers table via harvest
-                        const farmerResponse = await fetch(`https://easyabaca-api.vercel.app/api/farmers/${item.farmer_id}`, {
+                        const farmerResponse = await fetch(`https://server.easyabaca.site/api/farmers/${item.farmer_id}`, {
                           headers: { Authorization: `Bearer ${token}` }
                         });
                         

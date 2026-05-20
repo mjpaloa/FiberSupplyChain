@@ -72,7 +72,7 @@ export default function FarmerHarvestView() {
       const token = localStorage.getItem('token');
       const statusParam = filter !== 'all' ? `?status=${encodeURIComponent(filter)}` : '';
 
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/harvests/farmer/harvests${statusParam}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/harvests/farmer/harvests${statusParam}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -90,7 +90,7 @@ export default function FarmerHarvestView() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/harvests/farmer/harvests/statistics', {
+      const response = await fetch('https://server.easyabaca.site/api/harvests/farmer/harvests/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -110,7 +110,7 @@ export default function FarmerHarvestView() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/cusafa-inventory/add/${harvest.harvest_id}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/cusafa-inventory/add/${harvest.harvest_id}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -157,7 +157,7 @@ export default function FarmerHarvestView() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/harvests/${selectedHarvest.harvest_id}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/harvests/${selectedHarvest.harvest_id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -186,7 +186,7 @@ export default function FarmerHarvestView() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/harvests/${selectedHarvest.harvest_id}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/harvests/${selectedHarvest.harvest_id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

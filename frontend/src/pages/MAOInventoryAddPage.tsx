@@ -41,7 +41,7 @@ export default function MAOInventoryAddPage() {
   const fetchHarvestDetails = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/harvests/mao/harvests?status=Verified`, {
+      const response = await fetch(`https://server.easyabaca.site/api/harvests/mao/harvests?status=Verified`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -93,7 +93,7 @@ export default function MAOInventoryAddPage() {
         remarks: formData.remarks
       };
 
-      const response = await fetch('https://easyabaca-api.vercel.app/api/inventory/inventory', {
+      const response = await fetch('https://server.easyabaca.site/api/inventory/inventory', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

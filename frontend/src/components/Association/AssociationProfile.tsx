@@ -61,7 +61,7 @@ const AssociationProfile: React.FC<AssociationProfileProps> = ({ onBack, onEditP
         return;
       }
       
-      const response = await fetch('https://easyabaca-api.vercel.app/api/association/profile', {
+      const response = await fetch('https://server.easyabaca.site/api/association/profile', {
         method: 'GET',
         headers: { 
           'Authorization': `Bearer ${token}`,

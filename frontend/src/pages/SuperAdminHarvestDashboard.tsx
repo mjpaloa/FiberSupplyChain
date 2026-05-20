@@ -56,7 +56,7 @@ export default function SuperAdminHarvestDashboard() {
       if (filters.barangay) params.append('barangay', filters.barangay);
       
       const queryString = params.toString();
-      const url = `https://easyabaca-api.vercel.app/api/harvests/admin/harvests/all${queryString ? '?' + queryString : ''}`;
+      const url = `https://server.easyabaca.site/api/harvests/admin/harvests/all${queryString ? '?' + queryString : ''}`;
       
       console.log('🔍 Fetching harvests from:', url);
       console.log('🔍 With filters:', filters);
@@ -87,7 +87,7 @@ export default function SuperAdminHarvestDashboard() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/harvests/mao/harvests/statistics', {
+      const response = await fetch('https://server.easyabaca.site/api/harvests/mao/harvests/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

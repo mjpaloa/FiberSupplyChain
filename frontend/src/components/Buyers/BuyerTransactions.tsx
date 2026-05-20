@@ -48,7 +48,7 @@ const BuyerTransactions: React.FC = () => {
       
       // Fetch purchases
       const purchasesResponse = await fetch(
-        `https://easyabaca-api.vercel.app/api/buyer-purchases/transactions?status=${statusFilter}`,
+        `https://server.easyabaca.site/api/buyer-purchases/transactions?status=${statusFilter}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const purchasesData = await purchasesResponse.json();
@@ -75,7 +75,7 @@ const BuyerTransactions: React.FC = () => {
       let sales: any[] = [];
       try {
         const salesResponse = await fetch(
-          `https://easyabaca-api.vercel.app/api/buyer-purchases/sales`,
+          `https://server.easyabaca.site/api/buyer-purchases/sales`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
@@ -406,8 +406,8 @@ const BuyerTransactions: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const endpoint = transactionToDelete.type === 'purchase'
-        ? `https://easyabaca-api.vercel.app/api/buyer-purchases/${transactionToDelete.id}`
-        : `https://easyabaca-api.vercel.app/api/buyer-purchases/sales/${transactionToDelete.id}`;
+        ? `https://server.easyabaca.site/api/buyer-purchases/${transactionToDelete.id}`
+        : `https://server.easyabaca.site/api/buyer-purchases/sales/${transactionToDelete.id}`;
       
       const response = await fetch(endpoint, {
         method: 'DELETE',

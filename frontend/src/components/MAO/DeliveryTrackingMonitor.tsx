@@ -60,7 +60,7 @@ const DeliveryTrackingMonitor: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const statusParam = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/fiber-deliveries/all${statusParam}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/fiber-deliveries/all${statusParam}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();

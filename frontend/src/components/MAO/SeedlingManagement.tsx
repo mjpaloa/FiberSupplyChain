@@ -111,7 +111,7 @@ const SeedlingManagement: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/seedlings/all', {
+      const response = await fetch('https://server.easyabaca.site/api/seedlings/all', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -142,7 +142,7 @@ const SeedlingManagement: React.FC = () => {
   const fetchFarmers = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/mao/farmers', {
+      const response = await fetch('https://server.easyabaca.site/api/mao/farmers', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -201,7 +201,7 @@ const SeedlingManagement: React.FC = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://easyabaca-api.vercel.app/api/seedlings', {
+      const response = await fetch('https://server.easyabaca.site/api/seedlings', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -228,7 +228,7 @@ const SeedlingManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/seedlings/${selectedSeedling.seedling_id}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/seedlings/${selectedSeedling.seedling_id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -253,7 +253,7 @@ const SeedlingManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/seedlings/${id}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/seedlings/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

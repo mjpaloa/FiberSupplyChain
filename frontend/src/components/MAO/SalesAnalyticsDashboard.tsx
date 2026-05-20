@@ -85,7 +85,7 @@ const SalesAnalyticsDashboard: React.FC = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('accessToken');
-            const apiUrl = import.meta.env.VITE_API_URL || 'https://easyabaca-api.vercel.app';
+            const apiUrl = import.meta.env.VITE_API_URL || 'https://server.easyabaca.site';
 
             // Try the new specialized endpoint first
             try {

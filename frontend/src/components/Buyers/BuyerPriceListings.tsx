@@ -114,7 +114,7 @@ const BuyerPriceListings: React.FC = () => {
         ...(editModal.class_c_enabled && { class_c_price: editModal.class_c_price })
       };
       
-      const response = await fetch(`https://easyabaca-api.vercel.app/api/buyer-listings/${editModal.listing_id}`, {
+      const response = await fetch(`https://server.easyabaca.site/api/buyer-listings/${editModal.listing_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -84,7 +84,7 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
 
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch('https://easyabaca-api.vercel.app/api/auth/login', {
+      const response = await fetch('https://server.easyabaca.site/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,7 +163,7 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
       const recaptchaToken = await executeRecaptcha('login');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch('https://easyabaca-api.vercel.app/api/auth/register/buyer', {
+      const response = await fetch('https://server.easyabaca.site/api/auth/register/buyer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...submitData, recaptchaToken }),
