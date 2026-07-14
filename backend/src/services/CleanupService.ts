@@ -8,12 +8,12 @@ export class CleanupService {
   static async cleanupDeactivatedUsers(): Promise<void> {
     try {
       console.log('🧹 Starting cleanup of deactivated users...');
-      
+
       // Calculate the cutoff date (3 days ago)
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
       const cutoffDate = threeDaysAgo.toISOString();
-      
+
       console.log(`📅 Cutoff date: ${cutoffDate}`);
 
       // Cleanup deactivated farmers
@@ -27,8 +27,8 @@ export class CleanupService {
       if (farmersError) {
         console.error('❌ Error fetching deactivated farmers:', farmersError);
       } else if (deactivatedFarmers && deactivatedFarmers.length > 0) {
-        console.log(`🚜 Found ${deactivatedFarmers.length} farmers to delete:`, 
-          deactivatedFarmers.map(f => ({ id: f.farmer_id, name: f.full_name, email: f.email }))
+        console.log(`🚜 Found ${deactivatedFarmers.length} farmers to delete:`,
+          deactivatedFarmers.map((f: any) => ({ id: f.farmer_id, name: f.full_name, email: f.email }))
         );
 
         const { error: deleteFarmersError } = await supabase
@@ -58,8 +58,8 @@ export class CleanupService {
       if (buyersError) {
         console.error('❌ Error fetching deactivated buyers:', buyersError);
       } else if (deactivatedBuyers && deactivatedBuyers.length > 0) {
-        console.log(`🏢 Found ${deactivatedBuyers.length} buyers to delete:`, 
-          deactivatedBuyers.map(b => ({ id: b.buyer_id, name: b.owner_name, email: b.email }))
+        console.log(`🏢 Found ${deactivatedBuyers.length} buyers to delete:`,
+          deactivatedBuyers.map((b: any) => ({ id: b.buyer_id, name: b.owner_name, email: b.email }))
         );
 
         const { error: deleteBuyersError } = await supabase
@@ -89,8 +89,8 @@ export class CleanupService {
       if (officersError) {
         console.error('❌ Error fetching deactivated officers:', officersError);
       } else if (deactivatedOfficers && deactivatedOfficers.length > 0) {
-        console.log(`👥 Found ${deactivatedOfficers.length} officers to delete:`, 
-          deactivatedOfficers.map(o => ({ id: o.officer_id, name: o.full_name, email: o.email }))
+        console.log(`👥 Found ${deactivatedOfficers.length} officers to delete:`,
+          deactivatedOfficers.map((o: any) => ({ id: o.officer_id, name: o.full_name, email: o.email }))
         );
 
         const { error: deleteOfficersError } = await supabase
@@ -141,7 +141,7 @@ export class CleanupService {
 
       const farmerStats = {
         total: deactivatedFarmers?.length || 0,
-        expiringSoon: deactivatedFarmers?.filter(f => {
+        expiringSoon: deactivatedFarmers?.filter((f: any) => {
           const deactivatedDate = new Date(f.deactivated_at);
           const expiryDate = new Date(deactivatedDate);
           expiryDate.setDate(expiryDate.getDate() + 3);
@@ -158,7 +158,7 @@ export class CleanupService {
 
       const buyerStats = {
         total: deactivatedBuyers?.length || 0,
-        expiringSoon: deactivatedBuyers?.filter(b => {
+        expiringSoon: deactivatedBuyers?.filter((b: any) => {
           const deactivatedDate = new Date(b.deactivated_at);
           const expiryDate = new Date(deactivatedDate);
           expiryDate.setDate(expiryDate.getDate() + 3);
@@ -175,7 +175,7 @@ export class CleanupService {
 
       const officerStats = {
         total: deactivatedOfficers?.length || 0,
-        expiringSoon: deactivatedOfficers?.filter(o => {
+        expiringSoon: deactivatedOfficers?.filter((o: any) => {
           const deactivatedDate = new Date(o.deactivated_at);
           const expiryDate = new Date(deactivatedDate);
           expiryDate.setDate(expiryDate.getDate() + 3);
