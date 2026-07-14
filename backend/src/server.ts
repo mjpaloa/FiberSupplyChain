@@ -34,13 +34,22 @@ dotenv.config();
 const app: Application = express();
 const PORT = config.port;
 
-// CORS configuration for production
 const allowedOrigins = [
   'https://easyabaca.site',
   'https://www.easyabaca.site',
+  'https://app.easyabaca.site',
   'http://localhost:5173',
   'http://localhost:3000'
 ];
+
+if (process.env.FRONTEND_URL) {
+  // Support multiple values or single value from env
+  if (process.env.FRONTEND_URL.includes(',')) {
+    allowedOrigins.push(...process.env.FRONTEND_URL.split(',').map(o => o.trim()));
+  } else {
+    allowedOrigins.push(process.env.FRONTEND_URL.trim());
+  }
+}
 
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
