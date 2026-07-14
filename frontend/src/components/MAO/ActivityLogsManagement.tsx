@@ -13,7 +13,7 @@ const ActivityLogsManagement: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalLogs, setTotalLogs] = useState(0);
 
-  const API_URL = 'https://server.easyabaca.site/api';
+  const API_URL = 'https://fibersupplychain.onrender.com/api';
 
   useEffect(() => {
     fetchActivityLogs();

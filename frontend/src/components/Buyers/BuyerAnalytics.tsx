@@ -113,7 +113,7 @@ const BuyerAnalytics: React.FC = () => {
 
       // Fetch purchases data
       const purchasesResponse = await fetch(
-        'https://server.easyabaca.site/api/buyer-purchases',
+        'https://fibersupplychain.onrender.com/api/buyer-purchases',
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -129,7 +129,7 @@ const BuyerAnalytics: React.FC = () => {
       let totalSalesAmount = 0;
       try {
         const salesResponse = await fetch(
-          'https://server.easyabaca.site/api/buyer-purchases/sales',
+          'https://fibersupplychain.onrender.com/api/buyer-purchases/sales',
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (salesResponse.ok) {

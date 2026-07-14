@@ -166,7 +166,7 @@ const FarmerMonitoringView: React.FC = () => {
       setLoading(true);
 
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://server.easyabaca.site/api/farmers/monitoring', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/farmers/monitoring', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

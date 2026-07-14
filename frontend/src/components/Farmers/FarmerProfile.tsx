@@ -92,7 +92,7 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
         return;
       }
 
-      const response = await fetch('https://server.easyabaca.site/api/auth/me', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/me', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -77,7 +77,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
 
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch('https://server.easyabaca.site/api/auth/login', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -156,7 +156,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
       const recaptchaToken = await executeRecaptcha('login');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch('https://server.easyabaca.site/api/auth/register/farmer', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/register/farmer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...submitData, recaptchaToken }),

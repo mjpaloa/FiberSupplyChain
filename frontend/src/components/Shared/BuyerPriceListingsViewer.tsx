@@ -75,7 +75,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
       if (filterMunicipality !== 'all') params.append('municipality', filterMunicipality);
       if (filterAvailability !== 'all') params.append('availability', filterAvailability);
 
-      const response = await fetch(`https://server.easyabaca.site/api/buyer-listings/all?${params}`, {
+      const response = await fetch(`https://fibersupplychain.onrender.com/api/buyer-listings/all?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

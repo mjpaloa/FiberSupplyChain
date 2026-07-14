@@ -47,7 +47,7 @@ const TeamManagement: React.FC = () => {
 
   const fetchTeam = async () => {
     try {
-      const response = await fetch('https://server.easyabaca.site/api/team');
+      const response = await fetch('https://fibersupplychain.onrender.com/api/team');
       const data = await response.json();
       setTeam(data.team || []);
     } catch (error) {
@@ -119,8 +119,8 @@ const TeamManagement: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const url = editingMember
-        ? `https://server.easyabaca.site/api/team/${editingMember.member_id}`
-        : 'https://server.easyabaca.site/api/team';
+        ? `https://fibersupplychain.onrender.com/api/team/${editingMember.member_id}`
+        : 'https://fibersupplychain.onrender.com/api/team';
       
       const method = editingMember ? 'PUT' : 'POST';
 
@@ -152,7 +152,7 @@ const TeamManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`https://server.easyabaca.site/api/team/${id}`, {
+      const response = await fetch(`https://fibersupplychain.onrender.com/api/team/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

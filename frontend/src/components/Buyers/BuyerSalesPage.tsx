@@ -39,7 +39,7 @@ const BuyerSalesPage: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `https://server.easyabaca.site/api/buyer-purchases?quality=${qualityFilter}&date=${dateFilter}`,
+        `https://fibersupplychain.onrender.com/api/buyer-purchases?quality=${qualityFilter}&date=${dateFilter}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();

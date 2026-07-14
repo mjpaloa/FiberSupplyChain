@@ -21,7 +21,7 @@ const TeamSection: React.FC = () => {
 
   const fetchTeam = async () => {
     try {
-      const response = await fetch('https://server.easyabaca.site/api/team');
+      const response = await fetch('https://fibersupplychain.onrender.com/api/team');
       const data = await response.json();
       setTeam(data.team || []);
     } catch (error) {

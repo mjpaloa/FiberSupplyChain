@@ -79,7 +79,7 @@ const BuyerPriceListingForm: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://server.easyabaca.site/api/buyer-listings/create', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/buyer-listings/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

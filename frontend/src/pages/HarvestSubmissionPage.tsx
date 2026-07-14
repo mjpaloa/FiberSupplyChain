@@ -107,12 +107,12 @@ export default function HarvestSubmissionPage() {
       if (!token) return;
 
       // 1. Fetch planted seedlings
-      const seedlingsRes = await fetch('https://server.easyabaca.site/api/association-seedlings/farmer/received', {
+      const seedlingsRes = await fetch('https://fibersupplychain.onrender.com/api/association-seedlings/farmer/received', {
         headers: getAuthHeader()
       });
 
       // 2. Fetch existing harvests to check what's already been harvested
-      const harvestsRes = await fetch('https://server.easyabaca.site/api/harvests/farmer/harvests', {
+      const harvestsRes = await fetch('https://fibersupplychain.onrender.com/api/harvests/farmer/harvests', {
         headers: getAuthHeader()
       });
 
@@ -169,7 +169,7 @@ export default function HarvestSubmissionPage() {
         return;
       }
 
-      const response = await fetch('https://server.easyabaca.site/api/farmers/profile', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/farmers/profile', {
         headers: getAuthHeader()
       });
 
@@ -255,7 +255,7 @@ export default function HarvestSubmissionPage() {
 
       console.log('Submitting payload:', payload);
 
-      const response = await fetch('https://server.easyabaca.site/api/harvests/farmer/harvests', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/harvests/farmer/harvests', {
         method: 'POST',
         headers: {
           ...getAuthHeader(),

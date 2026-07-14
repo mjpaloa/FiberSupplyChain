@@ -84,7 +84,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
       // Get reCAPTCHA v3 token (invisible)
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch('https://server.easyabaca.site/api/auth/login', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -162,7 +162,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
       const recaptchaToken = await executeRecaptcha('register');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch('https://server.easyabaca.site/api/auth/register/officer', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/register/officer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

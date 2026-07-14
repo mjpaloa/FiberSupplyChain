@@ -85,7 +85,7 @@ const SalesAnalyticsDashboard: React.FC = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('accessToken');
-            const apiUrl = import.meta.env.VITE_API_URL || 'https://server.easyabaca.site';
+            const apiUrl = import.meta.env.VITE_API_URL || 'https://fibersupplychain.onrender.com';
 
             // Try the new specialized endpoint first
             try {

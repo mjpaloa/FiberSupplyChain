@@ -75,7 +75,7 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({ onComplete }) => 
         });
       }
       
-      const response = await fetch('https://server.easyabaca.site/api/mao/complete-profile', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/mao/complete-profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

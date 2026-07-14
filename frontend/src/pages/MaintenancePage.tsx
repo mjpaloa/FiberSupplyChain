@@ -46,7 +46,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = () => {
     try {
       console.log('Attempting login with:', { email, userType: 'officer' });
 
-      const response = await fetch('https://server.easyabaca.site/api/auth/login', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

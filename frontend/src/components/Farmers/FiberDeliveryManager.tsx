@@ -196,8 +196,8 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const url = isEditMode && selectedDelivery
-        ? `https://server.easyabaca.site/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
-        : 'https://server.easyabaca.site/api/fiber-deliveries/create';
+        ? `https://fibersupplychain.onrender.com/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
+        : 'https://fibersupplychain.onrender.com/api/fiber-deliveries/create';
 
       const method = isEditMode ? 'PUT' : 'POST';
 
@@ -260,7 +260,7 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `https://server.easyabaca.site/api/fiber-delivery/farmer/${selectedDelivery.delivery_id}`,
+        `https://fibersupplychain.onrender.com/api/fiber-delivery/farmer/${selectedDelivery.delivery_id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
@@ -292,7 +292,7 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `https://server.easyabaca.site/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}/cancel`,
+        `https://fibersupplychain.onrender.com/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}/cancel`,
         {
           method: 'POST',
           headers: {

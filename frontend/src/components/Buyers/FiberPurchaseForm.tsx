@@ -78,7 +78,7 @@ const FiberPurchaseForm: React.FC = () => {
         imageUrl: null // TODO: Handle image upload separately if needed
       };
 
-      const response = await fetch('https://server.easyabaca.site/api/buyer-purchases', {
+      const response = await fetch('https://fibersupplychain.onrender.com/api/buyer-purchases', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

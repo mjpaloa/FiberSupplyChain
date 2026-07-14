@@ -103,7 +103,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
       }
 
       const response = await fetch(
-        'https://server.easyabaca.site/api/association-seedlings/association/farmer-distributions',
+        'https://fibersupplychain.onrender.com/api/association-seedlings/association/farmer-distributions',
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -165,7 +165,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
       }
 
       const response = await fetch(
-        `https://server.easyabaca.site/api/association-seedlings/association/farmer-distributions/${distributionId}`,
+        `https://fibersupplychain.onrender.com/api/association-seedlings/association/farmer-distributions/${distributionId}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }

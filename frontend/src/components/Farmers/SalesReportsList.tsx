@@ -71,7 +71,7 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
       }
       
       console.log('✅ Using farmer ID:', farmerId);
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server.easyabaca.site';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://fibersupplychain.onrender.com';
       const response = await fetch(`${apiUrl}/api/sales/farmer-reports/${farmerId}`);
       
       if (!response.ok) {
