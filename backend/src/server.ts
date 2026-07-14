@@ -38,7 +38,6 @@ const allowedOrigins = [
   'https://easyabaca.site',
   'https://www.easyabaca.site',
   'https://app.easyabaca.site',
-  'https://fibersupplychain.onrender.com',
   'http://localhost:5173',
   'http://localhost:3000'
 ];
