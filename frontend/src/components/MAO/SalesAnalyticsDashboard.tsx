@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Package, DollarSign, BarChart3 } from 'lucide-react';
 import {
     BarChart as RechartsBarChart,
     Bar,
@@ -7,9 +6,14 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer
 } from 'recharts';
+import {
+    EditorialCard,
+    KpiStrip,
+    SegmentedToggle,
+    EDITORIAL_CHART
+} from '../Shared/EditorialUI';
 
 const PhilippinePeso = ({ className, size = 24 }: { className?: string; size?: number | string }) => (
     <svg
@@ -232,165 +236,123 @@ const SalesAnalyticsDashboard: React.FC = () => {
     const availableYears = Object.keys(data.monthlyStatsByYear || {}).map(Number).sort((a, b) => b - a);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-black text-gray-900 mb-2 flex items-center gap-3">
-                        <BarChart3 className="w-10 h-10 text-blue-600" />
-                        Sales Performance Analytics
-                    </h1>
-                    <p className="text-gray-600 text-lg">Fiber Sales (₱) by Class A, B, and C</p>
+        <div className="space-y-6">
+            <KpiStrip
+                columns={4}
+                items={[
+                    {
+                        label: 'Total Fiber Sales',
+                        value: `₱${data.totalSales.toLocaleString()}`,
+                        subtext: `${data.totalVolume.toLocaleString()} kg total volume`,
+                    },
+                    {
+                        label: 'Class A Sales',
+                        value: `₱${data.totalSalesA.toLocaleString()}`,
+                        subtext: `${data.totalVolumeA.toLocaleString()} kg sold`,
+                    },
+                    {
+                        label: 'Class B Sales',
+                        value: `₱${data.totalSalesB.toLocaleString()}`,
+                        subtext: `${data.totalVolumeB.toLocaleString()} kg sold`,
+                    },
+                    {
+                        label: 'Class C Sales',
+                        value: `₱${data.totalSalesC.toLocaleString()}`,
+                        subtext: `${data.totalVolumeC.toLocaleString()} kg sold`,
+                    },
+                ]}
+            />
+
+            <EditorialCard
+                title="Sales by Fiber Class"
+                subtitle="Fiber revenue (₱) across Class A, B, and C"
+                actions={
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        {chartView === 'monthly' && availableYears.length > 0 && (
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                aria-label="Select year"
+                                className="px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857]"
+                            >
+                                {availableYears.map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                ))}
+                            </select>
+                        )}
+                        <SegmentedToggle
+                            options={[
+                                { value: 'monthly', label: 'Monthly' },
+                                { value: 'yearly', label: 'Yearly' },
+                            ]}
+                            value={chartView}
+                            onChange={(v) => setChartView(v as 'monthly' | 'yearly')}
+                        />
+                    </div>
+                }
+            >
+                <div className="flex flex-wrap items-center justify-end gap-4 text-xs text-gray-600 mb-4">
+                    <span className="inline-flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.amber }} />
+                        Class A
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.emerald }} />
+                        Class B
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.espresso }} />
+                        Class C
+                    </span>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    {/* Fiber A Stats */}
-                    <div className="group relative bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                        <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                                    <Package className="w-6 h-6 text-white" />
-                                </div>
-                            </div>
-                            <p className="text-white/90 text-sm font-medium mb-1">Class A Sales</p>
-                            <p className="text-3xl font-bold text-white">₱{data.totalSalesA.toLocaleString()}</p>
+                <ResponsiveContainer width="100%" height={400}>
+                    <RechartsBarChart data={chartData} margin={{ top: 10, right: 12, left: 0, bottom: 8 }}>
+                        <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                        <XAxis
+                            dataKey={chartView === 'monthly' ? 'month' : 'year'}
+                            {...EDITORIAL_CHART.xAxisProps}
+                        />
+                        <YAxis
+                            {...EDITORIAL_CHART.yAxisProps}
+                            tickFormatter={(value) => `₱${Number(value).toLocaleString()}`}
+                        />
+                        <Tooltip
+                            contentStyle={EDITORIAL_CHART.tooltipStyle}
+                            cursor={{ fill: '#F9FAFB' }}
+                            formatter={(value: unknown) => `₱${Math.round(Number(value ?? 0)).toLocaleString()}`}
+                        />
+                        <Bar dataKey="Sales A (₱)" name="Class A" fill={EDITORIAL_CHART.colors.amber} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Sales B (₱)" name="Class B" fill={EDITORIAL_CHART.colors.emerald} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Sales C (₱)" name="Class C" fill={EDITORIAL_CHART.colors.espresso} radius={[4, 4, 0, 0]} />
+                    </RechartsBarChart>
+                </ResponsiveContainer>
+            </EditorialCard>
+
+            <EditorialCard title="Total Sales Summary" subtitle="Breakdown by fiber classification">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                    <div className="md:col-span-1 p-5 rounded-xl bg-[#F8F9FA] border border-gray-200">
+                        <p className="text-xs font-medium text-gray-500">All-Class Total</p>
+                        <p className="text-2xl font-bold text-gray-900 tabular-nums mt-1.5">
+                            ₱{data.totalSales.toLocaleString()}
+                        </p>
+                    </div>
+                    <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="p-4 rounded-xl border border-gray-200 bg-white">
+                            <span className="text-xs font-medium text-gray-500">Class A</span>
+                            <p className="text-lg font-bold text-gray-900 tabular-nums mt-1">₱{data.totalSalesA.toLocaleString()}</p>
                         </div>
-                    </div>
-
-                    {/* Fiber B Stats */}
-                    <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                        <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                                    <Package className="w-6 h-6 text-white" />
-                                </div>
-                            </div>
-                            <p className="text-white/90 text-sm font-medium mb-1">Class B Sales</p>
-                            <p className="text-3xl font-bold text-white">₱{data.totalSalesB.toLocaleString()}</p>
+                        <div className="p-4 rounded-xl border border-gray-200 bg-white">
+                            <span className="text-xs font-medium text-gray-500">Class B</span>
+                            <p className="text-lg font-bold text-gray-900 tabular-nums mt-1">₱{data.totalSalesB.toLocaleString()}</p>
                         </div>
-                    </div>
-
-                    {/* Fiber C Stats */}
-                    <div className="group relative bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                        <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                                    <Package className="w-6 h-6 text-white" />
-                                </div>
-                            </div>
-                            <p className="text-white/90 text-sm font-medium mb-1">Class C Sales</p>
-                            <p className="text-3xl font-bold text-white">₱{data.totalSalesC.toLocaleString()}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Chart Section */}
-                <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                        <h2 className="text-2xl font-bold text-gray-900">Sales by Fiber Class</h2>
-
-                        <div className="flex gap-3 items-center">
-                            {/* Year Selector (for monthly view) */}
-                            {chartView === 'monthly' && availableYears.length > 0 && (
-                                <select
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                                >
-                                    {availableYears.map(year => (
-                                        <option key={year} value={year}>{year}</option>
-                                    ))}
-                                </select>
-                            )}
-
-                            {/* View Toggle */}
-                            <div className="flex bg-gray-100 rounded-lg p-1">
-                                <button
-                                    onClick={() => setChartView('monthly')}
-                                    className={`px-4 py-2 rounded-lg font-semibold transition-all ${chartView === 'monthly'
-                                        ? 'bg-white text-blue-600 shadow-md'
-                                        : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    Monthly
-                                </button>
-                                <button
-                                    onClick={() => setChartView('yearly')}
-                                    className={`px-4 py-2 rounded-lg font-semibold transition-all ${chartView === 'yearly'
-                                        ? 'bg-white text-blue-600 shadow-md'
-                                        : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    Yearly
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Sales Chart - Class A, B, C */}
-                    <div>
-                        <h3 className="text-lg font-bold text-gray-700 mb-4">Sales by Fiber Class (₱)</h3>
-                        <ResponsiveContainer width="100%" height={450}>
-                            <RechartsBarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                <XAxis
-                                    dataKey={chartView === 'monthly' ? 'month' : 'year'}
-                                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                                />
-                                <YAxis
-                                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                                    tickFormatter={(value) => `₱${value.toLocaleString()}`}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                        border: '1px solid #e5e7eb',
-                                        borderRadius: '8px',
-                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                    }}
-                                    formatter={(value: any) => `₱${Math.round(value).toLocaleString()}`}
-                                />
-                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                <Bar dataKey="Sales A (₱)" name="Class A" fill="#10b981" radius={[8, 8, 0, 0]} />
-                                <Bar dataKey="Sales B (₱)" name="Class B" fill="#3b82f6" radius={[8, 8, 0, 0]} />
-                                <Bar dataKey="Sales C (₱)" name="Class C" fill="#a855f7" radius={[8, 8, 0, 0]} />
-                            </RechartsBarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Summary Section */}
-                <div className="bg-white rounded-2xl shadow-xl p-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Total Sales Summary</h2>
-                    <div className="max-w-2xl mx-auto">
-                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-8">
-                            <div className="flex items-center gap-3 mb-4">
-                                <PhilippinePeso className="w-10 h-10 text-green-600" />
-                                <h3 className="text-2xl font-bold text-gray-900">Total Sales</h3>
-                            </div>
-                            <p className="text-5xl font-black text-green-600 mb-6">₱{data.totalSales.toLocaleString()}</p>
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                                    <span className="text-gray-700 font-semibold">Class A:</span>
-                                    <span className="font-black text-lg text-emerald-600">₱{data.totalSalesA.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                                    <span className="text-gray-700 font-semibold">Class B:</span>
-                                    <span className="font-black text-lg text-blue-600">₱{data.totalSalesB.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                                    <span className="text-gray-700 font-semibold">Class C:</span>
-                                    <span className="font-black text-lg text-purple-600">₱{data.totalSalesC.toLocaleString()}</span>
-                                </div>
-                            </div>
+                        <div className="p-4 rounded-xl border border-gray-200 bg-white">
+                            <span className="text-xs font-medium text-gray-500">Class C</span>
+                            <p className="text-lg font-bold text-gray-900 tabular-nums mt-1">₱{data.totalSalesC.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </EditorialCard>
         </div>
     );
 };

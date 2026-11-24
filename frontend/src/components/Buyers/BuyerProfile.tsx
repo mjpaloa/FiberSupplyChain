@@ -5,8 +5,6 @@ import {
   Phone, 
   Mail, 
   MapPin, 
-  DollarSign, 
-  Package, 
   FileText, 
   Edit2, 
   Save, 
@@ -19,9 +17,9 @@ import {
   Eye,
   EyeOff,
   Key,
-  Camera,
-  Upload
+  Camera
 } from 'lucide-react';
+import { EditorialCard, StatusPill, EditorialCallout } from '../Shared/EditorialUI';
 
 interface BuyerInfo {
   buyer_id: string;
@@ -356,180 +354,182 @@ const BuyerProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center h-80">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#047857]"></div>
       </div>
     );
   }
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-      {/* Header */}
-      <div className="mb-4 sm:mb-6 md:mb-8">
-        <div className="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 md:p-8 text-white">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <Building className="w-6 h-6 sm:w-8 sm:h-8" />
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Buyer Profile</h1>
+    <div className="w-full max-w-6xl space-y-6">
+      {/* Header Summary Card */}
+      <EditorialCard>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-900">
+                {buyerInfo?.business_name || 'Buyer Account'}
+              </h2>
+              <StatusPill tone="success">Verified</StatusPill>
+            </div>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              Manage your company information and profile settings
+            </p>
+            {buyerInfo && (
+              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                <span className="inline-flex items-center gap-1.5">
+                  <Calendar size={14} className="text-gray-400" />
+                  Member since{' '}
+                  {buyerInfo?.created_at
+                    ? new Date(buyerInfo.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                    : 'N/A'}
+                </span>
               </div>
-              <p className="text-blue-50 text-sm sm:text-base">Manage your company information and profile settings</p>
-              {buyerInfo && (
-                <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
-                  <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 sm:px-3 py-1.5 rounded-lg">
-                    <CheckCircle size={14} className="sm:w-4 sm:h-4" />
-                    <span className="font-medium">Verified</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 sm:px-3 py-1.5 rounded-lg">
-                    <Calendar size={14} className="sm:w-4 sm:h-4" />
-                    <span>Since {buyerInfo?.created_at ? new Date(buyerInfo.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A'}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
-              {!isEditing ? (
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2.5 w-full sm:w-auto">
+            {!isEditing ? (
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors font-semibold text-sm flex-1 sm:flex-initial"
+              >
+                <Edit2 size={16} />
+                <span>Edit Profile</span>
+              </button>
+            ) : (
+              <>
                 <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-all font-semibold shadow-lg hover:shadow-xl text-sm sm:text-base flex-1 sm:flex-initial"
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors font-semibold text-sm flex-1 sm:flex-initial"
                 >
-                  <Edit2 size={18} className="sm:w-5 sm:h-5" />
-                  <span>Edit Profile</span>
+                  <X size={16} />
+                  <span>Cancel</span>
                 </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all font-semibold text-sm sm:text-base flex-1 sm:flex-initial"
-                  >
-                    <X size={18} className="sm:w-5 sm:h-5" />
-                    <span>Cancel</span>
-                  </button>
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={saving}
-                    className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-emerald-600 rounded-xl hover:bg-emerald-50 transition-all font-semibold disabled:opacity-50 shadow-lg text-sm sm:text-base flex-1 sm:flex-initial"
-                  >
-                    <Save size={18} className="sm:w-5 sm:h-5" />
-                    <span>{saving ? 'Saving...' : 'Save'}</span>
-                  </button>
-                </>
-              )}
-            </div>
+                <button
+                  type="button"
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors font-semibold text-sm disabled:opacity-50 flex-1 sm:flex-initial"
+                >
+                  <Save size={16} />
+                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
-      </div>
+      </EditorialCard>
 
-      {/* Success/Error Message */}
-      {message && (
-        <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 shadow-lg animate-in slide-in-from-top-2 ${
-          message.type === 'success' ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-200' : 'bg-red-100 text-red-800 border-2 border-red-200'
-        }`}>
-          {message.type === 'success' ? <CheckCircle size={18} className="sm:w-5 sm:h-5 flex-shrink-0" /> : <AlertCircle size={18} className="sm:w-5 sm:h-5 flex-shrink-0" />}
-          <span className="font-medium text-sm sm:text-base">{message.text}</span>
-        </div>
-      )}
-
-      {/* Password Change Section */}
-      <div className="mb-4 sm:mb-6 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 md:p-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-4 border-b border-gray-100">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg sm:rounded-xl">
-              <Lock className="text-white" size={18} />
-            </div>
-            <div>
-              <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Security Settings</h2>
-              <p className="text-xs sm:text-sm text-gray-500">Update your password</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowPasswordSection(!showPasswordSection)}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-semibold text-xs sm:text-sm w-full sm:w-auto justify-center"
-          >
-            <Key size={14} className="sm:w-4 sm:h-4" />
-            {showPasswordSection ? 'Hide' : 'Change Password'}
-          </button>
-        </div>
-
-        {showPasswordSection && (
-          <div className="space-y-4">
-            {/* Error Banner */}
+      {/* Error Banner */}
       {error && (
-        <div className="mb-4 sm:mb-6 p-4 rounded-xl flex items-start gap-3 bg-yellow-50 text-yellow-900 border-2 border-yellow-200">
-          <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
+        <div className="p-4 rounded-xl flex items-start gap-3 bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] text-sm">
+          <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="font-semibold mb-1">⚠️ Loading Issue</p>
-            <p className="text-sm">{error}</p>
+            <p className="font-semibold">Loading Issue</p>
+            <p className="text-xs mt-0.5">{error}</p>
           </div>
           <button
+            type="button"
             onClick={() => setError(null)}
-            className="text-yellow-600 hover:text-yellow-800"
+            className="text-[#92400E] hover:opacity-75 p-1"
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
       )}
 
       {/* Success/Error Message */}
       {message && (
-        <div className={`mb-4 sm:mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
-          {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-          <span className="font-medium text-sm sm:text-base">{message.text}</span>
+        <div className={`p-4 rounded-xl flex items-center gap-3 border text-sm font-medium ${
+          message.type === 'success'
+            ? 'bg-[#EAF6F0] text-[#047857] border-[#CBEAD9]'
+            : 'bg-[#FEE2E2] text-[#991B1B] border-[#FECACA]'
+        }`}>
+          {message.type === 'success' ? <CheckCircle size={18} className="flex-shrink-0" /> : <AlertCircle size={18} className="flex-shrink-0" />}
+          <span>{message.text}</span>
         </div>
       )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {/* New Password */}
+      {/* Security Settings Card */}
+      <EditorialCard
+        title="Security Settings"
+        subtitle="Update your account password"
+        actions={
+          <button
+            type="button"
+            onClick={() => setShowPasswordSection(!showPasswordSection)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors font-semibold text-xs sm:text-sm"
+          >
+            <Key size={15} />
+            <span>{showPasswordSection ? 'Hide' : 'Change Password'}</span>
+          </button>
+        }
+      >
+        {showPasswordSection ? (
+          <div className="space-y-4">
+            {passwordMessage && (
+              <div className={`p-3.5 rounded-xl flex items-center gap-2.5 border text-sm font-medium ${
+                passwordMessage.type === 'success'
+                  ? 'bg-[#EAF6F0] text-[#047857] border-[#CBEAD9]'
+                  : 'bg-[#FEE2E2] text-[#991B1B] border-[#FECACA]'
+              }`}>
+                {passwordMessage.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+                <span>{passwordMessage.text}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   New Password *
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type={showNewPassword ? 'text' : 'password'}
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                    className="w-full pl-11 pr-11 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                    className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none bg-white text-sm"
                     placeholder="Enter new password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
-              {/* Confirm Password */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Confirm New Password *
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={passwordData.confirmPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                    className="w-full pl-11 pr-11 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                    className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none bg-white text-sm"
                     placeholder="Confirm new password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex justify-end gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => {
@@ -537,7 +537,7 @@ const BuyerProfile: React.FC = () => {
                   setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
                   setPasswordMessage(null);
                 }}
-                className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-semibold text-sm"
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-semibold text-sm"
               >
                 Cancel
               </button>
@@ -545,7 +545,7 @@ const BuyerProfile: React.FC = () => {
                 type="button"
                 onClick={handlePasswordChange}
                 disabled={changingPassword}
-                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                className="px-5 py-2 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
               >
                 {changingPassword ? (
                   <>
@@ -554,47 +554,46 @@ const BuyerProfile: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <Key size={16} />
+                    <Key size={15} />
                     <span>Change Password</span>
                   </>
                 )}
               </button>
             </div>
 
-            <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-              <p className="text-xs text-purple-800">
-                <strong>Note:</strong> Password must be at least 6 characters long. Make sure to remember your new password.
-              </p>
-            </div>
+            <EditorialCallout tone="amber" title="Note:">
+              Password must be at least 6 characters long. Make sure to store your new password securely.
+            </EditorialCallout>
           </div>
+        ) : (
+          <p className="text-xs sm:text-sm text-gray-500">
+            Keep your account protected by updating your password periodically.
+          </p>
         )}
-      </div>
+      </EditorialCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Company Information */}
-        <div className="lg:col-span-2 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-100">
-            <div className="p-2 sm:p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl">
-              <Building className="text-white" size={20} />
-            </div>
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Company Information</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <EditorialCard
+          title="Company Information"
+          subtitle="Business details shared across the marketplace"
+          className="lg:col-span-2"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Company Name */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Company Name</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Company Name</label>
               {isEditing ? (
                 <input
                   type="text"
                   value={buyerInfo?.business_name || ''}
                   onChange={(e) => setBuyerInfo({ ...buyerInfo!, business_name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm"
                   placeholder="Enter company name"
                 />
               ) : (
-                <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl">
-                  <Building size={18} className="text-gray-500" />
+                <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-200 rounded-xl text-sm">
+                  <Building size={16} className="text-gray-400 flex-shrink-0" />
                   <span className="text-gray-900 font-medium">{buyerInfo?.business_name || 'Not set'}</span>
                 </div>
               )}
@@ -602,18 +601,18 @@ const BuyerProfile: React.FC = () => {
 
             {/* Contact Person */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Person</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Contact Person</label>
               {isEditing ? (
                 <input
                   type="text"
                   value={buyerInfo?.owner_name || ''}
                   onChange={(e) => setBuyerInfo({ ...buyerInfo!, owner_name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm"
                   placeholder="Enter contact person"
                 />
               ) : (
-                <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl">
-                  <User size={18} className="text-gray-500" />
+                <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-200 rounded-xl text-sm">
+                  <User size={16} className="text-gray-400 flex-shrink-0" />
                   <span className="text-gray-900 font-medium">{buyerInfo?.owner_name || 'Not set'}</span>
                 </div>
               )}
@@ -621,37 +620,37 @@ const BuyerProfile: React.FC = () => {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email Address</label>
               {isEditing ? (
                 <input
                   type="email"
                   value={buyerInfo?.email || ''}
                   onChange={(e) => setBuyerInfo({ ...buyerInfo!, email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm"
                   placeholder="Enter email"
                 />
               ) : (
-                <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl">
-                  <Mail size={18} className="text-gray-500" />
-                  <span className="text-gray-900 font-medium">{buyerInfo?.email || 'Not set'}</span>
+                <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-200 rounded-xl text-sm">
+                  <Mail size={16} className="text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-900 font-medium truncate">{buyerInfo?.email || 'Not set'}</span>
                 </div>
               )}
             </div>
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Phone Number</label>
               {isEditing ? (
                 <input
                   type="tel"
                   value={buyerInfo?.contact_number || ''}
                   onChange={(e) => setBuyerInfo({ ...buyerInfo!, contact_number: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm"
                   placeholder="+63 912 345 6789"
                 />
               ) : (
-                <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl">
-                  <Phone size={18} className="text-gray-500" />
+                <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-200 rounded-xl text-sm">
+                  <Phone size={16} className="text-gray-400 flex-shrink-0" />
                   <span className="text-gray-900 font-medium">{buyerInfo?.contact_number || 'Not set'}</span>
                 </div>
               )}
@@ -659,18 +658,18 @@ const BuyerProfile: React.FC = () => {
 
             {/* Address */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Complete Address</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Complete Address</label>
               {isEditing ? (
                 <textarea
                   value={buyerInfo?.business_address || ''}
                   onChange={(e) => setBuyerInfo({ ...buyerInfo!, business_address: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm resize-none"
                   rows={2}
                   placeholder="Enter complete address"
                 />
               ) : (
-                <div className="flex items-start gap-2 px-4 py-3 bg-gray-50 rounded-xl">
-                  <MapPin size={18} className="text-gray-500 mt-1" />
+                <div className="flex items-start gap-2.5 px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-200 rounded-xl text-sm">
+                  <MapPin size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
                   <span className="text-gray-900 font-medium">{buyerInfo?.business_address || 'Not set'}</span>
                 </div>
               )}
@@ -678,17 +677,17 @@ const BuyerProfile: React.FC = () => {
 
             {/* Municipality */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Municipality</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Municipality</label>
               {isEditing ? (
                 <input
                   type="text"
                   value={buyerInfo?.municipality || ''}
                   onChange={(e) => setBuyerInfo({ ...buyerInfo!, municipality: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm"
                   placeholder="Enter municipality"
                 />
               ) : (
-                <div className="px-4 py-3 bg-gray-50 rounded-xl">
+                <div className="px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-200 rounded-xl text-sm">
                   <span className="text-gray-900 font-medium">{buyerInfo?.municipality || 'Not set'}</span>
                 </div>
               )}
@@ -696,17 +695,17 @@ const BuyerProfile: React.FC = () => {
 
             {/* Barangay */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Barangay</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Barangay</label>
               {isEditing ? (
                 <input
                   type="text"
                   value={buyerInfo?.barangay || ''}
                   onChange={(e) => setBuyerInfo({ ...buyerInfo!, barangay: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm"
                   placeholder="Enter barangay"
                 />
               ) : (
-                <div className="px-4 py-3 bg-gray-50 rounded-xl">
+                <div className="px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-200 rounded-xl text-sm">
                   <span className="text-gray-900 font-medium">{buyerInfo?.barangay || 'Not set'}</span>
                 </div>
               )}
@@ -714,18 +713,18 @@ const BuyerProfile: React.FC = () => {
 
             {/* Business Permit */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Business Permit No.</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Business Permit No.</label>
               {isEditing ? (
                 <input
                   type="text"
                   value={buyerInfo?.license_or_accreditation || ''}
                   onChange={(e) => setBuyerInfo({ ...buyerInfo!, license_or_accreditation: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm"
                   placeholder="Enter business permit number"
                 />
               ) : (
-                <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl">
-                  <FileText size={18} className="text-gray-500" />
+                <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-200 rounded-xl text-sm">
+                  <FileText size={16} className="text-gray-400 flex-shrink-0" />
                   <span className="text-gray-900 font-medium">{buyerInfo?.license_or_accreditation || 'Not set'}</span>
                 </div>
               )}
@@ -733,12 +732,12 @@ const BuyerProfile: React.FC = () => {
 
             {/* Payment Terms */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Payment Terms</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Payment Terms</label>
               {isEditing ? (
                 <select
                   value={buyerInfo?.payment_terms || ''}
                   onChange={(e) => setBuyerInfo({ ...buyerInfo!, payment_terms: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white"
                 >
                   <option value="">Select payment terms</option>
                   <option value="Cash on Delivery">Cash on Delivery</option>
@@ -748,55 +747,53 @@ const BuyerProfile: React.FC = () => {
                   <option value="Negotiable">Negotiable</option>
                 </select>
               ) : (
-                <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl">
-                  <Calendar size={18} className="text-gray-500" />
+                <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-200 rounded-xl text-sm">
+                  <Calendar size={16} className="text-gray-400 flex-shrink-0" />
                   <span className="text-gray-900 font-medium">{buyerInfo?.payment_terms || 'Not set'}</span>
                 </div>
               )}
             </div>
 
-            {/* Requirements */}
+            {/* Accepted Quality Grades */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Accepted Quality Grades</label>
-              <div className="px-4 py-3 bg-gray-50 rounded-xl">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Accepted Quality Grades</label>
+              <div className="px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-200 rounded-xl text-sm">
                 <p className="text-gray-900 font-medium">
-                  {buyerInfo?.accepted_quality_grades && buyerInfo.accepted_quality_grades.length > 0 
+                  {buyerInfo?.accepted_quality_grades && buyerInfo.accepted_quality_grades.length > 0
                     ? buyerInfo.accepted_quality_grades.join(', ')
                     : 'All grades accepted'}
                 </p>
               </div>
             </div>
           </div>
-        </div>
+        </EditorialCard>
 
-        {/* Quick Info Card with Profile Picture */}
-        <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-emerald-600 rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 text-white h-fit border-2 border-white/20">
-          {/* Profile Picture Section */}
-          <div className="flex flex-col items-center mb-6">
+        {/* Quick Info & Profile Photo Card */}
+        <EditorialCard className="h-fit">
+          <div className="flex flex-col items-center pb-6 border-b border-gray-100">
             <div className="relative group">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-white/20 backdrop-blur-sm border-4 border-white/30 shadow-lg">
+              <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
                 {profilePicture ? (
-                  <img 
-                    src={profilePicture} 
-                    alt="Profile" 
+                  <img
+                    src={profilePicture}
+                    alt="Profile"
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-emerald-400">
-                    <User className="w-12 h-12 sm:w-16 sm:h-16 text-white" />
+                  <div className="w-full h-full flex items-center justify-center bg-[#EAF6F0] text-[#047857]">
+                    <User className="w-12 h-12" />
                   </div>
                 )}
               </div>
-              
-              {/* Upload Button Overlay */}
-              <label 
+
+              <label
                 htmlFor="profile-photo-upload"
-                className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                className="absolute inset-0 flex items-center justify-center bg-gray-900/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               >
                 {uploadingPhoto ? (
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-white"></div>
                 ) : (
-                  <Camera className="w-8 h-8 text-white" />
+                  <Camera className="w-7 h-7 text-white" />
                 )}
               </label>
               <input
@@ -808,37 +805,32 @@ const BuyerProfile: React.FC = () => {
                 disabled={uploadingPhoto}
               />
             </div>
-            <p className="text-xs text-blue-100 mt-3 text-center">Click to upload profile picture</p>
+            <p className="text-xs text-gray-500 mt-3 text-center">Click photo to upload profile picture</p>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 pb-4 border-b border-white/20">
-            <div className="p-2 sm:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
-              <CheckCircle size={20} />
+          <div className="pt-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-gray-500">Account Status</span>
+              <StatusPill tone="success">Active & Verified</StatusPill>
             </div>
-            <h3 className="text-lg sm:text-xl font-bold">Verified Buyer</h3>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <p className="text-blue-100 text-sm mb-1">Member Since</p>
-              <p className="text-xl font-bold">
-                {buyerInfo?.created_at ? new Date(buyerInfo.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'N/A'}
+
+            <div className="pt-3 border-t border-gray-100">
+              <p className="text-xs text-gray-500 mb-1">Member Since</p>
+              <p className="text-base font-bold text-gray-900">
+                {buyerInfo?.created_at
+                  ? new Date(buyerInfo.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                  : 'N/A'}
               </p>
             </div>
-            <div className="pt-4 border-t border-white/20">
-              <p className="text-blue-100 text-sm mb-2">Status</p>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="font-semibold">Active & Verified</span>
-              </div>
-            </div>
-            <div className="pt-4 border-t border-white/20">
-              <p className="text-blue-100 text-sm mb-2">Visibility</p>
-              <p className="text-sm">Your profile and pricing are visible to MAO, associations, and farmers</p>
+
+            <div className="pt-3 border-t border-gray-100">
+              <p className="text-xs text-gray-500 mb-1">Visibility</p>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Your profile and pricing are visible to MAO, associations, and farmers.
+              </p>
             </div>
           </div>
-        </div>
-      </div>
-
+        </EditorialCard>
       </div>
     </div>
   );

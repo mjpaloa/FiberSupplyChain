@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { Users, Eye, EyeOff } from 'lucide-react';
+import { ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import {
+  AuthLayout,
+  AUTH_INPUT_CLASS,
+  AUTH_LABEL_CLASS,
+  AUTH_SUBMIT_BTN_CLASS,
+} from './AuthLayout';
 
 interface OfficerAuthProps {
   onBack: () => void;
   onLoginSuccess: () => void;
 }
 
-export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onLoginSuccess }) => {
+export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onBack, onLoginSuccess }) => {
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<any>({
@@ -67,89 +73,88 @@ export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onLoginSuccess }) => {
     }
   };
 
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ backgroundImage: 'url(/assets/images/abcafiber.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
-      <div className="absolute inset-0 bg-black/45"></div>
+    <AuthLayout
+      showPortalSwitcher={false}
+      roleLabel="Admin Portal"
+      roleIcon={<ShieldCheck className="w-5 h-5" />}
+      title="Admin Portal"
+      subtitle="Sign in for MAO HVC coordinators and system administrators"
+      asideHeadline="Municipal Abaca Supply Chain Oversight"
+      asideDescription="Coordinate seedling allocations, verify harvests, oversee buyer listings, and track municipal fiber deliveries from one unified workspace."
+      asideHighlights={[
+        'Real-time production, monitoring & sales analytics',
+        'Farmer, CUSAFA officer & buyer verification workflow',
+        'Audit logging and role-based administrative controls',
+      ]}
+      onBack={onBack}
+      error={error}
+      footerNote="Authorized MAO personnel only. All activities are logged and monitored."
+    >
+      <form onSubmit={handleLogin} className="space-y-4">
+        <div>
+          <label htmlFor="officer-email" className={AUTH_LABEL_CLASS}>
+            Email Address <span aria-hidden="true" className="text-rose-600">*</span>
+          </label>
+          <input
+            id="officer-email"
+            name="email"
+            type="email"
+            autoComplete="username"
+            spellCheck={false}
+            enterKeyHint="next"
+            required
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className={AUTH_INPUT_CLASS}
+            placeholder="officer@talacogon.gov.ph"
+          />
+        </div>
 
-      <div className="max-w-md w-full relative z-10">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-green-100">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-              <Users className="w-8 h-8 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">Admin Portal</h2>
-            <p className="text-gray-600 text-sm">For MAO HVC and Administrators</p>
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-              <input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                placeholder="your.email@example.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* reCAPTCHA v3 - Invisible, automatic verification */}
-
+        <div>
+          <label htmlFor="officer-password" className={AUTH_LABEL_CLASS}>
+            Password <span aria-hidden="true" className="text-rose-600">*</span>
+          </label>
+          <div className="relative">
+            <input
+              id="officer-password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              enterKeyHint="done"
+              required
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className={`${AUTH_INPUT_CLASS} pr-11`}
+              placeholder="Enter your password"
+            />
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-pressed={showPassword}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
             >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Logging in...
-                </div>
-              ) : (
-                'Login'
-              )}
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
-          </form>
-
-          {/* Footer */}
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500 text-center">
-              Authorized personnel only. All activities are logged and monitored.
-              <br />
-              Protected by reCAPTCHA and secured with SSL encryption.
-            </p>
           </div>
         </div>
-      </div>
-    </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className={AUTH_SUBMIT_BTN_CLASS}
+        >
+          {loading ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+              <span>Signing in...</span>
+            </>
+          ) : (
+            'Sign In to Admin Portal'
+          )}
+        </button>
+      </form>
+    </AuthLayout>
   );
 };

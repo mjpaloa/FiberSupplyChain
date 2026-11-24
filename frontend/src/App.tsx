@@ -11,6 +11,7 @@ import AssociationComponent from './components/Association/AssociationComponent'
 import FarmersComponent from './components/Farmers/FarmersComponent';
 import BuyersComponent from './components/Buyers/BuyersComponent';
 import { validateAuthData, initActivityTracking } from './utils/authToken';
+import { clearApiCache } from './utils/apiCache';
 import MaintenanceChecker from './components/MaintenanceChecker';
 
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
@@ -88,6 +89,7 @@ const Dashboard: React.FC = () => {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userType');
     localStorage.removeItem('user');
+    clearApiCache();
 
     // Redirect based on user type
     if (currentUserType === 'farmer' || currentUserType === 'buyer' || currentUserType === 'association_officer') {
@@ -201,7 +203,7 @@ const AppContent: React.FC = () => {
         path="/mao"
         element={
           <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
-            <OfficerAuth onBack={() => { }} onLoginSuccess={handleLoginSuccess} />
+            <OfficerAuth onBack={() => navigate('/')} onLoginSuccess={handleLoginSuccess} />
           </GoogleReCaptchaProvider>
         }
       />

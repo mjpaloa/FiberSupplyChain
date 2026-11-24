@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Users,
   FileText,
   Download,
   Eye,
   CheckCircle,
   XCircle,
-  Clock,
   Search,
   Edit,
   Trash2,
-  Package,
   X
 } from 'lucide-react';
 import { getUserData, getAuthToken } from '../../utils/authToken';
+import { EditorialCard, KpiStrip, StatusPill } from '../Shared/EditorialUI';
 
 interface SalesReport {
   id: string;
@@ -304,117 +302,63 @@ const UnifiedSalesManagement: React.FC = () => {
     );
   }
 
+  const approvedReports = recentReports.filter(r => r.status === 'approved');
+  const pendingReports = recentReports.filter(r => r.status === 'pending');
+  const rejectedCount = recentReports.filter(r => r.status === 'rejected').length;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      {/* Stats Cards - Matching User Management */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        {/* Verified Sales Card - Blue */}
-        <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <span className="text-2xl font-bold text-white">₱</span>
-              </div>
-            </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Verified Sales</p>
-            <p className="text-3xl font-bold text-white">
-              ₱{recentReports.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.totalRevenue || 0), 0).toLocaleString()}
-            </p>
-          </div>
-        </div>
+    <div className="space-y-6">
+      <KpiStrip
+        columns={5}
+        items={[
+          {
+            label: 'Verified Sales',
+            value: `₱${approvedReports.reduce((sum, r) => sum + (r.totalRevenue || 0), 0).toLocaleString()}`,
+            subtext: `${approvedReports.length} approved`,
+          },
+          {
+            label: 'Pending Reports',
+            value: pendingReports.length.toLocaleString(),
+            subtext: `₱${pendingReports.reduce((sum, r) => sum + (r.totalRevenue || 0), 0).toLocaleString()} pending`,
+          },
+          {
+            label: 'Active Farmers',
+            value: new Set(recentReports.map(r => r.farmerId)).size.toLocaleString(),
+            subtext: `${approvedReports.length} verified reports`,
+          },
+          {
+            label: 'Total Abaca Sold',
+            value: `${approvedReports.reduce((sum, r) => sum + (r.totalQuantity || 0), 0).toLocaleString()} kg`,
+            subtext: 'Approved fiber weight',
+          },
+          {
+            label: 'Total Reports',
+            value: recentReports.length.toLocaleString(),
+            subtext: `${rejectedCount} rejected`,
+          },
+        ]}
+      />
 
-        {/* Pending Card - Yellow */}
-        <div className="group relative bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-6 shadow-lg overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Clock className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Pending</p>
-            <p className="text-3xl font-bold text-white">{recentReports.filter(r => r.status === 'pending').length}</p>
-            <p className="text-white/70 text-xs mt-2">
-              ₱{recentReports.filter(r => r.status === 'pending').reduce((sum, r) => sum + (r.totalRevenue || 0), 0).toLocaleString()}
-            </p>
-          </div>
-        </div>
-
-        {/* Active Card - Purple */}
-        <div className="group relative bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 shadow-lg overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Active</p>
-            <p className="text-3xl font-bold text-white">{new Set(recentReports.map(r => r.farmerId)).size}</p>
-            <p className="text-white/70 text-xs mt-2">
-              {recentReports.filter(r => r.status === 'approved').length} reports
-            </p>
-          </div>
-        </div>
-
-        {/* Total Abaca Sold Card - Cyan */}
-        <div className="group relative bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl p-6 shadow-lg overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Package className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Total Abaca Sold</p>
-            <p className="text-3xl font-bold text-white">
-              {recentReports.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.totalQuantity || 0), 0).toLocaleString()} kg
-            </p>
-          </div>
-        </div>
-
-        {/* Reports Card - Red */}
-        <div className="group relative bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl p-6 shadow-lg overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <p className="text-white/90 text-sm font-medium mb-1">Reports</p>
-            <p className="text-3xl font-bold text-white">{recentReports.length}</p>
-            <p className="text-white/70 text-xs mt-2">
-              {recentReports.filter(r => r.status === 'rejected').length} rejected
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Neumorphic Search and Filters Section */}
-      <div className="bg-gradient-to-r from-blue-50 via-emerald-50 to-purple-50 border-2 border-blue-200 rounded-3xl p-6 mb-8 shadow-lg">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 w-5 h-5 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search farmers, buyers, locations..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-blue-200 rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-medium shadow-md"
-              />
-            </div>
+      {/* Search and Filters */}
+      <EditorialCard className="p-4 sm:p-5">
+        <div className="flex flex-col lg:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search farmers, buyers, locations..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm text-gray-900 placeholder:text-gray-400"
+            />
           </div>
 
-          {/* Filters */}
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2.5">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-4 bg-white border-2 border-emerald-200 rounded-2xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all duration-200 font-medium text-gray-800 shadow-md"
+              aria-label="Filter by status"
+              className="px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm font-medium text-gray-700"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -425,7 +369,8 @@ const UnifiedSalesManagement: React.FC = () => {
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="px-4 py-4 bg-white border-2 border-purple-200 rounded-2xl focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all duration-200 font-medium text-gray-800 shadow-md"
+              aria-label="Filter by date"
+              className="px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm font-medium text-gray-700"
             >
               <option value="all">All Time</option>
               <option value="today">Today</option>
@@ -433,125 +378,126 @@ const UnifiedSalesManagement: React.FC = () => {
               <option value="month">This Month</option>
             </select>
 
-            <button className="flex items-center px-6 py-4 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-2xl hover:from-blue-500 hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold border-2 border-blue-300">
-              <Download className="w-5 h-5 mr-2" />
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-semibold"
+            >
+              <Download className="w-4 h-4 text-gray-500" />
               Export
             </button>
           </div>
         </div>
-      </div>
+      </EditorialCard>
 
-      {/* Compact Table with Pagination */}
+      {/* Reports Table */}
       {filteredReports.length === 0 ? (
-        <div className="bg-gradient-to-br from-gray-50 to-slate-100 border-2 border-gray-200 rounded-3xl p-12 text-center shadow-lg">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center shadow-lg">
-            <FileText className="w-10 h-10 text-gray-500" />
+        <EditorialCard className="p-12 text-center">
+          <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
+            <FileText className="w-6 h-6 text-gray-400" />
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">No sales reports found</h3>
-          <p className="text-gray-600">Farmer sales reports will appear here for management and verification</p>
-        </div>
+          <h3 className="font-serif text-lg font-bold text-gray-900 mb-1">No sales reports found</h3>
+          <p className="text-sm text-gray-500">Farmer sales reports will appear here for management and verification.</p>
+        </EditorialCard>
       ) : (
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden">
-
-          {/* Compact Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-blue-100 via-emerald-100 to-purple-100">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      Farmer
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Buyer</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold">₱</span>
-                      Amount
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Quantity</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+        <EditorialCard
+          title="Sales Reports"
+          subtitle="Farmer sales submissions and verification status"
+          badge={filteredReports.length}
+          noPadding
+        >
+          <div className="table-wrapper" tabIndex={0} role="region" aria-label="Sales reports table">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-gray-200 bg-[#FAFAFA]">
+                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-500">Farmer</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-500">Buyer</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-500">Amount</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-500">Quantity</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-500">Status</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-500">Date</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-500">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-indigo-100">
-                {currentReports.map((report, index) => (
-                  <tr key={report.id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
-                    }`}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="font-bold text-blue-900 text-sm">{report.farmerName}</div>
-                        <div className="text-purple-600 text-xs font-mono">{generateReadableId(report.id)}</div>
-                      </div>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {currentReports.map((report) => (
+                  <tr key={report.id} className="hover:bg-gray-50/70 transition-colors">
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="font-semibold text-gray-900 text-sm">{report.farmerName}</div>
+                      <div className="text-gray-500 text-xs font-mono">{generateReadableId(report.id)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-emerald-900">{report.buyerName || 'N/A'}</div>
+                    <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {report.buyerName || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-purple-900">
-                        {report.status === 'approved' ? `₱${report.totalRevenue?.toLocaleString()}` : 'Pending verification'}
-                      </div>
+                    <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 tabular-nums">
+                      {report.status === 'approved' ? `₱${report.totalRevenue?.toLocaleString()}` : 'Pending verification'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900">{report.totalQuantity} kg</div>
+                    <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-700 tabular-nums">
+                      {report.totalQuantity} kg
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {report.status === 'pending' && <Clock className="w-4 h-4 text-yellow-500" />}
-                        {report.status === 'approved' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                        {report.status === 'rejected' && <XCircle className="w-4 h-4 text-red-500" />}
-                        <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full shadow-md ${report.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          report.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                          {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                        </span>
-                      </div>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <StatusPill
+                        tone={
+                          report.status === 'approved'
+                            ? 'success'
+                            : report.status === 'rejected'
+                            ? 'danger'
+                            : 'warning'
+                        }
+                      >
+                        {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                      </StatusPill>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900">{new Date(report.submittedAt).toLocaleDateString()}</div>
+                    <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-600 tabular-nums">
+                      {new Date(report.submittedAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
                         <button
+                          type="button"
                           onClick={() => handleViewReport(report)}
-                          className="p-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
+                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                           title="View Details"
+                          aria-label="View Details"
                         >
                           <Eye size={16} />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleEditReport(report)}
-                          className="p-2 bg-emerald-100 text-emerald-600 rounded-xl hover:bg-emerald-200 hover:shadow-md transition-all duration-200"
+                          className="p-2 text-gray-600 hover:text-[#047857] hover:bg-[#EAF6F0] rounded-lg transition-colors"
                           title="Edit Report"
+                          aria-label="Edit Report"
                         >
                           <Edit size={16} />
                         </button>
                         {report.status === 'pending' && (
                           <>
                             <button
+                              type="button"
                               onClick={() => handleApproveReport(report.id)}
-                              className="p-2 bg-green-100 text-green-600 rounded-xl hover:bg-green-200 hover:shadow-md transition-all duration-200"
+                              className="p-2 text-[#047857] hover:bg-[#EAF6F0] rounded-lg transition-colors"
                               title="Approve Report"
+                              aria-label="Approve Report"
                             >
                               <CheckCircle className="w-4 h-4" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => handleRejectReport(report.id)}
-                              className="p-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title="Reject Report"
+                              aria-label="Reject Report"
                             >
                               <XCircle className="w-4 h-4" />
                             </button>
                           </>
                         )}
                         <button
+                          type="button"
                           onClick={() => handleDeleteReport(report.id)}
-                          className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 hover:shadow-md transition-all duration-200"
+                          className="p-2 text-gray-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete"
+                          aria-label="Delete"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -564,127 +510,123 @@ const UnifiedSalesManagement: React.FC = () => {
           </div>
 
           {/* Pagination Footer */}
-          <div className="p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              {/* Items per page selector */}
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700">Show entries:</span>
-                <div className="flex gap-2">
-                  {[10, 20, 30].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => handleItemsPerPageChange(size)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
-                        ? 'bg-indigo-500 text-white shadow-lg'
-                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
-                        }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
+          <div className="px-5 py-4 border-t border-gray-200 bg-[#FAFAFA] flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-medium text-gray-500">Show entries:</span>
+              <div className="flex gap-1.5">
+                {[10, 20, 30].map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => handleItemsPerPageChange(size)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${itemsPerPage === size
+                      ? 'bg-[#E59500] text-gray-900'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                      }`}
+                  >
+                    {size}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              {/* Page info and navigation */}
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">
-                  Showing {startIndex + 1} to {Math.min(endIndex, filteredReports.length)} of {filteredReports.length} entries
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                      }`}
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                      }`}
-                  >
-                    Next
-                  </button>
-                </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500 tabular-nums">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredReports.length)} of {filteredReports.length}
+              </span>
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
               </div>
             </div>
           </div>
-        </div>
+        </EditorialCard>
       )}
 
       {/* View Modal */}
       {showViewModal && selectedReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Sales Report Details</h2>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
+              <h2 className="font-serif text-xl font-bold text-gray-900">Sales Report Details</h2>
               <button
+                type="button"
                 onClick={() => setShowViewModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-6">
-              {/* Report ID */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl">
-                <p className="text-sm text-gray-600 mb-1">Report ID</p>
-                <p className="font-mono text-lg font-bold text-indigo-900">{generateReadableId(selectedReport.id)}</p>
+            <div className="space-y-4">
+              <div className="bg-[#F8F9FA] border border-gray-200 p-4 rounded-xl">
+                <p className="text-xs font-medium text-gray-500 mb-1">Report ID</p>
+                <p className="font-mono text-sm font-bold text-gray-900">{generateReadableId(selectedReport.id)}</p>
               </div>
 
-              {/* Farmer Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-emerald-50 p-4 rounded-xl">
-                  <p className="text-sm text-gray-600 mb-1">Farmer Name</p>
-                  <p className="font-semibold text-gray-900">{selectedReport.farmerName}</p>
+                <div className="bg-white border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs font-medium text-gray-500 mb-1">Farmer Name</p>
+                  <p className="text-sm font-semibold text-gray-900">{selectedReport.farmerName}</p>
                 </div>
-                <div className="bg-purple-50 p-4 rounded-xl">
-                  <p className="text-sm text-gray-600 mb-1">Buyer Company</p>
-                  <p className="font-semibold text-gray-900">{selectedReport.buyerName || 'N/A'}</p>
-                </div>
-              </div>
-
-              {/* Financial Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-green-50 p-4 rounded-xl">
-                  <p className="text-sm text-gray-600 mb-1">Total Sales</p>
-                  <p className="text-2xl font-bold text-green-900">₱{selectedReport.totalRevenue.toLocaleString()}</p>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-xl">
-                  <p className="text-sm text-gray-600 mb-1">Quantity Sold</p>
-                  <p className="text-2xl font-bold text-blue-900">{selectedReport.totalQuantity} kg</p>
+                <div className="bg-white border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs font-medium text-gray-500 mb-1">Buyer Company</p>
+                  <p className="text-sm font-semibold text-gray-900">{selectedReport.buyerName || 'N/A'}</p>
                 </div>
               </div>
 
-              {/* Status and Date */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <p className="text-sm text-gray-600 mb-2">Status</p>
-                  <span className={`inline-flex px-4 py-2 text-sm font-bold rounded-full ${selectedReport.status === 'approved' ? 'bg-green-100 text-green-800' :
-                    selectedReport.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
+                <div className="bg-white border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs font-medium text-gray-500 mb-1">Total Sales</p>
+                  <p className="text-xl font-bold text-gray-900 tabular-nums">₱{selectedReport.totalRevenue.toLocaleString()}</p>
+                </div>
+                <div className="bg-white border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs font-medium text-gray-500 mb-1">Quantity Sold</p>
+                  <p className="text-xl font-bold text-gray-900 tabular-nums">{selectedReport.totalQuantity} kg</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs font-medium text-gray-500 mb-2">Status</p>
+                  <StatusPill
+                    tone={
+                      selectedReport.status === 'approved'
+                        ? 'success'
+                        : selectedReport.status === 'rejected'
+                        ? 'danger'
+                        : 'warning'
+                    }
+                  >
                     {selectedReport.status.charAt(0).toUpperCase() + selectedReport.status.slice(1)}
-                  </span>
+                  </StatusPill>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <p className="text-sm text-gray-600 mb-1">Submitted Date</p>
-                  <p className="font-semibold text-gray-900">{new Date(selectedReport.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <div className="bg-white border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs font-medium text-gray-500 mb-1">Submitted Date</p>
+                  <p className="text-sm font-semibold text-gray-900">{new Date(selectedReport.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
               <button
+                type="button"
                 onClick={() => setShowViewModal(false)}
-                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 font-semibold transition-colors"
+                className="px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-semibold transition-colors"
               >
                 Close
               </button>
@@ -695,84 +637,79 @@ const UnifiedSalesManagement: React.FC = () => {
 
       {/* Edit Modal */}
       {showEditModal && selectedReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Edit Sales Report</h2>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
+              <h2 className="font-serif text-xl font-bold text-gray-900">Edit Sales Report</h2>
               <button
+                type="button"
                 onClick={() => setShowEditModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-4">
-              {/* Report ID (Read-only) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Report ID</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Report ID</label>
                 <input
                   type="text"
                   value={generateReadableId(selectedReport.id)}
                   disabled
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-xl font-mono text-gray-600"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-mono text-sm text-gray-500"
                 />
               </div>
 
-              {/* Farmer Name (Read-only) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Farmer Name</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Farmer Name</label>
                 <input
                   type="text"
                   value={selectedReport.farmerName}
                   disabled
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-xl text-gray-600"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500"
                 />
               </div>
 
-              {/* Buyer Company */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Buyer Company</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Buyer Company</label>
                 <input
                   type="text"
                   value={editFormData.buyerName}
                   onChange={(e) => setEditFormData({ ...editFormData, buyerName: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm"
                   placeholder="Enter buyer company name"
                 />
               </div>
 
-              {/* Total Sales */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Total Sales (₱)</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Total Sales (₱)</label>
                 <input
                   type="number"
                   value={editFormData.totalRevenue}
                   onChange={(e) => setEditFormData({ ...editFormData, totalRevenue: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm"
                   placeholder="Enter total sales"
                 />
               </div>
 
-              {/* Quantity Sold */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity Sold (kg)</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Quantity Sold (kg)</label>
                 <input
                   type="number"
                   value={editFormData.totalQuantity}
                   onChange={(e) => setEditFormData({ ...editFormData, totalQuantity: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm"
                   placeholder="Enter quantity sold"
                 />
               </div>
 
-              {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Status</label>
                 <select
                   value={editFormData.status}
                   onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as 'pending' | 'approved' | 'rejected' })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm"
                 >
                   <option value="pending">Pending</option>
                   <option value="approved">Approved</option>
@@ -781,16 +718,18 @@ const UnifiedSalesManagement: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end gap-2.5">
               <button
+                type="button"
                 onClick={() => setShowEditModal(false)}
-                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 font-semibold transition-colors"
+                className="px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-semibold transition-colors"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleUpdateReport}
-                className="px-6 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 font-semibold transition-colors shadow-lg"
+                className="px-5 py-2 bg-[#047857] text-white rounded-xl hover:bg-[#065F46] text-sm font-semibold transition-colors"
               >
                 Save Changes
               </button>

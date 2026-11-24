@@ -1,33 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
   User,
-  Mail,
-  Phone,
-  MapPin,
-  Briefcase,
-  Building2,
-  Calendar,
-  Clock,
   Users,
-  CheckCircle,
-  AlertCircle,
   Edit,
-  ArrowLeft,
-  Shield,
   KeyRound,
   Package,
   Share2,
-  Menu,
-  X,
-  ChevronDown,
-  LogOut,
   Sprout,
-  Layers,
   TrendingUp,
   Truck,
   Bell,
-  Activity
+  Activity,
+  X
 } from 'lucide-react';
 import {
   LineChart as RechartsLineChart,
@@ -46,6 +31,17 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import {
+  EditorialShell,
+  EditorialNavItem,
+  KpiStrip,
+  EditorialCard,
+  SegmentedToggle,
+  StatusPill,
+  KeepAlivePages,
+  useCacheState,
+  EDITORIAL_CHART
+} from '../Shared/EditorialUI';
 import AssociationInventory from './AssociationInventory';
 import AssociationSeedlingDistribution from './AssociationSeedlingDistribution';
 import CUSAFAInventory from '../MAO/CUSAFAInventory';
@@ -96,8 +92,6 @@ interface DeliveryStatusData {
 }
 
 const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentPage, setCurrentPage] = useState<DashboardPage>('overview');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -152,6 +146,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
   const user = userStr ? JSON.parse(userStr) : null;
 
+  const { version, manualTick } = useCacheState();
+  const lastOverviewVersionRef = useRef(version);
+  const prevManualTickRef = useRef(manualTick);
+
   useEffect(() => {
     loadDashboardStats();
     fetchOfficerProfile();
@@ -163,6 +161,33 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   useEffect(() => {
     loadRawSeedlingData();
   }, []);
+
+  // Refresh overview/analytics metrics only when cache invalidates
+  useEffect(() => {
+    const manualChanged = prevManualTickRef.current !== manualTick;
+    if (manualChanged) {
+      prevManualTickRef.current = manualTick;
+      lastOverviewVersionRef.current = version;
+      loadDashboardStats();
+      loadRawSeedlingData();
+      loadNotifications();
+      loadFiberDeliveryStats();
+      fetchOfficerProfile();
+      return;
+    }
+
+    if (
+      (currentPage === 'overview' || currentPage === 'analytics') &&
+      lastOverviewVersionRef.current !== version
+    ) {
+      lastOverviewVersionRef.current = version;
+      loadDashboardStats();
+      loadRawSeedlingData();
+      loadNotifications();
+      loadFiberDeliveryStats();
+      fetchOfficerProfile();
+    }
+  }, [currentPage, version, manualTick]);
 
   // Transform cached data when view mode changes (instant)
   useEffect(() => {
@@ -186,19 +211,6 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       console.error('Error fetching officer profile:', error);
     }
   };
-
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setSidebarOpen(false);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const loadDashboardStats = async () => {
     setLoadingStats(true);
@@ -337,13 +349,13 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
         // Create chart data
         const chartData: DeliveryStatusData[] = [];
-        if (stats.completed > 0) chartData.push({ name: 'Completed', value: stats.completed, fill: '#10b981' });
-        if (stats.delivered > 0) chartData.push({ name: 'Delivered', value: stats.delivered, fill: '#3b82f6' });
-        if (stats.inTransit > 0) chartData.push({ name: 'In Transit', value: stats.inTransit, fill: '#f59e0b' });
-        if (stats.cancelled > 0) chartData.push({ name: 'Cancelled', value: stats.cancelled, fill: '#ef4444' });
+        if (stats.completed > 0) chartData.push({ name: 'Completed', value: stats.completed, fill: EDITORIAL_CHART.colors.emerald });
+        if (stats.delivered > 0) chartData.push({ name: 'Delivered', value: stats.delivered, fill: EDITORIAL_CHART.colors.amber });
+        if (stats.inTransit > 0) chartData.push({ name: 'In Transit', value: stats.inTransit, fill: EDITORIAL_CHART.colors.espresso });
+        if (stats.cancelled > 0) chartData.push({ name: 'Cancelled', value: stats.cancelled, fill: EDITORIAL_CHART.colors.mutedSlate });
         
         if (chartData.length === 0) {
-          chartData.push({ name: 'No Deliveries', value: 1, fill: '#e5e7eb' });
+          chartData.push({ name: 'No Deliveries', value: 1, fill: EDITORIAL_CHART.colors.slate });
         }
 
         setFiberDeliveryChartData(chartData);
@@ -489,10 +501,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       const statusChartData: DeliveryStatusData[] = [];
       
       if (totalDistributed > 0) {
-        statusChartData.push({ name: 'Distributed', value: totalDistributed, fill: '#10b981' });
+        statusChartData.push({ name: 'Distributed', value: totalDistributed, fill: EDITORIAL_CHART.colors.emerald });
       }
       if (totalAvailable > 0) {
-        statusChartData.push({ name: 'Available', value: totalAvailable, fill: '#8b5cf6' });
+        statusChartData.push({ name: 'Available', value: totalAvailable, fill: EDITORIAL_CHART.colors.amber });
       }
       
       // Count planted seedlings
@@ -501,431 +513,325 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       ).reduce((sum: number, d: any) => sum + (d.quantity_distributed || 0), 0);
       
       if (plantedCount > 0) {
-        statusChartData.push({ name: 'Planted', value: plantedCount, fill: '#3b82f6' });
+        statusChartData.push({ name: 'Planted', value: plantedCount, fill: EDITORIAL_CHART.colors.espresso });
       }
 
       // If no data, show placeholder
       if (statusChartData.length === 0) {
-        statusChartData.push({ name: 'No Data', value: 1, fill: '#e2e8f0' });
+        statusChartData.push({ name: 'No Data', value: 1, fill: EDITORIAL_CHART.colors.slate });
       }
 
       console.log('📊 Pie Chart Data:', statusChartData);
       setDeliveryStatusData(statusChartData);
   };
 
-  const navItems: { id: DashboardPage; label: string; mobileLabel: string; icon: React.FC<any> }[] = [
-    { id: 'overview', label: 'Overview', mobileLabel: 'Overview', icon: LayoutDashboard },
-    { id: 'inventory', label: 'Seedling Inventory', mobileLabel: 'Seedlings', icon: Sprout },
-    { id: 'distribution', label: 'Distribution', mobileLabel: 'Distribution', icon: Share2 },
-    { id: 'fiber-inventory', label: 'Fiber Inventory', mobileLabel: 'Fiber Stock', icon: Package },
-    { id: 'fiber-deliveries', label: 'Fiber Deliveries', mobileLabel: 'Deliveries', icon: Truck },
-    { id: 'buyer-prices', label: 'Buyer Prices', mobileLabel: 'Prices', icon: TrendingUp },
+  const editorialNavItems: EditorialNavItem[] = [
+    { id: 'overview', label: 'Overview', category: 'General', icon: <LayoutDashboard className="w-[18px] h-[18px]" /> },
+    { id: 'inventory', label: 'Seedling Inventory', category: 'Seedlings', icon: <Sprout className="w-[18px] h-[18px]" /> },
+    { id: 'distribution', label: 'Distribution', category: 'Seedlings', icon: <Share2 className="w-[18px] h-[18px]" /> },
+    { id: 'fiber-inventory', label: 'Fiber Inventory', category: 'Fiber & Market', icon: <Package className="w-[18px] h-[18px]" /> },
+    { id: 'fiber-deliveries', label: 'Fiber Deliveries', category: 'Fiber & Market', icon: <Truck className="w-[18px] h-[18px]" /> },
+    { id: 'buyer-prices', label: 'Buyer Prices', category: 'Fiber & Market', icon: <TrendingUp className="w-[18px] h-[18px]" /> },
   ];
+
+  const getDistributionTone = (status?: string): 'success' | 'warning' | 'danger' | 'info' | 'neutral' => {
+    const s = (status || '').toLowerCase();
+    if (s.includes('plant')) return 'info';
+    if (s.includes('damaged') || s.includes('lost') || s.includes('cancel')) return 'danger';
+    if (s.includes('replant')) return 'warning';
+    if (!status || s.includes('distributed')) return 'success';
+    return 'neutral';
+  };
 
   const renderAnalytics = () => (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl p-8 text-white shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div>
-            <p className="text-sm uppercase tracking-wide text-emerald-100">Performance Analytics</p>
-            <h2 className="text-3xl font-bold mt-1">Data Insights & Trends</h2>
-            <p className="mt-2 text-emerald-50 max-w-2xl">
-              Track fiber deliveries, seedling distributions, and performance metrics over time
-            </p>
+      <EditorialCard
+        title="Data Insights & Trends"
+        subtitle="Track fiber deliveries, seedling distributions, and performance metrics over time"
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            {viewMode === 'monthly' && (
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                aria-label="Select analytics year"
+                className="px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857]"
+              >
+                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            )}
+            <SegmentedToggle
+              variant="amber"
+              value={viewMode}
+              onChange={(val) => setViewMode(val as 'monthly' | 'yearly')}
+              options={[
+                { value: 'monthly', label: 'Monthly' },
+                { value: 'yearly', label: 'Yearly' },
+              ]}
+            />
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setViewMode('monthly')}
-              className={`px-6 py-3 rounded-xl font-semibold transition ${viewMode === 'monthly'
-                ? 'bg-white text-emerald-600'
-                : 'bg-white/20 text-white hover:bg-white/30'
-                }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setViewMode('yearly')}
-              className={`px-6 py-3 rounded-xl font-semibold transition ${viewMode === 'yearly'
-                ? 'bg-white text-emerald-600'
-                : 'bg-white/20 text-white hover:bg-white/30'
-                }`}
-            >
-              Yearly
-            </button>
-          </div>
+        }
+      >
+        <div className="text-xs text-gray-500">
+          Performance analytics for {viewMode === 'monthly' ? `calendar year ${selectedYear}` : 'the past 5 years'}.
         </div>
-      </div>
+      </EditorialCard>
 
-      {viewMode === 'monthly' && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Year</label>
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-          >
-            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      <KpiStrip
+        columns={3}
+        items={[
+          {
+            label: 'Total Fiber Deliveries',
+            value: `${totalFiberKg.toFixed(2)} kg`,
+            subtext: `${totalDeliveries} deliveries`,
+          },
+          {
+            label: 'Total Seedlings Distributed',
+            value: totalSeedlingsDistributed.toLocaleString(),
+            subtext: 'To farmers',
+          },
+          {
+            label: 'Active Period',
+            value: viewMode === 'monthly' ? selectedYear : '5 Years',
+            subtext: viewMode === 'monthly' ? '12 months' : 'Historical data',
+          },
+        ]}
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl p-6 text-white shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-2xl">
-              <Truck className="w-8 h-8" />
-            </div>
-            <TrendingUp className="w-6 h-6 text-white/70" />
+      <EditorialCard
+        title="Fiber Deliveries (kg)"
+        subtitle="Track total fiber weight delivered over time"
+        actions={
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.amber }} />
+            <span>Fiber (kg)</span>
           </div>
-          <p className="text-sm text-blue-100 uppercase tracking-wide">Total Fiber Deliveries</p>
-          <p className="text-4xl font-bold mt-2">{totalFiberKg.toFixed(2)} kg</p>
-          <p className="text-xs text-blue-100 mt-2">{totalDeliveries} deliveries</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-6 text-white shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-2xl">
-              <Sprout className="w-8 h-8" />
-            </div>
-            <TrendingUp className="w-6 h-6 text-white/70" />
-          </div>
-          <p className="text-sm text-emerald-100 uppercase tracking-wide">Total Seedlings Distributed</p>
-          <p className="text-4xl font-bold mt-2">{totalSeedlingsDistributed.toLocaleString()}</p>
-          <p className="text-xs text-emerald-100 mt-2">To farmers</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-3xl p-6 text-white shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-2xl">
-              <Activity className="w-8 h-8" />
-            </div>
-            <TrendingUp className="w-6 h-6 text-white/70" />
-          </div>
-          <p className="text-sm text-purple-100 uppercase tracking-wide">Active Period</p>
-          <p className="text-4xl font-bold mt-2">{viewMode === 'monthly' ? selectedYear : '5 Years'}</p>
-          <p className="text-xs text-purple-100 mt-2">{viewMode === 'monthly' ? '12 months' : 'Historical data'}</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">Fiber Deliveries (kg)</h3>
-            <p className="text-sm text-gray-500">Track total fiber weight delivered over time</p>
-          </div>
-          <div className="p-3 bg-blue-100 rounded-2xl">
-            <Truck className="w-6 h-6 text-blue-600" />
-          </div>
-        </div>
+        }
+      >
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={analyticsData}>
-            <defs>
-              <linearGradient id="colorFiber" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-            <XAxis dataKey="period" stroke="#9ca3af" axisLine={false} tickLine={false} />
-            <YAxis stroke="#9ca3af" axisLine={false} tickLine={false} />
+            <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+            <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} />
+            <YAxis {...EDITORIAL_CHART.yAxisProps} />
             <Tooltip
-              contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+              contentStyle={EDITORIAL_CHART.tooltipStyle}
+              formatter={(value: unknown) => [`${Number(value ?? 0).toLocaleString()} kg`, 'Fiber']}
             />
             <Legend />
             <Area
               type="monotone"
               dataKey="fiberKg"
-              stroke="#3b82f6"
-              fillOpacity={1}
-              fill="url(#colorFiber)"
+              stroke={EDITORIAL_CHART.colors.amber}
+              fill={EDITORIAL_CHART.colors.amber}
+              fillOpacity={0.14}
               name="Fiber (kg)"
-              strokeWidth={3}
+              strokeWidth={2.5}
             />
           </AreaChart>
         </ResponsiveContainer>
-      </div>
+      </EditorialCard>
 
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">Seedling Distributions</h3>
-            <p className="text-sm text-gray-500">Monitor seedling distribution to farmers</p>
+      <EditorialCard
+        title="Seedling Distributions"
+        subtitle="Monitor seedling distribution to farmers"
+        actions={
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.emerald }} />
+            <span>Seedlings Distributed</span>
           </div>
-          <div className="p-3 bg-emerald-100 rounded-2xl">
-            <Sprout className="w-6 h-6 text-emerald-600" />
-          </div>
-        </div>
+        }
+      >
         <ResponsiveContainer width="100%" height={300}>
           <RechartsBarChart data={analyticsData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-            <XAxis dataKey="period" stroke="#9ca3af" axisLine={false} tickLine={false} />
-            <YAxis stroke="#9ca3af" axisLine={false} tickLine={false} />
+            <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+            <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} />
+            <YAxis {...EDITORIAL_CHART.yAxisProps} />
             <Tooltip
-              contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+              contentStyle={EDITORIAL_CHART.tooltipStyle}
+              cursor={{ fill: '#F8F9FA' }}
+              formatter={(value: unknown) => [Number(value ?? 0).toLocaleString(), 'Seedlings Distributed']}
             />
             <Legend />
-            <Bar dataKey="seedlings" fill="#10b981" name="Seedlings Distributed" radius={[8, 8, 0, 0]} />
+            <Bar
+              dataKey="seedlings"
+              fill={EDITORIAL_CHART.colors.emerald}
+              name="Seedlings Distributed"
+              radius={[6, 6, 0, 0]}
+            />
           </RechartsBarChart>
         </ResponsiveContainer>
-      </div>
+      </EditorialCard>
 
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">Delivery Count</h3>
-            <p className="text-sm text-gray-500">Number of fiber deliveries per period</p>
+      <EditorialCard
+        title="Delivery Count"
+        subtitle="Number of fiber deliveries per period"
+        actions={
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.espresso }} />
+            <span>Deliveries</span>
           </div>
-          <div className="p-3 bg-purple-100 rounded-2xl">
-            <Activity className="w-6 h-6 text-purple-600" />
-          </div>
-        </div>
+        }
+      >
         <ResponsiveContainer width="100%" height={300}>
           <RechartsLineChart data={analyticsData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-            <XAxis dataKey="period" stroke="#9ca3af" axisLine={false} tickLine={false} />
-            <YAxis stroke="#9ca3af" axisLine={false} tickLine={false} />
+            <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+            <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} />
+            <YAxis {...EDITORIAL_CHART.yAxisProps} />
             <Tooltip
-              contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+              contentStyle={EDITORIAL_CHART.tooltipStyle}
+              formatter={(value: unknown) => [Number(value ?? 0).toLocaleString(), 'Deliveries']}
             />
             <Legend />
             <Line
               type="monotone"
               dataKey="deliveries"
-              stroke="#8b5cf6"
-              strokeWidth={3}
+              stroke={EDITORIAL_CHART.colors.espresso}
+              strokeWidth={2.5}
               name="Deliveries"
-              dot={{ fill: '#8b5cf6', r: 6 }}
-              activeDot={{ r: 8 }}
+              dot={{ fill: EDITORIAL_CHART.colors.espresso, r: 4 }}
+              activeDot={{ r: 6 }}
             />
           </RechartsLineChart>
         </ResponsiveContainer>
-      </div>
+      </EditorialCard>
     </div>
   );
 
   const renderOverview = () => (
     <div className="space-y-6">
-
-      {/* KPI Cards - Match Buyers Design Exactly */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
-        {/* Card 1: Seedlings Received */}
-        <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white hover:scale-105 hover:-translate-y-2 transition-transform duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Package size={24} />
-              </div>
-            </div>
-            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Seedlings Received</h3>
-            <p className="text-3xl md:text-4xl font-black mb-1">{stats.totalReceivedQuantity.toLocaleString()}</p>
-            <div className="flex items-center gap-2 text-xs opacity-80">
-              <Package size={14} />
-              <span>From MAO distributions</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Distributed */}
-        <div className="group relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white hover:scale-105 hover:-translate-y-2 transition-transform duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Share2 size={24} />
-              </div>
-            </div>
-            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Seedlings Distributed</h3>
-            <p className="text-3xl md:text-4xl font-black mb-1">{stats.totalDistributedQuantity.toLocaleString()}</p>
-            <div className="flex items-center gap-1 text-xs opacity-80">
-              <Users size={14} />
-              <span>To {stats.totalFarmerDistributions} farmers</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Inventory */}
-        <div className="group relative bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white hover:scale-105 hover:-translate-y-2 transition-transform duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Layers size={24} />
-              </div>
-            </div>
-            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Inventory Remaining</h3>
-            <p className="text-3xl md:text-4xl font-black mb-1">{stats.totalAvailableQuantity.toLocaleString()}</p>
-            <div className="flex items-center gap-2 text-xs opacity-80">
-              <Layers size={14} />
-              <span>{stats.totalAvailableQuantity === 0 ? 'Fully distributed' : 'Ready for distribution'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Planting Progress */}
-        <div className="group relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white hover:scale-105 hover:-translate-y-2 transition-transform duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Sprout size={24} />
-              </div>
-            </div>
-            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Planting Progress</h3>
-            <p className="text-3xl md:text-4xl font-black mb-1">{stats.plantedQuantity.toLocaleString()}</p>
-            <div className="flex items-center gap-2 text-xs opacity-80">
-              <TrendingUp size={14} />
-              <span>{stats.plantingRate.toFixed(1)}% planted</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <KpiStrip
+        columns={4}
+        items={[
+          {
+            label: 'Seedlings Received',
+            value: stats.totalReceivedQuantity.toLocaleString(),
+            subtext: 'From MAO distributions',
+          },
+          {
+            label: 'Seedlings Distributed',
+            value: stats.totalDistributedQuantity.toLocaleString(),
+            subtext: `To ${stats.totalFarmerDistributions} farmers`,
+          },
+          {
+            label: 'Inventory Remaining',
+            value: stats.totalAvailableQuantity.toLocaleString(),
+            subtext: stats.totalAvailableQuantity === 0 ? 'Fully distributed' : 'Ready for distribution',
+          },
+          {
+            label: 'Planting Progress',
+            value: stats.plantedQuantity.toLocaleString(),
+            accentSubtext: `${stats.plantingRate.toFixed(1)}% planted`,
+          },
+        ]}
+      />
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Seedling Distributions Bar Chart - 2 columns */}
-        <div className="lg:col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300">
-        <div className="mb-4">
-          {/* Header with title and buttons */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
-            <div className="flex-1">
-              <h2 className="text-sm sm:text-base md:text-xl lg:text-2xl font-black text-gray-900 flex items-center gap-2">
-                <div className="w-1 h-5 sm:h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
-                Seedling Distributions
-              </h2>
-              <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 mt-1 sm:mt-2 ml-4 sm:ml-5 md:ml-7 font-medium">Monthly distribution trends to farmers</p>
-            </div>
-            
-            {/* Toggle buttons and icon */}
-            <div className="flex items-center gap-3 ml-5 sm:ml-0">
-              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-                <button
-                  onClick={() => setViewMode('monthly')}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all duration-200 ${viewMode === 'monthly'
-                    ? 'bg-white text-emerald-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setViewMode('yearly')}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all duration-200 ${viewMode === 'yearly'
-                    ? 'bg-white text-emerald-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  Yearly
-                </button>
-              </div>
-              <div className="hidden md:block p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl">
-                <Sprout className="text-emerald-600" size={28} />
-              </div>
-            </div>
-          </div>
-
-          {/* Data Insights Badges */}
-          <div className="flex flex-wrap items-center gap-2 ml-5 md:ml-7">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg">
-              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-              <span className="text-xs font-semibold text-emerald-700">Distributed</span>
-              <span className="text-xs font-black text-emerald-900">
-                {analyticsData.reduce((sum, d) => sum + d.seedlings, 0).toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
-              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-              <span className="text-xs font-semibold text-blue-700">Received</span>
-              <span className="text-xs font-black text-blue-900">
+        <EditorialCard
+          className="lg:col-span-2"
+          title="Seedling Distributions"
+          subtitle="Monthly distribution trends to farmers"
+          actions={
+            <SegmentedToggle
+              variant="amber"
+              value={viewMode}
+              onChange={(val) => setViewMode(val as 'monthly' | 'yearly')}
+              options={[
+                { value: 'monthly', label: 'Monthly' },
+                { value: 'yearly', label: 'Yearly' },
+              ]}
+            />
+          }
+        >
+          {/* Inline Legend */}
+          <div className="flex flex-wrap items-center gap-4 mb-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#F8F9FA] border border-gray-200 text-xs">
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: EDITORIAL_CHART.colors.amber }} />
+              <span className="font-medium text-gray-600">Received</span>
+              <span className="font-bold text-gray-900 tabular-nums">
                 {analyticsData.reduce((sum, d) => sum + d.received, 0).toLocaleString()}
               </span>
             </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#F8F9FA] border border-gray-200 text-xs">
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: EDITORIAL_CHART.colors.emerald }} />
+              <span className="font-medium text-gray-600">Distributed</span>
+              <span className="font-bold text-gray-900 tabular-nums">
+                {analyticsData.reduce((sum, d) => sum + d.seedlings, 0).toLocaleString()}
+              </span>
+            </div>
           </div>
-        </div>
-        
-        {loadingChart ? (
-          <div className="flex flex-col items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
-            <p className="text-sm font-medium text-gray-600">Loading {viewMode} data...</p>
-          </div>
-        ) : analyticsData && analyticsData.length > 0 ? (
-          <div className="w-full">
-            <div className="overflow-x-auto">
-              <div style={{ minWidth: viewMode === 'monthly' ? '600px' : '100%', width: '100%' }}>
-              <ResponsiveContainer width="100%" height={380}>
-                <RechartsBarChart data={analyticsData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                  <XAxis
-                    dataKey="period"
-                    stroke="#374151"
-                    style={{ fontSize: '12px', fontWeight: 500 }}
-                    axisLine={false}
-                    tickLine={false}
-                    dy={5}
-                  />
-                  <YAxis
-                    stroke="#374151"
-                    style={{ fontSize: '12px', fontWeight: 500 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: 'none',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                    }}
-                    cursor={{ fill: '#f9fafb' }}
-                  />
-                  <Bar dataKey="received" fill="#3b82f6" name="Seedlings Received" radius={[6, 6, 0, 0]} barSize={viewMode === 'monthly' ? 35 : 45} />
-                  <Bar dataKey="seedlings" fill="#10b981" name="Seedlings Distributed" radius={[6, 6, 0, 0]} barSize={viewMode === 'monthly' ? 35 : 45} />
-                </RechartsBarChart>
-              </ResponsiveContainer>
+
+          {loadingChart ? (
+            <div className="flex flex-col items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 border-t-[#047857] mb-3"></div>
+              <p className="text-xs font-medium text-gray-500">Loading {viewMode} data...</p>
+            </div>
+          ) : analyticsData && analyticsData.length > 0 ? (
+            <div className="w-full overflow-x-auto">
+              <div style={{ minWidth: viewMode === 'monthly' ? '560px' : '100%', width: '100%' }}>
+                <ResponsiveContainer width="100%" height={340}>
+                  <RechartsBarChart data={analyticsData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                    <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                    <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={5} />
+                    <YAxis {...EDITORIAL_CHART.yAxisProps} />
+                    <Tooltip
+                      contentStyle={EDITORIAL_CHART.tooltipStyle}
+                      cursor={{ fill: '#F8F9FA' }}
+                      formatter={(value: unknown, name: unknown) => [Number(value ?? 0).toLocaleString(), String(name ?? '')]}
+                    />
+                    <Bar
+                      dataKey="received"
+                      fill={EDITORIAL_CHART.colors.amber}
+                      name="Seedlings Received"
+                      radius={[6, 6, 0, 0]}
+                      barSize={viewMode === 'monthly' ? 28 : 40}
+                    />
+                    <Bar
+                      dataKey="seedlings"
+                      fill={EDITORIAL_CHART.colors.emerald}
+                      name="Seedlings Distributed"
+                      radius={[6, 6, 0, 0]}
+                      barSize={viewMode === 'monthly' ? 28 : 40}
+                    />
+                  </RechartsBarChart>
+                </ResponsiveContainer>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-            <div className="p-6 bg-gray-100 rounded-full mb-4">
-              <Activity className="w-12 h-12 text-gray-300" />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-full mb-3">
+                <Activity className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="font-semibold text-sm text-gray-600">No distribution data available</p>
+              <p className="text-xs text-gray-500 mt-1">Distribution data will appear when seedlings are distributed</p>
             </div>
-            <p className="font-semibold text-gray-500">No distribution data available</p>
-            <p className="text-sm text-gray-400 mt-2">Distribution data will appear when seedlings are distributed</p>
-          </div>
-        )}
-        </div>
+          )}
+        </EditorialCard>
 
         {/* Fiber Delivery Statistics Donut Chart - 1 column */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 border border-white/60 hover:shadow-3xl transition-shadow duration-300">
-          <div className="mb-6">
-            <h2 className="text-sm sm:text-base md:text-xl lg:text-2xl font-black text-gray-900 flex items-center gap-2">
-              <div className="w-1 h-5 sm:h-6 md:h-8 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
-              Delivery Status
-            </h2>
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 mt-1 sm:mt-2 ml-4 sm:ml-5 md:ml-7 font-medium">Track delivery status and performance</p>
-          </div>
-
+        <EditorialCard
+          title="Delivery Status"
+          subtitle="Track delivery status and performance"
+        >
           {fiberDeliveryChartData && fiberDeliveryChartData.length > 0 && fiberDeliveryChartData[0].name !== 'No Deliveries' ? (
             <>
-              {/* Donut Chart */}
-              <div className="relative">
-                <ResponsiveContainer width="100%" height={240}>
+              <div className="relative h-[220px]">
+                <ResponsiveContainer width="100%" height={220}>
                   <RechartsPieChart>
                     <Pie
                       data={fiberDeliveryChartData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={70}
-                      outerRadius={100}
-                      paddingAngle={5}
+                      innerRadius={65}
+                      outerRadius={92}
+                      paddingAngle={4}
                       dataKey="value"
-                      cornerRadius={8}
+                      cornerRadius={6}
                       strokeWidth={0}
                     >
                       {fiberDeliveryChartData.map((entry, index) => (
@@ -933,498 +839,360 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#fff',
-                        border: 'none',
-                        borderRadius: '12px',
-                        fontSize: '12px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                        padding: '8px 12px'
-                      }}
-                      formatter={(value: number) => {
+                      contentStyle={EDITORIAL_CHART.tooltipStyle}
+                      formatter={(value: unknown) => {
+                        const num = Number(value ?? 0);
                         const total = fiberDeliveryChartData.reduce((sum, item) => sum + item.value, 0);
-                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                        return [`${value} (${percentage}%)`, ''];
+                        const percentage = total > 0 ? ((num / total) * 100).toFixed(1) : '0.0';
+                        return [`${num} (${percentage}%)`, 'Deliveries'];
                       }}
                     />
                   </RechartsPieChart>
                 </ResponsiveContainer>
 
                 {/* Center Label */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none" style={{ marginTop: '-20px' }}>
-                  <div className="text-3xl font-bold text-blue-600">
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <div className="text-2xl font-bold text-gray-900 tabular-nums leading-none">
                     {fiberDeliveryStats.total}
                   </div>
-                  <div className="text-xs text-gray-500 font-medium mt-1">Total Deliveries</div>
+                  <div className="text-[11px] text-gray-500 font-medium mt-1">Total Deliveries</div>
                 </div>
               </div>
 
               {/* Statistics Grid */}
-              <div className="mt-6 space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-green-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="text-sm font-medium text-gray-700">Completed</span>
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#F8F9FA] border border-gray-200">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.emerald }} />
+                    <span className="text-xs font-medium text-gray-700">Completed</span>
                   </div>
-                  <span className="text-sm font-bold text-green-600">{fiberDeliveryStats.completed}</span>
+                  <span className="text-xs font-bold text-gray-900 tabular-nums">{fiberDeliveryStats.completed}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                    <span className="text-sm font-medium text-gray-700">Delivered</span>
+                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#F8F9FA] border border-gray-200">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.amber }} />
+                    <span className="text-xs font-medium text-gray-700">Delivered</span>
                   </div>
-                  <span className="text-sm font-bold text-blue-600">{fiberDeliveryStats.delivered}</span>
+                  <span className="text-xs font-bold text-gray-900 tabular-nums">{fiberDeliveryStats.delivered}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                    <span className="text-sm font-medium text-gray-700">In Transit</span>
+                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#F8F9FA] border border-gray-200">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.espresso }} />
+                    <span className="text-xs font-medium text-gray-700">In Transit</span>
                   </div>
-                  <span className="text-sm font-bold text-amber-600">{fiberDeliveryStats.inTransit}</span>
+                  <span className="text-xs font-bold text-gray-900 tabular-nums">{fiberDeliveryStats.inTransit}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-red-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <span className="text-sm font-medium text-gray-700">Cancelled</span>
+                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#F8F9FA] border border-gray-200">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.mutedSlate }} />
+                    <span className="text-xs font-medium text-gray-700">Cancelled</span>
                   </div>
-                  <span className="text-sm font-bold text-red-600">{fiberDeliveryStats.cancelled}</span>
+                  <span className="text-xs font-bold text-gray-900 tabular-nums">{fiberDeliveryStats.cancelled}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-purple-50 border-t-2 border-purple-200">
-                  <div className="flex items-center gap-3">
-                    <Package className="w-4 h-4 text-purple-600" />
-                    <span className="text-sm font-semibold text-gray-900">Total Fiber</span>
+                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#EAF6F0] border border-[#CBEAD9]">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-[#047857]" />
+                    <span className="text-xs font-semibold text-gray-900">Total Fiber</span>
                   </div>
-                  <span className="text-sm font-black text-purple-600">{fiberDeliveryStats.totalKg.toFixed(2)} kg</span>
+                  <span className="text-xs font-bold text-[#047857] tabular-nums">{fiberDeliveryStats.totalKg.toFixed(2)} kg</span>
                 </div>
               </div>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-              <div className="p-6 bg-gray-100 rounded-full mb-4">
-                <Truck className="w-12 h-12 text-gray-300" />
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-full mb-3">
+                <Truck className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="font-semibold text-gray-500">No delivery data available</p>
-              <p className="text-sm text-gray-400 mt-2">Fiber deliveries will appear here</p>
+              <p className="font-semibold text-sm text-gray-600">No delivery data available</p>
+              <p className="text-xs text-gray-500 mt-1">Fiber deliveries will appear here</p>
             </div>
           )}
-        </div>
+        </EditorialCard>
       </div>
 
       {/* Recent Activity Table */}
-      <div className="bg-gradient-to-br from-white to-gray-50/30 rounded-3xl p-6 md:p-8 shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-300">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div>
-            <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-black text-gray-900 flex items-center gap-2">
-              <div className="w-1 h-5 sm:h-6 md:h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
-              Recent Distributions
-            </h3>
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 mt-1 sm:mt-2 ml-3 sm:ml-4 md:ml-5 font-medium">Latest activity logs</p>
-          </div>
-          <button 
+      <EditorialCard
+        title="Recent Distributions"
+        subtitle="Latest activity logs"
+        noPadding
+        actions={
+          <button
+            type="button"
             onClick={() => setCurrentPage('distribution')}
-            className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl transition-all hover:shadow-lg hover:scale-105 transform duration-200"
+            className="px-4 py-2 text-xs font-semibold text-white bg-[#047857] hover:bg-[#065F46] rounded-xl transition-colors"
           >
             View All
           </button>
-        </div>
-        <div className="overflow-x-auto -mx-2">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b-2 border-gray-200">
-                <th className="text-left py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Farmer</th>
-                <th className="text-left py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Date</th>
-                <th className="text-left py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Variety</th>
-                <th className="text-right py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Quantity</th>
-                <th className="text-center py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentDistributions.map((dist: any, idx) => (
-                <tr key={idx} className="border-b border-gray-100 hover:bg-emerald-50/30 transition-all duration-200 group">
-                  <td className="py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4">
-                    <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md group-hover:scale-110 transition-transform">
-                        {dist.farmer_name ? dist.farmer_name.charAt(0).toUpperCase() : 'F'}
-                      </div>
-                      <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors truncate">{dist.farmer_name || 'Unknown Farmer'}</span>
-                    </div>
-                  </td>
-                  <td className="py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs md:text-sm font-medium text-gray-700 whitespace-nowrap">
-                    {new Date(dist.distribution_date || dist.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </td>
-                  <td className="py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4">
-                    <span className="px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
-                      {dist.variety || 'Abaca'}
-                    </span>
-                  </td>
-                  <td className="py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-[11px] sm:text-xs md:text-sm text-gray-900 font-black text-right whitespace-nowrap">
-                    {dist.quantity_distributed?.toLocaleString()}
-                  </td>
-                  <td className="py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-4 text-center">
-                    <span className={`inline-flex items-center px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm whitespace-nowrap ${
-                      dist.status?.toLowerCase().includes('planted') 
-                        ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200'
-                        : !dist.status || dist.status.includes('distributed')
-                        ? 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border border-emerald-200'
-                        : 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border border-gray-200'
-                    }`}>
-                      {dist.status ? dist.status.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Distributed'}
-                    </span>
-                  </td>
+        }
+      >
+        {recentDistributions.length === 0 ? (
+          <div className="p-10 text-center">
+            <Users className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm font-medium text-gray-600">No recent distributions found</p>
+          </div>
+        ) : (
+          <div className="table-wrapper" tabIndex={0} role="region" aria-label="Recent farmer seedling distributions">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Farmer</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Date</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Variety</th>
+                  <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Quantity</th>
+                  <th className="text-center py-3 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {recentDistributions.map((dist: any, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50/70 transition-colors">
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-semibold text-xs flex-shrink-0">
+                          {dist.farmer_name ? dist.farmer_name.charAt(0).toUpperCase() : 'F'}
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 truncate">{dist.farmer_name || 'Unknown Farmer'}</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 text-xs sm:text-sm text-gray-600 whitespace-nowrap tabular-nums">
+                      {new Date(dist.distribution_date || dist.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 whitespace-nowrap">
+                        {dist.variety || 'Abaca'}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-sm text-gray-900 font-semibold text-right whitespace-nowrap tabular-nums">
+                      {dist.quantity_distributed?.toLocaleString()}
+                    </td>
+                    <td className="py-3.5 px-5 text-center">
+                      <StatusPill tone={getDistributionTone(dist.status)}>
+                        {dist.status ? dist.status.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Distributed'}
+                      </StatusPill>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </EditorialCard>
     </div>
   );
 
-  const renderContent = () => {
-    if (currentPage === 'overview') {
-      return loadingStats ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
-            <span className="text-sm text-gray-500 mt-4">Loading dashboard insights...</span>
-          </div>
-        </div>
-      ) : (
-        renderOverview()
-      );
-    }
-
-    if (currentPage === 'analytics') {
-      return renderAnalytics();
-    }
-
-    if (currentPage === 'inventory') {
-      return <AssociationInventory />;
-    }
-
-    if (currentPage === 'fiber-inventory') {
-      return <CUSAFAInventory />;
-    }
-
-    if (currentPage === 'fiber-deliveries') {
-      return <CUSAFAFiberDeliveries />;
-    }
-
-    if (currentPage === 'distribution') {
-      return <AssociationSeedlingDistribution />;
-    }
-
-    if (currentPage === 'buyer-prices') {
-      return <BuyerPriceListingsViewer userRole="cusafa" />;
-    }
-
-    if (currentPage === 'profile') {
-      return <AssociationProfile onBack={() => setCurrentPage('overview')} onEditProfile={() => setCurrentPage('edit-profile')} />;
-    }
-
-    if (currentPage === 'edit-profile') {
-      return <EditAssociationProfile onBack={() => setCurrentPage('profile')} />;
-    }
-
-    if (currentPage === 'change-password') {
-      return <ChangePassword onBack={() => setCurrentPage('profile')} />;
-    }
-
-    return (
-      <div className="bg-white border border-dashed border-gray-200 rounded-3xl p-12 text-center text-gray-500">
-        Reports & analytics coming soon.
-      </div>
-    );
+  const cusafaPages = {
+    analytics: () => renderAnalytics(),
+    inventory: () => <AssociationInventory />,
+    'fiber-inventory': () => <CUSAFAInventory />,
+    'fiber-deliveries': () => <CUSAFAFiberDeliveries />,
+    distribution: () => <AssociationSeedlingDistribution />,
+    'buyer-prices': () => <BuyerPriceListingsViewer userRole="cusafa" />,
+    profile: () => (
+      <AssociationProfile
+        onBack={() => setCurrentPage('overview')}
+        onEditProfile={() => setCurrentPage('edit-profile')}
+      />
+    ),
+    'edit-profile': () => (
+      <EditAssociationProfile onBack={() => setCurrentPage('profile')} />
+    ),
+    'change-password': () => (
+      <ChangePassword onBack={() => setCurrentPage('profile')} />
+    ),
   };
 
-  return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Mobile Backdrop */}
-      {isMobile && sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <aside className={`
-        ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-64' : sidebarOpen ? 'w-64' : 'w-20'}
-        ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
-        bg-gradient-to-b from-slate-800 to-slate-900 text-white 
-        transition-all duration-300 ease-in-out flex flex-col
-        fixed md:static h-screen
-      `}>
-        {/* Logo */}
-        <div className="p-4 md:p-6 flex items-center justify-between border-b border-slate-700">
-          <div className={`transition-all duration-300 ease-in-out ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
-            <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">Association</h1>
-            <p className="text-xs text-slate-400 whitespace-nowrap">Seedling Management</p>
-          </div>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 flex-shrink-0 md:block hidden"
-          >
-            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-          {isMobile && (
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 flex-shrink-0 md:hidden"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-hide">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = currentPage === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setCurrentPage(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${active ? 'bg-emerald-600' : 'hover:bg-slate-700'
-                  } ${!sidebarOpen && 'justify-center'}`}
-              >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
-                  <span className="hidden sm:inline">{item.label}</span>
-                  <span className="sm:hidden">{item.mobileLabel}</span>
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Logout */}
-        <div className="p-4 border-t border-slate-700">
-          <button
-            onClick={onLogout}
-            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-red-600 rounded-lg transition-all duration-200 ${!sidebarOpen && 'justify-center'}`}
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between px-4 md:px-6 py-4">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition mr-2"
-            >
-              <Menu className="w-6 h-6 text-gray-600" />
-            </button>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide font-semibold truncate">Association Dashboard</p>
-              <h2 className="text-sm sm:text-lg md:text-2xl font-bold text-gray-900 mt-0.5 truncate">
-                <span className="hidden sm:inline">
-                  {currentPage === 'overview'
-                    ? 'Overview'
-                    : currentPage === 'analytics'
-                      ? 'Analytics Dashboard'
-                      : currentPage === 'inventory'
-                        ? 'Seedling Inventory'
-                        : currentPage === 'fiber-inventory'
-                          ? 'Fiber Inventory'
-                          : currentPage === 'fiber-deliveries'
-                            ? 'Fiber Deliveries'
-                            : currentPage === 'distribution'
-                              ? 'Farmer Distribution'
-                              : currentPage === 'buyer-prices'
-                                ? 'Buyer Price Listings'
-                                : 'Reports & Analytics'}
-                </span>
-                <span className="sm:hidden">
-                  {currentPage === 'overview'
-                    ? 'Overview'
-                    : currentPage === 'analytics'
-                      ? 'Analytics'
-                      : currentPage === 'inventory'
-                        ? 'Seedlings'
-                        : currentPage === 'fiber-inventory'
-                          ? 'Fiber Stock'
-                          : currentPage === 'fiber-deliveries'
-                            ? 'Deliveries'
-                            : currentPage === 'distribution'
-                              ? 'Distribution'
-                              : currentPage === 'buyer-prices'
-                                ? 'Prices'
-                                : 'Reports'}
-                </span>
-              </h2>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all"
-                >
-                  <Bell className="w-5 h-5 text-gray-600" />
-                  {notifications.filter(n => !n.read).length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                      {notifications.filter(n => !n.read).length}
-                    </span>
-                  )}
-                </button>
-                {showNotifications && (
-                  <div className="fixed sm:absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 max-h-[500px] overflow-y-auto">
-                    <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50">
-                      <h3 className="font-bold text-gray-900 text-lg">Notifications</h3>
-                      <p className="text-xs text-gray-600">Recent activity updates</p>
-                    </div>
-                    {notifications.length === 0 ? (
-                      <div className="p-8 text-center text-gray-500">
-                        <Bell className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                        <p className="text-sm">No notifications yet</p>
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-100">
-                        {notifications.map((notif) => (
-                          <div key={notif.id} className="p-4 hover:bg-gray-50 transition-colors">
-                            <div className="flex items-start gap-3">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${notif.type === 'seedling' ? 'bg-emerald-100' :
-                                notif.type === 'fiber' ? 'bg-blue-100' : 'bg-purple-100'
-                                }`}>
-                                {notif.type === 'seedling' ? (
-                                  <Sprout className={`w-5 h-5 ${notif.type === 'seedling' ? 'text-emerald-600' : ''
-                                    }`} />
-                                ) : notif.type === 'fiber' ? (
-                                  <Truck className="w-5 h-5 text-blue-600" />
-                                ) : (
-                                  <Share2 className="w-5 h-5 text-purple-600" />
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900">{notif.title}</p>
-                                <p className="text-xs text-gray-600 mt-1 line-clamp-2">{notif.message}</p>
-                                <p className="text-xs text-gray-400 mt-2">
-                                  {new Date(notif.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  className="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all"
-                >
-                  {officerProfile?.profile_picture ? (
-                    <img
-                      src={officerProfile.profile_picture}
-                      alt={officerProfile.full_name}
-                      className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full object-cover border-2 border-emerald-200 shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-lg">
-                      {(officerProfile?.full_name || user?.fullName || 'CU')
-                        .split(' ')
-                        .map((part: string) => part[0])
-                        .join('')
-                        .slice(0, 2)
-                        .toUpperCase()}
-                    </div>
-                  )}
-                  <div className="text-left hidden sm:block">
-                    <p className="text-sm font-semibold text-gray-900">{officerProfile?.full_name || user?.fullName || 'Association Officer'}</p>
-                    <p className="text-xs text-gray-500">{officerProfile?.association_name || user?.associationName || 'Central Union'}</p>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-gray-500 hidden sm:block" />
-                </button>
-                {showProfileDropdown && (
-                  <div className="fixed sm:absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-64 sm:w-72 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
-                    <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-200">
-                      <div className="flex items-center gap-3">
-                        {officerProfile?.profile_picture ? (
-                          <img
-                            src={officerProfile.profile_picture}
-                            alt={officerProfile.full_name}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-emerald-200"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center font-bold text-lg">
-                            {(officerProfile?.full_name || user?.fullName || 'CU')
-                              .split(' ')
-                              .map((part: string) => part[0])
-                              .join('')
-                              .slice(0, 2)
-                              .toUpperCase()}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-gray-900 truncate">{officerProfile?.full_name || user?.fullName || 'Association Officer'}</p>
-                          <p className="text-xs text-gray-600 truncate">{officerProfile?.position || 'Officer'}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="py-2">
-                      <button
-                        onClick={() => {
-                          setShowProfileDropdown(false);
-                          setCurrentPage('profile');
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-700 hover:bg-emerald-50 font-medium transition-colors flex items-center gap-3"
-                      >
-                        <User className="w-4 h-4 text-emerald-600" />
-                        View Profile
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowProfileDropdown(false);
-                          setCurrentPage('edit-profile');
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-700 hover:bg-emerald-50 font-medium transition-colors flex items-center gap-3"
-                      >
-                        <Edit className="w-4 h-4 text-blue-600" />
-                        Edit Profile
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowProfileDropdown(false);
-                          setCurrentPage('change-password');
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-700 hover:bg-emerald-50 font-medium transition-colors flex items-center gap-3"
-                      >
-                        <KeyRound className="w-4 h-4 text-purple-600" />
-                        Change Password
-                      </button>
-                    </div>
-                    <div className="border-t border-gray-200">
-                      <button
-                        onClick={() => {
-                          setShowProfileDropdown(false);
-                          onLogout();
-                        }}
-                        className="w-full text-left px-4 py-3 text-xs sm:text-sm text-red-600 hover:bg-red-50 font-medium transition-colors flex items-center gap-3"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+  const renderContent = () => (
+    <>
+      <div
+        className={currentPage === 'overview' ? 'block' : 'hidden'}
+        aria-hidden={currentPage !== 'overview'}
+      >
+        {loadingStats ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center">
+              <div className="w-10 h-10 border-2 border-gray-200 border-t-[#047857] rounded-full animate-spin" />
+              <span className="text-sm text-gray-500 mt-3">Loading dashboard insights...</span>
             </div>
           </div>
-        </header>
-
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
-          {renderContent()}
-        </main>
+        ) : (
+          renderOverview()
+        )}
       </div>
-    </div>
+      <KeepAlivePages
+        activeId={currentPage}
+        noKeepAlive={['edit-profile', 'change-password']}
+        pages={cusafaPages}
+      />
+    </>
+  );
+
+  const pageMeta: Record<DashboardPage, { title: string; subtitle: string }> = {
+    overview: {
+      title: 'Overview',
+      subtitle: 'Monitor seedling inventory, farmer distributions, and fiber deliveries.',
+    },
+    analytics: {
+      title: 'Analytics Dashboard',
+      subtitle: 'Track fiber deliveries, seedling distributions, and performance metrics over time.',
+    },
+    inventory: {
+      title: 'Seedling Inventory',
+      subtitle: 'Manage seedling allocations received from MAO and distribute to farmers.',
+    },
+    distribution: {
+      title: 'Farmer Distribution',
+      subtitle: 'Track seedling distributions and planting status across member farmers.',
+    },
+    'fiber-inventory': {
+      title: 'Fiber Inventory',
+      subtitle: 'Review harvested dry fiber stock ready for buyer delivery.',
+    },
+    'fiber-deliveries': {
+      title: 'Fiber Deliveries',
+      subtitle: 'Monitor active, delivered, and completed fiber shipments.',
+    },
+    'buyer-prices': {
+      title: 'Buyer Price Listings',
+      subtitle: 'Current buying prices published by registered fiber buyers.',
+    },
+    profile: {
+      title: 'Association Profile',
+      subtitle: 'Officer credentials and association membership details.',
+    },
+    'edit-profile': {
+      title: 'Edit Profile',
+      subtitle: 'Update officer details, profile photo, and valid ID.',
+    },
+    'change-password': {
+      title: 'Change Password',
+      subtitle: 'Update your account password and security settings.',
+    },
+  };
+
+  const activeMeta = pageMeta[currentPage] || pageMeta.overview;
+  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+
+  return (
+    <EditorialShell
+      brandTitle="CUSAFA Association"
+      brandSubtitle="Association portal"
+      navItems={editorialNavItems}
+      activeNavId={currentPage}
+      onSelectNav={(id) => {
+        setCurrentPage(id as DashboardPage);
+        setShowProfileDropdown(false);
+        setShowNotifications(false);
+      }}
+      pageTitle={activeMeta.title}
+      pageSubtitle={activeMeta.subtitle}
+      unreadCount={unreadNotificationsCount}
+      showNotifications={showNotifications}
+      onToggleNotifications={() => setShowNotifications(!showNotifications)}
+      notificationContent={
+        <div>
+          <div className="px-4 py-3 border-b border-gray-200 bg-[#FAFAFA] flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
+              <p className="text-[11px] text-gray-500">Recent activity updates</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowNotifications(false)}
+              aria-label="Close notifications"
+              className="text-gray-400 hover:text-gray-700 rounded-lg p-1 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="overflow-y-auto max-h-80">
+            {notifications.length === 0 ? (
+              <div className="py-8 px-4 text-center">
+                <Bell className="w-10 h-10 mx-auto text-gray-300 mb-2" />
+                <p className="text-xs text-gray-500">No notifications yet</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {notifications.map((notif) => (
+                  <div key={notif.id} className="px-4 py-3 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
+                        {notif.type === 'seedling' ? (
+                          <Sprout className="w-4 h-4 text-[#047857]" />
+                        ) : notif.type === 'fiber' ? (
+                          <Truck className="w-4 h-4 text-[#E59500]" />
+                        ) : (
+                          <Share2 className="w-4 h-4 text-gray-600" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-900 leading-tight">{notif.title}</p>
+                        <p className="text-xs text-gray-600 mt-0.5 line-clamp-2 leading-relaxed">{notif.message}</p>
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          {new Date(notif.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      }
+      profileName={officerProfile?.full_name || user?.fullName || 'Association Officer'}
+      profileRole={officerProfile?.association_name || officerProfile?.position || user?.associationName || 'CUSAFA Officer'}
+      profileAvatar={officerProfile?.profile_picture || null}
+      showProfileMenu={showProfileDropdown}
+      onToggleProfileMenu={() => setShowProfileDropdown(!showProfileDropdown)}
+      profileMenuContent={
+        <div className="py-1.5">
+          <div className="px-3.5 py-2 border-b border-gray-100">
+            <p className="text-xs font-semibold text-gray-900 truncate">
+              {officerProfile?.full_name || user?.fullName || 'Association Officer'}
+            </p>
+            <p className="text-[11px] text-gray-500 truncate">
+              {officerProfile?.position || 'Officer'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setShowProfileDropdown(false);
+              setCurrentPage('profile');
+            }}
+            className="w-full px-3.5 py-2 text-left hover:bg-gray-50 transition-colors flex items-center gap-2.5 text-xs font-medium text-gray-700"
+          >
+            <User className="w-3.5 h-3.5 text-gray-500" />
+            View Profile
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowProfileDropdown(false);
+              setCurrentPage('edit-profile');
+            }}
+            className="w-full px-3.5 py-2 text-left hover:bg-gray-50 transition-colors flex items-center gap-2.5 text-xs font-medium text-gray-700"
+          >
+            <Edit className="w-3.5 h-3.5 text-gray-500" />
+            Edit Profile
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowProfileDropdown(false);
+              setCurrentPage('change-password');
+            }}
+            className="w-full px-3.5 py-2 text-left hover:bg-gray-50 transition-colors flex items-center gap-2.5 text-xs font-medium text-gray-700"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-gray-500" />
+            Change Password
+          </button>
+        </div>
+      }
+      onLogout={onLogout}
+      logoutLabel="Sign out"
+    >
+      {renderContent()}
+    </EditorialShell>
   );
 };
 

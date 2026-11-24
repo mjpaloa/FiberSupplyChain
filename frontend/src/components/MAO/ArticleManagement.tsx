@@ -9,6 +9,7 @@ import {
   Calendar,
   Image as ImageIcon
 } from 'lucide-react';
+import { EditorialCard, StatusPill } from '../Shared/EditorialUI';
 
 interface Article {
   article_id: string;
@@ -168,163 +169,166 @@ const ArticleManagement: React.FC = () => {
     }
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryTone = (category: string): 'success' | 'info' | 'warning' | 'neutral' => {
     switch (category) {
       case 'Sustainability':
-        return 'bg-green-100 text-green-700 border-green-300';
+        return 'success';
       case 'Success Stories':
-        return 'bg-blue-100 text-blue-700 border-blue-300';
+        return 'info';
       case 'Education':
-        return 'bg-purple-100 text-purple-700 border-purple-300';
+        return 'warning';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-300';
+        return 'neutral';
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-2 border-[#047857] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <BookOpen className="w-7 h-7 text-emerald-600" />
-            Article Management
-          </h2>
-          <p className="text-gray-600 mt-1">Manage news articles and educational content</p>
-        </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-md"
-        >
-          <Plus className="w-5 h-5" />
-          New Article
-        </button>
-      </div>
-
-      {/* Articles List */}
-      {articles.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-300">
-          <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg mb-4">No articles yet</p>
+      <EditorialCard
+        title="Article Management"
+        subtitle="Manage news articles and educational content"
+        badge={articles.length}
+        actions={
           <button
+            type="button"
             onClick={() => handleOpenModal()}
-            className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold"
           >
-            Create First Article
+            <Plus className="w-4 h-4" />
+            New Article
           </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {articles.map((article) => (
-            <div
-              key={article.article_id}
-              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200"
+        }
+      >
+        {/* Articles List */}
+        {articles.length === 0 ? (
+          <div className="text-center py-14 bg-[#F8F9FA] rounded-2xl border border-dashed border-gray-300">
+            <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="font-serif text-lg font-bold text-gray-900 mb-1">No articles yet</p>
+            <p className="text-sm text-gray-500 mb-5">Publish news and educational guides for farmers and buyers.</p>
+            <button
+              type="button"
+              onClick={() => handleOpenModal()}
+              className="px-5 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold"
             >
-              {/* Image */}
-              {article.image_url ? (
-                <div className="h-48 overflow-hidden bg-gray-200">
-                  <img
-                    src={article.image_url}
-                    alt={article.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="h-48 bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-                  <ImageIcon className="w-16 h-16 text-emerald-300" />
-                </div>
-              )}
-
-              <div className="p-5">
-                {/* Category & Date */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${getCategoryColor(article.category)}`}>
-                    {article.category}
-                  </span>
-                  <span className="text-xs text-gray-500 flex items-center">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    {new Date(article.published_date).toLocaleDateString()}
-                  </span>
-                </div>
-
-                {/* Title */}
-                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
-                  {article.title}
-                </h3>
-
-                {/* Excerpt */}
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {article.excerpt}
-                </p>
-
-                {/* Author */}
-                {article.author && (
-                  <p className="text-xs text-gray-500 mb-4">By {article.author}</p>
+              Create First Article
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+            {articles.map((article) => (
+              <div
+                key={article.article_id}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col"
+              >
+                {/* Image */}
+                {article.image_url ? (
+                  <div className="h-44 overflow-hidden bg-gray-100 border-b border-gray-100">
+                    <img
+                      src={article.image_url}
+                      alt={article.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-44 bg-[#F8F9FA] border-b border-gray-100 flex items-center justify-center">
+                    <ImageIcon className="w-12 h-12 text-gray-300" />
+                  </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => handleOpenModal(article)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(article.article_id)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    {/* Category & Date */}
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <StatusPill tone={getCategoryTone(article.category)}>{article.category}</StatusPill>
+                      <span className="text-xs text-gray-500 flex items-center tabular-nums">
+                        <Calendar className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                        {new Date(article.published_date).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="font-serif text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                      {article.title}
+                    </h3>
+
+                    {/* Excerpt */}
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      {article.excerpt}
+                    </p>
+
+                    {/* Author */}
+                    {article.author && (
+                      <p className="text-xs text-gray-500 mb-4">By {article.author}</p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2.5 pt-4 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenModal(article)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-xs font-semibold"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(article.article_id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-red-200 text-red-700 rounded-xl hover:bg-red-50 transition-colors text-xs font-semibold"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </EditorialCard>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 rounded-t-2xl z-10">
-              <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-bold">
-                  {editingArticle ? 'Edit Article' : 'Create New Article'}
-                </h3>
-                <button
-                  onClick={handleCloseModal}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
+            <div className="sticky top-0 bg-white px-6 py-5 border-b border-gray-200 z-10 flex justify-between items-center">
+              <h3 className="font-serif text-xl font-bold text-gray-900">
+                {editingArticle ? 'Edit Article' : 'Create New Article'}
+              </h3>
+              <button
+                type="button"
+                aria-label="Close article modal"
+                onClick={handleCloseModal}
+                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Modal Form */}
             <form onSubmit={handleSubmit} className="p-6">
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {/* Title */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Title <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
                     placeholder="Enter article title"
                     required
                   />
@@ -333,13 +337,13 @@ const ArticleManagement: React.FC = () => {
                 {/* Category & Date */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Category <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm bg-white"
                       required
                     >
                       <option value="Sustainability">Sustainability</option>
@@ -349,40 +353,40 @@ const ArticleManagement: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Published Date
                     </label>
                     <input
                       type="date"
                       value={formData.published_date}
                       onChange={(e) => setFormData({ ...formData, published_date: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm tabular-nums"
                     />
                   </div>
                 </div>
 
                 {/* Author */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Author
                   </label>
                   <input
                     type="text"
                     value={formData.author}
                     onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
                     placeholder="Enter author name"
                   />
                 </div>
 
                 {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Cover Image
                   </label>
                   <div className="flex items-start gap-4">
                     {formData.image_url && (
-                      <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-300">
+                      <div className="relative w-28 h-28 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
                         <img
                           src={formData.image_url}
                           alt="Preview"
@@ -391,9 +395,9 @@ const ArticleManagement: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, image_url: '' })}
-                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                          className="absolute top-1 right-1 p-1 bg-white border border-gray-200 text-red-600 rounded-full hover:bg-red-50 transition-colors"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     )}
@@ -402,10 +406,10 @@ const ArticleManagement: React.FC = () => {
                         type="file"
                         accept="image/*"
                         onChange={handleImageUpload}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
                         disabled={uploadingImage}
                       />
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-gray-500 mt-1.5">
                         Max size: 5MB. Formats: JPG, PNG, GIF
                       </p>
                     </div>
@@ -414,14 +418,14 @@ const ArticleManagement: React.FC = () => {
 
                 {/* Excerpt */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Excerpt <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={formData.excerpt}
                     onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
                     placeholder="Brief summary of the article (shown in preview)"
                     required
                   />
@@ -429,14 +433,14 @@ const ArticleManagement: React.FC = () => {
 
                 {/* Content */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Content <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                     rows={10}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
                     placeholder="Full article content"
                     required
                   />
@@ -444,19 +448,19 @@ const ArticleManagement: React.FC = () => {
               </div>
 
               {/* Modal Actions */}
-              <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200">
+              <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all font-semibold shadow-md flex items-center justify-center gap-2"
+                  className="px-5 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold inline-flex items-center gap-2"
                 >
-                  <Save className="w-5 h-5" />
+                  <Save className="w-4 h-4" />
                   {editingArticle ? 'Update Article' : 'Create Article'}
                 </button>
               </div>

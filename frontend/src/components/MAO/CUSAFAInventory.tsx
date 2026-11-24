@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Package, 
-  Search, 
-  TrendingUp, 
-  Archive, 
-  Truck, 
-  X, 
-  Building,
+import {
+  Package,
+  Search,
+  Truck,
+  X,
   Calendar,
-  Phone,
-  MapPin,
-  FileText,
-  CheckCircle,
-  XCircle
+  MapPin
 } from 'lucide-react';
+import {
+  KpiStrip,
+  EditorialCard,
+  StatusPill,
+  EditorialCallout
+} from '../Shared/EditorialUI';
 
 interface Buyer {
   buyer_id: string;
@@ -190,75 +189,69 @@ const CUSAFAInventory: React.FC = () => {
 
   const varieties = Array.from(new Set(inventory.map(i => i.abaca_variety)));
 
+  const getStatusTone = (status: string): 'success' | 'info' | 'warning' | 'neutral' => {
+    switch (status?.toLowerCase()) {
+      case 'in_stock':
+        return 'success';
+      case 'sold':
+        return 'info';
+      case 'processed':
+        return 'warning';
+      default:
+        return 'neutral';
+    }
+  };
+
   if (loading) {
-    return <div className="flex justify-center items-center py-16"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div></div>;
+    return (
+      <div className="flex justify-center items-center py-16">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 border-t-[#047857]"></div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Package size={24} />
-            </div>
-          </div>
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">TOTAL STOCK</p>
-          <p className="text-4xl font-black mb-3">{stats.total.toFixed(2)} <span className="text-lg">kg</span></p>
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <Package size={16} />
-            <span>All fiber in inventory</span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Archive size={24} />
-            </div>
-          </div>
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">IN STOCK</p>
-          <p className="text-4xl font-black mb-3">{stats.inStock.toFixed(2)} <span className="text-lg">kg</span></p>
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <Archive size={16} />
-            <span>Available for delivery</span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Package size={24} />
-            </div>
-          </div>
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">TOTAL ITEMS</p>
-          <p className="text-4xl font-black mb-3">{stats.items} <span className="text-lg">records</span></p>
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <Package size={16} />
-            <span>Harvest entries</span>
-          </div>
-        </div>
-      </div>
+      <KpiStrip
+        columns={3}
+        items={[
+          {
+            label: 'Total Stock',
+            value: `${stats.total.toFixed(2)} kg`,
+            subtext: 'All fiber in inventory',
+          },
+          {
+            label: 'In Stock',
+            value: `${stats.inStock.toFixed(2)} kg`,
+            subtext: 'Available for delivery',
+          },
+          {
+            label: 'Total Items',
+            value: `${stats.items} records`,
+            subtext: 'Harvest entries',
+          },
+        ]}
+      />
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 md:p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
+      <EditorialCard>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="relative">
-            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               placeholder="Search farmer or variety..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium text-gray-700"
+            aria-label="Filter by status"
+            className="px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-white text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
           >
             <option value="all">All Status</option>
             <option value="in_stock">In Stock</option>
@@ -268,20 +261,22 @@ const CUSAFAInventory: React.FC = () => {
           <select
             value={varietyFilter}
             onChange={(e) => setVarietyFilter(e.target.value)}
-            className="px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium text-gray-700"
+            aria-label="Filter by variety"
+            className="px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-white text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
           >
             <option value="all">All Varieties</option>
             {varieties.map(v => <option key={v} value={v}>{v}</option>)}
           </select>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 whitespace-nowrap">Show:</span>
+            <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Show:</span>
             <select
               value={itemsPerPage}
               onChange={(e) => {
                 setItemsPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium text-gray-700 bg-white"
+              aria-label="Items per page"
+              className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-white text-gray-800 font-medium tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -289,251 +284,242 @@ const CUSAFAInventory: React.FC = () => {
             </select>
           </div>
         </div>
-      </div>
+      </EditorialCard>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-              <tr>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Farmer</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Variety</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Qty (kg)</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Grade</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Date</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Status</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">Location</th>
-                <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {paginatedInventory.map((item) => (
-                <tr key={item.harvest_id} className="hover:bg-blue-50/50 transition-colors duration-150">
-                <td className="px-2 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4">
-                  <div className="flex items-center gap-2 sm:gap-2 md:gap-3">
-                    {item.farmers?.profile_picture ? (
-                      <img 
-                        src={item.farmers.profile_picture} 
-                        alt={item.farmers?.full_name || item.farmer_name}
-                        className="w-10 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full object-cover border-2 border-blue-200 shadow-sm"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const nextEl = e.currentTarget.nextElementSibling as HTMLElement;
-                          if (nextEl) nextEl.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div 
-                      className="w-10 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm sm:text-sm md:text-lg shadow-md"
-                      style={{ display: item.farmers?.profile_picture ? 'none' : 'flex' }}
-                    >
-                      {(item.farmers?.full_name || item.farmer_name).charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm sm:text-sm md:text-base truncate">{item.farmers?.full_name || item.farmer_name}</p>
-                      <p className="text-xs sm:text-xs md:text-sm text-gray-500 flex items-center gap-1 hidden sm:flex">
-                        <MapPin className="w-3 h-3 sm:w-3 sm:h-3" />
-                        <span className="truncate">{item.barangay}, {item.municipality}</span>
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-2 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4">
-                  <span className="px-2.5 sm:px-2.5 md:px-3 py-1.5 sm:py-1 md:py-1.5 bg-emerald-100 text-emerald-700 rounded-lg sm:rounded-lg text-sm sm:text-sm md:text-sm font-semibold whitespace-nowrap">
-                    {item.abaca_variety}
-                  </span>
-                </td>
-                <td className="px-2 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4">
-                  <span className="text-base sm:text-base md:text-lg font-bold text-gray-900">{parseFloat(item.dry_fiber_output_kg?.toString() || '0').toFixed(2)}</span>
-                </td>
-                <td className="px-2 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4">
-                  <span className="px-2.5 sm:px-2.5 md:px-3 py-1.5 sm:py-1 md:py-1.5 bg-blue-100 text-blue-700 rounded-lg sm:rounded-lg text-sm sm:text-sm md:text-sm font-semibold whitespace-nowrap">
-                    {item.fiber_grade || 'N/A'}
-                  </span>
-                </td>
-                <td className="px-2 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4">
-                  <div className="flex items-center gap-1 sm:gap-2 text-sm sm:text-sm md:text-sm text-gray-600">
-                    <Calendar className="w-4 h-4 sm:w-4 sm:h-4 text-gray-400" />
-                    <span className="hidden sm:inline">{new Date(item.harvest_date).toLocaleDateString()}</span>
-                    <span className="sm:hidden">{new Date(item.harvest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                  </div>
-                </td>
-                <td className="px-2 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4">
-                  <span className="inline-block px-2.5 sm:px-2.5 md:px-3 py-1.5 sm:py-1 md:py-1.5 bg-emerald-100 text-emerald-700 rounded-lg sm:rounded-lg text-sm sm:text-sm md:text-sm font-semibold whitespace-nowrap">
-                    {item.status}
-                  </span>
-                </td>
-                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 hidden sm:table-cell">
-                  <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
-                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                    <span className="truncate">{item.municipality}</span>
-                  </div>
-                </td>
-                <td className="px-2 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4">
-                  <button
-                    onClick={async () => {
-                      setSelectedHarvest(item);
-                      setShowDeliveryModal(true);
-                      fetchBuyers();
-                      
-                      // Try to auto-fill farmer contact from multiple sources
-                      try {
-                        const token = localStorage.getItem('accessToken');
-                        
-                        // First, try to get from farmers table via harvest
-                        const farmerResponse = await fetch(`https://fibersupplychain.onrender.com/api/farmers/${item.farmer_id}`, {
-                          headers: { Authorization: `Bearer ${token}` }
-                        });
-                        
-                        if (farmerResponse.ok) {
-                          const farmerData = await farmerResponse.json();
-                          console.log('✅ Farmer data:', farmerData);
-                          const contact = farmerData.contact_number || farmerData.phone_number || '';
-                          
-                          if (contact) {
-                            setFormData(prev => ({
-                              ...prev,
-                              farmer_contact: contact
-                            }));
-                            console.log('✅ Auto-filled farmer contact:', contact);
-                          } else {
-                            console.warn('⚠️ No contact number found in farmer data');
-                          }
-                        } else {
-                          console.error('❌ Failed to fetch farmer data:', farmerResponse.status);
-                        }
-                      } catch (error) {
-                        console.error('❌ Error fetching farmer contact:', error);
-                        setFormData(prev => ({
-                          ...prev,
-                          farmer_contact: ''
-                        }));
-                      }
-                    }}
-                    className="px-3 sm:px-3 md:px-4 py-2 sm:py-2 text-sm sm:text-sm md:text-sm bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg sm:rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center gap-1.5 sm:gap-2 font-semibold whitespace-nowrap"
-                  >
-                    <Truck size={16} className="sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Create Delivery</span>
-                    <span className="sm:hidden">Deliver</span>
-                  </button>
-                </td>
-              </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {filteredInventory.length === 0 && (
-          <div className="text-center py-16">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Package className="w-10 h-10 text-gray-400" />
+      <EditorialCard noPadding>
+        {filteredInventory.length === 0 ? (
+          <div className="text-center py-14 px-4">
+            <div className="w-14 h-14 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Package className="w-7 h-7 text-gray-400" />
             </div>
-            <p className="text-gray-600 font-medium">No inventory items found</p>
-            <p className="text-sm text-gray-500 mt-1">Try adjusting your filters</p>
+            <p className="text-gray-700 font-semibold text-base">No inventory items found</p>
+            <p className="text-xs text-gray-500 mt-1">Try adjusting your filters</p>
           </div>
-        )}
-        
-        {/* Pagination Footer */}
-        {filteredInventory.length > 0 && (
-          <div className="flex items-center justify-between p-3 sm:p-4 md:p-6 border-t border-gray-100">
-            <p className="text-xs sm:text-sm text-gray-600">
-              Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-              >
-                Next
-              </button>
+        ) : (
+          <>
+            <div className="table-wrapper" tabIndex={0} role="region" aria-label="CUSAFA fiber inventory">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Farmer</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Variety</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Qty (kg)</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Grade</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">Location</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {paginatedInventory.map((item) => (
+                    <tr key={item.harvest_id} className="hover:bg-gray-50/70 transition-colors">
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          {item.farmers?.profile_picture ? (
+                            <img
+                              src={item.farmers.profile_picture}
+                              alt={item.farmers?.full_name || item.farmer_name}
+                              className="w-9 h-9 rounded-full object-cover border border-gray-200 flex-shrink-0"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const nextEl = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (nextEl) nextEl.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-semibold text-xs flex-shrink-0"
+                            style={{ display: item.farmers?.profile_picture ? 'none' : 'flex' }}
+                          >
+                            {(item.farmers?.full_name || item.farmer_name).charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm truncate">{item.farmers?.full_name || item.farmer_name}</p>
+                            <p className="text-xs text-gray-500 items-center gap-1 hidden sm:flex">
+                              <MapPin className="w-3 h-3 text-gray-400" />
+                              <span className="truncate">{item.barangay}, {item.municipality}</span>
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <span className="inline-flex items-center px-2.5 py-0.5 bg-gray-100 text-gray-800 border border-gray-200 rounded-full text-xs font-medium whitespace-nowrap">
+                          {item.abaca_variety}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <span className="text-sm font-bold text-gray-900 tabular-nums">
+                          {parseFloat(item.dry_fiber_output_kg?.toString() || '0').toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <span className="inline-flex items-center px-2.5 py-0.5 bg-gray-100 text-gray-700 border border-gray-200 rounded-full text-xs font-medium whitespace-nowrap">
+                          {item.fiber_grade || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 tabular-nums whitespace-nowrap">
+                          <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="hidden sm:inline">{new Date(item.harvest_date).toLocaleDateString()}</span>
+                          <span className="sm:hidden">{new Date(item.harvest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <StatusPill tone={getStatusTone(item.status)}>
+                          {item.status}
+                        </StatusPill>
+                      </td>
+                      <td className="px-4 py-3.5 hidden sm:table-cell">
+                        <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                          <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="truncate">{item.municipality}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setSelectedHarvest(item);
+                            setShowDeliveryModal(true);
+                            fetchBuyers();
+
+                            // Try to auto-fill farmer contact from multiple sources
+                            try {
+                              const token = localStorage.getItem('accessToken');
+
+                              // First, try to get from farmers table via harvest
+                              const farmerResponse = await fetch(`https://fibersupplychain.onrender.com/api/farmers/${item.farmer_id}`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                              });
+
+                              if (farmerResponse.ok) {
+                                const farmerData = await farmerResponse.json();
+                                console.log('✅ Farmer data:', farmerData);
+                                const contact = farmerData.contact_number || farmerData.phone_number || '';
+
+                                if (contact) {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    farmer_contact: contact
+                                  }));
+                                  console.log('✅ Auto-filled farmer contact:', contact);
+                                } else {
+                                  console.warn('⚠️ No contact number found in farmer data');
+                                }
+                              } else {
+                                console.error('❌ Failed to fetch farmer data:', farmerResponse.status);
+                              }
+                            } catch (error) {
+                              console.error('❌ Error fetching farmer contact:', error);
+                              setFormData(prev => ({
+                                ...prev,
+                                farmer_contact: ''
+                              }));
+                            }
+                          }}
+                          className="px-3.5 py-2 text-xs bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors inline-flex items-center gap-1.5 font-semibold whitespace-nowrap"
+                        >
+                          <Truck size={14} />
+                          <span className="hidden sm:inline">Create Delivery</span>
+                          <span className="sm:hidden">Deliver</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
+
+            {/* Pagination Footer */}
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-t border-gray-200 bg-[#FAFAFA]">
+              <p className="text-xs text-gray-500 tabular-nums">
+                Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3.5 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium text-gray-700"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3.5 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium text-gray-700"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
         )}
-      </div>
+      </EditorialCard>
 
       {showDeliveryModal && selectedHarvest && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
-            {/* Header with Gradient */}
-            <div className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-6 md:p-8 flex justify-between items-center sticky top-0 z-10 rounded-t-2xl sm:rounded-t-3xl">
-              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-                <div className="p-2 sm:p-4 bg-white/20 rounded-xl sm:rounded-2xl backdrop-blur-sm shadow-lg flex-shrink-0">
-                  <Truck className="text-white" size={24} />
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-white truncate">Create Fiber Delivery</h2>
-                  <p className="text-emerald-50 text-xs sm:text-sm mt-1 truncate hidden sm:block">Schedule delivery from inventory to buyer</p>
-                </div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-3xl w-full max-h-[92vh] overflow-y-auto">
+            <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10 rounded-t-2xl">
+              <div className="min-w-0">
+                <h2 className="font-serif text-xl font-bold text-gray-900 truncate">Create Fiber Delivery</h2>
+                <p className="text-xs text-gray-500 mt-0.5 truncate">Schedule delivery from inventory to buyer</p>
               </div>
-              <button 
+              <button
+                type="button"
                 onClick={() => {
                   setShowDeliveryModal(false);
                   setSelectedHarvest(null);
                 }}
-                className="p-2 sm:p-3 hover:bg-white/20 rounded-xl transition-all text-white flex-shrink-0 ml-2"
+                aria-label="Close modal"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500 flex-shrink-0 ml-2"
               >
-                <X size={20} className="sm:w-7 sm:h-7" />
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 md:space-y-8">
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
               {/* Harvest Details Card */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-blue-200 shadow-sm">
-                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
-                  <div className="p-1.5 sm:p-2 bg-blue-500 rounded-lg sm:rounded-xl">
-                    <Package className="text-white" size={18} />
+              <div className="bg-[#F8F9FA] rounded-xl p-4 sm:p-5 border border-gray-200">
+                <h3 className="font-serif text-base font-bold text-gray-900 mb-3">Harvest Details</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="bg-white rounded-xl p-3 border border-gray-200">
+                    <p className="text-xs text-gray-500 mb-0.5">Farmer</p>
+                    <p className="font-semibold text-sm text-gray-900">{selectedHarvest.farmers?.full_name || selectedHarvest.farmer_name}</p>
                   </div>
-                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Harvest Details</h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Farmer</p>
-                    <p className="font-bold text-gray-900 text-sm sm:text-base md:text-lg">{selectedHarvest.farmers?.full_name || selectedHarvest.farmer_name}</p>
+                  <div className="bg-white rounded-xl p-3 border border-gray-200">
+                    <p className="text-xs text-gray-500 mb-0.5">Variety</p>
+                    <p className="font-semibold text-sm text-[#047857]">{selectedHarvest.abaca_variety}</p>
                   </div>
-                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Variety</p>
-                    <p className="font-bold text-emerald-600 text-sm sm:text-base md:text-lg">{selectedHarvest.abaca_variety}</p>
+                  <div className="bg-white rounded-xl p-3 border border-gray-200">
+                    <p className="text-xs text-gray-500 mb-0.5">Quantity</p>
+                    <p className="font-semibold text-sm text-gray-900 tabular-nums">{selectedHarvest.dry_fiber_output_kg} kg</p>
                   </div>
-                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Quantity</p>
-                    <p className="font-bold text-gray-900 text-sm sm:text-base md:text-lg">{selectedHarvest.dry_fiber_output_kg} <span className="text-sm sm:text-base text-gray-600">kg</span></p>
+                  <div className="bg-white rounded-xl p-3 border border-gray-200">
+                    <p className="text-xs text-gray-500 mb-0.5">Grade</p>
+                    <p className="font-semibold text-sm text-gray-900">{selectedHarvest.fiber_grade}</p>
                   </div>
-                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Grade</p>
-                    <p className="font-bold text-blue-600 text-sm sm:text-base md:text-lg">{selectedHarvest.fiber_grade}</p>
-                  </div>
-                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm sm:col-span-2">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Location</p>
-                    <p className="font-bold text-gray-900 text-sm sm:text-base md:text-lg">{selectedHarvest.barangay}, {selectedHarvest.municipality}</p>
+                  <div className="bg-white rounded-xl p-3 border border-gray-200 sm:col-span-2">
+                    <p className="text-xs text-gray-500 mb-0.5">Location</p>
+                    <p className="font-semibold text-sm text-gray-900">{selectedHarvest.barangay}, {selectedHarvest.municipality}</p>
                   </div>
                 </div>
               </div>
 
               {/* Buyer Selection Card */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-purple-200 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-5">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="p-1.5 sm:p-2 bg-purple-500 rounded-lg sm:rounded-xl">
-                      <Building className="text-white" size={18} />
-                    </div>
-                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Select Buyer</h3>
-                  </div>
+              <div className="bg-[#F8F9FA] rounded-xl p-4 sm:p-5 border border-gray-200 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <h3 className="font-serif text-base font-bold text-gray-900">Select Buyer</h3>
                   <button
                     type="button"
                     onClick={fetchBuyers}
                     disabled={loadingBuyers}
-                    className="px-3 sm:px-4 py-2 bg-purple-500 text-white rounded-lg sm:rounded-xl hover:bg-purple-600 transition-all disabled:opacity-50 flex items-center gap-2 font-semibold shadow-md text-sm sm:text-base w-full sm:w-auto justify-center"
+                    className="px-3.5 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 text-xs font-semibold w-full sm:w-auto"
                   >
-                    {loadingBuyers ? '⏳' : '🔄'} Reload
+                    {loadingBuyers ? 'Loading...' : 'Reload Buyers'}
                   </button>
                 </div>
                 <select
@@ -542,43 +528,35 @@ const CUSAFAInventory: React.FC = () => {
                   onChange={handleInputChange}
                   required
                   disabled={loadingBuyers}
-                  className="w-full px-3 sm:px-5 py-3 sm:py-4 border-2 border-purple-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white hover:border-purple-300 disabled:bg-gray-100 font-medium text-gray-900 text-sm sm:text-base"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 disabled:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
                 >
                   <option value="">
-                    {loadingBuyers ? '⏳ Loading buyers...' : buyers.length === 0 ? '❌ No buyers available' : 'Choose buyer...'}
+                    {loadingBuyers ? 'Loading buyers...' : buyers.length === 0 ? 'No buyers available' : 'Choose buyer...'}
                   </option>
                   {buyers.map(buyer => (
                     <option key={buyer.buyer_id} value={buyer.buyer_id}>
-                      🏢 {buyer.business_name} ({buyer.owner_name}) {buyer.contact_number ? `📞 ${buyer.contact_number}` : ''}
+                      {buyer.business_name} ({buyer.owner_name}) {buyer.contact_number ? `- ${buyer.contact_number}` : ''}
                     </option>
                   ))}
                 </select>
                 {!loadingBuyers && buyers.length === 0 && (
-                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
-                    <XCircle size={16} className="text-red-500" />
-                    <p className="text-sm text-red-600 font-medium">No buyers found. Click "Reload" or check console.</p>
-                  </div>
+                  <EditorialCallout tone="rose">
+                    No buyers found. Click "Reload Buyers" or check console.
+                  </EditorialCallout>
                 )}
                 {!loadingBuyers && buyers.length > 0 && (
-                  <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
-                    <CheckCircle size={16} className="text-emerald-600" />
-                    <p className="text-sm text-emerald-700 font-medium">{buyers.length} buyer(s) loaded successfully</p>
-                  </div>
+                  <EditorialCallout tone="emerald">
+                    {buyers.length} buyer(s) loaded successfully.
+                  </EditorialCallout>
                 )}
               </div>
 
               {/* Delivery Information Card */}
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-emerald-200 shadow-sm">
-                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
-                  <div className="p-1.5 sm:p-2 bg-emerald-500 rounded-lg sm:rounded-xl">
-                    <Calendar className="text-white" size={18} />
-                  </div>
-                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Delivery Information</h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
-                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
-                      <Calendar size={12} className="text-emerald-500 sm:w-3.5 sm:h-3.5" />
+              <div className="bg-[#F8F9FA] rounded-xl p-4 sm:p-5 border border-gray-200">
+                <h3 className="font-serif text-base font-bold text-gray-900 mb-3">Delivery Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Delivery Date <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -588,13 +566,12 @@ const CUSAFAInventory: React.FC = () => {
                       onChange={handleInputChange}
                       required
                       min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-emerald-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium text-sm sm:text-base"
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
                     />
                   </div>
 
-                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
-                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
-                      <Truck size={12} className="text-emerald-500 sm:w-3.5 sm:h-3.5" />
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Delivery Method <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -602,17 +579,16 @@ const CUSAFAInventory: React.FC = () => {
                       value={formData.delivery_method}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-emerald-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium text-sm sm:text-base"
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
                     >
-                      <option value="CUSAFA Delivery">🚚 CUSAFA Delivery</option>
-                      <option value="Buyer Pickup">🏢 Buyer Pickup</option>
-                      <option value="Third-party">🚛 Third-party Courier</option>
+                      <option value="CUSAFA Delivery">CUSAFA Delivery</option>
+                      <option value="Buyer Pickup">Buyer Pickup</option>
+                      <option value="Third-party">Third-party Courier</option>
                     </select>
                   </div>
 
-                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
-                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
-                      <Phone size={12} className="text-emerald-500 sm:w-3.5 sm:h-3.5" />
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Farmer Contact <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -622,19 +598,17 @@ const CUSAFAInventory: React.FC = () => {
                       onChange={handleInputChange}
                       placeholder="09xxxxxxxxx"
                       required
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-emerald-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium text-sm sm:text-base"
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
                     />
                     {formData.farmer_contact && (
-                      <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
-                        <CheckCircle size={12} />
+                      <p className="text-[11px] text-[#047857] mt-1 font-medium">
                         Auto-filled from farmer profile
                       </p>
                     )}
                   </div>
 
-                  <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm sm:col-span-2">
-                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
-                      <MapPin size={12} className="text-emerald-500 sm:w-3.5 sm:h-3.5" />
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Delivery Location <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -644,48 +618,41 @@ const CUSAFAInventory: React.FC = () => {
                       onChange={handleInputChange}
                       required
                       placeholder="Enter delivery address"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-emerald-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white hover:border-emerald-300 font-medium text-sm sm:text-base"
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Notes Card */}
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-amber-200 shadow-sm">
-                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
-                  <div className="p-1.5 sm:p-2 bg-amber-500 rounded-lg sm:rounded-xl">
-                    <FileText className="text-white" size={18} />
-                  </div>
-                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Additional Notes</h3>
-                </div>
+              <div className="bg-[#F8F9FA] rounded-xl p-4 sm:p-5 border border-gray-200">
+                <label className="block font-serif text-base font-bold text-gray-900 mb-2">Additional Notes</label>
                 <textarea
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
                   rows={3}
                   placeholder="Any special instructions or notes..."
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-amber-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white hover:border-amber-300 resize-none font-medium text-sm sm:text-base"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors resize-none"
                 />
               </div>
 
               {/* Submit Buttons */}
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-6 sm:pt-8 border-t-2 border-gray-200">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => {
                     setShowDeliveryModal(false);
                     setSelectedHarvest(null);
                   }}
-                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gray-100 text-gray-700 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-all font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg text-sm sm:text-base"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium text-sm"
                 >
-                  <X size={18} />
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg sm:rounded-xl hover:shadow-xl hover:scale-105 transition-all font-bold flex items-center justify-center gap-2 shadow-lg text-sm sm:text-base"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors font-semibold text-sm"
                 >
-                  <CheckCircle size={18} />
                   Create Delivery
                 </button>
               </div>

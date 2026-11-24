@@ -9,9 +9,9 @@ import {
   User,
   Mail,
   Phone,
-  Briefcase,
-  Image as ImageIcon
+  Briefcase
 } from 'lucide-react';
+import { EditorialCard, StatusPill } from '../Shared/EditorialUI';
 
 interface TeamMember {
   member_id: string;
@@ -175,162 +175,168 @@ const TeamManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-2 border-[#047857] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="w-7 h-7 text-blue-600" />
-            Team Management
-          </h2>
-          <p className="text-gray-600 mt-1">Manage MAO Culiram team members</p>
-        </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
-        >
-          <Plus className="w-5 h-5" />
-          Add Team Member
-        </button>
-      </div>
-
-      {/* Team List */}
-      {team.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-300">
-          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg mb-4">No team members yet</p>
+    <div className="space-y-6">
+      <EditorialCard
+        title="Team Management"
+        subtitle="Manage MAO Culiram team members"
+        badge={team.length}
+        actions={
           <button
+            type="button"
             onClick={() => handleOpenModal()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold"
           >
-            Add First Team Member
+            <Plus className="w-4 h-4" />
+            Add Team Member
           </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {team.map((member) => (
-            <div
-              key={member.member_id}
-              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200"
+        }
+      >
+        {/* Team List */}
+        {team.length === 0 ? (
+          <div className="text-center py-14 bg-[#F8F9FA] rounded-2xl border border-dashed border-gray-300">
+            <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="font-serif text-lg font-bold text-gray-900 mb-1">No team members yet</p>
+            <p className="text-sm text-gray-500 mb-5">Add agricultural officers and staff to display on the public portal.</p>
+            <button
+              type="button"
+              onClick={() => handleOpenModal()}
+              className="px-5 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold"
             >
-              {/* Photo */}
-              <div className="relative h-56 bg-gradient-to-br from-blue-100 to-indigo-100 overflow-hidden">
-                {member.photo_url ? (
-                  <img
-                    src={member.photo_url}
-                    alt={member.full_name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <User className="w-24 h-24 text-blue-300" />
-                  </div>
-                )}
-                {/* Active Badge */}
-                {!member.is_active && (
-                  <div className="absolute top-3 right-3 px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                    Inactive
-                  </div>
-                )}
-              </div>
-
-              <div className="p-5">
-                {/* Name & Position */}
-                <h3 className="text-xl font-bold text-gray-900 mb-1">
-                  {member.full_name}
-                </h3>
-                <p className="text-blue-600 font-semibold mb-3 flex items-center gap-2">
-                  <Briefcase className="w-4 h-4" />
-                  {member.position}
-                </p>
-
-                {/* Bio */}
-                {member.bio && (
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {member.bio}
-                  </p>
-                )}
-
-                {/* Contact Info */}
-                <div className="space-y-2 mb-4 pt-3 border-t border-gray-200">
-                  {member.email && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Mail className="w-4 h-4 mr-2 text-blue-500" />
-                      <span className="truncate">{member.email}</span>
+              Add First Team Member
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+            {team.map((member) => (
+              <div
+                key={member.member_id}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col"
+              >
+                {/* Photo */}
+                <div className="relative h-52 bg-[#F8F9FA] border-b border-gray-100 overflow-hidden">
+                  {member.photo_url ? (
+                    <img
+                      src={member.photo_url}
+                      alt={member.full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User className="w-16 h-16 text-gray-300" />
                     </div>
                   )}
-                  {member.phone && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Phone className="w-4 h-4 mr-2 text-blue-500" />
-                      {member.phone}
+                  {/* Active Badge */}
+                  {!member.is_active && (
+                    <div className="absolute top-3 right-3">
+                      <StatusPill tone="danger">Inactive</StatusPill>
                     </div>
                   )}
                 </div>
 
-                {/* Display Order */}
-                <p className="text-xs text-gray-500 mb-4">
-                  Display Order: {member.display_order}
-                </p>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    {/* Name & Position */}
+                    <h3 className="font-serif text-lg font-bold text-gray-900 mb-1">
+                      {member.full_name}
+                    </h3>
+                    <p className="text-[#047857] text-sm font-medium mb-3 flex items-center gap-1.5">
+                      <Briefcase className="w-4 h-4 flex-shrink-0" />
+                      <span>{member.position}</span>
+                    </p>
 
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleOpenModal(member)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(member.member_id)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
+                    {/* Bio */}
+                    {member.bio && (
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {member.bio}
+                      </p>
+                    )}
+
+                    {/* Contact Info */}
+                    {(member.email || member.phone) && (
+                      <div className="space-y-1.5 mb-4 pt-3 border-t border-gray-100">
+                        {member.email && (
+                          <div className="flex items-center text-xs text-gray-600">
+                            <Mail className="w-3.5 h-3.5 mr-2 text-gray-400 flex-shrink-0" />
+                            <span className="truncate">{member.email}</span>
+                          </div>
+                        )}
+                        {member.phone && (
+                          <div className="flex items-center text-xs text-gray-600 tabular-nums">
+                            <Phone className="w-3.5 h-3.5 mr-2 text-gray-400 flex-shrink-0" />
+                            <span>{member.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Display Order */}
+                    <p className="text-xs text-gray-500 mb-4 tabular-nums">
+                      Display Order: {member.display_order}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2.5 pt-3 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenModal(member)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-xs font-semibold"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(member.member_id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-red-200 text-red-700 rounded-xl hover:bg-red-50 transition-colors text-xs font-semibold"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </EditorialCard>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-t-2xl z-10">
-              <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-bold">
-                  {editingMember ? 'Edit Team Member' : 'Add Team Member'}
-                </h3>
-                <button
-                  onClick={handleCloseModal}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
+            <div className="sticky top-0 bg-white px-6 py-5 border-b border-gray-200 z-10 flex justify-between items-center">
+              <h3 className="font-serif text-xl font-bold text-gray-900">
+                {editingMember ? 'Edit Team Member' : 'Add Team Member'}
+              </h3>
+              <button
+                type="button"
+                aria-label="Close team member modal"
+                onClick={handleCloseModal}
+                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Modal Form */}
             <form onSubmit={handleSubmit} className="p-6">
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {/* Photo Upload */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Photo
                   </label>
                   <div className="flex items-start gap-4">
                     {formData.photo_url ? (
-                      <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-300">
+                      <div className="relative w-28 h-28 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
                         <img
                           src={formData.photo_url}
                           alt="Preview"
@@ -339,14 +345,14 @@ const TeamManagement: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, photo_url: '' })}
-                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                          className="absolute top-1 right-1 p-1 bg-white border border-gray-200 text-red-600 rounded-full hover:bg-red-50 transition-colors"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ) : (
-                      <div className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
-                        <User className="w-12 h-12 text-gray-300" />
+                      <div className="w-28 h-28 rounded-xl border border-dashed border-gray-300 flex items-center justify-center bg-[#F8F9FA] flex-shrink-0">
+                        <User className="w-10 h-10 text-gray-300" />
                       </div>
                     )}
                     <div className="flex-1">
@@ -354,10 +360,10 @@ const TeamManagement: React.FC = () => {
                         type="file"
                         accept="image/*"
                         onChange={handlePhotoUpload}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
                         disabled={uploadingPhoto}
                       />
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-gray-500 mt-1.5">
                         Max size: 5MB. Formats: JPG, PNG, GIF
                       </p>
                     </div>
@@ -366,14 +372,14 @@ const TeamManagement: React.FC = () => {
 
                 {/* Full Name */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Full Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.full_name}
                     onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
                     placeholder="Enter full name"
                     required
                   />
@@ -381,14 +387,14 @@ const TeamManagement: React.FC = () => {
 
                 {/* Position */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Position <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.position}
                     onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
                     placeholder="e.g. Municipal Agriculture Officer"
                     required
                   />
@@ -396,14 +402,14 @@ const TeamManagement: React.FC = () => {
 
                 {/* Bio */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Bio
                   </label>
                   <textarea
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
                     placeholder="Brief description about the team member"
                   />
                 </div>
@@ -411,27 +417,27 @@ const TeamManagement: React.FC = () => {
                 {/* Email & Phone */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Email
                     </label>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
                       placeholder="email@example.com"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Phone
                     </label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm tabular-nums"
                       placeholder="+63 XXX XXX XXXX"
                     />
                   </div>
@@ -439,14 +445,14 @@ const TeamManagement: React.FC = () => {
 
                 {/* Display Order */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Display Order
                   </label>
                   <input
                     type="number"
                     value={formData.display_order}
-                    onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm tabular-nums"
                     placeholder="0"
                     min="0"
                   />
@@ -457,19 +463,19 @@ const TeamManagement: React.FC = () => {
               </div>
 
               {/* Modal Actions */}
-              <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200">
+              <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold shadow-md flex items-center justify-center gap-2"
+                  className="px-5 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold inline-flex items-center gap-2"
                 >
-                  <Save className="w-5 h-5" />
+                  <Save className="w-4 h-4" />
                   {editingMember ? 'Update Member' : 'Add Member'}
                 </button>
               </div>

@@ -6,15 +6,17 @@ import {
   Eye,
   Share2,
   Sprout,
-  Calendar,
-  Layers,
   Edit,
   Trash2,
   X,
-  Camera,
-  Upload,
   Users
 } from 'lucide-react';
+import {
+  KpiStrip,
+  EditorialCard,
+  StatusPill,
+  EditorialCallout
+} from '../Shared/EditorialUI';
 
 interface AssociationDistribution {
   distribution_id: string;
@@ -354,238 +356,225 @@ const AssociationInventory: React.FC = () => {
   const totalRemaining = distributions.reduce((sum, d) => sum + (d.remaining_quantity ?? 0), 0);
   const verifiedFarmers = farmers.filter(f => f.is_verified && f.is_active);
 
-  const getStatusColor = (status: string) => {
+  const getStatusTone = (status: string): 'info' | 'warning' | 'success' | 'danger' | 'neutral' => {
     switch (status?.toLowerCase()) {
       case 'distributed_to_association':
-        return 'bg-blue-100 text-blue-800';
+        return 'info';
       case 'partially_distributed_to_farmers':
-        return 'bg-amber-100 text-amber-800';
-      case 'fully_distributed_to_farmers':
-        return 'bg-green-100 text-green-800';
       case 'partially_planted':
-        return 'bg-indigo-100 text-indigo-800';
+        return 'warning';
+      case 'fully_distributed_to_farmers':
       case 'fully_planted':
-        return 'bg-emerald-100 text-emerald-800';
+        return 'success';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'danger';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'neutral';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'distributed_to_association':
+        return 'Received';
+      case 'partially_distributed_to_farmers':
+      case 'partially_planted':
+        return 'Ongoing Distribution';
+      case 'fully_distributed_to_farmers':
+      case 'fully_planted':
+        return 'Completely Distributed';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return 'Unknown';
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-
-        </div>
-      </div>
-
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Package size={24} />
-            </div>
-          </div>
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">TOTAL RECEIVED</p>
-          <p className="text-4xl font-black mb-3">{totalReceived.toLocaleString()}</p>
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <Package size={16} />
-            <span>Seedlings from MAO</span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Users size={24} />
-            </div>
-          </div>
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">COMPLETELY DISTRIBUTED</p>
-          <p className="text-4xl font-black mb-3">{totalDistributed.toLocaleString()}</p>
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <Users size={16} />
-            <span>To {verifiedFarmers.length} farmers</span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Layers size={24} />
-            </div>
-          </div>
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">REMAINING STOCK</p>
-          <p className="text-4xl font-black mb-3">{totalRemaining.toLocaleString()}</p>
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <Layers size={16} />
-            <span>Available for distribution</span>
-          </div>
-        </div>
-      </div>
+      <KpiStrip
+        columns={3}
+        items={[
+          {
+            label: 'Total Received',
+            value: totalReceived.toLocaleString(),
+            subtext: 'Seedlings from MAO',
+          },
+          {
+            label: 'Completely Distributed',
+            value: totalDistributed.toLocaleString(),
+            subtext: `To ${verifiedFarmers.length} farmers`,
+          },
+          {
+            label: 'Remaining Stock',
+            value: totalRemaining.toLocaleString(),
+            subtext: 'Available for distribution',
+          },
+        ]}
+      />
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-white/60 p-4 md:p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <EditorialCard>
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               placeholder="Search by variety, supplier..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-3 md:py-4 text-sm border-2 border-gray-200 rounded-xl md:rounded-2xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 bg-gray-50 font-medium transition-all"
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
             />
           </div>
-          <div className="w-full sm:w-56">
+          <div className="w-full sm:w-64">
             <div className="relative">
-              <Filter className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
+              <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-3 md:py-4 text-sm border-2 border-gray-200 rounded-xl md:rounded-2xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 bg-gray-50 appearance-none cursor-pointer font-medium transition-all"
+                aria-label="Filter inventory by status"
+                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl bg-white text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] cursor-pointer transition-colors"
               >
                 <option value="all">All Status</option>
-                <option value="distributed_to_association">📦 Received</option>
-                <option value="partially_distributed_to_farmers">🔄 Ongoing Distribution</option>
-                <option value="fully_distributed_to_farmers">✅ Completely Distributed</option>
-                <option value="partially_planted">🌱 Partially Planted</option>
-                <option value="fully_planted">🌳 Fully Planted</option>
-                <option value="cancelled">❌ Cancelled</option>
+                <option value="distributed_to_association">Received</option>
+                <option value="partially_distributed_to_farmers">Ongoing Distribution</option>
+                <option value="fully_distributed_to_farmers">Completely Distributed</option>
+                <option value="partially_planted">Partially Planted</option>
+                <option value="fully_planted">Fully Planted</option>
+                <option value="cancelled">Cancelled</option>
               </select>
             </div>
           </div>
         </div>
-      </div>
+      </EditorialCard>
 
       {/* Inventory Table */}
-      <div className="bg-white rounded-xl shadow-2xl border border-white/60 overflow-hidden">
+      <EditorialCard noPadding>
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-[#047857]"></div>
           </div>
         ) : filteredDistributions.length === 0 ? (
-          <div className="text-center py-12">
-            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-700 font-semibold text-lg mb-2">No seedlings in inventory</p>
-            <p className="text-sm text-gray-500">Contact MAO to receive seedling distributions</p>
+          <div className="text-center py-12 px-4">
+            <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-700 font-semibold text-base mb-1">No seedlings in inventory</p>
+            <p className="text-xs text-gray-500">Contact MAO to receive seedling distributions</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="table-wrapper" tabIndex={0} role="region" aria-label="Association seedling inventory">
             <table className="w-full">
-              <thead className="bg-gray-50 rounded-t-xl">
-                <tr>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Photo</th>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Variety</th>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Received</th>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell">Distributed</th>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell">Remaining</th>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Photo</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Variety</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Received</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Distributed</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Remaining</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white">
+              <tbody className="bg-white divide-y divide-gray-100">
                 {paginatedDistributions.map((dist) => {
                   const distributedQty = dist.distributed_to_farmers || 0;
-                  // Use ?? instead of || to handle 0 correctly (0 is a valid remaining quantity)
                   const remainingQty = dist.remaining_quantity ?? (dist.quantity_distributed - distributedQty);
+                  const isCompleted = dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted';
 
                   return (
-                    <tr key={dist.distribution_id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
-                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                    <tr key={dist.distribution_id} className="hover:bg-gray-50/70 transition-colors">
+                      <td className="px-4 py-3.5">
+                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
                           {dist.seedling_photo ? (
                             <img src={dist.seedling_photo} alt="Seedling" className="w-full h-full object-cover" />
                           ) : (
-                            <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
+                            <Sprout className="w-5 h-5 text-gray-400" />
                           )}
                         </div>
                       </td>
-                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100 text-xs sm:text-sm text-gray-900">
+                      <td className="px-4 py-3.5 text-xs sm:text-sm text-gray-600 tabular-nums whitespace-nowrap">
                         <span className="hidden sm:inline">{new Date(dist.date_distributed).toLocaleDateString()}</span>
                         <span className="sm:hidden">{new Date(dist.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                       </td>
-                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100 text-xs sm:text-sm text-gray-900">
+                      <td className="px-4 py-3.5 text-xs sm:text-sm text-gray-900">
                         <div className="font-semibold">{dist.variety}</div>
                         {dist.source_supplier && (
                           <div className="text-xs text-gray-500 hidden sm:block">{dist.source_supplier}</div>
                         )}
                       </td>
-                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100 text-xs sm:text-sm text-gray-900 font-semibold">
+                      <td className="px-4 py-3.5 text-xs sm:text-sm text-gray-900 font-semibold tabular-nums">
                         {dist.quantity_distributed.toLocaleString()}
                       </td>
-                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100 text-xs sm:text-sm text-gray-900 font-semibold hidden sm:table-cell">
+                      <td className="px-4 py-3.5 text-xs sm:text-sm text-gray-900 font-semibold tabular-nums hidden sm:table-cell">
                         {distributedQty.toLocaleString()}
                       </td>
-                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100 text-xs sm:text-sm text-gray-900 font-semibold hidden sm:table-cell">
+                      <td className="px-4 py-3.5 text-xs sm:text-sm text-gray-900 font-semibold tabular-nums hidden sm:table-cell">
                         {remainingQty.toLocaleString()}
                       </td>
-                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100">
-                        <span className={`inline-block px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-normal sm:whitespace-nowrap ${getStatusColor(dist.status)}`}>
-                          {dist.status === 'distributed_to_association' ? '📦 Received' :
-                            (dist.status === 'partially_distributed_to_farmers' || dist.status === 'partially_planted') ? '🔄 Ongoing Distribution' :
-                              (dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted') ? '✅ Completely Distributed' :
-                                dist.status === 'cancelled' ? '❌ Cancelled' :
-                                  '❓ Unknown'}
-                        </span>
+                      <td className="px-4 py-3.5">
+                        <StatusPill tone={getStatusTone(dist.status)}>
+                          {getStatusLabel(dist.status)}
+                        </StatusPill>
                       </td>
-                      <td className="px-3 sm:px-4 py-3 border-b border-gray-100">
-                        <div className="flex items-center gap-2">
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1.5">
                           <button
+                            type="button"
                             onClick={() => {
                               setSelectedDistribution(dist);
                               setShowViewModal(true);
                             }}
-                            className="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-blue-100 text-blue-700 hover:bg-blue-200"
+                            className="p-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
                             title="View Details"
+                            aria-label="View details"
                           >
-                            <Eye size={16} />
+                            <Eye size={15} />
                           </button>
                           <button
-                            onClick={() => {
-                              handleOpenEditModal(dist);
-                            }}
-                            disabled={dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted'}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 grayscale'
-                              : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                              }`}
-                            title={(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
-                              ? 'Completed records cannot be modified'
-                              : 'Edit'}
+                            type="button"
+                            onClick={() => handleOpenEditModal(dist)}
+                            disabled={isCompleted}
+                            className={`p-2 rounded-xl border transition-colors ${
+                              isCompleted
+                                ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                            }`}
+                            title={isCompleted ? 'Completed records cannot be modified' : 'Edit'}
+                            aria-label="Edit distribution"
                           >
-                            <Edit size={16} />
+                            <Edit size={15} />
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setSelectedDistribution(dist);
                               setShowDeleteModal(true);
                             }}
-                            disabled={dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted'}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 grayscale'
-                              : 'bg-red-100 text-red-700 hover:bg-red-200'
-                              }`}
-                            title={(dist.status === 'fully_distributed_to_farmers' || dist.status === 'fully_planted')
-                              ? 'Completed records cannot be modified'
-                              : 'Delete'}
+                            disabled={isCompleted}
+                            className={`p-2 rounded-xl border transition-colors ${
+                              isCompleted
+                                ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                                : 'border-gray-200 bg-white text-red-600 hover:bg-red-50'
+                            }`}
+                            title={isCompleted ? 'Completed records cannot be modified' : 'Delete'}
+                            aria-label="Delete distribution"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={15} />
                           </button>
                           <button
+                            type="button"
                             onClick={() => openDistributeModal(dist)}
                             disabled={remainingQty === 0}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${remainingQty > 0
-                              ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              }`}
+                            className={`p-2 rounded-xl transition-colors ${
+                              remainingQty > 0
+                                ? 'bg-[#047857] text-white hover:bg-[#065F46]'
+                                : 'border border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                            }`}
                             title={remainingQty > 0 ? 'Distribute to Farmers' : 'No remaining seedlings'}
+                            aria-label="Distribute to farmers"
                           >
-                            <Share2 size={16} />
+                            <Share2 size={15} />
                           </button>
                         </div>
                       </td>
@@ -599,97 +588,97 @@ const AssociationInventory: React.FC = () => {
 
         {/* Pagination Footer */}
         {filteredDistributions.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mt-6 pt-4 px-2 sm:px-4 pb-2 border-t border-gray-200">
-            <p className="text-xs sm:text-sm text-gray-600">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 border-t border-gray-200 bg-[#FAFAFA]">
+            <p className="text-xs text-gray-500 tabular-nums">
               Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
             </p>
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="px-3 sm:px-4 py-2 rounded-lg border-2 border-gray-300 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 text-xs sm:text-sm font-medium text-gray-700 shadow-sm"
+                className="px-3.5 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium text-gray-700"
               >
                 Previous
               </button>
               <button
+                type="button"
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages || totalPages === 0}
-                className="px-3 sm:px-4 py-2 rounded-lg border-2 border-gray-300 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 text-xs sm:text-sm font-medium text-gray-700 shadow-sm"
+                className="px-3.5 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium text-gray-700"
               >
                 Next
               </button>
             </div>
           </div>
         )}
-      </div>
+      </EditorialCard>
 
       {/* View Modal */}
       {showViewModal && selectedDistribution && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between rounded-t-2xl">
-              <h2 className="text-2xl font-bold text-gray-900">Distribution Details</h2>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+              <h2 className="font-serif text-xl font-bold text-gray-900">Distribution Details</h2>
               <button
+                type="button"
                 onClick={() => {
                   setShowViewModal(false);
                   setSelectedDistribution(null);
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                aria-label="Close modal"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-xs sm:text-sm text-gray-600 mb-1 font-medium">Variety</p>
-                  <p className="font-semibold text-gray-900">{selectedDistribution.variety}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="bg-[#F8F9FA] border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1 font-medium">Variety</p>
+                  <p className="font-semibold text-sm text-gray-900">{selectedDistribution.variety}</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-xs sm:text-sm text-gray-600 mb-1 font-medium">Source/Supplier</p>
-                  <p className="font-semibold text-gray-900">{selectedDistribution.source_supplier || 'N/A'}</p>
+                <div className="bg-[#F8F9FA] border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1 font-medium">Source/Supplier</p>
+                  <p className="font-semibold text-sm text-gray-900">{selectedDistribution.source_supplier || 'N/A'}</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-xs sm:text-sm text-gray-600 mb-1 font-medium">Date Distributed</p>
-                  <p className="font-semibold text-gray-900">
+                <div className="bg-[#F8F9FA] border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1 font-medium">Date Distributed</p>
+                  <p className="font-semibold text-sm text-gray-900 tabular-nums">
                     {new Date(selectedDistribution.date_distributed).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <p className="text-xs sm:text-sm text-blue-700 mb-1 font-medium">Total Received</p>
-                  <p className="font-bold text-blue-600 text-lg sm:text-xl">
+                <div className="bg-[#F8F9FA] border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1 font-medium">Total Received</p>
+                  <p className="font-bold text-gray-900 text-lg tabular-nums">
                     {selectedDistribution.quantity_distributed.toLocaleString()}
                   </p>
                 </div>
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                  <p className="text-xs sm:text-sm text-purple-700 mb-1 font-medium">Completely Distributed</p>
-                  <p className="font-bold text-purple-600 text-lg sm:text-xl">
+                <div className="bg-[#F8F9FA] border border-gray-200 p-4 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1 font-medium">Completely Distributed</p>
+                  <p className="font-bold text-gray-900 text-lg tabular-nums">
                     {(selectedDistribution.distributed_to_farmers || 0).toLocaleString()}
                   </p>
                 </div>
-                <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
-                  <p className="text-xs sm:text-sm text-emerald-700 mb-1 font-medium">Remaining Inventory</p>
-                  <p className="font-bold text-emerald-600 text-lg sm:text-xl">
+                <div className="bg-[#EAF6F0] border border-[#CBEAD9] p-4 rounded-xl">
+                  <p className="text-xs text-[#047857] mb-1 font-medium">Remaining Inventory</p>
+                  <p className="font-bold text-[#047857] text-lg tabular-nums">
                     {(selectedDistribution.remaining_quantity ?? 0).toLocaleString()}
                   </p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg col-span-1 sm:col-span-2">
-                  <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Status</p>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedDistribution.status)}`}>
-                    {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
-                      (selectedDistribution.status === 'partially_distributed_to_farmers' || selectedDistribution.status === 'partially_planted') ? '🔄 Ongoing Distribution' :
-                        (selectedDistribution.status === 'fully_distributed_to_farmers' || selectedDistribution.status === 'fully_planted') ? '✅ Completely Distributed' :
-                          selectedDistribution.status === 'cancelled' ? '❌ Cancelled' :
-                            '❓ Unknown Status'}
-                  </span>
+                <div className="bg-[#F8F9FA] border border-gray-200 p-4 rounded-xl col-span-1 sm:col-span-2">
+                  <p className="text-xs text-gray-500 mb-2 font-medium">Status</p>
+                  <StatusPill tone={getStatusTone(selectedDistribution.status)}>
+                    {getStatusLabel(selectedDistribution.status)}
+                  </StatusPill>
                 </div>
               </div>
 
               {selectedDistribution.remarks && (
                 <div className="mb-6">
-                  <p className="text-sm text-gray-600 mb-1">Remarks</p>
-                  <p className="font-medium text-gray-900 bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs font-medium text-gray-500 mb-1.5">Remarks</p>
+                  <p className="text-sm text-gray-900 bg-[#F8F9FA] border border-gray-200 p-3.5 rounded-xl">
                     {selectedDistribution.remarks}
                   </p>
                 </div>
@@ -698,35 +687,35 @@ const AssociationInventory: React.FC = () => {
               {/* Photos */}
               {(selectedDistribution.seedling_photo || selectedDistribution.packaging_photo || selectedDistribution.quality_photo) && (
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-3">Photos</p>
-                  <div className="grid grid-cols-3 gap-4">
+                  <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3">Photos</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {selectedDistribution.seedling_photo && (
                       <div>
-                        <p className="text-xs text-gray-600 mb-2">Seedling Photo</p>
+                        <p className="text-xs text-gray-500 mb-1.5">Seedling Photo</p>
                         <img
                           src={selectedDistribution.seedling_photo}
                           alt="Seedling"
-                          className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                          className="w-full h-32 object-cover rounded-xl border border-gray-200"
                         />
                       </div>
                     )}
                     {selectedDistribution.packaging_photo && (
                       <div>
-                        <p className="text-xs text-gray-600 mb-2">Distribution Photo</p>
+                        <p className="text-xs text-gray-500 mb-1.5">Distribution Photo</p>
                         <img
                           src={selectedDistribution.packaging_photo}
                           alt="Packaging"
-                          className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                          className="w-full h-32 object-cover rounded-xl border border-gray-200"
                         />
                       </div>
                     )}
                     {selectedDistribution.quality_photo && (
                       <div>
-                        <p className="text-xs text-gray-600 mb-2">Quality Photo</p>
+                        <p className="text-xs text-gray-500 mb-1.5">Quality Photo</p>
                         <img
                           src={selectedDistribution.quality_photo}
                           alt="Quality"
-                          className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                          className="w-full h-32 object-cover rounded-xl border border-gray-200"
                         />
                       </div>
                     )}
@@ -740,86 +729,84 @@ const AssociationInventory: React.FC = () => {
 
       {/* Distribute Modal */}
       {showDistributeModal && selectedDistribution && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-xl sm:rounded-2xl w-full max-w-full sm:max-w-lg lg:max-w-3xl shadow-2xl max-h-[95vh] flex flex-col">
-            {/* Fixed Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-teal-500 p-4 sm:p-6 flex items-center justify-between rounded-t-xl sm:rounded-t-2xl flex-shrink-0">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-white">Distribute to Farmer</h2>
-                  <p className="text-xs sm:text-sm text-emerald-50">{selectedDistribution.variety}</p>
-                </div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg w-full max-w-3xl max-h-[92vh] flex flex-col">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl flex-shrink-0">
+              <div>
+                <h2 className="font-serif text-xl font-bold text-gray-900">Distribute to Farmer</h2>
+                <p className="text-xs text-gray-500 mt-0.5">{selectedDistribution.variety}</p>
               </div>
-              <button onClick={closeDistributeModal} className="p-2 hover:bg-white/20 rounded-lg transition">
-                <X className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <button
+                type="button"
+                onClick={closeDistributeModal}
+                aria-label="Close modal"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Scrollable Content */}
             <div className="overflow-y-auto flex-1">
-              <form onSubmit={handleDistributeSubmit} className="p-4 sm:p-6 space-y-5 sm:space-y-6">
+              <form onSubmit={handleDistributeSubmit} className="p-6 space-y-6">
                 {/* Summary Cards Section */}
-                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                  <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2 uppercase tracking-wide">
-                    <Package className="w-4 h-4 text-emerald-600" />
+                <div className="bg-[#F8F9FA] rounded-xl p-4 border border-gray-200">
+                  <h3 className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wider">
                     Distribution Summary
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                    <div className="bg-blue-50 rounded-xl p-3 border border-blue-100 text-center">
-                      <p className="text-[10px] md:text-xs text-blue-600 font-semibold uppercase mb-1">Total Received</p>
-                      <p className="text-lg md:text-xl font-black text-blue-700">{selectedDistribution.quantity_distributed.toLocaleString()}</p>
-                      <p className="text-[10px] text-blue-500 font-medium">seedlings</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white rounded-xl p-3 border border-gray-200">
+                      <p className="text-[11px] text-gray-500 font-medium mb-1">Total Received</p>
+                      <p className="text-lg font-bold text-gray-900 tabular-nums">{selectedDistribution.quantity_distributed.toLocaleString()}</p>
                     </div>
-                    <div className="bg-purple-50 rounded-xl p-3 border border-purple-100 text-center">
-                      <p className="text-[10px] md:text-xs text-purple-600 font-semibold uppercase mb-1">Distributed</p>
-                      <p className="text-lg md:text-xl font-black text-purple-700">{(selectedDistribution.distributed_to_farmers || 0).toLocaleString()}</p>
-                      <p className="text-[10px] text-purple-500 font-medium">so far</p>
+                    <div className="bg-white rounded-xl p-3 border border-gray-200">
+                      <p className="text-[11px] text-gray-500 font-medium mb-1">Distributed</p>
+                      <p className="text-lg font-bold text-gray-900 tabular-nums">{(selectedDistribution.distributed_to_farmers || 0).toLocaleString()}</p>
                     </div>
-                    <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100 text-center">
-                      <p className="text-[10px] md:text-xs text-emerald-600 font-semibold uppercase mb-1">Available</p>
-                      <p className="text-lg md:text-xl font-black text-emerald-700">{getAvailableQuantity(selectedDistribution).toLocaleString()}</p>
-                      <p className="text-[10px] text-emerald-500 font-medium">remaining</p>
+                    <div className="bg-[#EAF6F0] rounded-xl p-3 border border-[#CBEAD9]">
+                      <p className="text-[11px] text-[#047857] font-medium mb-1">Available</p>
+                      <p className="text-lg font-bold text-[#047857] tabular-nums">{getAvailableQuantity(selectedDistribution).toLocaleString()}</p>
                     </div>
-                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-center flex flex-col justify-center items-center">
-                      <p className="text-[10px] md:text-xs text-gray-500 font-semibold uppercase mb-1">Status</p>
-                      <span className={`px-2 py-1 rounded-full text-[10px] md:text-xs font-bold ${getStatusColor(selectedDistribution.status)}`}>
-                        {selectedDistribution.status === 'distributed_to_association' ? '📦 Received' :
-                          (selectedDistribution.status === 'partially_distributed_to_farmers' || selectedDistribution.status === 'partially_planted') ? '🔄 Ongoing Distribution' :
-                            (selectedDistribution.status === 'fully_distributed_to_farmers' || selectedDistribution.status === 'fully_planted') ? '✅ Completely Distributed' :
-                              selectedDistribution.status === 'cancelled' ? '❌ Cancelled' :
-                                '❓ Unknown Status'}
-                      </span>
+                    <div className="bg-white rounded-xl p-3 border border-gray-200 flex flex-col justify-center">
+                      <p className="text-[11px] text-gray-500 font-medium mb-1">Status</p>
+                      <div>
+                        <StatusPill tone={getStatusTone(selectedDistribution.status)}>
+                          {getStatusLabel(selectedDistribution.status)}
+                        </StatusPill>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Distribution Details Section */}
                 <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 pb-2 border-b border-gray-200">
-                    <Users className="w-4 h-4 text-emerald-600" />
+                  <h3 className="font-serif text-base font-bold text-gray-900 pb-2 border-b border-gray-200">
                     Distribution Details
                   </h3>
 
                   {/* Farmer Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Select Farmer <span className="text-red-500">*</span>
                     </label>
                     {loadingFarmers ? (
-                      <div className="flex items-center gap-2 px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500"></div>
-                        <span className="text-gray-600 text-sm">Loading farmers...</span>
+                      <div className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-200 border-t-[#047857]"></div>
+                        <span className="text-gray-600 text-xs">Loading farmers...</span>
                       </div>
                     ) : verifiedFarmers.length === 0 ? (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
-                        ⚠️ No verified farmers available. <button type="button" className="font-semibold underline hover:text-yellow-900" onClick={fetchFarmers}>Refresh list</button>
-                      </div>
+                      <EditorialCallout
+                        tone="amber"
+                        action={
+                          <button type="button" className="text-xs font-semibold underline text-gray-900" onClick={fetchFarmers}>
+                            Refresh list
+                          </button>
+                        }
+                      >
+                        No verified farmers available.
+                      </EditorialCallout>
                     ) : (
                       <select
-                        className="w-full border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm sm:text-base"
+                        className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
                         value={distributeForm.farmer_id}
                         onChange={(e) => setDistributeForm(prev => ({ ...prev, farmer_id: e.target.value }))}
                         required
@@ -832,15 +819,15 @@ const AssociationInventory: React.FC = () => {
                         ))}
                       </select>
                     )}
-                    <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                      <Users className="w-3 h-3" />
+                    <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5" />
                       {verifiedFarmers.length} verified & active farmers
                     </p>
                   </div>
 
                   {/* Quantity Input */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                       Quantity <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -852,37 +839,37 @@ const AssociationInventory: React.FC = () => {
                         const value = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
                         setDistributeForm(prev => ({ ...prev, quantity_distributed: value }));
                       }}
-                      className="w-full border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm sm:text-base"
+                      className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 bg-white text-sm text-gray-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
                       placeholder="Enter quantity"
                       required
                     />
-                    <p className="text-xs text-gray-500 mt-2">Maximum available: <span className="font-semibold text-emerald-600">{getAvailableQuantity(selectedDistribution).toLocaleString()} seedlings</span></p>
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      Maximum available: <span className="font-semibold text-[#047857] tabular-nums">{getAvailableQuantity(selectedDistribution).toLocaleString()} seedlings</span>
+                    </p>
                   </div>
 
                   {/* Remarks */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Remarks</label>
                     <textarea
                       rows={3}
                       value={distributeForm.remarks}
                       onChange={(e) => setDistributeForm(prev => ({ ...prev, remarks: e.target.value }))}
-                      className="w-full border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm sm:text-base resize-none"
+                      className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors resize-none"
                       placeholder="Additional notes (optional)"
                     />
                   </div>
                 </div>
-
-
               </form>
             </div>
 
             {/* Fixed Footer */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6 rounded-b-xl sm:rounded-b-2xl flex-shrink-0">
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+            <div className="sticky bottom-0 bg-[#FAFAFA] border-t border-gray-200 px-6 py-4 rounded-b-2xl flex-shrink-0">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={closeDistributeModal}
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm sm:text-base"
+                  className="w-full sm:w-auto px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium text-sm"
                 >
                   Cancel
                 </button>
@@ -890,11 +877,11 @@ const AssociationInventory: React.FC = () => {
                   type="submit"
                   onClick={handleDistributeSubmit}
                   disabled={distributeSubmitting || verifiedFarmers.length === 0}
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed shadow-lg disabled:shadow-none"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {distributeSubmitting ? (
                     <span className="flex items-center justify-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/40 border-t-white"></div>
                       Distributing...
                     </span>
                   ) : (
@@ -909,69 +896,63 @@ const AssociationInventory: React.FC = () => {
 
       {/* Edit Modal */}
       {showEditModal && selectedDistribution && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between rounded-t-2xl">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                  <Edit className="w-6 h-6 text-amber-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Edit Distribution</h2>
-                  <p className="text-sm text-gray-600">Update distribution remarks</p>
-                </div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-2xl w-full overflow-hidden">
+            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="font-serif text-xl font-bold text-gray-900">Edit Distribution</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Update distribution remarks and status</p>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setShowEditModal(false);
                   setSelectedDistribution(null);
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                aria-label="Close modal"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateDistribution} className="p-6 space-y-6">
-              <div className="mb-6">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Variety</p>
-                    <p className="font-semibold text-gray-900">{selectedDistribution.variety}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Quantity</p>
-                    <p className="font-semibold text-gray-900">
-                      {selectedDistribution.quantity_distributed.toLocaleString()}
-                    </p>
-                  </div>
+            <form onSubmit={handleUpdateDistribution} className="p-6 space-y-5">
+              <div className="grid grid-cols-2 gap-4 bg-[#F8F9FA] border border-gray-200 p-4 rounded-xl">
+                <div>
+                  <p className="text-xs text-gray-500 mb-0.5">Variety</p>
+                  <p className="font-semibold text-sm text-gray-900">{selectedDistribution.variety}</p>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-xs text-blue-800">
-                    ℹ️ Note: You can only update remarks. Quantity and other details are managed by MAO.
+                <div>
+                  <p className="text-xs text-gray-500 mb-0.5">Quantity</p>
+                  <p className="font-semibold text-sm text-gray-900 tabular-nums">
+                    {selectedDistribution.quantity_distributed.toLocaleString()}
                   </p>
                 </div>
               </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <EditorialCallout tone="neutral">
+                You can only update remarks and status. Quantity and source details are managed by MAO.
+              </EditorialCallout>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Remarks
                 </label>
                 <textarea
                   rows={4}
                   value={editForm.remarks}
                   onChange={(e) => setEditForm(prev => ({ ...prev, remarks: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857]"
                   placeholder="Add any notes or remarks about this distribution..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Status</label>
                 <select
                   value={editForm.status}
                   onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857]"
                 >
                   {DISTRIBUTION_STATUSES.map(status => (
                     <option key={status.value} value={status.value}>{status.label}</option>
@@ -979,20 +960,20 @@ const AssociationInventory: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <div className="flex justify-end gap-2.5 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => {
                     setShowEditModal(false);
                     setSelectedDistribution(null);
                   }}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium"
+                  className="px-5 py-2 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold"
                 >
                   Save Changes
                 </button>
@@ -1004,42 +985,40 @@ const AssociationInventory: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedDistribution && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                  <Trash2 className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Delete Distribution</h2>
-                  <p className="text-sm text-gray-600">This action cannot be undone</p>
-                </div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-md w-full overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+              <div className="w-10 h-10 bg-red-50 border border-red-200 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h2 className="font-serif text-lg font-bold text-gray-900">Delete Distribution</h2>
+                <p className="text-xs text-gray-500">This action cannot be undone</p>
               </div>
             </div>
 
-            <div className="p-6">
-              <p className="text-gray-700 mb-4">
-                Are you sure you want to delete the distribution of <strong>{selectedDistribution.quantity_distributed}</strong> {selectedDistribution.variety} seedlings?
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-700">
+                Are you sure you want to delete the distribution of <strong className="tabular-nums">{selectedDistribution.quantity_distributed}</strong> {selectedDistribution.variety} seedlings?
               </p>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                <p className="text-sm text-red-800">
-                  ⚠️ Warning: This will also delete all farmer distributions associated with this record.
-                </p>
-              </div>
+              <EditorialCallout tone="rose">
+                This will also delete all farmer distributions associated with this record.
+              </EditorialCallout>
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-gray-200 bg-[#FAFAFA] flex justify-end gap-2.5">
               <button
+                type="button"
                 onClick={() => {
                   setShowDeleteModal(false);
                   setSelectedDistribution(null);
                 }}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={async () => {
                   try {
                     const token = localStorage.getItem('accessToken');
@@ -1065,7 +1044,7 @@ const AssociationInventory: React.FC = () => {
                     alert('❌ Failed to delete distribution');
                   }
                 }}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold"
               >
                 Delete
               </button>

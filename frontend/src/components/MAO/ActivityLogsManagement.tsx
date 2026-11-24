@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Search, Globe, Monitor, CheckCircle, XCircle, Clock, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import axios from 'axios';
+import { Activity, Search, Globe, Monitor, Clock, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { EditorialCard, StatusPill } from '../Shared/EditorialUI';
 
 const ActivityLogsManagement: React.FC = () => {
   const [activeTab] = useState<'logs'>('logs');
@@ -21,17 +21,28 @@ const ActivityLogsManagement: React.FC = () => {
 
   const getAuthHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('accessToken')}` });
 
-  const fetchActivityLogs = async () => {
+  const fetchActivityLogs = async (forceRefresh = false) => {
     setLoading(true);
     try {
-      const params: any = { page: currentPage, limit: 50 };
-      if (searchTerm) params.search = searchTerm;
-      if (userTypeFilter) params.userType = userTypeFilter;
-      if (actionTypeFilter) params.actionType = actionTypeFilter;
-      const response = await axios.get(`${API_URL}/activity-logs`, { headers: getAuthHeaders(), params });
-      setLogs(response.data.logs);
-      setTotalPages(response.data.pagination.totalPages);
-      setTotalLogs(response.data.pagination.total);
+      const searchParams = new URLSearchParams({
+        page: String(currentPage),
+        limit: '50',
+      });
+      if (searchTerm) searchParams.set('search', searchTerm);
+      if (userTypeFilter) searchParams.set('userType', userTypeFilter);
+      if (actionTypeFilter) searchParams.set('actionType', actionTypeFilter);
+
+      const response = await fetch(`${API_URL}/activity-logs?${searchParams.toString()}`, {
+        headers: getAuthHeaders(),
+        cache: forceRefresh ? 'reload' : 'default',
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch activity logs: ${response.status}`);
+      }
+      const data = await response.json();
+      setLogs(data.logs || []);
+      setTotalPages(data.pagination?.totalPages || 1);
+      setTotalLogs(data.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching activity logs:', error);
     } finally {
@@ -40,20 +51,26 @@ const ActivityLogsManagement: React.FC = () => {
   };
 
 
-  const getActionTypeColor = (actionType: string) => {
-    const colors: Record<string, string> = {
-      auth: 'bg-blue-100 text-blue-800', create: 'bg-green-100 text-green-800', read: 'bg-gray-100 text-gray-800',
-      update: 'bg-yellow-100 text-yellow-800', delete: 'bg-red-100 text-red-800', system: 'bg-purple-100 text-purple-800',
+  const getActionTypeTone = (actionType: string): 'info' | 'success' | 'neutral' | 'warning' | 'danger' => {
+    const tones: Record<string, 'info' | 'success' | 'neutral' | 'warning' | 'danger'> = {
+      auth: 'info',
+      create: 'success',
+      read: 'neutral',
+      update: 'warning',
+      delete: 'danger',
+      system: 'info',
     };
-    return colors[actionType] || 'bg-gray-100 text-gray-800';
+    return tones[actionType] || 'neutral';
   };
 
-  const getUserTypeColor = (userType: string) => {
-    const colors: Record<string, string> = {
-      officer: 'bg-indigo-100 text-indigo-800', farmer: 'bg-green-100 text-green-800',
-      buyer: 'bg-orange-100 text-orange-800', association_officer: 'bg-purple-100 text-purple-800',
+  const getUserTypeTone = (userType: string): 'info' | 'success' | 'warning' | 'neutral' => {
+    const tones: Record<string, 'info' | 'success' | 'warning' | 'neutral'> = {
+      officer: 'info',
+      farmer: 'success',
+      buyer: 'warning',
+      association_officer: 'info',
     };
-    return colors[userType] || 'bg-gray-100 text-gray-800';
+    return tones[userType] || 'neutral';
   };
 
   const formatDate = (dateString: string) => {
@@ -64,161 +81,177 @@ const ActivityLogsManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-indigo-100 rounded-lg">
-              <Activity className="h-8 w-8 text-indigo-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Activity Logs & Security</h2>
-            </div>
-          </div>
-          <button onClick={fetchActivityLogs}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center space-x-2">
+      <EditorialCard
+        title="Activity Logs & Security"
+        subtitle="Audit trail of system authentication and data actions"
+        badge={totalLogs}
+        actions={
+          <button
+            type="button"
+            onClick={() => fetchActivityLogs(true)}
+            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-semibold inline-flex items-center gap-2"
+          >
             <RefreshCw className="h-4 w-4" />
             <span>Refresh</span>
           </button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm">
-        {
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search..."
-                    className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">User Type</label>
-                <select value={userTypeFilter} onChange={(e) => setUserTypeFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                  <option value="">All Types</option>
-                  <option value="officer">Officer</option>
-                  <option value="farmer">Farmer</option>
-                  <option value="buyer">Buyer</option>
-                  <option value="association_officer">Association Officer</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Action Type</label>
-                <select value={actionTypeFilter} onChange={(e) => setActionTypeFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                  <option value="">All Actions</option>
-                  <option value="auth">Authentication</option>
-                  <option value="create">Create</option>
-                  <option value="read">Read</option>
-                  <option value="update">Update</option>
-                  <option value="delete">Delete</option>
-                  <option value="system">System</option>
-                </select>
+        }
+        noPadding
+      >
+        {/* Filter Controls */}
+        <div className="px-5 sm:px-6 py-4 border-b border-gray-200 bg-[#FAFAFA]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Search</label>
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search user, action, IP..."
+                  className="pl-10 w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
+                />
               </div>
             </div>
-
-            {loading ? (
-              <div className="flex items-center justify-center h-64">
-                <RefreshCw className="h-8 w-8 text-indigo-600 animate-spin" />
-              </div>
-            ) : logs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-                <Activity className="h-12 w-12 mb-4" />
-                <p>No activity logs found</p>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP/MAC</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {logs.map((log) => (
-                        <tr key={log.log_id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <div className="flex items-center space-x-2">
-                              <Clock className="h-4 w-4 text-gray-400" />
-                              <span>{formatDate(log.created_at)}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">{log.user_name}</span>
-                              <span className="text-xs text-gray-500">{log.user_email}</span>
-                              <span className={`inline-flex mt-1 px-2 py-0.5 text-xs rounded-full w-fit ${getUserTypeColor(log.user_type || '')}`}>
-                                {log.user_type || 'Unknown'}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col space-y-1">
-                              <span className={`inline-flex px-2 py-0.5 text-xs rounded-full w-fit ${getActionTypeColor(log.action_type)}`}>
-                                {log.action_type}
-                              </span>
-                              <span className="text-sm">{log.action}</span>
-                              <span className="text-xs text-gray-500">{log.description}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col space-y-1">
-                              <div className="flex items-center space-x-2">
-                                <Globe className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm">{log.ip_address}</span>
-                              </div>
-                              {log.mac_address && (
-                                <div className="flex items-center space-x-2">
-                                  <Monitor className="h-4 w-4 text-gray-400" />
-                                  <span className="text-xs text-gray-500">{log.mac_address}</span>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {log.success ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Success
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-red-100 text-red-800">
-                                <XCircle className="h-3 w-3 mr-1" />
-                                Failed
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex items-center justify-between border-t pt-4">
-                  <p className="text-sm text-gray-700">Page {currentPage} of {totalPages} ({totalLogs} total logs)</p>
-                  <div className="flex space-x-2">
-                    <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}
-                      className="px-3 py-1 border rounded-lg disabled:opacity-50 hover:bg-gray-50">
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}
-                      className="px-3 py-1 border rounded-lg disabled:opacity-50 hover:bg-gray-50">
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">User Type</label>
+              <select
+                value={userTypeFilter}
+                onChange={(e) => setUserTypeFilter(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
+              >
+                <option value="">All Types</option>
+                <option value="officer">Officer</option>
+                <option value="farmer">Farmer</option>
+                <option value="buyer">Buyer</option>
+                <option value="association_officer">Association Officer</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Action Type</label>
+              <select
+                value={actionTypeFilter}
+                onChange={(e) => setActionTypeFilter(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] text-sm"
+              >
+                <option value="">All Actions</option>
+                <option value="auth">Authentication</option>
+                <option value="create">Create</option>
+                <option value="read">Read</option>
+                <option value="update">Update</option>
+                <option value="delete">Delete</option>
+                <option value="system">System</option>
+              </select>
+            </div>
           </div>
-        }
-      </div>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <RefreshCw className="h-7 w-7 text-[#047857] animate-spin" />
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+            <Activity className="h-10 w-10 text-gray-400 mb-3" />
+            <p className="font-serif text-base font-bold text-gray-900">No activity logs found</p>
+            <p className="text-xs text-gray-500 mt-1">Try adjusting your filters</p>
+          </div>
+        ) : (
+          <>
+            <div className="table-wrapper" tabIndex={0} role="region" aria-label="Activity logs table">
+              <table className="min-w-full divide-y divide-gray-100">
+                <thead className="bg-[#FAFAFA] border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Timestamp</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">IP / MAC</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {logs.map((log) => (
+                    <tr key={log.log_id} className="hover:bg-gray-50/80 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 tabular-nums">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          <span>{formatDate(log.created_at)}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-semibold text-gray-900">{log.user_name}</span>
+                          <span className="text-xs text-gray-500">{log.user_email}</span>
+                          <div className="mt-0.5">
+                            <StatusPill tone={getUserTypeTone(log.user_type || '')}>
+                              {log.user_type || 'Unknown'}
+                            </StatusPill>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <div>
+                            <StatusPill tone={getActionTypeTone(log.action_type)}>
+                              {log.action_type}
+                            </StatusPill>
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">{log.action}</span>
+                          <span className="text-xs text-gray-500">{log.description}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1 tabular-nums">
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                            <span className="text-sm text-gray-700">{log.ip_address}</span>
+                          </div>
+                          {log.mac_address && (
+                            <div className="flex items-center gap-2">
+                              <Monitor className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                              <span className="text-xs text-gray-500">{log.mac_address}</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <StatusPill tone={log.success ? 'success' : 'danger'}>
+                          {log.success ? 'Success' : 'Failed'}
+                        </StatusPill>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center justify-between border-t border-gray-200 bg-[#FAFAFA] px-5 sm:px-6 py-4">
+              <p className="text-xs sm:text-sm text-gray-600 tabular-nums">
+                Page {currentPage} of {totalPages} ({totalLogs} total logs)
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="Previous page"
+                  className="p-2 bg-white border border-gray-300 text-gray-700 rounded-xl disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  aria-label="Next page"
+                  className="p-2 bg-white border border-gray-300 text-gray-700 rounded-xl disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </EditorialCard>
     </div>
   );
 };

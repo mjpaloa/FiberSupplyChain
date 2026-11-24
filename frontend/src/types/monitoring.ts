@@ -35,6 +35,7 @@ export interface MonitoringRecord {
   weatherCondition?: string;
   estimatedYield?: number;
   remarks?: string;
+  status?: 'Ongoing' | 'Completed' | 'Done Monitor' | string;
   createdAt: string;
   updatedAt: string;
 }

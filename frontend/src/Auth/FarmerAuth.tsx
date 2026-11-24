@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { User, ChevronRight, ChevronLeft, Upload, X, Camera, FileText, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { User, ChevronRight, ChevronLeft, Upload, X, Camera, FileText, Eye, EyeOff } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import {
+  AuthLayout,
+  AuthStepProgress,
+  AUTH_INPUT_CLASS,
+  AUTH_LABEL_CLASS,
+  AUTH_PRIMARY_BTN_CLASS,
+  AUTH_SUBMIT_BTN_CLASS,
+  AUTH_SECONDARY_BTN_CLASS,
+} from './AuthLayout';
 
 interface FarmerAuthProps {
   onBack: () => void;
@@ -221,429 +230,409 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ backgroundImage: 'url(/assets/images/abcafiber.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
-      <div className="absolute inset-0 bg-black/45"></div>
+    <AuthLayout
+      roleLabel="Farmer Portal"
+      roleIcon={<User className="w-5 h-5" />}
+      title={isLogin ? 'Farmer Sign In' : 'Farmer Registration'}
+      subtitle={isLogin ? 'For registered Abaca farmers in Culiram' : 'Register your farm profile and verification ID'}
+      asideHeadline="Grow, Track & Sell Abaca Directly"
+      asideDescription="Monitor your distributed seedlings, field inspection updates, verified harvests, and direct buyer pricing in one place."
+      asideHighlights={[
+        'Track seedling distributions and field planting status',
+        'View MAO & CUSAFA farm monitoring recommendations',
+        'Submit verified harvests and check live buyer rates',
+      ]}
+      onBack={onBack}
+      mode={isLogin ? 'login' : 'register'}
+      onModeChange={(nextMode) => {
+        setIsLogin(nextMode === 'login');
+        setCurrentStep(1);
+        setError('');
+      }}
+      error={error}
+      footerNote="Verification typically takes 1–3 business days after document submission."
+    >
+      {isLogin ? (
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label htmlFor="farmer-login-email" className={AUTH_LABEL_CLASS}>
+              Email Address <span aria-hidden="true" className="text-rose-600">*</span>
+            </label>
+            <input
+              id="farmer-login-email"
+              name="email"
+              type="email"
+              autoComplete="username"
+              spellCheck={false}
+              enterKeyHint="next"
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className={AUTH_INPUT_CLASS}
+              placeholder="farmer@example.com"
+            />
+          </div>
 
-      <div className="max-w-md w-full relative z-10">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-green-100">
-          {/* Back Button */}
-          <button
-            onClick={onBack}
-            className="mb-6 flex items-center text-gray-600 hover:text-green-700 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
+          <div>
+            <label htmlFor="farmer-login-password" className={AUTH_LABEL_CLASS}>
+              Password <span aria-hidden="true" className="text-rose-600">*</span>
+            </label>
+            <div className="relative">
+              <input
+                id="farmer-login-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                enterKeyHint="done"
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className={`${AUTH_INPUT_CLASS} pr-11`}
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-pressed={showPassword}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} className={AUTH_SUBMIT_BTN_CLASS}>
+            {loading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              'Sign In as Farmer'
+            )}
           </button>
+        </form>
+      ) : (
+        <form onSubmit={handleRegister}>
+          <AuthStepProgress steps={['Personal Info', 'Account Setup']} currentStep={currentStep} />
 
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-              <User className="w-8 h-8 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">
-              {isLogin ? 'Farmer Portal' : 'Farmer Registration'}
-            </h2>
-            <p className="text-gray-600 text-sm">For Abaca Farmers</p>
-          </div>
-
-          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => {
-                setIsLogin(true);
-                setCurrentStep(1);
-              }}
-              className={`flex-1 py-2 rounded-md transition-colors ${isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
-                }`}
-            >
-              Login
-            </button>
-            <button
-              onClick={() => {
-                setIsLogin(false);
-                setCurrentStep(1);
-              }}
-              className={`flex-1 py-2 rounded-md transition-colors ${!isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
-                }`}
-            >
-              Register
-            </button>
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
-              {error}
-            </div>
-          )}
-
-          {isLogin ? (
-            <form onSubmit={handleLogin} className="space-y-4">
+          {currentStep === 1 && (
+            <div className="space-y-3.5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <label htmlFor="farmer-fullname" className={AUTH_LABEL_CLASS}>
+                  Full Name <span aria-hidden="true" className="text-rose-600">*</span>
+                </label>
                 <input
-                  type="email"
+                  id="farmer-fullname"
+                  name="fullName"
+                  type="text"
+                  autoComplete="name"
+                  enterKeyHint="next"
                   required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                  placeholder="your.email@example.com"
+                  value={formData.fullName || ''}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  className={AUTH_INPUT_CLASS}
+                  placeholder="Juan Dela Cruz"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="farmer-sex" className={AUTH_LABEL_CLASS}>Sex</label>
+                  <select
+                    id="farmer-sex"
+                    name="sex"
+                    autoComplete="sex"
+                    value={formData.sex || ''}
+                    onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+                    className={AUTH_INPUT_CLASS}
+                  >
+                    <option value="">Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="farmer-age" className={AUTH_LABEL_CLASS}>Age</label>
+                  <input
+                    id="farmer-age"
+                    name="age"
+                    type="number"
+                    min="18"
+                    inputMode="numeric"
+                    value={formData.age || ''}
+                    onChange={(e) => setFormData({ ...formData, age: e.target.value ? parseInt(e.target.value, 10) : '' })}
+                    className={AUTH_INPUT_CLASS}
+                    placeholder="45"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="farmer-birthday" className={AUTH_LABEL_CLASS}>Birthday</label>
+                  <input
+                    id="farmer-birthday"
+                    name="birthday"
+                    type="date"
+                    autoComplete="bday"
+                    value={formData.birthday || ''}
+                    onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+                    className={AUTH_INPUT_CLASS}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="farmer-civil-status" className={AUTH_LABEL_CLASS}>Civil Status</label>
+                  <select
+                    id="farmer-civil-status"
+                    name="civilStatus"
+                    value={formData.civilStatus || ''}
+                    onChange={(e) => setFormData({ ...formData, civilStatus: e.target.value })}
+                    className={AUTH_INPUT_CLASS}
+                  >
+                    <option value="">Select</option>
+                    <option value="Single">Single</option>
+                    <option value="Married">Married</option>
+                    <option value="Widowed">Widowed</option>
+                    <option value="Divorced">Divorced</option>
+                    <option value="Separated">Separated</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="farmer-contact" className={AUTH_LABEL_CLASS}>Contact Number</label>
+                <input
+                  id="farmer-contact"
+                  name="contactNumber"
+                  type="tel"
+                  autoComplete="tel"
+                  enterKeyHint="next"
+                  value={formData.contactNumber || ''}
+                  onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                  className={AUTH_INPUT_CLASS}
+                  placeholder="09171234567"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
+                <label htmlFor="farmer-address" className={AUTH_LABEL_CLASS}>Farm / Home Address</label>
+                <input
+                  id="farmer-address"
+                  name="address"
+                  type="text"
+                  autoComplete="street-address"
+                  enterKeyHint="next"
+                  value={formData.address || ''}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className={AUTH_INPUT_CLASS}
+                  placeholder="Purok 1, Culiram, Talacogon"
+                />
+              </div>
+            </div>
+          )}
+
+          {currentStep === 2 && (
+            <div className="space-y-4">
+              <div className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-4 space-y-4">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#EAF6F0] text-[#047857] flex items-center justify-center flex-shrink-0">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Verification Documents</h3>
+                    <p className="text-xs text-gray-500">Upload a profile photo and valid ID (JPG/PNG, max 5MB each)</p>
+                  </div>
+                </div>
+
+                <div>
+                  <span className={AUTH_LABEL_CLASS}>
+                    Profile Photo <span aria-hidden="true" className="text-rose-600">*</span>
+                  </span>
+                  {!profilePhotoPreview ? (
+                    <label className="flex flex-col items-center justify-center w-full h-28 bg-white border border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-[#047857] hover:bg-gray-50 transition-colors">
+                      <Upload className="w-6 h-6 text-gray-400 mb-1.5" />
+                      <span className="text-xs font-medium text-gray-700">Click to upload profile photo</span>
+                      <span className="text-[11px] text-gray-400">JPG, PNG up to 5MB</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handlePhotoUpload(e, 'profile')}
+                        className="sr-only"
+                        required
+                      />
+                    </label>
+                  ) : (
+                    <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white">
+                      <img src={profilePhotoPreview} alt="Profile preview" className="w-full h-44 object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto('profile')}
+                        aria-label="Remove profile photo"
+                        className="absolute top-2 right-2 p-1.5 bg-white/95 border border-gray-200 text-rose-600 rounded-full hover:bg-rose-50 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <span className={AUTH_LABEL_CLASS}>
+                    Valid ID (Driver's License, National ID, etc.) <span aria-hidden="true" className="text-rose-600">*</span>
+                  </span>
+                  {!validIdPreview ? (
+                    <label className="flex flex-col items-center justify-center w-full h-28 bg-white border border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-[#047857] hover:bg-gray-50 transition-colors">
+                      <FileText className="w-6 h-6 text-gray-400 mb-1.5" />
+                      <span className="text-xs font-medium text-gray-700">Click to upload valid ID</span>
+                      <span className="text-[11px] text-gray-400">JPG, PNG up to 5MB</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handlePhotoUpload(e, 'id')}
+                        className="sr-only"
+                        required
+                      />
+                    </label>
+                  ) : (
+                    <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white">
+                      <img src={validIdPreview} alt="Valid ID preview" className="w-full h-44 object-contain bg-gray-50" />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto('id')}
+                        aria-label="Remove valid ID photo"
+                        className="absolute top-2 right-2 p-1.5 bg-white/95 border border-gray-200 text-rose-600 rounded-full hover:bg-rose-50 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
+              <div>
+                <label htmlFor="farmer-reg-email" className={AUTH_LABEL_CLASS}>
+                  Email Address <span aria-hidden="true" className="text-rose-600">*</span>
+                </label>
+                <input
+                  id="farmer-reg-email"
+                  name="email"
+                  type="email"
+                  autoComplete="username"
+                  spellCheck={false}
+                  enterKeyHint="next"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className={AUTH_INPUT_CLASS}
+                  placeholder="farmer@example.com"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="farmer-reg-password" className={AUTH_LABEL_CLASS}>
+                    Password <span aria-hidden="true" className="text-rose-600">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="farmer-reg-password"
+                      name="new-password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      enterKeyHint="next"
+                      aria-describedby="farmer-password-rules"
+                      required
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className={`${AUTH_INPUT_CLASS} pr-10`}
+                      placeholder="Create password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-pressed={showPassword}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-500 hover:text-gray-800"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="farmer-reg-confirm-password" className={AUTH_LABEL_CLASS}>
+                    Confirm Password <span aria-hidden="true" className="text-rose-600">*</span>
+                  </label>
+                  <input
+                    id="farmer-reg-confirm-password"
+                    name="confirmPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    enterKeyHint="done"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    className={AUTH_INPUT_CLASS}
+                    placeholder="Re-enter password"
+                  />
+                </div>
+              </div>
+
+              <div id="farmer-password-rules" className="rounded-xl bg-[#F8F9FA] border border-gray-200 px-3.5 py-2.5 text-xs text-gray-600">
+                <p className="font-semibold text-gray-700 mb-1">Password requirements:</p>
+                <p>At least 4 characters, including uppercase (A-Z), lowercase (a-z), number (0-9), and special character (@$!%*?&).</p>
+              </div>
+
+              <div>
+                <label htmlFor="farmer-remarks" className={AUTH_LABEL_CLASS}>Remarks / Notes</label>
+                <textarea
+                  id="farmer-remarks"
+                  name="remarks"
+                  rows={2}
+                  value={formData.remarks || ''}
+                  onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                  className={`${AUTH_INPUT_CLASS} resize-y`}
+                  placeholder="Optional farm details or association notes..."
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-3 mt-6 pt-4 border-t border-gray-100">
+            {currentStep > 1 && (
+              <button
+                type="button"
+                onClick={prevStep}
+                className={AUTH_SECONDARY_BTN_CLASS}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Previous</span>
+              </button>
+            )}
+
+            {currentStep < 2 ? (
+              <button
+                type="button"
+                onClick={nextStep}
+                disabled={currentStep === 1 && !isStep1Valid()}
+                className={`${AUTH_PRIMARY_BTN_CLASS} w-auto ml-auto`}
+              >
+                <span>Next Step</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
+                className={`${AUTH_PRIMARY_BTN_CLASS} w-auto ml-auto`}
               >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Logging in...
-                  </div>
-                ) : (
-                  'Login'
-                )}
+                {loading ? 'Creating account...' : 'Create Farmer Account'}
               </button>
-            </form>
-          ) : (
-            <form onSubmit={handleRegister}>
-              {/* Progress Indicator */}
-              <div className="mb-8 px-4">
-                <div className="flex items-center justify-center relative">
-                  {/* Progress Line Background */}
-                  <div className="absolute top-5 left-[25%] right-[25%] h-0.5 bg-gray-200 -z-0"></div>
-                  {/* Active Progress Line */}
-                  <div
-                    className={`absolute top-5 left-[25%] h-0.5 bg-green-600 transition-all duration-500 -z-0`}
-                    style={{ width: currentStep > 1 ? '50%' : '0%' }}
-                  ></div>
-
-                  <div className="flex justify-between w-full max-w-[280px] relative z-10">
-                    {/* Step 1 */}
-                    <div className="flex flex-col items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-2 transition-all duration-300 shadow-sm ${currentStep >= 1 ? 'bg-green-600 text-white ring-4 ring-green-100' : 'bg-gray-200 text-gray-500'
-                        }`}>
-                        1
-                      </div>
-                      <span className={`text-[11px] font-black uppercase tracking-tight ${currentStep >= 1 ? 'text-green-700' : 'text-gray-400'
-                        }`}>Personal Info</span>
-                    </div>
-
-                    {/* Step 2 */}
-                    <div className="flex flex-col items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-2 transition-all duration-300 shadow-sm ${currentStep >= 2 ? 'bg-green-600 text-white ring-4 ring-green-100' : 'bg-gray-200 text-gray-500'
-                        }`}>
-                        2
-                      </div>
-                      <span className={`text-[11px] font-black uppercase tracking-tight ${currentStep >= 2 ? 'text-green-700' : 'text-gray-400'
-                        }`}>Account Setup</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 1: Personal Information */}
-              {currentStep === 1 && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.fullName || ''}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Juan Dela Cruz"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Sex</label>
-                      <select
-                        value={formData.sex || ''}
-                        onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="">Select</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                      <input
-                        type="number"
-                        min="18"
-                        value={formData.age || ''}
-                        onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="45"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Birthday</label>
-                      <input
-                        type="date"
-                        value={formData.birthday || ''}
-                        onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Civil Status</label>
-                      <select
-                        value={formData.civilStatus || ''}
-                        onChange={(e) => setFormData({ ...formData, civilStatus: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="">Select</option>
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
-                        <option value="Widowed">Widowed</option>
-                        <option value="Divorced">Divorced</option>
-                        <option value="Separated">Separated</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                    <input
-                      type="tel"
-                      value={formData.contactNumber || ''}
-                      onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="09171234567"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                    <input
-                      type="text"
-                      value={formData.address || ''}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Purok 1, Culiram, Prosperidad"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Account Information */}
-              {currentStep === 2 && (
-                <div className="space-y-3">
-                  {/* Photo Upload Section */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <div className="flex items-start gap-2 mb-3">
-                      <Camera className="w-5 h-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <h4 className="font-semibold text-blue-900 text-sm">Verification Documents Required</h4>
-                        <p className="text-xs text-blue-700">Upload your photo and valid ID for account verification</p>
-                      </div>
-                    </div>
-
-                    {/* Profile Photo Upload */}
-                    <div className="mb-3">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Profile Photo * <span className="text-xs text-gray-500">(Max 5MB)</span>
-                      </label>
-                      {!profilePhotoPreview ? (
-                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                          <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                          <span className="text-sm text-gray-600">Click to upload profile photo</span>
-                          <span className="text-xs text-gray-500">JPG, PNG (Max 5MB)</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handlePhotoUpload(e, 'profile')}
-                            className="hidden"
-                            required
-                          />
-                        </label>
-                      ) : (
-                        <div className="relative">
-                          <img
-                            src={profilePhotoPreview}
-                            alt="Profile Preview"
-                            className="w-full h-48 object-cover rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removePhoto('profile')}
-                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Valid ID Upload */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Valid ID * <span className="text-xs text-gray-500">(Driver's License, National ID, etc.)</span>
-                      </label>
-                      {!validIdPreview ? (
-                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                          <FileText className="w-8 h-8 text-gray-400 mb-2" />
-                          <span className="text-sm text-gray-600">Click to upload valid ID</span>
-                          <span className="text-xs text-gray-500">JPG, PNG (Max 5MB)</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handlePhotoUpload(e, 'id')}
-                            className="hidden"
-                            required
-                          />
-                        </label>
-                      ) : (
-                        <div className="relative">
-                          <img
-                            src={validIdPreview}
-                            alt="ID Preview"
-                            className="w-full h-48 object-contain rounded-lg bg-gray-100"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removePhoto('id')}
-                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="your.email@example.com"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-                      <input
-                        type="password"
-                        required
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="••••••••"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
-                      <input
-                        type="password"
-                        required
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Re-enter password"
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-2 text-xs text-gray-600">
-                    <p className="font-medium mb-1">Password must contain:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>At least 4 characters</li>
-                      <li>One uppercase letter (A-Z)</li>
-                      <li>One lowercase letter (a-z)</li>
-                      <li>One number (0-9)</li>
-                      <li>One special character (@$!%*?&)</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Remarks / Notes</label>
-                    <textarea
-                      rows={3}
-                      value={formData.remarks || ''}
-                      onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
-                      placeholder="Additional notes..."
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation Buttons */}
-              <div className="flex justify-between mt-6 pt-4 border-t">
-                {currentStep > 1 && (
-                  <button
-                    type="button"
-                    onClick={prevStep}
-                    className="px-5 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium flex items-center gap-2"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Previous
-                  </button>
-                )}
-
-                {currentStep < 2 ? (
-                  <button
-                    type="button"
-                    onClick={nextStep}
-                    disabled={(currentStep === 1 && !isStep1Valid())}
-                    className="ml-auto px-5 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition font-medium flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="ml-auto px-5 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition font-medium disabled:opacity-50 shadow-lg hover:shadow-xl"
-                  >
-                    {loading ? 'Registering...' : 'Complete Registration'}
-                  </button>
-                )}
-              </div>
-            </form>
-          )}
-
-          {/* Footer */}
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500 text-center">
-              Authorized personnel only. All activities are logged and monitored.
-              <br />
-              Protected by reCAPTCHA and secured with SSL encryption.
-            </p>
+            )}
           </div>
-        </div>
-      </div>
-    </div>
+        </form>
+      )}
+    </AuthLayout>
   );
 };

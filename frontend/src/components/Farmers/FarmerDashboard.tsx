@@ -1,19 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { apiGet, apiPost, apiPut } from '../../utils/apiClient';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { apiGet, apiPut } from '../../utils/apiClient';
 import {
   LayoutDashboard,
   Sprout,
   Package,
   Calendar,
-  MapPin,
   User,
   LogOut,
-  Menu,
   X,
-  Bell,
   Settings,
   FileText,
-  Leaf,
   Eye,
   CheckCircle,
   Camera,
@@ -22,51 +18,32 @@ import {
   Search,
   Filter,
   Truck,
-  Activity,
   Lock,
-  ChevronDown,
-  Layers,
-  Clock,
-  TrendingUp
+  Bell
 } from 'lucide-react';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   Area,
   AreaChart,
   BarChart,
   Bar
 } from 'recharts';
+import {
+  EditorialShell,
+  EditorialNavItem,
+  KpiStrip,
+  EditorialCard,
+  SegmentedToggle,
+  StatusPill,
+  KeepAlivePages,
+  useCacheState,
+  EDITORIAL_CHART
+} from '../Shared/EditorialUI';
 
-const PhilippinePeso = ({ className, size = 24 }: { className?: string; size?: number | string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    className={className}
-  >
-    <text
-      x="12"
-      y="12"
-      dy="1"
-      textAnchor="middle"
-      dominantBaseline="central"
-      fontSize="20"
-      fontWeight="bold"
-      fill="currentColor"
-    >
-      ₱
-    </text>
-  </svg>
-);
 import FarmerMonitoringView from './FarmerMonitoringView';
 import FarmerHarvestView from './FarmerHarvestView';
 import SalesReportForm from './SalesReportForm';
@@ -81,8 +58,6 @@ interface FarmerDashboardProps {
 }
 
 const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'seedlings' | 'harvest' | 'harvest-submit' | 'monitoring' | 'sales-report' | 'track-deliveries' | 'analytics' | 'profile'>('dashboard');
   const [showSalesForm, setShowSalesForm] = useState(false);
   const [seedlings, setSeedlings] = useState<any[]>([]);
@@ -147,9 +122,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [harvestStats, setHarvestStats] = useState({ totalFiberKg: 0, totalRevenue: 0 });
   const [hoveredPieSegment, setHoveredPieSegment] = useState<number | null>(null);
   const [farmStatusData, setFarmStatusData] = useState([
-    { status: 'Healthy', percentage: 0, count: 0, color: { id: 'green', start: '#10b981', end: '#059669' } },
-    { status: 'Action Needed', percentage: 0, count: 0, color: { id: 'yellow', start: '#f59e0b', end: '#d97706' } },
-    { status: 'Needs Support', percentage: 0, count: 0, color: { id: 'red', start: '#ef4444', end: '#dc2626' } }
+    { status: 'Healthy', percentage: 0, count: 0, color: { id: 'green', start: EDITORIAL_CHART.colors.emerald, end: EDITORIAL_CHART.colors.emerald } },
+    { status: 'Action Needed', percentage: 0, count: 0, color: { id: 'yellow', start: EDITORIAL_CHART.colors.amber, end: EDITORIAL_CHART.colors.amber } },
+    { status: 'Needs Support', percentage: 0, count: 0, color: { id: 'red', start: EDITORIAL_CHART.colors.danger, end: EDITORIAL_CHART.colors.danger } }
   ]);
   const [loadingCharts, setLoadingCharts] = useState(false);
   const [loadingProductionChart, setLoadingProductionChart] = useState(false);
@@ -161,27 +136,42 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
 
+  const { version, manualTick } = useCacheState();
+  const loadedSeedlingsVersionRef = useRef(-1);
+  const loadedAnalyticsKeyRef = useRef('');
+  const lastMetaVersionRef = useRef(version);
+  const prevManualTickRef = useRef(manualTick);
+  const prevPageRef = useRef(currentPage);
+
   useEffect(() => {
-    if (currentPage === 'seedlings' || currentPage === 'dashboard') {
+    const manualChanged = prevManualTickRef.current !== manualTick;
+    if (manualChanged) {
+      prevManualTickRef.current = manualTick;
+      loadedSeedlingsVersionRef.current = -1;
+      loadedAnalyticsKeyRef.current = '';
+    }
+
+    if (
+      (currentPage === 'seedlings' || currentPage === 'dashboard') &&
+      loadedSeedlingsVersionRef.current !== version
+    ) {
+      loadedSeedlingsVersionRef.current = version;
       fetchMySeedlings();
     }
-    if (currentPage === 'profile') {
-      fetchFarmerProfile();
+
+    if (prevPageRef.current === 'profile' && currentPage !== 'profile') {
+      setShowChangePassword(false);
     }
-  }, [currentPage]);
+    prevPageRef.current = currentPage;
 
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setSidebarOpen(false);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (lastMetaVersionRef.current !== version || manualChanged) {
+      lastMetaVersionRef.current = version;
+      fetchFarmerProfile();
+      fetchNotifications();
+      fetchLatestFarmStatus();
+      fetchLatestDeliveryStatus();
+    }
+  }, [currentPage, version, manualTick]);
 
   // Load profile photo on mount
   useEffect(() => {
@@ -259,13 +249,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     }
   };
 
-  // Generate analytics data on mount and when view mode changes
+  // Generate analytics data once per cache version / view / year filter
   useEffect(() => {
-    if (currentPage === 'dashboard') {
-      generateAnalyticsData();
-      generateFarmStatusData();
-    }
-  }, [currentPage, distributionViewMode, selectedYear]);
+    if (currentPage !== 'dashboard') return;
+    const analyticsKey = `${version}:${manualTick}:${distributionViewMode}:${selectedYear}`;
+    if (loadedAnalyticsKeyRef.current === analyticsKey) return;
+    loadedAnalyticsKeyRef.current = analyticsKey;
+    generateAnalyticsData();
+    generateFarmStatusData();
+  }, [currentPage, version, manualTick, distributionViewMode, selectedYear]);
 
   // Separate effect for Fiber Production chart
   useEffect(() => {
@@ -280,13 +272,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       regenerateRevenueData();
     }
   }, [revenueViewMode, revenueSelectedYear]);
-
-  // Also regenerate when seedlings change
-  useEffect(() => {
-    if (seedlings.length > 0 && currentPage === 'dashboard') {
-      generateAnalyticsData();
-    }
-  }, [seedlings, currentPage]);
 
   // Calculate seedling statistics
   const seedlingStats = useMemo(() => {
@@ -640,19 +625,19 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             status: 'Healthy',
             percentage: Math.round(healthyPercentage),
             count: healthyCount,
-            color: { id: 'green', start: '#10b981', end: '#059669' }
+            color: { id: 'green', start: EDITORIAL_CHART.colors.emerald, end: EDITORIAL_CHART.colors.emerald }
           },
           {
             status: 'Action Needed',
             percentage: Math.round(actionNeededPercentage),
             count: actionNeededCount,
-            color: { id: 'yellow', start: '#f59e0b', end: '#d97706' }
+            color: { id: 'yellow', start: EDITORIAL_CHART.colors.amber, end: EDITORIAL_CHART.colors.amber }
           },
           {
             status: 'Needs Support',
             percentage: Math.round(needsSupportPercentage),
             count: needsSupportCount,
-            color: { id: 'red', start: '#ef4444', end: '#dc2626' }
+            color: { id: 'red', start: EDITORIAL_CHART.colors.danger, end: EDITORIAL_CHART.colors.danger }
           }
         ]);
 
@@ -1110,1268 +1095,815 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     nextHarvest: '2 weeks'
   };
 
-  return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50">
-      {/* Mobile Backdrop */}
-      {isMobile && sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+  const navItems: EditorialNavItem[] = [
+    { id: 'dashboard', label: 'Dashboard', category: 'General', icon: <LayoutDashboard className="w-[18px] h-[18px]" /> },
+    { id: 'seedlings', label: 'My Seedlings', category: 'Farm Operations', icon: <Sprout className="w-[18px] h-[18px]" /> },
+    { id: 'monitoring', label: 'Farm Monitoring', category: 'Farm Operations', icon: <Calendar className="w-[18px] h-[18px]" /> },
+    { id: 'harvest', label: 'Harvest Records', category: 'Farm Operations', icon: <Package className="w-[18px] h-[18px]" /> },
+    { id: 'track-deliveries', label: 'Track Deliveries', category: 'Deliveries & Sales', icon: <Truck className="w-[18px] h-[18px]" /> },
+    { id: 'sales-report', label: 'Sales Reports', category: 'Deliveries & Sales', icon: <FileText className="w-[18px] h-[18px]" /> }
+  ];
 
-      {/* Sidebar */}
-      <aside className={`
-        ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-64' : sidebarOpen ? 'w-64' : 'w-20'}
-        ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
-        bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 text-white 
-        transition-[width,transform] duration-300 ease-in-out flex flex-col shadow-2xl
-        md:relative md:translate-x-0
-      `}>
-        {/* Logo */}
-        <div className="p-4 md:p-6 flex items-center justify-between border-b border-slate-700 overflow-hidden">
-          <div className={`
-            transition-all duration-300 ease-in-out whitespace-nowrap
-            ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0'}
-          `}>
-            <h1 className="text-lg md:text-xl font-bold">Farmer Portal</h1>
-            <p className="text-xs text-blue-300">Abaca Management</p>
+  const pageMeta: Record<string, { title: string; subtitle: string }> = {
+    dashboard: {
+      title: 'Dashboard',
+      subtitle: `Welcome back, ${user?.fullName || farmerData?.full_name || 'Farmer'}!`
+    },
+    seedlings: {
+      title: 'My Seedlings',
+      subtitle: 'Seedlings received from MAO distributions and planting progress'
+    },
+    monitoring: {
+      title: 'Farm Monitoring',
+      subtitle: 'Inspection history and recommendations from MAO visits'
+    },
+    harvest: {
+      title: 'Harvest Records',
+      subtitle: 'Track abaca harvests, verification status, and fiber yield'
+    },
+    'track-deliveries': {
+      title: 'Track My Deliveries',
+      subtitle: 'Monitor fiber deliveries and buyer fulfillment'
+    },
+    'sales-report': {
+      title: showSalesForm ? 'Submit Sales Report' : 'Sales Reports',
+      subtitle: 'Record and manage monthly abaca fiber sales'
+    },
+    profile: {
+      title: showChangePassword ? 'Change Password' : showEditProfile ? 'Edit Profile' : 'My Profile',
+      subtitle: 'Manage your farmer account, farm details, and security'
+    }
+  };
+
+  const currentMeta = pageMeta[currentPage] || {
+    title: 'Farmer Dashboard',
+    subtitle: `Welcome back, ${user?.fullName || farmerData?.full_name || 'Farmer'}!`
+  };
+
+  const notificationContent = (
+    <div>
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <h3 className="font-serif text-sm font-bold text-gray-900">Notifications</h3>
+        <button
+          type="button"
+          onClick={() => setShowNotifications(false)}
+          className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          aria-label="Close notifications"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="max-h-72 overflow-y-auto">
+        {notifications.length === 0 ? (
+          <div className="text-center py-8 px-4">
+            <Bell className="w-9 h-9 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">No new notifications</p>
           </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {notifications.map((notif) => (
+              <div key={notif.id} className="px-4 py-3 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
+                      notif.color === 'green'
+                        ? 'bg-[#EAF6F0] text-[#047857]'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {notif.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 mb-0.5">{notif.title}</p>
+                    <p className="text-xs text-gray-600 mb-1 leading-relaxed">{notif.message}</p>
+                    <p className="text-[11px] text-gray-400">
+                      {new Date(notif.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {notifications.length > 0 && (
+        <div className="px-4 py-2.5 border-t border-gray-100 bg-gray-50/70">
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 md:block hidden flex-shrink-0 z-50 relative"
-          >
-            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-          {isMobile && (
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-2 hover:bg-slate-700 rounded-lg transition md:hidden"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 overflow-hidden">
-          <button
-            onClick={() => setCurrentPage('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'dashboard' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
-          >
-            <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
-            <span className={`
-              whitespace-nowrap transition-all duration-300 ease-in-out
-              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
-            `}>Dashboard</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('seedlings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'seedlings' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
-          >
-            <Sprout className="w-5 h-5 flex-shrink-0" />
-            <span className={`
-              whitespace-nowrap transition-all duration-300 ease-in-out
-              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
-            `}>My Seedlings</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('monitoring')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'monitoring' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
-          >
-            <Calendar className="w-5 h-5 flex-shrink-0" />
-            <span className={`
-              whitespace-nowrap transition-all duration-300 ease-in-out
-              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
-            `}>Farm Monitoring</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('harvest')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'harvest' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
-          >
-            <Package className="w-5 h-5 flex-shrink-0" />
-            <span className={`
-              whitespace-nowrap transition-all duration-300 ease-in-out
-              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
-            `}>Harvest Records</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('track-deliveries')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'track-deliveries' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
-          >
-            <Truck className="w-5 h-5 flex-shrink-0" />
-            <span className={`
-              whitespace-nowrap transition-all duration-300 ease-in-out
-              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
-            `}>Track Deliveries</span>
-          </button>
-
-          <button
+            type="button"
             onClick={() => {
-              setCurrentPage('sales-report');
-              setShowSalesForm(false);
+              setUnreadCount(0);
+              setShowNotifications(false);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'sales-report' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && !isMobile ? 'justify-center' : ''}`}
+            className="w-full text-center text-xs font-semibold text-[#047857] hover:text-[#065F46] transition-colors"
           >
-            <FileText className="w-5 h-5 flex-shrink-0" />
-            <span className={`
-              whitespace-nowrap transition-all duration-300 ease-in-out
-              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
-            `}>Sales Reports</span>
-          </button>
-
-        </nav>
-
-        {/* Logout */}
-        <div className="p-4 border-t border-slate-700 overflow-hidden">
-          <button
-            onClick={onLogout}
-            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-red-600 rounded-lg transition-all duration-200 ${!sidebarOpen && !isMobile ? 'justify-center' : ''
-              }`}
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            <span className={`
-              whitespace-nowrap transition-all duration-300 ease-in-out
-              ${(isMobile || sidebarOpen) ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0 overflow-hidden'}
-            `}>Logout</span>
+            View all notifications
           </button>
         </div>
-      </aside>
+      )}
+    </div>
+  );
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {/* Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 md:px-8 py-4 md:py-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition mr-2"
-            >
-              <Menu className="w-6 h-6 text-gray-600" />
-            </button>
+  const profileMenuContent = (
+    <div className="divide-y divide-gray-100">
+      <div className="px-3.5 py-2.5 bg-gray-50/60">
+        <p className="text-xs font-semibold text-gray-900 truncate">{user?.fullName || farmerData?.full_name || 'Farmer'}</p>
+        {user?.email && <p className="text-[11px] text-gray-500 truncate mt-0.5">{user.email}</p>}
+      </div>
+      <div className="py-1">
+        <button
+          type="button"
+          onClick={() => {
+            setCurrentPage('profile');
+            setShowProfile(false);
+            setShowEditProfile(false);
+            setShowChangePassword(false);
+            setShowProfileDropdown(false);
+          }}
+          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <User className="w-3.5 h-3.5 text-gray-400" />
+          <span>View Profile</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setCurrentPage('profile');
+            setShowEditProfile(true);
+            setShowProfile(false);
+            setShowChangePassword(false);
+            setShowProfileDropdown(false);
+          }}
+          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <Settings className="w-3.5 h-3.5 text-gray-400" />
+          <span>Edit Profile</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setCurrentPage('profile');
+            setShowChangePassword(true);
+            setShowProfile(false);
+            setShowEditProfile(false);
+            setShowProfileDropdown(false);
+          }}
+          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <Lock className="w-3.5 h-3.5 text-gray-400" />
+          <span>Change Password</span>
+        </button>
+      </div>
+    </div>
+  );
 
-            <div className="flex-1">
-              <h2 className="text-lg md:text-2xl font-bold text-gray-800">
-                {currentPage === 'dashboard' ? 'Dashboard' :
-                  currentPage === 'seedlings' ? 'My Seedlings' :
-                    currentPage === 'harvest' ? 'Harvest Records' :
-                      currentPage === 'monitoring' ? 'Farm Monitoring' :
-                        currentPage === 'sales-report' ? (showSalesForm ? 'Submit Sales Report' : 'Sales Reports') :
-                          currentPage === 'track-deliveries' ? 'Track My Deliveries' :
-                            currentPage === 'profile' ? 'My Profile' :
-                              'Farmer Dashboard'}
-              </h2>
-              <p className="text-xs md:text-sm text-gray-600 hidden sm:block">Welcome back, {user?.fullName || 'Farmer'}!</p>
-            </div>
-            <div className="flex items-center gap-2 md:gap-4">
-              {/* Notification Bell with Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition relative"
-                >
-                  <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
-                  {unreadCount > 0 && (
-                    <>
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                        {unreadCount}
-                      </span>
-                    </>
-                  )}
-                </button>
-
-                {/* Notification Dropdown */}
-                {showNotifications && (
-                  <div className="fixed md:absolute right-4 md:right-0 left-4 md:left-auto mt-2 md:w-80 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-3 md:p-4 border-b border-gray-100 flex items-center justify-between">
-                      <h3 className="text-white font-semibold text-sm md:text-base">Notifications</h3>
-                      <button
-                        onClick={() => setShowNotifications(false)}
-                        className="text-white hover:bg-white/20 rounded-lg p-1 transition"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Notifications List */}
-                    <div className="max-h-64 md:max-h-96 overflow-y-auto">
-                      {notifications.length === 0 ? (
-                        <div className="text-center py-8 px-4">
-                          <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                          <p className="text-sm text-gray-500">No new notifications</p>
-                        </div>
-                      ) : (
-                        <div className="divide-y divide-gray-100">
-                          {notifications.map((notif) => (
-                            <div
-                              key={notif.id}
-                              className="px-4 py-3 hover:bg-gray-50 transition cursor-pointer"
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${notif.color === 'green' ? 'bg-green-100' : 'bg-blue-100'
-                                  }`}>
-                                  {notif.icon}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold text-gray-900 mb-1">
-                                    {notif.title}
-                                  </p>
-                                  <p className="text-xs text-gray-600 mb-1">
-                                    {notif.message}
-                                  </p>
-                                  <p className="text-xs text-gray-400">
-                                    {new Date(notif.date).toLocaleDateString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      year: 'numeric'
-                                    })}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Footer */}
-                    {notifications.length > 0 && (
-                      <div className="p-3 border-t border-gray-100 bg-gray-50">
-                        <button
-                          onClick={() => {
-                            setUnreadCount(0);
-                            setShowNotifications(false);
-                          }}
-                          className="w-full text-center text-sm text-green-600 hover:text-green-700 font-medium"
-                        >
-                          View all notifications
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              {/* Profile Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition"
-                >
-                  <div className="w-9 h-9 rounded-full overflow-hidden bg-green-600 flex items-center justify-center text-white font-semibold border-2 border-green-200">
-                    {profilePhoto ? (
-                      <img
-                        src={profilePhoto}
-                        alt={user?.fullName || 'Farmer'}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span>{user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'F'}</span>
-                    )}
-                  </div>
-                  <span className="font-medium text-sm text-gray-800 hidden sm:block">{user?.fullName || 'Farmer'}</span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                </button>
-
-                {/* Profile Dropdown Menu */}
-                {showProfileDropdown && (
-                  <div className="fixed sm:absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-64 sm:w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50">
-                    <div className="p-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-green-600 flex items-center justify-center text-white font-semibold border-2 border-green-200">
-                          {profilePhoto ? (
-                            <img
-                              src={profilePhoto}
-                              alt={user?.fullName || 'Farmer'}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-lg">{user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'F'}</span>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{user?.fullName || 'Farmer'}</p>
-                          <p className="text-xs text-gray-500">{user?.associationName || 'Independent Farmer'}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-600">{user?.email || ''}</p>
-                      <p className="text-xs text-gray-400 mt-1">{user?.phone || ''}</p>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        setCurrentPage('profile');
-                        setShowProfile(false);
-                        setShowEditProfile(false);
-                        setShowChangePassword(false);
-                        setShowProfileDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <User size={16} />
-                      <span className="font-medium">View Profile</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCurrentPage('profile');
-                        setShowEditProfile(true);
-                        setShowProfile(false);
-                        setShowChangePassword(false);
-                        setShowProfileDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Settings size={16} />
-                      <span className="font-medium">Edit Profile</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCurrentPage('profile');
-                        setShowChangePassword(true);
-                        setShowProfile(false);
-                        setShowEditProfile(false);
-                        setShowProfileDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Lock size={16} />
-                      <span className="font-medium">Change Password</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowProfileDropdown(false);
-                        onLogout();
-                      }}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-                    >
-                      <LogOut size={16} />
-                      <span className="font-medium">Logout</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Content */}
-        <div className="p-4 md:p-6 lg:p-8">
-          {currentPage === 'dashboard' && (
-            <div className="space-y-8">
-              {/* Modern Agriculture Analytics Dashboard */}
+  return (
+    <>
+      <EditorialShell
+        brandTitle="Farmer Portal"
+        brandSubtitle="Abaca producer"
+        navItems={navItems}
+        activeNavId={currentPage === 'profile' ? '' : currentPage}
+        onSelectNav={(id) => {
+          setCurrentPage(id as any);
+          if (id === 'sales-report') {
+            setShowSalesForm(false);
+          }
+          setShowNotifications(false);
+          setShowProfileDropdown(false);
+        }}
+        pageTitle={currentMeta.title}
+        pageSubtitle={currentMeta.subtitle}
+        unreadCount={unreadCount}
+        showNotifications={showNotifications}
+        onToggleNotifications={() => {
+          setShowNotifications((prev) => !prev);
+          setShowProfileDropdown(false);
+        }}
+        notificationContent={notificationContent}
+        profileName={user?.fullName || farmerData?.full_name || 'Farmer'}
+        profileRole={user?.associationName || farmerData?.association_name || 'Independent Farmer'}
+        profileAvatar={profilePhoto}
+        showProfileMenu={showProfileDropdown}
+        onToggleProfileMenu={() => {
+          setShowProfileDropdown((prev) => !prev);
+          setShowNotifications(false);
+        }}
+        profileMenuContent={profileMenuContent}
+        onLogout={onLogout}
+        logoutLabel="Sign out"
+      >
+        <div className="space-y-6">
+          <div
+            className={currentPage === 'dashboard' ? 'space-y-6' : 'hidden'}
+            aria-hidden={currentPage !== 'dashboard'}
+          >
               {(() => {
                 const distributionData = generateDistributionData();
                 const totalDistributed = distributionData.reduce((sum: number, item: any) => sum + (item.seedlings || 0), 0);
                 const totalPlanted = distributionData.reduce((sum: number, item: any) => sum + (item.planted || 0), 0);
-                // Use direct stats instead of calculating from revenueData
                 const totalRevenue = harvestStats.totalRevenue;
                 const totalFiberKg = harvestStats.totalFiberKg;
+                const condition = latestFarmStatus?.condition || 'No Data';
+                const deliveryStatus = latestDeliveryStatus?.status || 'No Data';
+                const deliveryCount = latestDeliveryStatus?.count || 0;
 
-                console.log('📊 Dashboard KPI Display:', {
-                  totalRevenue,
-                  totalFiberKg,
-                  harvestStats
-                });
+                const kpiItems = [
+                  {
+                    label: 'Seedlings received',
+                    value: totalDistributed.toLocaleString(),
+                    subtext: 'From MAO distributions'
+                  },
+                  {
+                    label: 'Seedlings planted',
+                    value: totalPlanted.toLocaleString(),
+                    subtext: 'Successfully planted'
+                  },
+                  {
+                    label: 'Fiber harvested',
+                    value: `${totalFiberKg.toLocaleString()} kg`,
+                    subtext: 'Total production output'
+                  },
+                  {
+                    label: 'Total sales',
+                    value: `₱${totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'K' : totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    subtext: 'From approved sales'
+                  },
+                  {
+                    label: 'Farm status',
+                    value: condition,
+                    subtext: 'Latest monitoring report'
+                  },
+                  {
+                    label: 'Delivery status',
+                    value: deliveryStatus === 'No Deliveries' ? 'None' : deliveryStatus,
+                    subtext: deliveryStatus === 'Active' ? `${deliveryCount} active delivery` : 'Updated status'
+                  }
+                ];
 
                 return (
                   <>
+                    {/* 1. KPI Strip */}
+                    <KpiStrip items={kpiItems} columns={6} />
 
-                    {/* 1. KPI Cards Section */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-
-                      {/* Seedlings Received - Vibrant Blue */}
-                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
-
-                        <div className="relative z-10">
-                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
-                            <Package className="w-6 h-6 text-white" />
-                          </div>
-                          <p className="text-sm font-bold text-blue-50 tracking-widest mb-1 opacity-90">Seedlings received</p>
-                          <h3 className="text-4xl font-black text-white mb-2 tracking-tight">{totalDistributed.toLocaleString()}</h3>
-                          <p className="text-xs text-blue-100 opacity-80 flex items-center gap-1 font-medium">
-                            <Package size={12} /> From MAO distributions
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Seedlings Planted - Vibrant Green */}
-                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
-
-                        <div className="relative z-10">
-                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
-                            <Leaf className="w-6 h-6 text-white" />
-                          </div>
-                          <p className="text-sm font-bold text-emerald-50 tracking-widest mb-1 opacity-90">Seedlings planted</p>
-                          <h3 className="text-4xl font-black text-white mb-2 tracking-tight">{totalPlanted.toLocaleString()}</h3>
-                          <p className="text-xs text-emerald-100 opacity-80 flex items-center gap-1 font-medium">
-                            <CheckCircle size={12} /> Successfully planted
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Fiber Harvested - Vibrant Orange */}
-                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
-
-                        <div className="relative z-10">
-                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
-                            <Activity className="w-6 h-6 text-white" />
-                          </div>
-                          <p className="text-sm font-bold text-orange-50 tracking-widest mb-1 opacity-90">Fiber harvested</p>
-                          <h3 className="text-4xl font-black text-white mb-2 tracking-tight">{totalFiberKg.toLocaleString()} <span className="text-xl opacity-80 font-bold">kg</span></h3>
-                          <p className="text-xs text-orange-100 opacity-80 flex items-center gap-1 font-medium">
-                            <TrendingUp size={12} /> Total production output
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Total Revenue - Vibrant Purple */}
-                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300">
-
-                        <div className="relative z-10">
-                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
-                            <PhilippinePeso className="w-6 h-6 text-white" />
-                          </div>
-                          <p className="text-sm font-bold text-purple-50 tracking-widest mb-1 opacity-90">Total sales</p>
-                          <h3 className="text-4xl font-black text-white mb-2 tracking-tight">₱{totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'K' : totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
-                          <p className="text-xs text-purple-100 opacity-80 flex items-center gap-1 font-medium">
-                            <PhilippinePeso size={12} /> From approved sales
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Farm Status - Dynamic Gradient */}
-                      {(() => {
-                        const condition = latestFarmStatus?.condition || 'No Data';
-                        const getStatusGradient = (status: string) => {
-                          if (status === 'Healthy') return 'from-teal-500 to-teal-600';
-                          if (status === 'Needs Support') return 'from-amber-500 to-amber-600';
-                          if (status === 'Damaged') return 'from-red-500 to-red-600';
-                          return 'from-gray-500 to-gray-600';
-                        };
-                        const bgGradient = getStatusGradient(condition);
-                        return (
-                          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${bgGradient} p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300`}>
-                            <div className="relative z-10">
-                              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
-                                <CheckCircle className="w-6 h-6 text-white" />
-                              </div>
-                              <p className="text-sm font-medium text-white/90 tracking-wider mb-1">Farm status</p>
-                              <h3 className="text-3xl font-bold text-white mb-2">{condition}</h3>
-                              <p className="text-xs text-white/80 flex items-center gap-1">
-                                <Activity size={12} /> Latest monitoring report
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Delivery Status - Cyan/Dynamic Gradient */}
-                      {(() => {
-                        const status = latestDeliveryStatus?.status || 'No Data';
-                        const count = latestDeliveryStatus?.count || 0;
-                        const getDeliveryGradient = (status: string) => {
-                          if (status === 'Active') return 'from-cyan-500 to-blue-600';
-                          if (status === 'Completed') return 'from-emerald-500 to-teal-600';
-                          if (status === 'No Deliveries') return 'from-pink-500 to-rose-600';
-                          return 'from-indigo-500 to-violet-600';
-                        };
-                        const bgGradient = getDeliveryGradient(status);
-
-                        return (
-                          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${bgGradient} p-6 shadow-lg text-white group hover:scale-[1.02] transition-transform duration-300`}>
-                            <div className="relative z-10">
-                              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-inner">
-                                <Truck className="w-6 h-6 text-white" />
-                              </div>
-                              <p className="text-sm font-medium text-white/90 tracking-wider mb-1">Delivery status</p>
-                              <h3 className="text-3xl font-bold text-white mb-2">
-                                {status === 'No Deliveries' ? 'None' : status}
-                              </h3>
-                              <p className="text-xs text-white/80 flex items-center gap-1">
-                                <Clock size={12} /> {status === 'Active' ? `${count} active delivery` : 'Updated status'}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Charts Section - 2x2 Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
-                      {/* 2. Seedling Distribution Trends */}
-                      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-5 md:mb-6 gap-3">
-                          <div>
-                            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Seedling Distribution Trends</h2>
-                            <p className="text-xs sm:text-sm text-gray-600">Distributed vs planted seedlings</p>
-                          </div>
+                    {/* 2. Charts Section - 2x2 Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Seedling Distribution Trends */}
+                      <EditorialCard
+                        title="Seedling Distribution Trends"
+                        subtitle="Distributed vs planted seedlings"
+                        actions={
                           <div className="flex flex-wrap items-center gap-2">
-                            {/* Toggle */}
-                            <div className="inline-flex bg-gray-100 rounded-lg p-1">
-                              <button
-                                onClick={() => setDistributionViewMode('monthly')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${distributionViewMode === 'monthly'
-                                  ? 'bg-white text-emerald-600 shadow-sm'
-                                  : 'text-gray-600 hover:text-gray-900'
-                                  }`}
-                              >
-                                Monthly
-                              </button>
-                              <button
-                                onClick={() => setDistributionViewMode('yearly')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${distributionViewMode === 'yearly'
-                                  ? 'bg-white text-emerald-600 shadow-sm'
-                                  : 'text-gray-600 hover:text-gray-900'
-                                  }`}
-                              >
-                                Yearly
-                              </button>
-                            </div>
+                            <SegmentedToggle
+                              options={[
+                                { value: 'monthly', label: 'Monthly' },
+                                { value: 'yearly', label: 'Yearly' }
+                              ]}
+                              value={distributionViewMode}
+                              onChange={(val) => setDistributionViewMode(val as 'monthly' | 'yearly')}
+                            />
                             {distributionViewMode === 'monthly' && (
                               <select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 shadow-sm"
+                                aria-label="Select seedling distribution year"
+                                className="px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:outline-none focus:border-[#047857]"
                               >
-                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
                                   <option key={year} value={year}>{year}</option>
                                 ))}
                               </select>
                             )}
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2 sm:gap-3 text-xs mb-3 sm:mb-4">
-                          <div className="flex items-center gap-1 sm:gap-2">
-                            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500"></div>
-                            <span className="text-gray-700 font-medium text-xs sm:text-sm">Distributed</span>
+                        }
+                      >
+                        <div className="flex items-center gap-4 text-xs mb-4">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full inline-block"
+                              style={{ backgroundColor: EDITORIAL_CHART.colors.emerald }}
+                            />
+                            <span className="text-gray-600 font-medium">Distributed</span>
                           </div>
-                          <div className="flex items-center gap-1 sm:gap-2">
-                            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-500"></div>
-                            <span className="text-gray-700 font-medium text-xs sm:text-sm">Planted</span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full inline-block"
+                              style={{ backgroundColor: EDITORIAL_CHART.colors.amber }}
+                            />
+                            <span className="text-gray-600 font-medium">Planted</span>
                           </div>
                         </div>
-                        <div className="overflow-x-auto">
-                          <ResponsiveContainer width={distributionViewMode === 'yearly' ? distributionData.length * 120 : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 300 : 450}>
-                            {distributionViewMode === 'monthly' ? (
-                              <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35}>
-                                <defs>
-                                  <linearGradient id="colorSeedlingsMonth" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.6} />
-                                  </linearGradient>
-                                  <linearGradient id="colorPlantedMonth" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.6} />
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                                <XAxis
-                                  dataKey="month"
-                                  stroke="#6b7280"
-                                  style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
-                                  tickLine={false}
-                                  angle={window.innerWidth < 640 ? -45 : 0}
-                                  textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
-                                  height={window.innerWidth < 640 ? 60 : 30}
-                                />
-                                <YAxis
-                                  stroke="#6b7280"
-                                  style={{ fontSize: '13px', fontWeight: 600 }}
-                                  tickFormatter={(value) => value.toLocaleString()}
-                                  tickLine={false}
-                                />
-                                <Tooltip
-                                  contentStyle={{
-                                    backgroundColor: '#fff',
-                                    border: 'none',
-                                    borderRadius: '16px',
-                                    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                    padding: '16px 20px'
-                                  }}
-                                  labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                  itemStyle={{ padding: '6px 0', fontSize: '13px', fontWeight: 600 }}
-                                />
-                                <Bar dataKey="seedlings" fill="url(#colorSeedlingsMonth)" name="Distributed" radius={[8, 8, 0, 0]} />
-                                <Bar dataKey="planted" fill="url(#colorPlantedMonth)" name="Planted" radius={[8, 8, 0, 0]} />
-                              </BarChart>
-                            ) : (
-                              <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={40}>
-                                <defs>
-                                  <linearGradient id="colorSeedlings" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.6} />
-                                  </linearGradient>
-                                  <linearGradient id="colorPlanted" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.6} />
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                                <XAxis
-                                  dataKey="year"
-                                  stroke="#6b7280"
-                                  style={{ fontSize: '13px', fontWeight: 600 }}
-                                  tickLine={false}
-                                />
-                                <YAxis
-                                  stroke="#6b7280"
-                                  style={{ fontSize: '13px', fontWeight: 600 }}
-                                  tickFormatter={(value) => value.toLocaleString()}
-                                  tickLine={false}
-                                />
-                                <Tooltip
-                                  contentStyle={{
-                                    backgroundColor: '#fff',
-                                    border: 'none',
-                                    borderRadius: '16px',
-                                    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                    padding: '16px 20px'
-                                  }}
-                                  labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                  itemStyle={{ padding: '6px 0', fontSize: '13px', fontWeight: 600 }}
-                                />
-                                <Bar dataKey="seedlings" fill="url(#colorSeedlings)" name="Distributed" radius={[8, 8, 0, 0]} />
-                                <Bar dataKey="planted" fill="url(#colorPlanted)" name="Planted" radius={[8, 8, 0, 0]} />
-                              </BarChart>
-                            )}
+
+                        <div className="w-full h-[320px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={distributionData}
+                              margin={{ top: 8, right: 12, left: 0, bottom: 8 }}
+                              barSize={distributionViewMode === 'monthly' ? 20 : 32}
+                            >
+                              <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                              <XAxis
+                                dataKey={distributionViewMode === 'monthly' ? 'month' : 'year'}
+                                {...EDITORIAL_CHART.xAxisProps}
+                              />
+                              <YAxis
+                                {...EDITORIAL_CHART.yAxisProps}
+                                tickFormatter={(value) => Number(value).toLocaleString()}
+                              />
+                              <Tooltip
+                                contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                labelStyle={{ fontWeight: 700, marginBottom: '6px', color: '#111827' }}
+                                formatter={(value: unknown) => [Number(value || 0).toLocaleString(), undefined]}
+                              />
+                              <Bar
+                                dataKey="seedlings"
+                                fill={EDITORIAL_CHART.colors.emerald}
+                                name="Distributed"
+                                radius={[6, 6, 0, 0]}
+                              />
+                              <Bar
+                                dataKey="planted"
+                                fill={EDITORIAL_CHART.colors.amber}
+                                name="Planted"
+                                radius={[6, 6, 0, 0]}
+                              />
+                            </BarChart>
                           </ResponsiveContainer>
                         </div>
-                      </div>
+                      </EditorialCard>
 
-                      {/* Farm Status Donut Chart */}
-                      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
-                        <div className="mb-4 sm:mb-5 md:mb-6">
-                          <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Farm Status Distribution</h2>
-                          <p className="text-xs sm:text-sm text-gray-600">Health status of your farms</p>
-                        </div>
-
-                        {/* Donut Chart */}
-                        <div className="relative w-full h-48 sm:h-56 md:h-64 flex items-center justify-center mb-4 sm:mb-5 md:mb-6">
-                          <svg viewBox="0 0 240 240" className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 drop-shadow-xl">
-                            <defs>
-                              {farmStatusData.map((item) => (
-                                <linearGradient key={item.color.id} id={item.color.id} x1="0%" y1="0%" x2="100%" y2="100%">
-                                  <stop offset="0%" stopColor={item.color.start} />
-                                  <stop offset="100%" stopColor={item.color.end} />
-                                </linearGradient>
-                              ))}
-                              <filter id="shadowFilter" x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
-                                <feOffset dx="0" dy="4" result="offsetblur" />
-                                <feComponentTransfer>
-                                  <feFuncA type="linear" slope="0.3" />
-                                </feComponentTransfer>
-                                <feMerge>
-                                  <feMergeNode />
-                                  <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                              </filter>
-                              <radialGradient id="gradient-center">
-                                <stop offset="0%" stopColor="#f9fafb" />
-                                <stop offset="100%" stopColor="#e5e7eb" />
-                              </radialGradient>
-                            </defs>
+                      {/* Farm Status Distribution Donut */}
+                      <EditorialCard
+                        title="Farm Status Distribution"
+                        subtitle="Health status of your farms"
+                      >
+                        <div className="relative w-full h-56 flex items-center justify-center mb-5">
+                          <svg viewBox="0 0 240 240" className="w-48 h-48">
                             {(() => {
                               let currentAngle = -90;
-                              const visibleData = farmStatusData.filter(item => item.percentage > 0);
+                              const visibleData = farmStatusData.filter((item) => item.percentage > 0);
 
-                              // CRITICAL FIX: If only one item, show full circle with correct color
-                              if (visibleData.length === 1) {
-                                const singleItem = visibleData[0];
-                                const radius = 90;
-
+                              if (visibleData.length === 0) {
                                 return (
                                   <g>
-                                    <circle
-                                      cx="120"
-                                      cy="120"
-                                      r={radius}
-                                      fill={`url(#${singleItem.color.id})`}
-                                      filter="url(#shadowFilter)"
-                                    />
-                                    <circle cx="120" cy="120" r="55" fill="white" />
-                                    <circle cx="120" cy="120" r="52" fill="url(#gradient-center)" />
-                                    <text
-                                      x="120"
-                                      y="110"
-                                      textAnchor="middle"
-                                      className="text-3xl font-bold"
-                                      fill={singleItem.color.start}
-                                    >
-                                      {singleItem.percentage.toFixed(1)}%
-                                    </text>
-                                    <text
-                                      x="120"
-                                      y="130"
-                                      textAnchor="middle"
-                                      className="text-sm font-semibold fill-gray-600"
-                                    >
-                                      {singleItem.status}
-                                    </text>
+                                    <circle cx="120" cy="120" r="88" fill="#F1F5F9" />
+                                    <circle cx="120" cy="120" r="56" fill="#FFFFFF" />
                                   </g>
                                 );
                               }
 
-                              return visibleData.map((item, index) => {
-                                const angle = (item.percentage / 100) * 360;
-                                const startAngle = currentAngle;
-                                const endAngle = currentAngle + angle;
-                                const midAngle = (startAngle + endAngle) / 2;
-                                currentAngle = endAngle;
-
-                                const startRad = (startAngle * Math.PI) / 180;
-                                const endRad = (endAngle * Math.PI) / 180;
-                                const midRad = (midAngle * Math.PI) / 180;
-
-                                const radius = hoveredPieSegment === index ? 95 : 90;
-                                const x1 = 120 + radius * Math.cos(startRad);
-                                const y1 = 120 + radius * Math.sin(startRad);
-                                const x2 = 120 + radius * Math.cos(endRad);
-                                const y2 = 120 + radius * Math.sin(endRad);
-
-                                const labelRadius = 65;
-                                const labelX = 120 + labelRadius * Math.cos(midRad);
-                                const labelY = 120 + labelRadius * Math.sin(midRad);
-
-                                const largeArc = angle > 180 ? 1 : 0;
-
+                              if (visibleData.length === 1) {
+                                const singleItem = visibleData[0];
                                 return (
-                                  <g
-                                    key={index}
-                                    onMouseEnter={() => setHoveredPieSegment(index)}
-                                    onMouseLeave={() => setHoveredPieSegment(null)}
-                                    style={{ cursor: 'pointer' }}
-                                  >
-                                    <path
-                                      d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                                      fill={`url(#${item.color.id})`}
-                                      filter="url(#shadowFilter)"
-                                      className="transition-all duration-300"
-                                      style={{
-                                        transform: hoveredPieSegment === index ? 'scale(1.05)' : 'scale(1)',
-                                        transformOrigin: '120px 120px',
-                                        opacity: hoveredPieSegment === null || hoveredPieSegment === index ? 1 : 0.6
-                                      }}
-                                    />
-                                    {item.percentage > 8 && (
-                                      <text
-                                        x={labelX}
-                                        y={labelY}
-                                        textAnchor="middle"
-                                        dominantBaseline="middle"
-                                        className="text-xs font-bold fill-white"
-                                        style={{ pointerEvents: 'none', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
-                                      >
-                                        {item.percentage.toFixed(0)}%
-                                      </text>
-                                    )}
+                                  <g>
+                                    <circle cx="120" cy="120" r="88" fill={singleItem.color.start} />
+                                    <circle cx="120" cy="120" r="56" fill="#FFFFFF" />
                                   </g>
                                 );
-                              });
+                              }
+
+                              return (
+                                <>
+                                  {visibleData.map((item, index) => {
+                                    const angle = (item.percentage / 100) * 360;
+                                    const startAngle = currentAngle;
+                                    const endAngle = currentAngle + angle;
+                                    const midAngle = (startAngle + endAngle) / 2;
+                                    currentAngle = endAngle;
+
+                                    const startRad = (startAngle * Math.PI) / 180;
+                                    const endRad = (endAngle * Math.PI) / 180;
+                                    const midRad = (midAngle * Math.PI) / 180;
+
+                                    const radius = hoveredPieSegment === index ? 92 : 88;
+                                    const x1 = 120 + radius * Math.cos(startRad);
+                                    const y1 = 120 + radius * Math.sin(startRad);
+                                    const x2 = 120 + radius * Math.cos(endRad);
+                                    const y2 = 120 + radius * Math.sin(endRad);
+
+                                    const labelRadius = 72;
+                                    const labelX = 120 + labelRadius * Math.cos(midRad);
+                                    const labelY = 120 + labelRadius * Math.sin(midRad);
+
+                                    const largeArc = angle > 180 ? 1 : 0;
+
+                                    return (
+                                      <g
+                                        key={index}
+                                        onMouseEnter={() => setHoveredPieSegment(index)}
+                                        onMouseLeave={() => setHoveredPieSegment(null)}
+                                        style={{ cursor: 'pointer' }}
+                                      >
+                                        <path
+                                          d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                          fill={item.color.start}
+                                          stroke="#FFFFFF"
+                                          strokeWidth="2"
+                                          style={{
+                                            opacity: hoveredPieSegment === null || hoveredPieSegment === index ? 1 : 0.55
+                                          }}
+                                        />
+                                        {item.percentage > 10 && (
+                                          <text
+                                            x={labelX}
+                                            y={labelY}
+                                            textAnchor="middle"
+                                            dominantBaseline="middle"
+                                            className="text-[11px] font-semibold fill-white"
+                                            style={{ pointerEvents: 'none' }}
+                                          >
+                                            {item.percentage.toFixed(0)}%
+                                          </text>
+                                        )}
+                                      </g>
+                                    );
+                                  })}
+                                  <circle cx="120" cy="120" r="56" fill="#FFFFFF" />
+                                </>
+                              );
                             })()}
-                            <circle cx="120" cy="120" r="55" fill="white" />
-                            <circle cx="120" cy="120" r="52" fill="url(#gradient-center)" />
                           </svg>
 
                           {(() => {
-                            const visibleData = farmStatusData.filter(item => item.percentage > 0);
-                            const displayData = hoveredPieSegment !== null && visibleData[hoveredPieSegment]
-                              ? visibleData[hoveredPieSegment]
-                              : visibleData.length === 1
-                                ? visibleData[0]
-                                : null;
+                            const visibleData = farmStatusData.filter((item) => item.percentage > 0);
+                            const displayData =
+                              hoveredPieSegment !== null && visibleData[hoveredPieSegment]
+                                ? visibleData[hoveredPieSegment]
+                                : visibleData.length === 1
+                                  ? visibleData[0]
+                                  : null;
 
-                            return displayData && (
-                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                                <p className="text-2xl font-bold text-gray-800">{displayData.percentage.toFixed(1)}%</p>
-                                <p className="text-xs text-gray-600 font-semibold">{displayData.status}</p>
-                                <p className="text-xs text-gray-500">{displayData.count} farms</p>
-                              </div>
+                            if (!displayData && visibleData.length === 0) {
+                              return (
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                                  <p className="text-sm font-semibold text-gray-500">No data</p>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              displayData && (
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                                  <p className="text-xl font-bold text-gray-900 tabular-nums">
+                                    {displayData.percentage.toFixed(1)}%
+                                  </p>
+                                  <p className="text-xs text-gray-600 font-medium">{displayData.status}</p>
+                                  <p className="text-[11px] text-gray-400 tabular-nums">{displayData.count} farms</p>
+                                </div>
+                              )
                             );
                           })()}
                         </div>
 
-                        {/* Legend */}
-                        <div className="grid grid-cols-1 gap-3">
+                        <div className="grid grid-cols-1 gap-2.5">
                           {farmStatusData.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="w-4 h-4 rounded-full" style={{ background: `linear-gradient(135deg, ${item.color.start}, ${item.color.end})` }}></div>
-                                <span className="text-sm font-semibold text-gray-700">{item.status}</span>
+                            <div
+                              key={index}
+                              className="flex items-center justify-between px-3.5 py-2.5 bg-gray-50/70 border border-gray-100 rounded-xl"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <span
+                                  className="w-3 h-3 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: item.color.start }}
+                                />
+                                <span className="text-sm font-medium text-gray-700">{item.status}</span>
                               </div>
-                              <div className="text-right">
-                                <p className="text-sm font-bold text-gray-900">{item.percentage}%</p>
-                                <p className="text-xs text-gray-500">{item.count} farms</p>
+                              <div className="flex items-baseline gap-2 tabular-nums">
+                                <span className="text-sm font-bold text-gray-900">{item.percentage}%</span>
+                                <span className="text-xs text-gray-500">({item.count} farms)</span>
                               </div>
                             </div>
                           ))}
                         </div>
-                      </div>
+                      </EditorialCard>
 
                       {/* 3. Abaca Fiber Production Over Time */}
-                      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-5 md:mb-6 gap-3">
-                          <div>
-                            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Abaca Fiber Production</h2>
-                            <p className="text-xs sm:text-sm text-gray-600">Fiber harvest trends</p>
-                          </div>
+                      <EditorialCard
+                        title="Abaca Fiber Production"
+                        subtitle="Fiber harvest trends"
+                        actions={
                           <div className="flex flex-wrap items-center gap-2">
-                            <div className="inline-flex bg-gray-100 rounded-lg p-1">
-                              <button
-                                onClick={() => setProductionViewMode('monthly')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${productionViewMode === 'monthly'
-                                  ? 'bg-white text-orange-600 shadow-sm'
-                                  : 'text-gray-600 hover:text-gray-900'
-                                  }`}
-                              >
-                                Monthly
-                              </button>
-                              <button
-                                onClick={() => setProductionViewMode('yearly')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${productionViewMode === 'yearly'
-                                  ? 'bg-white text-orange-600 shadow-sm'
-                                  : 'text-gray-600 hover:text-gray-900'
-                                  }`}
-                              >
-                                Yearly
-                              </button>
-                            </div>
+                            <SegmentedToggle
+                              options={[
+                                { value: 'monthly', label: 'Monthly' },
+                                { value: 'yearly', label: 'Yearly' }
+                              ]}
+                              value={productionViewMode}
+                              onChange={(val) => setProductionViewMode(val as 'monthly' | 'yearly')}
+                            />
                             {productionViewMode === 'monthly' && (
                               <select
                                 value={productionSelectedYear}
                                 onChange={(e) => setProductionSelectedYear(Number(e.target.value))}
-                                className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 shadow-sm"
+                                aria-label="Select fiber production year"
+                                className="px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:outline-none focus:border-[#047857]"
                               >
-                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
                                   <option key={year} value={year}>{year}</option>
                                 ))}
                               </select>
                             )}
                           </div>
+                        }
+                      >
+                        <div className="flex items-center gap-2 text-xs mb-4">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full inline-block"
+                            style={{ backgroundColor: EDITORIAL_CHART.colors.amber }}
+                          />
+                          <span className="text-gray-600 font-medium">Dry fiber output (kg)</span>
                         </div>
                         {loadingProductionChart ? (
-                          <div className="flex items-center justify-center h-48 sm:h-56 md:h-64">
-                            <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-orange-600"></div>
+                          <div className="flex items-center justify-center h-[300px]">
+                            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#047857] border-t-transparent" />
                           </div>
                         ) : (
-                          <div className="overflow-x-auto">
-                            <ResponsiveContainer width={productionViewMode === 'yearly' ? Math.max(productionData.length * 120, 500) : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 250 : 300}>
+                          <div className="w-full h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
                               {productionViewMode === 'monthly' ? (
-                                <AreaChart data={productionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-                                  <defs>
-                                    <linearGradient id="colorFiberMonth" x1="0" y1="0" x2="0" y2="1">
-                                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.6} />
-                                      <stop offset="95%" stopColor="#f97316" stopOpacity={0.1} />
-                                    </linearGradient>
-                                  </defs>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                                  <XAxis
-                                    dataKey="month"
-                                    stroke="#6b7280"
-                                    style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
-                                    tickLine={false}
-                                    angle={window.innerWidth < 640 ? -45 : 0}
-                                    textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
-                                    height={window.innerWidth < 640 ? 60 : 30}
-                                  />
+                                <AreaChart data={productionData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+                                  <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                  <XAxis dataKey="month" {...EDITORIAL_CHART.xAxisProps} />
                                   <YAxis
-                                    stroke="#6b7280"
-                                    style={{ fontSize: '13px', fontWeight: 600 }}
-                                    tickFormatter={(value) => value.toLocaleString()}
-                                    tickLine={false}
+                                    {...EDITORIAL_CHART.yAxisProps}
+                                    tickFormatter={(value) => Number(value).toLocaleString()}
                                   />
                                   <Tooltip
-                                    contentStyle={{
-                                      backgroundColor: '#fff',
-                                      border: 'none',
-                                      borderRadius: '16px',
-                                      boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                      padding: '16px 20px'
-                                    }}
-                                    labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                    formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Fiber Production']}
-                                    itemStyle={{ fontSize: '13px', fontWeight: 600 }}
+                                    contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                    labelStyle={{ fontWeight: 700, marginBottom: '6px', color: '#111827' }}
+                                    formatter={(value: unknown) => [`${Number(value || 0).toLocaleString()} kg`, 'Fiber Production']}
                                   />
                                   <Area
                                     type="monotone"
                                     dataKey="fiberKg"
-                                    stroke="#f97316"
-                                    strokeWidth={4}
-                                    fillOpacity={1}
-                                    fill="url(#colorFiberMonth)"
+                                    stroke={EDITORIAL_CHART.colors.amber}
+                                    strokeWidth={2.5}
+                                    fill={EDITORIAL_CHART.colors.amber}
+                                    fillOpacity={0.14}
                                     name="Fiber Production"
                                   />
                                 </AreaChart>
                               ) : (
-                                <BarChart data={productionData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
-                                  <defs>
-                                    <linearGradient id="colorFiberYear" x1="0" y1="0" x2="0" y2="1">
-                                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
-                                      <stop offset="95%" stopColor="#f97316" stopOpacity={0.6} />
-                                    </linearGradient>
-                                  </defs>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                                  <XAxis
-                                    dataKey="year"
-                                    stroke="#6b7280"
-                                    style={{ fontSize: '13px', fontWeight: 600 }}
-                                    tickLine={false}
-                                  />
+                                <BarChart data={productionData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }} barSize={32}>
+                                  <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                  <XAxis dataKey="year" {...EDITORIAL_CHART.xAxisProps} />
                                   <YAxis
-                                    stroke="#6b7280"
-                                    style={{ fontSize: '13px', fontWeight: 600 }}
-                                    tickFormatter={(value) => value.toLocaleString()}
-                                    tickLine={false}
+                                    {...EDITORIAL_CHART.yAxisProps}
+                                    tickFormatter={(value) => Number(value).toLocaleString()}
                                   />
                                   <Tooltip
-                                    contentStyle={{
-                                      backgroundColor: '#fff',
-                                      border: 'none',
-                                      borderRadius: '16px',
-                                      boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                      padding: '16px 20px'
-                                    }}
-                                    labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                    formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Fiber Production']}
-                                    itemStyle={{ fontSize: '13px', fontWeight: 600 }}
+                                    contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                    labelStyle={{ fontWeight: 700, marginBottom: '6px', color: '#111827' }}
+                                    formatter={(value: unknown) => [`${Number(value || 0).toLocaleString()} kg`, 'Fiber Production']}
                                   />
-                                  <Bar dataKey="fiberKg" fill="url(#colorFiberYear)" name="Fiber Production" radius={[8, 8, 0, 0]} />
+                                  <Bar
+                                    dataKey="fiberKg"
+                                    fill={EDITORIAL_CHART.colors.amber}
+                                    name="Fiber Production"
+                                    radius={[6, 6, 0, 0]}
+                                  />
                                 </BarChart>
                               )}
                             </ResponsiveContainer>
                           </div>
                         )}
-                      </div>
+                      </EditorialCard>
 
                       {/* 4. Sales & Revenue Analytics */}
-                      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-5 md:mb-6 gap-3">
-                          <div>
-                            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1">Sales</h2>
-                            <p className="text-xs sm:text-sm text-gray-600">Sales performance</p>
-                          </div>
+                      <EditorialCard
+                        title="Sales"
+                        subtitle="Sales performance"
+                        badge={`₱${(totalRevenue / 1000).toFixed(1)}K`}
+                        actions={
                           <div className="flex flex-wrap items-center gap-2">
-                            <div className="inline-flex bg-gray-100 rounded-lg p-1">
-                              <button
-                                onClick={() => setRevenueViewMode('monthly')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${revenueViewMode === 'monthly'
-                                  ? 'bg-white text-purple-600 shadow-sm'
-                                  : 'text-gray-600 hover:text-gray-900'
-                                  }`}
-                              >
-                                Monthly
-                              </button>
-                              <button
-                                onClick={() => setRevenueViewMode('yearly')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${revenueViewMode === 'yearly'
-                                  ? 'bg-white text-purple-600 shadow-sm'
-                                  : 'text-gray-600 hover:text-gray-900'
-                                  }`}
-                              >
-                                Yearly
-                              </button>
-                            </div>
+                            <SegmentedToggle
+                              options={[
+                                { value: 'monthly', label: 'Monthly' },
+                                { value: 'yearly', label: 'Yearly' }
+                              ]}
+                              value={revenueViewMode}
+                              onChange={(val) => setRevenueViewMode(val as 'monthly' | 'yearly')}
+                            />
                             {revenueViewMode === 'monthly' && (
                               <select
                                 value={revenueSelectedYear}
                                 onChange={(e) => setRevenueSelectedYear(Number(e.target.value))}
-                                className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 shadow-sm"
+                                aria-label="Select sales year"
+                                className="px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:outline-none focus:border-[#047857]"
                               >
-                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
                                   <option key={year} value={year}>{year}</option>
                                 ))}
                               </select>
                             )}
-                            <div className="px-3 py-1.5 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                              <p className="text-xs text-purple-700 font-semibold">Total: ₱{(totalRevenue / 1000).toFixed(1)}K</p>
-                            </div>
                           </div>
+                        }
+                      >
+                        <div className="flex items-center gap-2 text-xs mb-4">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full inline-block"
+                            style={{ backgroundColor: EDITORIAL_CHART.colors.espresso }}
+                          />
+                          <span className="text-gray-600 font-medium">Sales revenue (PHP)</span>
                         </div>
                         {loadingRevenueChart ? (
-                          <div className="flex items-center justify-center h-48 sm:h-56 md:h-64">
-                            <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-purple-600"></div>
+                          <div className="flex items-center justify-center h-[300px]">
+                            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#047857] border-t-transparent" />
                           </div>
                         ) : (
-                          <div className="overflow-x-auto">
-                            <ResponsiveContainer width={revenueViewMode === 'yearly' ? Math.max(revenueData.length * 120, 500) : (window.innerWidth < 640 ? 800 : '100%')} height={window.innerWidth < 640 ? 250 : 300}>
+                          <div className="w-full h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
                               {revenueViewMode === 'monthly' ? (
-                                <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-                                  <defs>
-                                    <linearGradient id="colorRevenueMonth" x1="0" y1="0" x2="0" y2="1">
-                                      <stop offset="5%" stopColor="#a855f7" stopOpacity={0.6} />
-                                      <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1} />
-                                    </linearGradient>
-                                  </defs>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                                  <XAxis
-                                    dataKey="month"
-                                    stroke="#6b7280"
-                                    style={{ fontSize: window.innerWidth < 640 ? '11px' : '13px', fontWeight: 600 }}
-                                    tickLine={false}
-                                    angle={window.innerWidth < 640 ? -45 : 0}
-                                    textAnchor={window.innerWidth < 640 ? 'end' : 'middle'}
-                                    height={window.innerWidth < 640 ? 60 : 30}
-                                  />
+                                <AreaChart data={revenueData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+                                  <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                  <XAxis dataKey="month" {...EDITORIAL_CHART.xAxisProps} />
                                   <YAxis
-                                    stroke="#6b7280"
-                                    style={{ fontSize: '13px', fontWeight: 600 }}
-                                    tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}K`}
-                                    tickLine={false}
+                                    {...EDITORIAL_CHART.yAxisProps}
+                                    tickFormatter={(value) => `₱${(Number(value) / 1000).toFixed(0)}K`}
                                   />
                                   <Tooltip
-                                    contentStyle={{
-                                      backgroundColor: '#fff',
-                                      border: 'none',
-                                      borderRadius: '16px',
-                                      boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                      padding: '16px 20px'
-                                    }}
-                                    labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                    formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Sales']}
-                                    itemStyle={{ fontSize: '13px', fontWeight: 600 }}
+                                    contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                    labelStyle={{ fontWeight: 700, marginBottom: '6px', color: '#111827' }}
+                                    formatter={(value: unknown) => [`₱${Number(value || 0).toLocaleString()}`, 'Sales']}
                                   />
                                   <Area
                                     type="monotone"
                                     dataKey="revenue"
-                                    stroke="#a855f7"
-                                    strokeWidth={4}
-                                    fillOpacity={1}
-                                    fill="url(#colorRevenueMonth)"
+                                    stroke={EDITORIAL_CHART.colors.espresso}
+                                    strokeWidth={2.5}
+                                    fill={EDITORIAL_CHART.colors.espresso}
+                                    fillOpacity={0.12}
                                     name="Sales"
                                   />
                                 </AreaChart>
                               ) : (
-                                <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }} barSize={35} barGap={8}>
-                                  <defs>
-                                    <linearGradient id="colorRevenueYear" x1="0" y1="0" x2="0" y2="1">
-                                      <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
-                                      <stop offset="95%" stopColor="#a855f7" stopOpacity={0.6} />
-                                    </linearGradient>
-                                  </defs>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                                  <XAxis
-                                    dataKey="year"
-                                    stroke="#6b7280"
-                                    style={{ fontSize: '13px', fontWeight: 600 }}
-                                    tickLine={false}
-                                  />
+                                <BarChart data={revenueData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }} barSize={32}>
+                                  <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                  <XAxis dataKey="year" {...EDITORIAL_CHART.xAxisProps} />
                                   <YAxis
-                                    stroke="#6b7280"
-                                    style={{ fontSize: '13px', fontWeight: 600 }}
-                                    tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}K`}
-                                    tickLine={false}
+                                    {...EDITORIAL_CHART.yAxisProps}
+                                    tickFormatter={(value) => `₱${(Number(value) / 1000).toFixed(0)}K`}
                                   />
                                   <Tooltip
-                                    contentStyle={{
-                                      backgroundColor: '#fff',
-                                      border: 'none',
-                                      borderRadius: '16px',
-                                      boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-                                      padding: '16px 20px'
-                                    }}
-                                    labelStyle={{ fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}
-                                    formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Sales']}
-                                    itemStyle={{ fontSize: '13px', fontWeight: 600 }}
+                                    contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                    labelStyle={{ fontWeight: 700, marginBottom: '6px', color: '#111827' }}
+                                    formatter={(value: unknown) => [`₱${Number(value || 0).toLocaleString()}`, 'Sales']}
                                   />
-                                  <Bar dataKey="revenue" fill="url(#colorRevenueYear)" name="Sales" radius={[8, 8, 0, 0]} />
+                                  <Bar
+                                    dataKey="revenue"
+                                    fill={EDITORIAL_CHART.colors.espresso}
+                                    name="Sales"
+                                    radius={[6, 6, 0, 0]}
+                                  />
                                 </BarChart>
                               )}
                             </ResponsiveContainer>
                           </div>
                         )}
-                      </div>
+                      </EditorialCard>
                     </div>
                   </>
                 );
               })()}
             </div>
-          )}
 
-          {currentPage === 'seedlings' && (
-            <>
-              {/* Seedlings Overview Stats Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-5 md:mb-6">
-                {/* Total Seedlings (Units) Card */}
-                <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
-                        <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Total</span>
-                    </div>
-                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Total Seedlings</p>
-                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.totalUnits} units</p>
-                  </div>
-                </div>
+          <div
+            className={currentPage === 'seedlings' ? 'space-y-6' : 'hidden'}
+            aria-hidden={currentPage !== 'seedlings'}
+          >
+              {/* Seedlings Overview KPI Strip */}
+              <KpiStrip
+                columns={4}
+                items={[
+                  {
+                    label: 'Total Seedlings',
+                    value: `${seedlingStats.totalUnits.toLocaleString()} units`,
+                    subtext: `${seedlingStats.totalBatches} distribution batches`
+                  },
+                  {
+                    label: 'Damaged Seedlings',
+                    value: `${seedlingStats.damagedUnits.toLocaleString()} units`,
+                    subtext: 'Reported losses'
+                  },
+                  {
+                    label: 'Planted',
+                    value: `${seedlingStats.plantedUnits.toLocaleString()} units`,
+                    subtext: `${seedlingStats.plantedBatches} completed batches`
+                  },
+                  {
+                    label: 'Not Yet Planted',
+                    value: `${seedlingStats.notPlantedUnits.toLocaleString()} units`,
+                    subtext: `${seedlingStats.notPlantedBatches} pending batches`
+                  }
+                ]}
+              />
 
-                {/* Damaged Seedlings Card */}
-                <div className="group relative bg-gradient-to-br from-red-500 to-rose-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
-                        <X className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Losses</span>
-                    </div>
-                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Damaged Seedlings</p>
-                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.damagedUnits} units</p>
-                  </div>
-                </div>
-
-                {/* Planted Card */}
-                <div className="group relative bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
-                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Planted</span>
-                    </div>
-                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Planted</p>
-                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.plantedUnits} units</p>
-                  </div>
-                </div>
-
-                {/* Not Yet Planted Card */}
-                <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="p-2 sm:p-2.5 md:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
-                        <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">Pending</span>
-                    </div>
-                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium mb-1">Not Yet Planted</p>
-                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{seedlingStats.notPlantedUnits} units</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Modern Filters with Glassmorphism - UserManagement Style */}
-              <div className="bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-white/20 p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
-                <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
-                  {/* Search */}
-                  <div className="flex-1">
-                    <div className="relative group">
-                      <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 group-focus-within:text-emerald-500 transition-colors" />
-                      <input
-                        type="text"
-                        placeholder="Search by variety, source..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
-                      />
-                    </div>
+              {/* Search & Filter Toolbar */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <div className="flex flex-col md:flex-row gap-3">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search by variety, source..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] placeholder:text-gray-400"
+                    />
                   </div>
 
-                  {/* Status Filter */}
-                  <div className="w-full md:w-56">
-                    <div className="relative">
-                      <Filter className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
-                      <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as any)}
-                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer font-medium"
-                      >
-                        <option value="all">All Status</option>
-                        <option value="distributed">📦 Distributed</option>
-                        <option value="planted">✓ Planted</option>
-                        <option value="damaged">✗ Damaged</option>
-                      </select>
-                    </div>
+                  <div className="w-full md:w-56 relative">
+                    <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value as any)}
+                      className="w-full pl-10 pr-8 py-2.5 text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] cursor-pointer font-medium text-gray-700"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="distributed">Distributed</option>
+                      <option value="planted">Planted</option>
+                      <option value="damaged">Damaged</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
               {loading ? (
-                <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-                  <div className="relative w-16 h-16 mx-auto mb-4">
-                    <div className="absolute inset-0 rounded-full border-4 border-green-200"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-green-600 border-t-transparent animate-spin"></div>
+                <EditorialCard>
+                  <div className="py-12 text-center">
+                    <div className="w-10 h-10 border-2 border-[#047857] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-sm text-gray-600 font-medium">Loading your seedlings...</p>
                   </div>
-                  <p className="text-gray-600 font-medium">Loading your seedlings...</p>
-                </div>
+                </EditorialCard>
               ) : filteredSeedlings.length === 0 ? (
-                <div className="bg-white rounded-2xl shadow-lg p-16 text-center border-2 border-gray-200">
-                  <div className="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
-                    <Sprout className="w-12 h-12 text-gray-400" />
+                <EditorialCard>
+                  <div className="py-12 text-center">
+                    <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Sprout className="w-7 h-7 text-gray-400" />
+                    </div>
+                    <h3 className="font-serif text-xl font-bold text-gray-900 mb-1.5">No Records Found</h3>
+                    <p className="text-sm text-gray-500">
+                      {seedlings.length === 0
+                        ? "You haven't received any seedlings from MAO Culiram yet"
+                        : 'No seedlings match your search criteria'}
+                    </p>
+                    {seedlings.length === 0 && (
+                      <p className="text-xs text-gray-400 mt-1">Contact MAO Culiram for seedling distribution</p>
+                    )}
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">No Records Found</h3>
-                  <p className="text-gray-600 mb-4">
-                    {seedlings.length === 0
-                      ? "You haven't received any seedlings from MAO Culiram yet"
-                      : "No seedlings match your search criteria"}
-                  </p>
-                  {seedlings.length === 0 && (
-                    <p className="text-sm text-gray-500">Contact MAO Culiram for seedling distribution</p>
-                  )}
-                </div>
+                </EditorialCard>
               ) : (
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[1000px]">
-                      <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+                <EditorialCard noPadding>
+                  <div className="table-wrapper" tabIndex={0} role="region" aria-label="My seedlings list">
+                    <table className="w-full min-w-[960px]">
+                      <thead className="border-b border-gray-200">
                         <tr>
-                          <th className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            <div className="flex items-center gap-2">
-                              <Camera className="w-4 h-4" />
+                          <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <div className="flex items-center gap-1.5">
+                              <Camera className="w-3.5 h-3.5 text-gray-400" />
                               Photo
                             </div>
                           </th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            <div className="flex items-center gap-2">
-                              <Sprout className="w-4 h-4" />
+                          <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <div className="flex items-center gap-1.5">
+                              <Sprout className="w-3.5 h-3.5 text-gray-400" />
                               Variety & Date
                             </div>
                           </th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            <div className="flex items-center gap-2">
-                              <Package className="w-4 h-4" />
+                          <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <div className="flex items-center gap-1.5">
+                              <Package className="w-3.5 h-3.5 text-gray-400" />
                               Quantity
                             </div>
                           </th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            <div className="flex items-center gap-2">
-                              <UsersIcon className="w-4 h-4" />
+                          <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <div className="flex items-center gap-1.5">
+                              <UsersIcon className="w-3.5 h-3.5 text-gray-400" />
                               Source
                             </div>
                           </th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            <div className="flex items-center gap-2">
-                              <FileText className="w-4 h-4" />
+                          <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <div className="flex items-center gap-1.5">
+                              <FileText className="w-3.5 h-3.5 text-gray-400" />
                               Batch ID
                             </div>
                           </th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            <div className="flex items-center gap-2">
-                              <Mail className="w-4 h-4" />
+                          <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <div className="flex items-center gap-1.5">
+                              <Mail className="w-3.5 h-3.5 text-gray-400" />
                               Remarks
                             </div>
                           </th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4" />
+                          <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <div className="flex items-center gap-1.5">
+                              <CheckCircle className="w-3.5 h-3.5 text-gray-400" />
                               Status
                             </div>
                           </th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                          <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Actions
                           </th>
                         </tr>
@@ -2380,12 +1912,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         {filteredSeedlings
                           .slice((currentPageNum - 1) * itemsPerPage, currentPageNum * itemsPerPage)
                           .map((seedling) => (
-                            <tr key={seedling.distribution_id} className="hover:bg-gradient-to-r hover:from-emerald-50/50 hover:to-teal-50/50 transition-all duration-200 group">
+                            <tr key={seedling.distribution_id} className="hover:bg-gray-50/80 transition-colors">
                               {/* Photo */}
-                              <td className="px-6 py-4">
-                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-100 to-teal-200 flex-shrink-0 shadow-md">
+                              <td className="px-5 py-3.5">
+                                <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#EAF6F0] border border-gray-200 flex-shrink-0">
                                   {(() => {
-                                    // Check all possible photo fields - photos are in the parent association distribution
                                     const photoUrl = seedling.association_seedling_distributions?.seedling_photo ||
                                       seedling.association_seedling_distributions?.packaging_photo ||
                                       seedling.association_seedling_distributions?.quality_photo ||
@@ -2393,44 +1924,26 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                       seedling.packaging_photo ||
                                       seedling.quality_photo;
 
-                                    // Debug log for first render
-                                    if (seedling.distribution_id && !(window as any).photoDebugLogged) {
-                                      console.log('🖼️ Photo check for seedling:', {
-                                        id: seedling.distribution_id,
-                                        seedling_photo: seedling.seedling_photo ? 'exists' : 'null',
-                                        packaging_photo: seedling.packaging_photo ? 'exists' : 'null',
-                                        quality_photo: seedling.quality_photo ? 'exists' : 'null',
-                                        photoUrl: photoUrl ? photoUrl.substring(0, 50) + '...' : 'none'
-                                      });
-                                      (window as any).photoDebugLogged = true;
-                                    }
-
                                     if (photoUrl && photoUrl.trim() !== '') {
                                       return (
                                         <img
                                           src={photoUrl}
                                           alt="Seedling"
                                           className="w-full h-full object-cover"
-                                          onLoad={() => console.log('✅ Image loaded successfully')}
                                           onError={(e) => {
-                                            console.error('❌ Image failed to load:', {
-                                              url: photoUrl.substring(0, 100),
-                                              error: e
-                                            });
                                             e.currentTarget.style.display = 'none';
                                             const parent = e.currentTarget.parentElement;
                                             if (parent) {
-                                              parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg></div>';
+                                              parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-5 h-5 text-[#047857]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg></div>';
                                             }
                                           }}
                                         />
                                       );
                                     }
 
-                                    console.log('⚠️ No photo URL found, showing icon');
                                     return (
                                       <div className="w-full h-full flex items-center justify-center">
-                                        <Sprout className="w-6 h-6 text-emerald-600" />
+                                        <Sprout className="w-5 h-5 text-[#047857]" />
                                       </div>
                                     );
                                   })()}
@@ -2438,81 +1951,97 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                               </td>
 
                               {/* Variety & Date */}
-                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
-                                <div className="font-semibold text-xs sm:text-sm text-gray-900">{seedling.variety}</div>
-                                <div className="text-xs text-gray-500">{new Date(seedling.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                              <td className="px-5 py-3.5">
+                                <div className="font-semibold text-sm text-gray-900">{seedling.variety}</div>
+                                <div className="text-xs text-gray-500">
+                                  {new Date(seedling.date_distributed).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </div>
                               </td>
 
                               {/* Quantity */}
-                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600">
-                                <div className="font-medium text-gray-900 group">
+                              <td className="px-5 py-3.5 text-sm">
+                                <div className="font-medium text-gray-900 tabular-nums">
                                   {seedling.status === 'planted'
                                     ? <>{seedling.planted_quantity ?? seedling.quantity_distributed} / {seedling.quantity_distributed} units</>
                                     : <>{seedling.quantity_distributed} units</>
                                   }
                                 </div>
                                 {seedling.damaged_quantity > 0 && (
-                                  <div className="text-xs text-red-500 font-medium">({seedling.damaged_quantity} loss)</div>
+                                  <div className="text-xs text-red-600 font-medium tabular-nums">
+                                    ({seedling.damaged_quantity} loss)
+                                  </div>
                                 )}
                               </td>
 
                               {/* Source */}
-                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm">
-                                <div className="font-medium text-gray-900">
-                                  {seedling.association_seedling_distributions?.source_supplier ||
-                                    seedling.source_supplier ||
-                                    seedling.association_officers?.association_name ||
-                                    'MAO Culiram'}
-                                </div>
+                              <td className="px-5 py-3.5 text-sm text-gray-700 font-medium">
+                                {seedling.association_seedling_distributions?.source_supplier ||
+                                  seedling.source_supplier ||
+                                  seedling.association_officers?.association_name ||
+                                  'MAO Culiram'}
                               </td>
 
                               {/* Batch ID */}
-                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm">
-                                <div className="font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded inline-block text-xs">
+                              <td className="px-5 py-3.5 text-xs">
+                                <span className="font-mono text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 rounded-lg inline-block">
                                   #{seedling.distribution_id?.slice(0, 8).toUpperCase() || 'N/A'}
-                                </div>
+                                </span>
                               </td>
 
                               {/* Remarks */}
-                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600">
+                              <td className="px-5 py-3.5 text-sm text-gray-600">
                                 {seedling.remarks || '-'}
                               </td>
 
                               {/* Status */}
-                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${seedling.status === 'planted' ? 'bg-emerald-100 text-emerald-700' :
-                                  seedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
-                                    seedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
-                                      'bg-amber-100 text-amber-700'
-                                  }`}>
-                                  {seedling.status === 'planted' ? 'Complete' : seedling.status.charAt(0).toUpperCase() + seedling.status.slice(1)}
-                                </span>
+                              <td className="px-5 py-3.5 whitespace-nowrap">
+                                <StatusPill
+                                  tone={
+                                    seedling.status === 'planted'
+                                      ? 'success'
+                                      : seedling.status === 'distributed'
+                                        ? 'info'
+                                        : seedling.status === 'damaged'
+                                          ? 'danger'
+                                          : 'warning'
+                                  }
+                                >
+                                  {seedling.status === 'planted'
+                                    ? 'Complete'
+                                    : seedling.status.charAt(0).toUpperCase() + seedling.status.slice(1)}
+                                </StatusPill>
                               </td>
 
                               {/* Actions */}
-                              <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 whitespace-nowrap">
-                                <div className="flex items-center gap-1 sm:gap-1.5">
+                              <td className="px-5 py-3.5 whitespace-nowrap">
+                                <div className="flex items-center gap-1.5">
                                   <button
+                                    type="button"
                                     onClick={() => {
                                       setSelectedSeedling(seedling);
                                       setShowViewModal(true);
                                     }}
-                                    className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md group-hover:bg-blue-50"
+                                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
                                     title="View Details"
                                   >
                                     <Eye className="w-4 h-4" />
                                   </button>
 
                                   {seedling.status === 'planted' ? (
-                                    <div className="p-1.5 sm:p-2 text-emerald-600" title="Already Planted">
+                                    <span className="p-2 text-[#047857]" title="Already Planted">
                                       <CheckCircle className="w-4 h-4" />
-                                    </div>
+                                    </span>
                                   ) : (
                                     <button
+                                      type="button"
                                       onClick={() => {
-                                        const defaultLocation = farmerData ?
-                                          `${farmerData.barangay || ''}, ${farmerData.municipality || ''}`.trim().replace(/^, |, $/g, '') :
-                                          '';
+                                        const defaultLocation = farmerData
+                                          ? `${farmerData.barangay || ''}, ${farmerData.municipality || ''}`.trim().replace(/^, |, $/g, '')
+                                          : '';
                                         setSelectedSeedling(seedling);
                                         setPlantingData({
                                           ...plantingData,
@@ -2522,7 +2051,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                         });
                                         setShowPlantingModal(true);
                                       }}
-                                      className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                      className="p-2 text-[#047857] hover:bg-[#EAF6F0] rounded-xl transition-colors"
                                       title="Mark as Planted"
                                     >
                                       <Sprout className="w-4 h-4" />
@@ -2536,24 +2065,25 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     </table>
                   </div>
 
-                  {/* Pagination Controls - UserManagement Style */}
-                  <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-3 sm:px-4 md:px-6 py-3 sm:py-4">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-                      {/* Items per page */}
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <span className="text-xs sm:text-sm font-medium text-gray-700">Show entries:</span>
-                        <div className="flex gap-1 sm:gap-2">
+                  {/* Pagination Controls */}
+                  <div className="border-t border-gray-100 px-5 py-4 bg-white">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xs font-medium text-gray-500">Show entries:</span>
+                        <div className="flex gap-1.5">
                           {[10, 20, 50].map((size) => (
                             <button
                               key={size}
+                              type="button"
                               onClick={() => {
                                 setItemsPerPage(size);
                                 setCurrentPageNum(1);
                               }}
-                              className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${itemsPerPage === size
-                                ? 'bg-emerald-500 text-white shadow-lg'
-                                : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
-                                }`}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                                itemsPerPage === size
+                                  ? 'bg-[#E59500] text-gray-900'
+                                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                              }`}
                             >
                               {size}
                             </button>
@@ -2561,29 +2091,30 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         </div>
                       </div>
 
-                      {/* Page info and navigation */}
-                      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          Showing {((currentPageNum - 1) * itemsPerPage) + 1} to {Math.min(currentPageNum * itemsPerPage, filteredSeedlings.length)} of {filteredSeedlings.length}
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <span className="text-xs text-gray-500 tabular-nums">
+                          Showing {((currentPageNum - 1) * itemsPerPage) + 1} to{' '}
+                          {Math.min(currentPageNum * itemsPerPage, filteredSeedlings.length)} of{' '}
+                          {filteredSeedlings.length}
                         </span>
-                        <div className="flex gap-1 sm:gap-2">
+                        <div className="flex gap-1.5">
                           <button
-                            onClick={() => setCurrentPageNum(prev => Math.max(1, prev - 1))}
+                            type="button"
+                            onClick={() => setCurrentPageNum((prev) => Math.max(1, prev - 1))}
                             disabled={currentPageNum === 1}
-                            className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${currentPageNum === 1
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                              }`}
+                            className="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           >
                             Previous
                           </button>
                           <button
-                            onClick={() => setCurrentPageNum(prev => Math.min(Math.ceil(filteredSeedlings.length / itemsPerPage), prev + 1))}
+                            type="button"
+                            onClick={() =>
+                              setCurrentPageNum((prev) =>
+                                Math.min(Math.ceil(filteredSeedlings.length / itemsPerPage), prev + 1)
+                              )
+                            }
                             disabled={currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)}
-                            className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                              }`}
+                            className="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           >
                             Next
                           </button>
@@ -2591,67 +2122,57 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </EditorialCard>
               )}
-            </>
-          )}
+            </div>
 
-          {currentPage === 'harvest' && (
-            <FarmerHarvestView />
-          )}
-
-          {currentPage === 'monitoring' && (
-            <FarmerMonitoringView />
-          )}
-
-          {/* Sales Report Page */}
-          {currentPage === 'sales-report' && (
-            <>
-              {showSalesForm ? (
-                <SalesReportForm
-                  onSubmit={(report) => {
-                    console.log('Sales report submitted:', report);
-                    alert('Sales report submitted successfully!');
-                    setShowSalesForm(false); // Go back to list view after submit
-                  }}
-                  onCancel={() => setShowSalesForm(false)} // Go back to list view
-                />
-              ) : (
-                <SalesReportsList
-                  onAddNewReport={() => setShowSalesForm(true)}
-                />
-              )}
-            </>
-          )}
-
-          {/* Track Deliveries Page */}
-          {currentPage === 'track-deliveries' && (
-            <FarmerDeliveryTracking />
-          )}
-
-          {currentPage === 'profile' && (
-            showChangePassword ? (
-              <FarmerChangePassword onBack={() => setShowChangePassword(false)} />
-            ) : showEditProfile ? (
-              <EditFarmerProfile onBack={() => setShowEditProfile(false)} />
-            ) : (
-              <FarmerProfile
-                onBack={() => setCurrentPage('dashboard')}
-                onEditProfile={() => setShowEditProfile(true)}
-              />
-            )
-          )}
+          <KeepAlivePages
+            activeId={currentPage}
+            noKeepAlive={['profile']}
+            pages={{
+              harvest: () => <FarmerHarvestView />,
+              monitoring: () => <FarmerMonitoringView />,
+              'sales-report': () =>
+                showSalesForm ? (
+                  <SalesReportForm
+                    onSubmit={(report) => {
+                      console.log('Sales report submitted:', report);
+                      alert('Sales report submitted successfully!');
+                      setShowSalesForm(false);
+                    }}
+                    onCancel={() => setShowSalesForm(false)}
+                  />
+                ) : (
+                  <SalesReportsList onAddNewReport={() => setShowSalesForm(true)} />
+                ),
+              'track-deliveries': () => <FarmerDeliveryTracking />,
+              profile: () =>
+                showChangePassword ? (
+                  <FarmerChangePassword onBack={() => setShowChangePassword(false)} />
+                ) : showEditProfile ? (
+                  <EditFarmerProfile onBack={() => setShowEditProfile(false)} />
+                ) : (
+                  <FarmerProfile
+                    onBack={() => setCurrentPage('dashboard')}
+                    onEditProfile={() => setShowEditProfile(true)}
+                  />
+                ),
+            }}
+          />
         </div>
-        {/* End content wrapper */}
-      </main>
+      </EditorialShell>
 
       {/* Planting Modal */}
       {showPlantingModal && selectedSeedling && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
-              <h2 className="text-2xl font-bold text-gray-800">Mark Seedlings as Planted</h2>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="font-serif text-xl font-bold text-gray-900">Mark Seedlings as Planted</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Record planting date, quantities, and field photos</p>
+              </div>
               <button
+                type="button"
                 onClick={() => {
                   setShowPlantingModal(false);
                   setPlantingData({
@@ -2665,24 +2186,27 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     planting_photo_3: ''
                   });
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                aria-label="Close planting modal"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6">
               {/* Seedling Info */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold text-green-900 mb-2">Seedling Information</h3>
+              <div className="bg-[#EAF6F0] border border-[#CBEAD9] rounded-xl p-4 mb-6">
+                <h3 className="font-serif text-sm font-bold text-gray-900 mb-2">Seedling Information</h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-green-700">Variety:</span>
-                    <span className="ml-2 font-medium text-green-900">{selectedSeedling.variety}</span>
+                    <span className="text-gray-600">Variety:</span>
+                    <span className="ml-2 font-semibold text-gray-900">{selectedSeedling.variety}</span>
                   </div>
                   <div>
-                    <span className="text-green-700">Quantity:</span>
-                    <span className="ml-2 font-medium text-green-900">{selectedSeedling.quantity_distributed}</span>
+                    <span className="text-gray-600">Quantity:</span>
+                    <span className="ml-2 font-semibold text-gray-900 tabular-nums">
+                      {selectedSeedling.quantity_distributed}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -2692,18 +2216,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Planting Date *</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">Planting Date *</label>
                       <input
                         type="date"
                         required
                         value={plantingData.planting_date}
                         onChange={(e) => setPlantingData({ ...plantingData, planting_date: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Actual Planted *</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">Actual Planted *</label>
                       <input
                         type="number"
                         required
@@ -2721,12 +2245,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             damaged_quantity: Math.max(0, selectedSeedling.quantity_distributed - numVal)
                           });
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Damaged/Died</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">Damaged/Died</label>
                       <input
                         type="number"
                         min="0"
@@ -2743,59 +2267,59 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                             planting_quantity: Math.max(0, selectedSeedling.quantity_distributed - numVal)
                           });
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Planting Location</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Planting Location</label>
                     <input
                       type="text"
                       value={plantingData.planting_location}
                       onChange={(e) => setPlantingData({ ...plantingData, planting_location: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857]"
                       placeholder="e.g., Farm Section A, Near river"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Planting Method</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Planting Method</label>
                     <textarea
                       rows={3}
                       value={plantingData.planting_notes}
                       onChange={(e) => setPlantingData({ ...plantingData, planting_notes: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857]"
                       placeholder="Describe the planting method used..."
                     />
                   </div>
 
                   {/* Photo Upload */}
-                  <div className="pt-4 border-t border-gray-200">
-                    <h4 className="text-md font-semibold text-gray-800 mb-3">📸 Planting Photos (Optional)</h4>
+                  <div className="pt-4 border-t border-gray-100">
+                    <h4 className="font-serif text-sm font-bold text-gray-900 mb-3">Planting Photos (Optional)</h4>
                     <div className="grid grid-cols-3 gap-4">
                       {[1, 2, 3].map((num) => (
                         <div key={num}>
-                          <label className="block text-sm text-gray-600 mb-2">Photo {num}</label>
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-green-500 transition">
+                          <label className="block text-xs text-gray-600 mb-1.5">Photo {num}</label>
+                          <div className="border border-dashed border-gray-300 rounded-xl p-3 text-center hover:border-[#047857] transition-colors">
                             {plantingData[`planting_photo_${num}` as keyof typeof plantingData] ? (
                               <div className="relative">
                                 <img
                                   src={plantingData[`planting_photo_${num}` as keyof typeof plantingData] as string}
                                   alt={`Planting ${num}`}
-                                  className="w-full h-24 object-cover rounded"
+                                  className="w-full h-24 object-cover rounded-lg"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => setPlantingData({ ...plantingData, [`planting_photo_${num}`]: '' })}
-                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
                                 >
                                   <X className="w-3 h-3" />
                                 </button>
                               </div>
                             ) : (
-                              <label className="cursor-pointer">
-                                <Sprout className="w-6 h-6 text-gray-400 mx-auto mb-1" />
+                              <label className="cursor-pointer block">
+                                <Sprout className="w-5 h-5 text-gray-400 mx-auto mb-1" />
                                 <p className="text-xs text-gray-600">Upload</p>
                                 <input
                                   type="file"
@@ -2814,7 +2338,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
                   <button
                     type="button"
                     onClick={() => {
@@ -2830,15 +2354,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                         planting_photo_3: ''
                       });
                     }}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                    className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+                    className="px-5 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold"
                   >
-                    ✓ Mark as Planted
+                    Mark as Planted
                   </button>
                 </div>
               </form>
@@ -2849,64 +2373,79 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
       {/* View Modal */}
       {showViewModal && selectedSeedling && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
-              <h2 className="text-2xl font-bold text-gray-800">Seedling Details</h2>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="font-serif text-xl font-bold text-gray-900">Seedling Details</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Distribution and planting summary</p>
+              </div>
               <button
+                type="button"
                 onClick={() => setShowViewModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                aria-label="Close seedling details"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-6 space-y-6">
               {/* Distribution Information */}
-              <div className="mb-6">
-                <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Sprout className="w-5 h-5 text-green-600" />
+              <div className="bg-gray-50/70 border border-gray-200 rounded-xl p-5">
+                <h3 className="font-serif text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Sprout className="w-4 h-4 text-[#047857]" />
                   Distribution Information
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Variety</p>
-                    <p className="font-medium text-gray-900">{selectedSeedling.variety}</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Variety</p>
+                    <p className="text-sm font-semibold text-gray-900">{selectedSeedling.variety}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Quantity</p>
-                    <p className="font-medium text-gray-900">{selectedSeedling.quantity_distributed.toLocaleString()}</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Quantity</p>
+                    <p className="text-sm font-semibold text-gray-900 tabular-nums">
+                      {selectedSeedling.quantity_distributed.toLocaleString()}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Date Distributed</p>
-                    <p className="font-medium text-gray-900">{new Date(selectedSeedling.date_distributed).toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Date Distributed</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {new Date(selectedSeedling.date_distributed).toLocaleDateString()}
+                    </p>
                   </div>
                   {selectedSeedling.source_supplier && (
                     <div>
-                      <p className="text-sm text-gray-600">Source/Supplier</p>
-                      <p className="font-medium text-gray-900">{selectedSeedling.source_supplier}</p>
+                      <p className="text-xs text-gray-500 mb-0.5">Source / Supplier</p>
+                      <p className="text-sm font-semibold text-gray-900">{selectedSeedling.source_supplier}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-sm text-gray-600">Status</p>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${selectedSeedling.status === 'planted' ? 'bg-green-100 text-green-700' :
-                      selectedSeedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
-                        selectedSeedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
-                      }`}>
+                    <p className="text-xs text-gray-500 mb-1">Status</p>
+                    <StatusPill
+                      tone={
+                        selectedSeedling.status === 'planted'
+                          ? 'success'
+                          : selectedSeedling.status === 'distributed'
+                            ? 'info'
+                            : selectedSeedling.status === 'damaged'
+                              ? 'danger'
+                              : 'warning'
+                      }
+                    >
                       {selectedSeedling.status}
-                    </span>
+                    </StatusPill>
                   </div>
                   {selectedSeedling.organization && (
                     <div>
-                      <p className="text-sm text-gray-600">Distributed By</p>
-                      <p className="font-medium text-gray-900">{selectedSeedling.organization.full_name}</p>
+                      <p className="text-xs text-gray-500 mb-0.5">Distributed By</p>
+                      <p className="text-sm font-semibold text-gray-900">{selectedSeedling.organization.full_name}</p>
                     </div>
                   )}
                   {selectedSeedling.remarks && (
-                    <div className="col-span-2">
-                      <p className="text-sm text-gray-600">Remarks</p>
-                      <p className="font-medium text-gray-900">{selectedSeedling.remarks}</p>
+                    <div className="sm:col-span-2">
+                      <p className="text-xs text-gray-500 mb-0.5">Remarks</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedSeedling.remarks}</p>
                     </div>
                   )}
                 </div>
@@ -2914,36 +2453,36 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
               {/* Distribution Photos */}
               {(selectedSeedling.seedling_photo || selectedSeedling.packaging_photo || selectedSeedling.quality_photo) && (
-                <div className="mb-6 pb-6 border-b border-gray-200">
-                  <h3 className="font-semibold text-gray-800 mb-4">📸 Distribution Photos</h3>
-                  <div className="grid grid-cols-3 gap-4">
+                <div className="pb-6 border-b border-gray-100">
+                  <h3 className="font-serif text-base font-bold text-gray-900 mb-4">Distribution Photos</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {selectedSeedling.seedling_photo && (
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Seedling Photo</p>
+                        <p className="text-xs text-gray-500 mb-1.5">Seedling Photo</p>
                         <img
                           src={selectedSeedling.seedling_photo}
                           alt="Seedling"
-                          className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                          className="w-full h-44 object-cover rounded-xl border border-gray-200"
                         />
                       </div>
                     )}
                     {selectedSeedling.packaging_photo && (
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Distribution Photo</p>
+                        <p className="text-xs text-gray-500 mb-1.5">Distribution Photo</p>
                         <img
                           src={selectedSeedling.packaging_photo}
                           alt="Packaging"
-                          className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                          className="w-full h-44 object-cover rounded-xl border border-gray-200"
                         />
                       </div>
                     )}
                     {selectedSeedling.quality_photo && (
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Quality Photo</p>
+                        <p className="text-xs text-gray-500 mb-1.5">Quality Photo</p>
                         <img
                           src={selectedSeedling.quality_photo}
                           alt="Quality"
-                          className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                          className="w-full h-44 object-cover rounded-xl border border-gray-200"
                         />
                       </div>
                     )}
@@ -2953,48 +2492,50 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
               {/* Planting Information (if planted) */}
               {selectedSeedling.status === 'planted' && (
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                <div>
+                  <h3 className="font-serif text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-[#047857]" />
                     Planting Information
                   </h3>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-[#EAF6F0] border border-[#CBEAD9] rounded-xl p-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {selectedSeedling.planting_date && (
                         <div>
-                          <p className="text-sm text-green-700">Planting Date</p>
-                          <p className="font-medium text-green-900">{new Date(selectedSeedling.planting_date).toLocaleDateString()}</p>
+                          <p className="text-xs text-gray-600 mb-0.5">Planting Date</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {new Date(selectedSeedling.planting_date).toLocaleDateString()}
+                          </p>
                         </div>
                       )}
                       {selectedSeedling.planted_quantity !== undefined && (
                         <div>
-                          <p className="text-sm text-green-700">Quantity Planted</p>
-                          <p className="font-medium text-green-900">
+                          <p className="text-xs text-gray-600 mb-0.5">Quantity Planted</p>
+                          <p className="text-sm font-semibold text-gray-900 tabular-nums">
                             {selectedSeedling.planted_quantity ?? selectedSeedling.quantity_distributed} units
                           </p>
                         </div>
                       )}
                       <div>
-                        <p className="text-sm text-red-700">Damaged Quantity</p>
-                        <p className="font-medium text-red-900">
+                        <p className="text-xs text-gray-600 mb-0.5">Damaged Quantity</p>
+                        <p className="text-sm font-semibold text-red-700 tabular-nums">
                           {selectedSeedling.damaged_quantity ?? 0} units
                         </p>
                       </div>
                       {selectedSeedling.planting_location && (
                         <div>
-                          <p className="text-sm text-green-700">Location</p>
-                          <p className="font-medium text-green-900">{selectedSeedling.planting_location}</p>
+                          <p className="text-xs text-gray-600 mb-0.5">Location</p>
+                          <p className="text-sm font-semibold text-gray-900">{selectedSeedling.planting_location}</p>
                         </div>
                       )}
                       {selectedSeedling.planting_notes && (
-                        <div className="col-span-2">
-                          <p className="text-sm text-green-700">Planting Method</p>
-                          <p className="font-medium text-green-900">{selectedSeedling.planting_notes}</p>
+                        <div className="sm:col-span-2">
+                          <p className="text-xs text-gray-600 mb-0.5">Planting Method</p>
+                          <p className="text-sm font-medium text-gray-900">{selectedSeedling.planting_notes}</p>
                         </div>
                       )}
                       {!selectedSeedling.planting_date && !selectedSeedling.planting_location && !selectedSeedling.planting_notes && (
-                        <div className="col-span-2 text-center py-4">
-                          <p className="text-sm text-green-700">Seedlings marked as planted</p>
+                        <div className="sm:col-span-2 text-center py-3">
+                          <p className="text-sm font-medium text-gray-900">Seedlings marked as planted</p>
                           <p className="text-xs text-gray-500 mt-1">Detailed planting information not yet recorded</p>
                         </div>
                       )}
@@ -3006,15 +2547,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
               {/* Planting Photos (if planted) */}
               {(selectedSeedling.planting_photo_1 || selectedSeedling.planting_photo_2 || selectedSeedling.planting_photo_3) && (
                 <div>
-                  <h3 className="font-semibold text-gray-800 mb-4">🌱 Your Planting Photos</h3>
-                  <div className="grid grid-cols-3 gap-4">
+                  <h3 className="font-serif text-base font-bold text-gray-900 mb-3">Your Planting Photos</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {selectedSeedling.planting_photo_1 && (
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Photo 1</p>
+                        <p className="text-xs text-gray-500 mb-1.5">Photo 1</p>
                         <img
                           src={selectedSeedling.planting_photo_1}
                           alt="Planting 1"
-                          className="w-full h-48 object-cover rounded-lg border-2 border-green-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-full h-44 object-cover rounded-xl border border-gray-200 cursor-pointer hover:opacity-85 transition-opacity"
                           onClick={() => {
                             setSelectedPhoto(selectedSeedling.planting_photo_1);
                             setShowPhotoModal(true);
@@ -3024,11 +2565,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     )}
                     {selectedSeedling.planting_photo_2 && (
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Photo 2</p>
+                        <p className="text-xs text-gray-500 mb-1.5">Photo 2</p>
                         <img
                           src={selectedSeedling.planting_photo_2}
                           alt="Planting 2"
-                          className="w-full h-48 object-cover rounded-lg border-2 border-green-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-full h-44 object-cover rounded-xl border border-gray-200 cursor-pointer hover:opacity-85 transition-opacity"
                           onClick={() => {
                             setSelectedPhoto(selectedSeedling.planting_photo_2);
                             setShowPhotoModal(true);
@@ -3038,11 +2579,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     )}
                     {selectedSeedling.planting_photo_3 && (
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Photo 3</p>
+                        <p className="text-xs text-gray-500 mb-1.5">Photo 3</p>
                         <img
                           src={selectedSeedling.planting_photo_3}
                           alt="Planting 3"
-                          className="w-full h-48 object-cover rounded-lg border-2 border-green-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-full h-44 object-cover rounded-xl border border-gray-200 cursor-pointer hover:opacity-85 transition-opacity"
                           onClick={() => {
                             setSelectedPhoto(selectedSeedling.planting_photo_3);
                             setShowPhotoModal(true);
@@ -3054,6 +2595,16 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                 </div>
               )}
             </div>
+
+            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/70 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowViewModal(false)}
+                className="px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -3061,24 +2612,26 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       {/* Full Screen Photo Modal */}
       {showPhotoModal && selectedPhoto && (
         <div
-          className="fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4"
+          className="fixed inset-0 bg-gray-950/90 flex items-center justify-center z-[60] p-4"
           onClick={() => setShowPhotoModal(false)}
         >
           <button
+            type="button"
             onClick={() => setShowPhotoModal(false)}
-            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-200 z-10"
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
+            aria-label="Close full screen photo"
           >
             <X className="w-6 h-6 text-white" />
           </button>
           <img
             src={selectedPhoto}
             alt="Full screen view"
-            className="max-w-full max-h-full object-contain rounded-lg"
+            className="max-w-full max-h-full object-contain rounded-xl"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
       )}
-    </div>
+    </>
   );
 };
 

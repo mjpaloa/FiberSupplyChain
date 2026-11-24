@@ -4,6 +4,7 @@
  */
 
 import { API_BASE_URL } from '../config/api';
+import { clearApiCache } from './apiCache';
 const TOKEN_KEY = 'token';
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
@@ -120,6 +121,7 @@ export const clearAuthData = () => {
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(USER_TYPE_KEY);
     localStorage.removeItem(LAST_ACTIVITY_KEY);
+    clearApiCache();
     console.log('✅ Auth data cleared successfully');
   } catch (error) {
     console.error('❌ Error clearing auth data:', error);
@@ -170,6 +172,7 @@ export const completeLogin = (
   user: any,
   userType: string
 ) => {
+  clearApiCache();
   saveAuthTokens(accessToken, refreshToken);
   saveUserData(user, userType);
   updateActivity(); // Initialize activity timestamp on login

@@ -3,7 +3,6 @@ import {
   Calendar,
   User,
   Leaf,
-  AlertTriangle,
   CheckCircle,
   FileText,
   Save,
@@ -16,6 +15,7 @@ import {
   COMMON_ISSUES
 } from '../../types/monitoring';
 import { validateMonitoringForm } from '../../utils/monitoringHelpers';
+import { EditorialCallout } from '../Shared/EditorialUI';
 
 interface MonitoringFormProps {
   onSubmit: (data: MonitoringFormData) => Promise<void>;
@@ -199,24 +199,26 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 rounded-t-2xl z-10">
+      <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <FileText className="w-6 h-6" />
+            <div className="w-10 h-10 bg-[#EAF6F0] text-[#047857] rounded-xl flex items-center justify-center">
+              <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">Field Monitoring Form</h2>
-              <p className="text-emerald-100 text-sm">Record farm visits and crop monitoring</p>
+              <h2 className="font-serif text-xl font-bold text-gray-900">Field Monitoring Form</h2>
+              <p className="text-gray-500 text-xs">Record farm visits and crop monitoring</p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onCancel}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Close form"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -224,41 +226,32 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
         {/* Error Messages */}
         {errors.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-start space-x-3">
-              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <h4 className="font-semibold text-red-800 mb-2">Please fix the following errors:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
-                  {errors.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
+          <EditorialCallout tone="rose" title="Please fix the following errors:">
+            <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm text-red-700 mt-1">
+              {errors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </EditorialCallout>
         )}
 
         {/* Success Message */}
         {successMessage && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
-              <p className="text-emerald-800 font-medium">{successMessage}</p>
-            </div>
-          </div>
+          <EditorialCallout tone="emerald" title="Saved:">
+            <span className="font-medium text-gray-900">{successMessage}</span>
+          </EditorialCallout>
         )}
 
         {/* Section 1: Visit Information */}
-        <div className="bg-gray-50 rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center space-x-2">
-            <Calendar className="w-5 h-5 text-emerald-600" />
+        <div className="bg-[#F8F9FA] rounded-xl border border-gray-200 p-5 space-y-4">
+          <h3 className="font-serif text-base font-bold text-gray-900 flex items-center space-x-2">
+            <Calendar className="w-4 h-4 text-[#047857]" />
             <span>Visit Information</span>
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Date of Visit <span className="text-red-500">*</span>
               </label>
               <input
@@ -267,17 +260,17 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                 value={formData.dateOfVisit}
                 onChange={handleInputChange}
                 max={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Monitored By <span className="text-red-500">*</span>
                 {currentOfficer && (
-                  <span className="ml-2 text-xs font-normal text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                    ✓ Auto-filled from your account
+                  <span className="ml-2 text-[11px] font-medium text-[#047857] bg-[#EAF6F0] px-2 py-0.5 rounded-full">
+                    Auto-filled from your account
                   </span>
                 )}
               </label>
@@ -287,14 +280,14 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                 value={formData.monitoredBy}
                 onChange={handleInputChange}
                 placeholder="Coordinator name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors bg-gray-50"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors bg-white read-only:bg-gray-100"
                 required
                 readOnly={!!currentOfficer}
                 title={currentOfficer ? "This field is automatically filled with your name" : "Enter coordinator name"}
               />
               {currentOfficer && (
                 <p className="text-xs text-gray-500 mt-1">
-                  📋 Role: {currentOfficer.role}
+                  Role: {currentOfficer.role}
                 </p>
               )}
             </div>
@@ -302,16 +295,18 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
         </div>
 
         {/* Section 2: Farmer Information */}
-        <div className="bg-blue-50 rounded-xl p-6 space-y-4 border-2 border-blue-200">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center space-x-2">
-            <User className="w-5 h-5 text-blue-600" />
-            <span>Farmer / Association Information</span>
-          </h3>
-          <p className="text-sm text-gray-600">Select the farmer being monitored from registered farmers</p>
+        <div className="bg-[#F8F9FA] rounded-xl border border-gray-200 p-5 space-y-4">
+          <div>
+            <h3 className="font-serif text-base font-bold text-gray-900 flex items-center space-x-2">
+              <User className="w-4 h-4 text-[#047857]" />
+              <span>Farmer / Association Information</span>
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">Select the farmer being monitored from registered farmers</p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Select Farmer <span className="text-red-500">*</span>
               </label>
               {farmersList && farmersList.length > 0 ? (
@@ -319,7 +314,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                   name="farmerName"
                   value={formData.farmerName}
                   onChange={handleFarmerSelect}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] bg-white font-medium"
                   required
                 >
                   <option value="">-- Select Farmer from Database --</option>
@@ -330,7 +325,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                   ))}
                 </select>
               ) : (
-                <div className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center">
+                <div className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl bg-gray-100 text-sm text-gray-500 flex items-center justify-center">
                   <span>Loading farmers...</span>
                 </div>
               )}
@@ -338,7 +333,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Association Name
               </label>
               <input
@@ -347,12 +342,12 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                 value={formData.associationName}
                 onChange={handleInputChange}
                 placeholder="Enter association name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Farm Location
               </label>
               <input
@@ -361,30 +356,32 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                 value={formData.farmLocation}
                 onChange={handleInputChange}
                 placeholder="e.g., Barangay Culiram, Sitio 3"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
               />
             </div>
           </div>
         </div>
 
         {/* Section 3: Farm Assessment */}
-        <div className="bg-green-50 rounded-xl p-6 space-y-4 border-2 border-green-200">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center space-x-2">
-            <Leaf className="w-5 h-5 text-green-600" />
-            <span>Crop Growth & Farm Condition</span>
-          </h3>
-          <p className="text-sm text-gray-600">Assess current farm status and crop development stage</p>
+        <div className="bg-[#F8F9FA] rounded-xl border border-gray-200 p-5 space-y-4">
+          <div>
+            <h3 className="font-serif text-base font-bold text-gray-900 flex items-center space-x-2">
+              <Leaf className="w-4 h-4 text-[#047857]" />
+              <span>Crop Growth & Farm Condition</span>
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">Assess current farm status and crop development stage</p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Farm Condition <span className="text-red-500">*</span>
               </label>
               <select
                 name="farmCondition"
                 value={formData.farmCondition}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
                 required
               >
                 {FARM_CONDITIONS.map(condition => (
@@ -396,14 +393,14 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Growth Stage <span className="text-red-500">*</span>
               </label>
               <select
                 name="growthStage"
                 value={formData.growthStage}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
                 required
               >
                 {GROWTH_STAGES.map(stage => (
@@ -415,7 +412,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Weather Condition
               </label>
               <input
@@ -424,12 +421,12 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                 value={formData.weatherCondition}
                 onChange={handleInputChange}
                 placeholder="e.g., Sunny, Rainy, Cloudy"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Estimated Yield (kg)
               </label>
               <input
@@ -440,25 +437,25 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                 placeholder="Enter estimated yield"
                 min="0"
                 step="0.1"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
               />
             </div>
           </div>
 
           {/* Issues Observed */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-xs font-semibold text-gray-700 mb-2">
               Issues Observed
             </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
               {COMMON_ISSUES.map(issue => (
                 <button
                   key={issue}
                   type="button"
                   onClick={() => handleIssueToggle(issue)}
-                  className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${formData.issuesObserved.includes(issue)
-                      ? 'bg-emerald-100 border-emerald-500 text-emerald-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:border-emerald-300'
+                  className={`px-3.5 py-2 rounded-xl border transition-colors text-xs font-semibold ${formData.issuesObserved.includes(issue)
+                      ? 'bg-[#E59500] border-[#E59500] text-gray-900'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                 >
                   {issue}
@@ -469,7 +466,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
 
           {formData.issuesObserved.includes('Other') && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Specify Other Issues
               </label>
               <input
@@ -478,22 +475,24 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                 value={formData.otherIssues}
                 onChange={handleInputChange}
                 placeholder="Describe other issues"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
               />
             </div>
           )}
         </div>
 
         {/* Section 4: Actions and Recommendations */}
-        <div className="bg-purple-50 rounded-xl p-6 space-y-4 border-2 border-purple-200">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center space-x-2">
-            <CheckCircle className="w-5 h-5 text-purple-600" />
-            <span>Actions Taken & Recommendations</span>
-          </h3>
-          <p className="text-sm text-gray-600">Document what was done and advice given to the farmer</p>
+        <div className="bg-[#F8F9FA] rounded-xl border border-gray-200 p-5 space-y-4">
+          <div>
+            <h3 className="font-serif text-base font-bold text-gray-900 flex items-center space-x-2">
+              <CheckCircle className="w-4 h-4 text-[#047857]" />
+              <span>Actions Taken & Recommendations</span>
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">Document what was done and advice given to the farmer</p>
+          </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
               Actions Taken <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -501,14 +500,14 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
               value={formData.actionsTaken}
               onChange={handleInputChange}
               placeholder="Describe actions taken during the visit..."
-              rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
+              rows={3}
+              className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors resize-none"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
               Recommendations <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -516,14 +515,14 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
               value={formData.recommendations}
               onChange={handleInputChange}
               placeholder="Provide recommendations for the farmer..."
-              rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
+              rows={3}
+              className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors resize-none"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
               Additional Remarks
             </label>
             <textarea
@@ -531,41 +530,42 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
               value={formData.remarks}
               onChange={handleInputChange}
               placeholder="Any additional notes or observations..."
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
+              rows={2}
+              className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors resize-none"
             />
           </div>
         </div>
 
         {/* Section 5: Next Monitoring Schedule */}
-        <div className="bg-indigo-50 rounded-xl p-6 space-y-4 border-2 border-indigo-200">
-          <h3 className="text-lg font-bold text-emerald-700 flex items-center gap-2 mb-2">
-            <Calendar className="w-5 h-5" />
-            Next Monitoring Schedule
-          </h3>
-          <p className="text-sm text-gray-600">Set the date for the next field monitoring visit</p>
+        <div className="bg-[#F8F9FA] rounded-xl border border-gray-200 p-5 space-y-4">
+          <div>
+            <h3 className="font-serif text-base font-bold text-gray-900 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#047857]" />
+              Next Monitoring Schedule
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">Set the date for the next field monitoring visit</p>
+          </div>
 
           {/* Final Visit Checkbox */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 mb-4">
-            <label className="flex items-start gap-3 cursor-pointer group">
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isFinalVisit}
                 onChange={(e) => {
                   setIsFinalVisit(e.target.checked);
                   if (e.target.checked) {
-                    // Clear next monitoring date when final visit is checked
                     setFormData(prev => ({ ...prev, nextMonitoringDate: '' }));
                   }
                 }}
-                className="mt-1 w-5 h-5 text-green-600 border-green-300 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
+                className="mt-1 w-4 h-4 text-[#047857] border-gray-300 rounded focus:ring-2 focus:ring-[#047857] cursor-pointer"
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="font-bold text-green-800">This is the Final Visit</span>
+                  <CheckCircle className="w-4 h-4 text-[#047857]" />
+                  <span className="font-semibold text-sm text-gray-900">This is the Final Visit</span>
                 </div>
-                <p className="text-sm text-green-700 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   Check this if the farm has reached stable condition and no more monitoring is needed.
                   The status will be automatically marked as <strong>Completed</strong> and no next visit will be scheduled.
                 </p>
@@ -576,7 +576,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
           {/* Next Monitoring Date - Only show if NOT final visit */}
           {!isFinalVisit && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Next Monitoring Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -585,10 +585,10 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
                 value={formData.nextMonitoringDate}
                 onChange={handleInputChange}
                 min={new Date(new Date(formData.dateOfVisit).getTime() + 86400000).toISOString().split('T')[0]}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
                 required
               />
-              <p className="text-xs text-gray-600 mt-2">
+              <p className="text-xs text-gray-500 mt-1.5">
                 Recommended: Schedule next visit within 7-14 days for optimal monitoring
               </p>
             </div>
@@ -596,43 +596,36 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
 
           {/* Final Visit Confirmation Message */}
           {isFinalVisit && (
-            <div className="bg-green-100 border border-green-300 rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-green-800">Final Visit Confirmed</p>
-                <p className="text-sm text-green-700 mt-1">
-                  This monitoring record will be marked as <strong>Completed</strong>.
-                  The farm will no longer appear in Upcoming or Overdue lists.
-                </p>
-              </div>
-            </div>
+            <EditorialCallout tone="emerald" title="Final Visit Confirmed:">
+              This monitoring record will be marked as <strong>Completed</strong>. The farm will no longer appear in Upcoming or Overdue lists.
+            </EditorialCallout>
           )}
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-semibold flex items-center justify-center space-x-2"
+            className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-semibold flex items-center justify-center space-x-2"
             disabled={loading}
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
             <span>Cancel</span>
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition-all font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>Saving...</span>
               </>
             ) : (
               <>
-                <Save className="w-5 h-5" />
+                <Save className="w-4 h-4" />
                 <span>Save Monitoring Record</span>
               </>
             )}

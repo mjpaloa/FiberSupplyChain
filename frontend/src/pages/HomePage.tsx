@@ -462,9 +462,11 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
             <div className="flex justify-between items-center h-16 md:h-20">
               {/* Logo and Title - Far Left */}
               <div className="flex items-center space-x-3 group cursor-pointer">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                  <Leaf className="w-6 h-6 md:w-7 md:h-7 text-white" />
-                </div>
+                <img
+                  src="/assets/images/abacalogo.png"
+                  alt="E.A.S.Y ABACA Logo"
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-contain bg-white border border-gray-200 p-0.5"
+                />
                 <div>
                   <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
                     E.A.S.Y ABACA

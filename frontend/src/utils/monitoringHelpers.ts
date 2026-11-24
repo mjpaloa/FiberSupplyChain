@@ -3,7 +3,7 @@
  * Utility functions for monitoring operations
  */
 
-import { MonitoringRecord, MonitoringStats, MonitoringFilters } from '../types/monitoring';
+import type { MonitoringRecord, MonitoringStats, MonitoringFilters } from '../types/monitoring';
 
 /**
  * Generate unique monitoring ID
@@ -14,16 +14,20 @@ export const generateMonitoringId = (): string => {
   return `MON-${timestamp}-${random}`;
 };
 
+const LONG_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
 /**
  * Format date for display
  */
 export const formatDate = (dateString: string): string => {
+  if (!dateString) return 'N/A';
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  if (Number.isNaN(date.getTime())) return String(dateString);
+  return LONG_DATE_FORMATTER.format(date);
 };
 
 /**
@@ -165,32 +169,117 @@ export const filterRecords = (
 };
 
 /**
- * Sort records by date (newest first)
+ * Build a stable grouping key per farmer (falls back to normalized name if ID is missing)
  */
-export const sortByDate = (records: MonitoringRecord[]): MonitoringRecord[] => {
-  return [...records].sort((a, b) => 
-    new Date(b.dateOfVisit).getTime() - new Date(a.dateOfVisit).getTime()
-  );
+export const getFarmerKey = (record: MonitoringRecord): string => {
+  if (record.farmerId) return String(record.farmerId);
+  return `name:${(record.farmerName || '').trim().toLowerCase()}`;
 };
 
 /**
- * Get latest monitoring record per farmer
- * Returns only the most recent record for each farmer
+ * Deterministic comparator: newest visit date first, then createdAt, then monitoringId
  */
-export const getLatestRecordPerFarmer = (records: MonitoringRecord[]): MonitoringRecord[] => {
-  const farmerMap = new Map<string, MonitoringRecord>();
-  
-  records.forEach(record => {
-    // Only consider Ongoing records
-    if ((record as any).status !== 'Ongoing') return;
-    
-    const existing = farmerMap.get(record.farmerId);
-    if (!existing || new Date(record.dateOfVisit) > new Date(existing.dateOfVisit)) {
-      farmerMap.set(record.farmerId, record);
+export const compareMonitoringRecordsDesc = (a: MonitoringRecord, b: MonitoringRecord): number => {
+  const visitDiff = Date.parse(b.dateOfVisit) - Date.parse(a.dateOfVisit);
+  if (!Number.isNaN(visitDiff) && visitDiff !== 0) return visitDiff;
+
+  const createdDiff = Date.parse(b.createdAt || '') - Date.parse(a.createdAt || '');
+  if (!Number.isNaN(createdDiff) && createdDiff !== 0) return createdDiff;
+
+  return (b.monitoringId || '').localeCompare(a.monitoringId || '');
+};
+
+/**
+ * Sort records by date (newest first)
+ */
+export const sortByDate = (records: MonitoringRecord[]): MonitoringRecord[] => {
+  return [...records].sort(compareMonitoringRecordsDesc);
+};
+
+export interface PartitionedMonitoringRecords {
+  active: MonitoringRecord[];
+  history: MonitoringRecord[];
+  activeIds: Set<string>;
+  byFarmer: Map<string, MonitoringRecord[]>;
+}
+
+/**
+ * Partition monitoring records into current Active cycles vs History.
+ * - A farmer's newest record is Active only if its status is 'Ongoing' (or unset).
+ * - Earlier 'Ongoing' visits superseded by a newer visit, plus all 'Completed' and
+ *   'Done Monitor' records, belong in History.
+ */
+export const partitionMonitoringRecords = (
+  records: MonitoringRecord[]
+): PartitionedMonitoringRecords => {
+  const byFarmer = new Map<string, MonitoringRecord[]>();
+
+  records.forEach((record) => {
+    const key = getFarmerKey(record);
+    const list = byFarmer.get(key);
+    if (list) {
+      list.push(record);
+    } else {
+      byFarmer.set(key, [record]);
     }
   });
-  
-  return Array.from(farmerMap.values());
+
+  const active: MonitoringRecord[] = [];
+  const history: MonitoringRecord[] = [];
+  const activeIds = new Set<string>();
+
+  byFarmer.forEach((farmerRecords, key) => {
+    const sorted = [...farmerRecords].sort(compareMonitoringRecordsDesc);
+    byFarmer.set(key, sorted);
+
+    const [latest, ...older] = sorted;
+    if (!latest) return;
+
+    const latestStatus = latest.status || 'Ongoing';
+    if (latestStatus === 'Ongoing') {
+      active.push(latest);
+      activeIds.add(latest.monitoringId);
+      history.push(...older);
+    } else {
+      history.push(...sorted);
+    }
+  });
+
+  return {
+    active: sortByDate(active),
+    history: sortByDate(history),
+    activeIds,
+    byFarmer,
+  };
+};
+
+export const getActiveMonitoring = (records: MonitoringRecord[]): MonitoringRecord[] =>
+  partitionMonitoringRecords(records).active;
+
+export const getHistoryMonitoring = (records: MonitoringRecord[]): MonitoringRecord[] =>
+  partitionMonitoringRecords(records).history;
+
+export const getFarmerMonitoringHistory = (
+  records: MonitoringRecord[],
+  target: MonitoringRecord
+): MonitoringRecord[] => {
+  const targetKey = getFarmerKey(target);
+  return records.filter((r) => getFarmerKey(r) === targetKey).sort(compareMonitoringRecordsDesc);
+};
+
+export const getHistoryRecordCategory = (
+  record: MonitoringRecord
+): 'completed' | 'done' | 'previous' => {
+  if (record.status === 'Completed') return 'completed';
+  if (record.status === 'Done Monitor') return 'done';
+  return 'previous';
+};
+
+/**
+ * Get latest active Ongoing monitoring record per farmer
+ */
+export const getLatestRecordPerFarmer = (records: MonitoringRecord[]): MonitoringRecord[] => {
+  return getActiveMonitoring(records);
 };
 
 /**
@@ -198,26 +287,13 @@ export const getLatestRecordPerFarmer = (records: MonitoringRecord[]): Monitorin
  * Only shows the latest Ongoing record per farmer with future next_monitoring_date
  */
 export const getUpcomingMonitoring = (records: MonitoringRecord[]): MonitoringRecord[] => {
-  console.log('🔍 getUpcomingMonitoring: Input records:', records.length);
-  
-  // Get only latest Ongoing record per farmer
   const latestRecords = getLatestRecordPerFarmer(records);
-  console.log('🔍 Latest records per farmer:', latestRecords.length);
-  
-  const upcoming = latestRecords
+
+  return latestRecords
     .filter(record => {
-      // Must have a next monitoring date and it must be in the future
-      const hasDate = !!record.nextMonitoringDate;
-      const isUpcomingDate = hasDate && isUpcoming(record.nextMonitoringDate);
-      console.log(`  Record ${record.monitoringId}: hasDate=${hasDate}, nextDate=${record.nextMonitoringDate}, isUpcoming=${isUpcomingDate}`);
-      return hasDate && isUpcomingDate;
+      return Boolean(record.nextMonitoringDate) && isUpcoming(record.nextMonitoringDate);
     })
-    .sort((a, b) => 
-      new Date(a.nextMonitoringDate).getTime() - new Date(b.nextMonitoringDate).getTime()
-    );
-  
-  console.log('✅ getUpcomingMonitoring: Returning', upcoming.length, 'records');
-  return upcoming;
+    .sort((a, b) => Date.parse(a.nextMonitoringDate) - Date.parse(b.nextMonitoringDate));
 };
 
 /**
@@ -225,26 +301,13 @@ export const getUpcomingMonitoring = (records: MonitoringRecord[]): MonitoringRe
  * Only shows the latest Ongoing record per farmer that is overdue
  */
 export const getOverdueMonitoring = (records: MonitoringRecord[]): MonitoringRecord[] => {
-  console.log('🔍 getOverdueMonitoring: Input records:', records.length);
-  
-  // Get only latest Ongoing record per farmer
   const latestRecords = getLatestRecordPerFarmer(records);
-  console.log('🔍 Latest records per farmer:', latestRecords.length);
-  
-  const overdue = latestRecords
+
+  return latestRecords
     .filter(record => {
-      // Must have a next monitoring date and it must be in the past
-      const hasDate = !!record.nextMonitoringDate;
-      const isOverdueDate = hasDate && isOverdue(record.nextMonitoringDate);
-      console.log(`  Record ${record.monitoringId}: hasDate=${hasDate}, nextDate=${record.nextMonitoringDate}, isOverdue=${isOverdueDate}`);
-      return hasDate && isOverdueDate;
+      return Boolean(record.nextMonitoringDate) && isOverdue(record.nextMonitoringDate);
     })
-    .sort((a, b) => 
-      new Date(a.nextMonitoringDate).getTime() - new Date(b.nextMonitoringDate).getTime()
-    );
-  
-  console.log('✅ getOverdueMonitoring: Returning', overdue.length, 'records');
-  return overdue;
+    .sort((a, b) => Date.parse(a.nextMonitoringDate) - Date.parse(b.nextMonitoringDate));
 };
 
 /**

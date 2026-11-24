@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Package, DollarSign, TrendingUp, ShoppingCart, X, ShoppingBag, Receipt, Trash2 } from 'lucide-react';
+import { Package, ShoppingCart, X } from 'lucide-react';
+import { KpiStrip, EditorialCard, StatusPill } from '../Shared/EditorialUI';
 
 interface InventoryItem {
   fiber_class: string;
@@ -200,28 +201,19 @@ const BuyerInventory: React.FC = () => {
     }
   };
 
-  const getClassColor = (fiberClass: string) => {
+  const getClassTone = (fiberClass: string): 'success' | 'info' | 'warning' | 'neutral' => {
     switch (fiberClass) {
-      case 'Class A': return 'from-emerald-500 to-green-600';
-      case 'Class B': return 'from-blue-500 to-indigo-600';
-      case 'Class C': return 'from-orange-500 to-amber-600';
-      default: return 'from-gray-500 to-slate-600';
-    }
-  };
-
-  const getClassBadgeColor = (fiberClass: string) => {
-    switch (fiberClass) {
-      case 'Class A': return 'bg-emerald-100 text-emerald-700 border-emerald-300';
-      case 'Class B': return 'bg-blue-100 text-blue-700 border-blue-300';
-      case 'Class C': return 'bg-orange-100 text-orange-700 border-orange-300';
-      default: return 'bg-gray-100 text-gray-700 border-gray-300';
+      case 'Class A': return 'success';
+      case 'Class B': return 'info';
+      case 'Class C': return 'warning';
+      default: return 'neutral';
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-80">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#047857]"></div>
       </div>
     );
   }
@@ -232,178 +224,133 @@ const BuyerInventory: React.FC = () => {
   const totalSalesCount = sales.length;
 
   return (
-    <div className="w-full max-w-full">
-      <div className="space-y-6">
-      
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div className="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Package size={24} />
-              </div>
-            </div>
-            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Stock</h3>
-            <p className="text-3xl md:text-4xl font-black mb-1">{totalKg.toFixed(2)} kg</p>
-            <div className="flex items-center gap-2 text-xs opacity-80">
-              <Package size={14} />
-              <span>Available Inventory</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="group relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <span className="text-2xl font-bold">₱</span>
-              </div>
-            </div>
-            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Value</h3>
-            <p className="text-3xl md:text-4xl font-black mb-1">₱{totalValue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-            <div className="flex items-center gap-1 text-xs opacity-80">
-              <span className="text-sm font-bold">₱</span>
-              <span>Inventory Worth</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="group relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <TrendingUp size={24} />
-              </div>
-            </div>
-            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Total Sales</h3>
-            <p className="text-3xl md:text-4xl font-black mb-1">₱{totalSales.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-            <div className="flex items-center gap-1 text-xs opacity-80">
-              <span className="text-sm font-bold">₱</span>
-              <span>Sales Revenue</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="group relative bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <TrendingUp size={24} />
-              </div>
-            </div>
-            <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">Active Classes</h3>
-            <p className="text-3xl md:text-4xl font-black mb-1">{inventory.filter(i => i.total_kg > 0).length}</p>
-            <div className="flex items-center gap-2 text-xs opacity-80">
-              <TrendingUp size={14} />
-              <span>With Stock</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="w-full max-w-full space-y-6">
+      {/* KPI Summary Strip */}
+      <KpiStrip
+        columns={4}
+        items={[
+          {
+            label: 'Total Stock',
+            value: `${totalKg.toFixed(2)} kg`,
+            subtext: `${totalPurchaseCount} purchases recorded`,
+          },
+          {
+            label: 'Inventory Worth',
+            value: `₱${totalValue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            subtext: 'Estimated stock valuation',
+          },
+          {
+            label: 'Total Sales Revenue',
+            value: `₱${totalSales.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            subtext: `${totalSalesCount} completed sales`,
+          },
+          {
+            label: 'Active Classes',
+            value: inventory.filter(i => i.total_kg > 0).length,
+            subtext: 'Classes currently in stock',
+          },
+        ]}
+      />
 
       {/* Inventory Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {inventory.map((item) => (
-          <div key={item.fiber_class} className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-xl border border-white/60 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 p-5 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${getClassBadgeColor(item.fiber_class)}`}>
-                    {item.fiber_class}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2 font-medium">Abaca Fiber</p>
-                </div>
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${getClassColor(item.fiber_class)} bg-opacity-10`}>
-                  <Package className="w-6 h-6 text-gray-700" />
-                </div>
+          <EditorialCard
+            key={item.fiber_class}
+            noPadding
+            className="flex flex-col"
+          >
+            <div className="px-6 py-5 border-b border-gray-100 bg-[#FAFAFA] flex items-center justify-between">
+              <div>
+                <StatusPill tone={getClassTone(item.fiber_class)}>{item.fiber_class}</StatusPill>
+                <p className="text-xs text-gray-500 mt-2 font-medium">Abaca Fiber Grade</p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600">
+                <Package className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="p-5 md:p-6 space-y-4">
-              {/* Available Stock - Highlighted */}
-              <div className={`bg-gradient-to-br ${
-                item.total_kg > 0 
-                  ? 'from-blue-50 to-indigo-50 border-blue-200' 
-                  : item.fiber_class === 'Class A' 
-                    ? 'from-emerald-50/60 to-teal-50/50 border-emerald-200/60' 
-                    : item.fiber_class === 'Class B' 
-                      ? 'from-sky-50/60 to-blue-50/50 border-blue-200/60' 
-                      : 'from-amber-50/60 to-orange-50/50 border-orange-200/60'
-              } border rounded-xl p-4`}>
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Available Stock</p>
-                <p className="text-3xl font-black text-gray-900">{item.total_kg.toFixed(2)} <span className="text-lg text-gray-600">kg</span></p>
+            <div className="p-6 space-y-4 flex-1 flex flex-col">
+              {/* Available Stock */}
+              <div className="rounded-xl border border-gray-200 bg-[#FAFAFA] p-4">
+                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Available Stock</p>
+                <p className="text-3xl font-bold text-gray-900 tabular-nums">
+                  {item.total_kg.toFixed(2)} <span className="text-sm font-medium text-gray-500">kg</span>
+                </p>
                 {item.total_kg === 0 && (
-                  <p className="text-xs text-red-500/70 font-semibold mt-2">OUT OF STOCK</p>
+                  <p className="text-xs text-red-700 font-semibold mt-2">OUT OF STOCK</p>
                 )}
               </div>
 
-              {/* Stats Grid - Only show if stock available */}
+              {/* Stats Grid */}
               {item.total_kg > 0 && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-xs text-gray-500 font-medium mb-1">Purchases</p>
-                      <p className="text-lg font-bold text-gray-900">{item.purchase_count}</p>
+                    <div className="rounded-xl border border-gray-200 bg-white p-3">
+                      <p className="text-[11px] text-gray-500 font-medium mb-1">Purchases</p>
+                      <p className="text-lg font-bold text-gray-900 tabular-nums">{item.purchase_count}</p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-xs text-gray-500 font-medium mb-1">Avg. Price</p>
-                      <p className="text-lg font-bold text-gray-900">₱{item.avg_purchase_price.toFixed(2)}</p>
+                    <div className="rounded-xl border border-gray-200 bg-white p-3">
+                      <p className="text-[11px] text-gray-500 font-medium mb-1">Avg. Price</p>
+                      <p className="text-lg font-bold text-gray-900 tabular-nums">₱{item.avg_purchase_price.toFixed(2)}</p>
                     </div>
                   </div>
 
-                  {/* Total Value */}
-                  <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Total Value</p>
-                    <p className="text-2xl font-black text-emerald-600">₱{(item.total_kg * item.avg_purchase_price).toFixed(2)}</p>
+                  <div className="rounded-xl bg-[#EAF6F0] border border-[#CBEAD9] p-4">
+                    <p className="text-[11px] font-semibold text-[#047857] uppercase tracking-wider mb-1">Estimated Value</p>
+                    <p className="text-2xl font-bold text-gray-900 tabular-nums">
+                      ₱{(item.total_kg * item.avg_purchase_price).toFixed(2)}
+                    </p>
                   </div>
                 </>
               )}
 
               {/* Sell Button */}
-              <button
-                onClick={() => openSaleModal(item)}
-                disabled={item.total_kg === 0}
-                className={`w-full py-3 px-4 rounded-xl font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 text-sm md:text-base ${item.total_kg > 0
-                    ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:via-blue-800 hover:to-indigo-800 shadow-lg hover:shadow-xl transform hover:scale-[1.02]'
-                    : 'bg-gray-300 cursor-not-allowed opacity-60'
+              <div className="mt-auto pt-2">
+                <button
+                  type="button"
+                  onClick={() => openSaleModal(item)}
+                  disabled={item.total_kg === 0}
+                  className={`w-full py-2.5 px-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 text-sm ${
+                    item.total_kg > 0
+                      ? 'bg-[#047857] hover:bg-[#065F46] text-white'
+                      : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
                   }`}
-              >
-                <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-                {item.total_kg > 0 ? 'Sell Fiber' : 'Out of Stock'}
-              </button>
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>{item.total_kg > 0 ? 'Sell Fiber' : 'Out of Stock'}</span>
+                </button>
+              </div>
             </div>
-          </div>
+          </EditorialCard>
         ))}
-      </div>
       </div>
 
       {/* Sale Modal */}
       {showSaleModal && selectedClass && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className={`bg-gradient-to-r ${getClassColor(selectedClass.fiber_class)} p-6 text-white flex justify-between items-center`}>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <div>
-                <h2 className="text-2xl font-bold">Sell {selectedClass.fiber_class}</h2>
-                <p className="text-sm opacity-90 mt-1">Available: {selectedClass.total_kg.toFixed(2)} kg</p>
+                <h2 className="font-serif text-xl font-bold text-gray-900">Sell {selectedClass.fiber_class}</h2>
+                <p className="text-xs text-gray-500 mt-0.5 tabular-nums">
+                  Available: {selectedClass.total_kg.toFixed(2)} kg
+                </p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowSaleModal(false)}
-                className="text-white hover:bg-white/20 p-2 rounded-lg transition"
+                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaleSubmit} className="p-6 space-y-4">
-              {/* Quantity */}
+            <form onSubmit={handleSaleSubmit} className="p-6 space-y-4 overflow-y-auto">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Quantity (kg) *</label>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Quantity (kg) *
+                </label>
                 <input
                   type="number"
                   step="0.01"
@@ -412,15 +359,16 @@ const BuyerInventory: React.FC = () => {
                   required
                   value={saleFormData.quantity_kg || ''}
                   onChange={(e) => setSaleFormData({ ...saleFormData, quantity_kg: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm"
                   placeholder="Enter quantity in kg"
                 />
-                <p className="text-xs text-gray-500 mt-1">Max: {selectedClass.total_kg.toFixed(2)} kg</p>
+                <p className="text-xs text-gray-500 mt-1 tabular-nums">Max: {selectedClass.total_kg.toFixed(2)} kg</p>
               </div>
 
-              {/* Price Per Kg */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Price per kg (₱) *</label>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Price per kg (₱) *
+                </label>
                 <input
                   type="number"
                   step="0.01"
@@ -428,62 +376,71 @@ const BuyerInventory: React.FC = () => {
                   required
                   value={saleFormData.price_per_kg || ''}
                   onChange={(e) => setSaleFormData({ ...saleFormData, price_per_kg: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm"
                   placeholder="Enter selling price"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1 tabular-nums">
                   Avg. purchase: ₱{selectedClass.avg_purchase_price.toFixed(2)}/kg
                 </p>
               </div>
 
-              {/* Buyer Name */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Buyer Name *</label>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Buyer Name *
+                </label>
                 <input
                   type="text"
                   required
                   value={saleFormData.buyer_name}
                   onChange={(e) => setSaleFormData({ ...saleFormData, buyer_name: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm"
                   placeholder="Enter buyer name"
                 />
               </div>
 
-              {/* Notes */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Notes (Optional)</label>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Notes (Optional)
+                </label>
                 <textarea
                   value={saleFormData.notes}
                   onChange={(e) => setSaleFormData({ ...saleFormData, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition resize-none"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857]/20 outline-none text-sm resize-none"
                   placeholder="Additional notes..."
                 />
               </div>
 
-              {/* Total Amount */}
-              <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-4">
+              <div className="bg-[#EAF6F0] border border-[#CBEAD9] rounded-xl p-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-700 font-bold">Total Amount:</span>
-                  <span className="text-2xl font-bold text-emerald-600">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#047857]">Total Amount</span>
+                  <span className="text-2xl font-bold text-gray-900 tabular-nums">
                     ₱{(saleFormData.quantity_kg * saleFormData.price_per_kg).toFixed(2)}
                   </span>
                 </div>
                 {saleFormData.quantity_kg > 0 && (
-                  <p className="text-xs text-gray-600 mt-2">
-                    Profit: ₱{((saleFormData.price_per_kg - selectedClass.avg_purchase_price) * saleFormData.quantity_kg).toFixed(2)}
+                  <p className="text-xs text-gray-700 mt-1.5 tabular-nums">
+                    Estimated Profit: ₱{((saleFormData.price_per_kg - selectedClass.avg_purchase_price) * saleFormData.quantity_kg).toFixed(2)}
                   </p>
                 )}
               </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {submitting ? 'Processing...' : 'Complete Sale'}
-              </button>
+              <div className="pt-2 border-t border-gray-100 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowSaleModal(false)}
+                  className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl font-semibold text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 bg-[#047857] hover:bg-[#065F46] text-white py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Processing...' : 'Complete Sale'}
+                </button>
+              </div>
             </form>
           </div>
         </div>

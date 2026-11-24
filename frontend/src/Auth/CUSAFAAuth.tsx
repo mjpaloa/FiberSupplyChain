@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, ArrowLeft, ChevronRight, ChevronLeft, X, Camera, FileText, Building2 } from 'lucide-react';
+import { Eye, EyeOff, ChevronRight, ChevronLeft, X, Camera, FileText, Building2 } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import {
+  AuthLayout,
+  AuthStepProgress,
+  AUTH_INPUT_CLASS,
+  AUTH_LABEL_CLASS,
+  AUTH_PRIMARY_BTN_CLASS,
+  AUTH_SUBMIT_BTN_CLASS,
+  AUTH_SECONDARY_BTN_CLASS,
+} from './AuthLayout';
 
 interface CUSAFAAuthProps {
   onBack: () => void;
@@ -239,431 +248,387 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ backgroundImage: 'url(/assets/images/abcafiber.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
-      <div className="absolute inset-0 bg-black/45"></div>
+    <AuthLayout
+      roleLabel="CUSAFA Association"
+      roleIcon={<Building2 className="w-5 h-5" />}
+      title={isLogin ? 'Association Sign In' : 'Officer Registration'}
+      subtitle={isLogin ? 'Login here as a CUSAFA association officer' : 'Register as a verified association coordinator'}
+      asideHeadline="Coordinate Seedlings, Harvests & Member Logistics"
+      asideDescription="Distribute MAO seedling allocations to member farmers, oversee warehouse dry fiber inventory, and coordinate deliveries with verified buyers."
+      asideHighlights={[
+        'Track association seedling allocations & farmer distributions',
+        'Manage verified warehouse fiber inventory & shipments',
+        'View live buyer pricing benchmarks across grades',
+      ]}
+      onBack={onBack}
+      mode={isLogin ? 'login' : 'register'}
+      onModeChange={(nextMode) => {
+        setIsLogin(nextMode === 'login');
+        setCurrentStep(1);
+        setError('');
+      }}
+      error={error}
+      footerNote="Association officer accounts require MAO administrator approval before activation."
+    >
+      {isLogin ? (
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label htmlFor="cusafa-login-email" className={AUTH_LABEL_CLASS}>
+              Email Address <span aria-hidden="true" className="text-rose-600">*</span>
+            </label>
+            <input
+              id="cusafa-login-email"
+              name="email"
+              type="email"
+              autoComplete="username"
+              spellCheck={false}
+              enterKeyHint="next"
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className={AUTH_INPUT_CLASS}
+              placeholder="officer@cusafa.com"
+            />
+          </div>
 
-      <div className="max-w-md w-full relative z-10">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-green-100">
-          {/* Back Button */}
-          <button
-            onClick={onBack}
-            className="mb-6 flex items-center text-gray-600 hover:text-green-700 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
+          <div>
+            <label htmlFor="cusafa-login-password" className={AUTH_LABEL_CLASS}>
+              Password <span aria-hidden="true" className="text-rose-600">*</span>
+            </label>
+            <div className="relative">
+              <input
+                id="cusafa-login-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                enterKeyHint="done"
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className={`${AUTH_INPUT_CLASS} pr-11`}
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-pressed={showPassword}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} className={AUTH_SUBMIT_BTN_CLASS}>
+            {loading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              'Sign In as Officer'
+            )}
           </button>
+        </form>
+      ) : (
+        <form onSubmit={handleRegister}>
+          <AuthStepProgress
+            steps={['Basic Info', 'Officer Details', 'Documents']}
+            currentStep={currentStep}
+          />
 
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-              <Building2 className="w-8 h-8 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">
-              {isLogin ? 'Association Portal' : 'Association Registration'}
-            </h2>
-            <p className="text-gray-600 text-sm">
-              {isLogin ? 'Login Here as Association Officer' : 'Register as Association officer'}
-            </p>
-          </div>
-
-          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => {
-                setIsLogin(true);
-                setCurrentStep(1);
-              }}
-              className={`flex-1 py-2 rounded-md transition-colors ${isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
-                }`}
-            >
-              Login
-            </button>
-            <button
-              onClick={() => {
-                setIsLogin(false);
-                setCurrentStep(1);
-              }}
-              className={`flex-1 py-2 rounded-md transition-colors ${!isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
-                }`}
-            >
-              Register
-            </button>
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
-              {error}
-            </div>
-          )}
-
-          {isLogin ? (
-            // LOGIN FORM
-            <form onSubmit={handleLogin} className="space-y-4">
+          {currentStep === 1 && (
+            <div className="space-y-3.5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <label htmlFor="cusafa-fullname" className={AUTH_LABEL_CLASS}>
+                  Full Name <span aria-hidden="true" className="text-rose-600">*</span>
+                </label>
                 <input
-                  type="email"
+                  id="cusafa-fullname"
+                  name="fullName"
+                  type="text"
+                  autoComplete="name"
+                  enterKeyHint="next"
                   required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                  placeholder="your.email@cusafa.com"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  className={AUTH_INPUT_CLASS}
+                  placeholder="Juan Dela Cruz"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <label htmlFor="cusafa-reg-email" className={AUTH_LABEL_CLASS}>
+                  Email Address <span aria-hidden="true" className="text-rose-600">*</span>
+                </label>
+                <input
+                  id="cusafa-reg-email"
+                  name="email"
+                  type="email"
+                  autoComplete="username"
+                  spellCheck={false}
+                  enterKeyHint="next"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className={AUTH_INPUT_CLASS}
+                  placeholder="officer@cusafa.com"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="cusafa-reg-password" className={AUTH_LABEL_CLASS}>
+                  Password <span aria-hidden="true" className="text-rose-600">*</span>
+                </label>
                 <div className="relative">
                   <input
+                    id="cusafa-reg-password"
+                    name="new-password"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    enterKeyHint="next"
+                    aria-describedby="cusafa-password-rules"
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                    placeholder="••••••••"
+                    className={`${AUTH_INPUT_CLASS} pr-11`}
+                    placeholder="Create a strong password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    aria-pressed={showPassword}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                <p id="cusafa-password-rules" className="mt-1.5 text-xs text-gray-500">
+                  Must include uppercase, lowercase, number, and special character (@$!%*?&).
+                </p>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Logging in...
-                  </div>
-                ) : (
-                  'Login'
-                )}
-              </button>
-            </form>
-          ) : (
-            // REGISTRATION FORM
-            <form onSubmit={handleRegister} className="space-y-4">
-              {/* Progress Indicator */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${currentStep >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                      }`}>
-                      1
-                    </div>
-                    <span className={`text-xs font-medium text-center ${currentStep >= 1 ? 'text-green-700' : 'text-gray-500'
-                      }`}>Basic Info</span>
-                  </div>
-                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${currentStep > 1 ? 'bg-green-600' : 'bg-gray-200'
-                    }`}></div>
-                  <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${currentStep >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                      }`}>
-                      2
-                    </div>
-                    <span className={`text-xs font-medium text-center ${currentStep >= 2 ? 'text-green-700' : 'text-gray-500'
-                      }`}>Officer Details</span>
-                  </div>
-                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${currentStep > 2 ? 'bg-green-600' : 'bg-gray-200'
-                    }`}></div>
-                  <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${currentStep >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                      }`}>
-                      3
-                    </div>
-                    <span className={`text-xs font-medium text-center ${currentStep >= 3 ? 'text-green-700' : 'text-gray-500'
-                      }`}>Document Upload</span>
-                  </div>
-                </div>
+              <div>
+                <label htmlFor="cusafa-reg-confirm-password" className={AUTH_LABEL_CLASS}>
+                  Confirm Password <span aria-hidden="true" className="text-rose-600">*</span>
+                </label>
+                <input
+                  id="cusafa-reg-confirm-password"
+                  name="confirmPassword"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  enterKeyHint="next"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  className={AUTH_INPUT_CLASS}
+                  placeholder="Re-enter password"
+                />
               </div>
 
-              {/* Step 1: Basic Information */}
-              {currentStep === 1 && (
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-800 mb-4">Basic Information</h3>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                      placeholder="Juan Dela Cruz"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                      placeholder="your.email@cusafa.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        required
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                        placeholder="••••••••"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
-                    </div>
-                    <div className="mt-2 text-xs text-gray-600">
-                      <p className="font-medium mb-1">Password must contain:</p>
-                      <ul className="list-disc list-inside space-y-1">
-                        <li>At least 4 characters</li>
-                        <li>One uppercase letter (A-Z)</li>
-                        <li>One lowercase letter (a-z)</li>
-                        <li>One number (0-9)</li>
-                        <li>One special character (@$!%*?&)</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
-                    <input
-                      type="password"
-                      required
-                      value={formData.confirmPassword}
-                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                      placeholder="••••••••"
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={nextStep}
-                    disabled={!canProceedToStep2()}
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl"
-                  >
-                    Next <ChevronRight className="w-5 h-5 ml-2" />
-                  </button>
-                </div>
-              )}
-
-              {/* Step 2: Officer Details */}
-              {currentStep === 2 && (
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-800 mb-4">Officer Details</h3>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Position *</label>
-                    <select
-                      required
-                      value={formData.position}
-                      onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                    >
-                      <option value="">Select Position</option>
-                      <option value="President">President</option>
-                      <option value="Vice President">Vice President</option>
-                      <option value="Treasurer">Treasurer</option>
-                      <option value="Secretary">Secretary</option>
-                      <option value="Auditor">Auditor</option>
-                      <option value="Board Member">Board Member</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Organization Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.associationName}
-                      onChange={(e) => setFormData({ ...formData, associationName: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                      placeholder="CUSAFA"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Contact Number *</label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.contactNumber}
-                      onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                      placeholder="09123456789"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                    <textarea
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                      placeholder="Complete address"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Term Duration</label>
-                    <input
-                      type="text"
-                      value={formData.termDuration}
-                      onChange={(e) => setFormData({ ...formData, termDuration: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                      placeholder="e.g., 2024-2026"
-                    />
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <button
-                      type="button"
-                      onClick={prevStep}
-                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-lg transition-colors flex items-center justify-center"
-                    >
-                      <ChevronLeft className="w-5 h-5 mr-2" /> Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      disabled={!canProceedToStep3()}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl"
-                    >
-                      Next <ChevronRight className="w-5 h-5 ml-2" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Document Upload */}
-              {currentStep === 3 && (
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-800 mb-4">Document Upload</h3>
-
-                  {/* Profile Photo */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Profile Photo (Optional)
-                    </label>
-                    {profilePhotoPreview ? (
-                      <div className="relative">
-                        <img
-                          src={profilePhotoPreview}
-                          alt="Profile preview"
-                          className="w-full h-48 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removePhoto('profile')}
-                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                        <Camera className="w-8 h-8 text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500">Click to upload photo</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handlePhotoUpload(e, 'profile')}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                  </div>
-
-                  {/* Valid ID Photo */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Valid ID Photo (Optional)
-                    </label>
-                    {validIdPreview ? (
-                      <div className="relative">
-                        <img
-                          src={validIdPreview}
-                          alt="ID preview"
-                          className="w-full h-48 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removePhoto('id')}
-                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                        <FileText className="w-8 h-8 text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500">Click to upload ID</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handlePhotoUpload(e, 'id')}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                  </div>
-
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800">
-                    <p className="font-medium mb-1">⚠️ Verification Required</p>
-                    <p>Your account will be pending verification after registration. An administrator will review and approve your account before you can login.</p>
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <button
-                      type="button"
-                      onClick={prevStep}
-                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-lg transition-colors flex items-center justify-center"
-                    >
-                      <ChevronLeft className="w-5 h-5 mr-2" /> Back
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
-                    >
-                      {loading ? 'Registering...' : 'Register'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-            </form>
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  disabled={!canProceedToStep2()}
+                  className={`${AUTH_PRIMARY_BTN_CLASS} w-auto`}
+                >
+                  <span>Next Step</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           )}
 
-          {/* Footer */}
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500 text-center">
-              Authorized personnel only. All activities are logged and monitored.
-              <br />
-              Protected by reCAPTCHA and secured with SSL encryption.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+          {currentStep === 2 && (
+            <div className="space-y-3.5">
+              <div>
+                <label htmlFor="cusafa-position" className={AUTH_LABEL_CLASS}>
+                  Position <span aria-hidden="true" className="text-rose-600">*</span>
+                </label>
+                <select
+                  id="cusafa-position"
+                  name="position"
+                  required
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  className={AUTH_INPUT_CLASS}
+                >
+                  <option value="">Select Position</option>
+                  <option value="President">President</option>
+                  <option value="Vice President">Vice President</option>
+                  <option value="Treasurer">Treasurer</option>
+                  <option value="Secretary">Secretary</option>
+                  <option value="Auditor">Auditor</option>
+                  <option value="Board Member">Board Member</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="cusafa-association-name" className={AUTH_LABEL_CLASS}>
+                  Organization Name <span aria-hidden="true" className="text-rose-600">*</span>
+                </label>
+                <input
+                  id="cusafa-association-name"
+                  name="associationName"
+                  type="text"
+                  autoComplete="organization"
+                  required
+                  value={formData.associationName}
+                  onChange={(e) => setFormData({ ...formData, associationName: e.target.value })}
+                  className={AUTH_INPUT_CLASS}
+                  placeholder="CUSAFA"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="cusafa-contact" className={AUTH_LABEL_CLASS}>
+                    Contact Number <span aria-hidden="true" className="text-rose-600">*</span>
+                  </label>
+                  <input
+                    id="cusafa-contact"
+                    name="contactNumber"
+                    type="tel"
+                    autoComplete="tel"
+                    required
+                    value={formData.contactNumber}
+                    onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                    className={AUTH_INPUT_CLASS}
+                    placeholder="09123456789"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="cusafa-term" className={AUTH_LABEL_CLASS}>Term Duration</label>
+                  <input
+                    id="cusafa-term"
+                    name="termDuration"
+                    type="text"
+                    value={formData.termDuration}
+                    onChange={(e) => setFormData({ ...formData, termDuration: e.target.value })}
+                    className={AUTH_INPUT_CLASS}
+                    placeholder="e.g., 2024-2026"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="cusafa-address" className={AUTH_LABEL_CLASS}>Address</label>
+                <textarea
+                  id="cusafa-address"
+                  name="address"
+                  rows={2}
+                  autoComplete="street-address"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className={`${AUTH_INPUT_CLASS} resize-y`}
+                  placeholder="Complete address"
+                />
+              </div>
+
+              <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
+                <button type="button" onClick={prevStep} className={AUTH_SECONDARY_BTN_CLASS}>
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  disabled={!canProceedToStep3()}
+                  className={`${AUTH_PRIMARY_BTN_CLASS} w-auto`}
+                >
+                  <span>Next Step</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 3 && (
+            <div className="space-y-4">
+              <div className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-4 space-y-4">
+                <div>
+                  <span className={AUTH_LABEL_CLASS}>Profile Photo (Optional)</span>
+                  {profilePhotoPreview ? (
+                    <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white">
+                      <img src={profilePhotoPreview} alt="Profile preview" className="w-full h-40 object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto('profile')}
+                        aria-label="Remove profile photo"
+                        className="absolute top-2 right-2 p-1.5 bg-white/95 border border-gray-200 text-rose-600 rounded-full hover:bg-rose-50 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-24 bg-white border border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-[#047857] hover:bg-gray-50 transition-colors">
+                      <Camera className="w-5 h-5 text-gray-400 mb-1" />
+                      <span className="text-xs font-medium text-gray-700">Click to upload photo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handlePhotoUpload(e, 'profile')}
+                        className="sr-only"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                <div>
+                  <span className={AUTH_LABEL_CLASS}>Valid ID Photo (Optional)</span>
+                  {validIdPreview ? (
+                    <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white">
+                      <img src={validIdPreview} alt="Valid ID preview" className="w-full h-40 object-contain bg-gray-50" />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto('id')}
+                        aria-label="Remove ID photo"
+                        className="absolute top-2 right-2 p-1.5 bg-white/95 border border-gray-200 text-rose-600 rounded-full hover:bg-rose-50 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-24 bg-white border border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-[#047857] hover:bg-gray-50 transition-colors">
+                      <FileText className="w-5 h-5 text-gray-400 mb-1" />
+                      <span className="text-xs font-medium text-gray-700">Click to upload valid ID</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handlePhotoUpload(e, 'id')}
+                        className="sr-only"
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-[#EAF6F0] border border-[#CBEAD9] p-3.5 text-xs text-gray-800 leading-relaxed">
+                <p className="font-semibold text-[#047857] mb-0.5">Verification Required</p>
+                <p>Your account will be pending verification after registration until approved by a MAO administrator.</p>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
+                <button type="button" onClick={prevStep} className={AUTH_SECONDARY_BTN_CLASS}>
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`${AUTH_PRIMARY_BTN_CLASS} w-auto`}
+                >
+                  {loading ? 'Registering...' : 'Create Officer Account'}
+                </button>
+              </div>
+            </div>
+          )}
+        </form>
+      )}
+    </AuthLayout>
   );
 };

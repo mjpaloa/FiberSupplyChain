@@ -5,12 +5,12 @@ import {
   FileText,
   CheckCircle,
   AlertCircle,
-  Building,
   Mail,
   Plus,
   Upload,
   X
 } from 'lucide-react';
+import { EditorialCard, EditorialCallout, StatusPill } from '../Shared/EditorialUI';
 
 interface AbacaClass {
   enabled: boolean;
@@ -203,29 +203,33 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
     }
   };
 
-  const renderClassCard = (classType: 'class_a' | 'class_b' | 'class_c', label: string, description: string, color: string) => {
+  const renderClassCard = (classType: 'class_a' | 'class_b' | 'class_c', label: string, description: string, tone: 'success' | 'info' | 'warning') => {
     const classData = formData[classType];
 
     return (
-      <div className={`border-2 rounded-2xl p-5 transition-all ${classData.enabled
-          ? `border-${color}-500 bg-${color}-50`
-          : 'border-gray-200 bg-gray-50'
+      <div className={`border rounded-2xl p-5 transition-colors ${classData.enabled
+          ? 'border-[#047857] bg-[#EAF6F0]/40'
+          : 'border-gray-200 bg-[#FAFAFA]'
         }`}>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => handleClassToggle(classType)}
-              className={`p-2 rounded-xl transition-all ${classData.enabled
-                  ? `bg-${color}-500 text-white`
-                  : 'bg-gray-300 text-gray-600'
+              className={`p-2 rounded-xl transition-colors ${classData.enabled
+                  ? 'bg-[#047857] text-white'
+                  : 'bg-white border border-gray-300 text-gray-500 hover:text-gray-900'
                 }`}
+              aria-label={`Toggle ${label}`}
             >
-              {classData.enabled ? <CheckCircle size={20} /> : <Plus size={20} />}
+              {classData.enabled ? <CheckCircle size={18} /> : <Plus size={18} />}
             </button>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">{label}</h3>
-              <p className="text-sm text-gray-600">{description}</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-gray-900 font-sans">{label}</h3>
+                <StatusPill tone={tone}>{classData.enabled ? 'Enabled' : 'Disabled'}</StatusPill>
+              </div>
+              <p className="text-xs text-gray-500 mt-0.5">{description}</p>
             </div>
           </div>
         </div>
@@ -234,11 +238,11 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
           <div className="space-y-4 mt-4 pt-4 border-t border-gray-200">
             {/* Price Input */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Price per KG (₱) <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                Price per KG (₱) <span className="text-red-600">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 font-semibold">₱</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-sm">₱</span>
                 <input
                   type="number"
                   value={classData.price}
@@ -246,7 +250,7 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
                   required={classData.enabled}
                   step="0.01"
                   min="0"
-                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm tabular-nums"
                   placeholder="0.00"
                 />
               </div>
@@ -254,15 +258,15 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
 
             {/* Image Upload */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Reference Image <span className="text-gray-500 text-xs">(Optional)</span>
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                Reference Image <span className="text-gray-400 font-normal normal-case">(Optional)</span>
               </label>
               {!classData.image ? (
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                    <p className="text-sm text-gray-500">Click to upload image</p>
-                    <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
+                <label className="flex flex-col items-center justify-center w-full h-32 border border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-colors">
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <Upload className="w-6 h-6 mb-1.5 text-gray-400" />
+                    <p className="text-xs font-medium text-gray-600">Click to upload image</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">PNG, JPG up to 5MB</p>
                   </div>
                   <input
                     type="file"
@@ -279,14 +283,14 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
                   <img
                     src={classData.image}
                     alt={`${label} reference`}
-                    className="w-full h-48 object-cover rounded-xl"
+                    className="w-full h-48 object-cover rounded-xl border border-gray-200"
                   />
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(classType)}
-                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    className="absolute top-2 right-2 p-1.5 bg-white border border-gray-200 text-red-600 rounded-full hover:bg-red-50 transition-colors shadow-sm"
                   >
-                    <X size={16} />
+                    <X size={15} />
                   </button>
                 </div>
               )}
@@ -298,44 +302,34 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
   };
 
   return (
-    <div className="w-full max-w-full">
+    <div className="w-full max-w-full space-y-6">
       {/* Success/Error Message */}
       {message && (
-        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 shadow-sm ${message.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
-          }`}>
-          {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-          <span className="font-medium">{message.text}</span>
+        <div className={`p-4 rounded-xl flex items-center gap-3 border text-sm font-medium ${
+          message.type === 'success'
+            ? 'bg-[#EAF6F0] text-[#047857] border-[#CBEAD9]'
+            : 'bg-[#FEE2E2] text-[#991B1B] border-[#FECACA]'
+        }`}>
+          {message.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+          <span>{message.text}</span>
         </div>
       )}
 
       {/* Info Banner */}
-      <div className="mb-8 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl shadow-sm">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={22} />
-          <div>
-            <p className="text-blue-900 font-bold mb-1.5 text-base">📢 Public Listing</p>
-            <p className="text-blue-800 text-sm leading-relaxed">
-              Your price listing will be publicly visible to all farmers, associations, MAO officers, and CUSAFA.
-              Upload reference images to help farmers identify the quality standards you're looking for.
-            </p>
-          </div>
-        </div>
-      </div>
+      <EditorialCallout tone="amber" title="Public Listing:">
+        Your price listing will be publicly visible to all farmers, associations, MAO officers, and CUSAFA. Upload reference images to help farmers identify the quality standards you're looking for.
+      </EditorialCallout>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Company Information Card */}
-        <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-7 border border-gray-100">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm">
-              <Building className="text-white" size={24} />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">Company Information</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <EditorialCard
+          title="Company Information"
+          subtitle="Contact details displayed on your public buying offer"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Company Name <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Company Name <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -343,14 +337,14 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
                 value={formData.company_name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white"
                 placeholder="Enter company name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Contact Person <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Contact Person <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -358,50 +352,50 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
                 value={formData.contact_person}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white"
                 placeholder="Enter contact person name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Phone Number <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Phone Number <span className="text-red-600">*</span>
               </label>
               <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                 <input
                   type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
+                  className="w-full pl-10 pr-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white"
                   placeholder="+63 912 345 6789"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Email Address <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Email Address <span className="text-red-600">*</span>
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
+                  className="w-full pl-10 pr-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white"
                   placeholder="email@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Municipality <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Municipality <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -409,14 +403,14 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
                 value={formData.municipality}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white"
                 placeholder="Enter municipality"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Barangay <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Barangay <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -424,70 +418,59 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
                 value={formData.barangay}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white"
                 placeholder="Enter barangay"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Complete Address/Location <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Complete Address / Location <span className="text-red-600">*</span>
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3.5 top-3.5 text-gray-400" size={18} />
+                <MapPin className="absolute left-3.5 top-3 text-gray-400" size={16} />
                 <textarea
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-gray-50 hover:bg-white resize-none"
+                  className="w-full pl-10 pr-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white resize-none"
                   rows={2}
                   placeholder="Enter complete address or landmark"
                 />
               </div>
             </div>
           </div>
-        </div>
+        </EditorialCard>
 
         {/* Abaca Classes Pricing Card */}
-        <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-7 border border-gray-100">
-          <div className="flex items-start gap-3 mb-6 pb-4 border-b border-gray-100">
-            <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-sm flex items-center justify-center">
-              <span className="text-white text-3xl font-bold">₱</span>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">Abaca Classes & Pricing</h2>
-              <p className="text-sm text-gray-600 leading-relaxed">Enable and set prices for the abaca classes you want to buy. Upload reference images to show quality standards.</p>
-            </div>
+        <EditorialCard
+          title="Abaca Classes & Pricing"
+          subtitle="Enable and set prices for the abaca classes you want to buy"
+        >
+          <div className="space-y-4">
+            {renderClassCard('class_a', 'Class A', 'Premium quality abaca fiber', 'success')}
+            {renderClassCard('class_b', 'Class B', 'Standard quality abaca fiber', 'info')}
+            {renderClassCard('class_c', 'Class C', 'Basic quality abaca fiber', 'warning')}
           </div>
-
-          <div className="space-y-5">
-            {renderClassCard('class_a', 'Class A', 'Premium quality abaca fiber', 'emerald')}
-            {renderClassCard('class_b', 'Class B', 'Standard quality abaca fiber', 'blue')}
-            {renderClassCard('class_c', 'Class C', 'Basic quality abaca fiber', 'amber')}
-          </div>
-        </div>
+        </EditorialCard>
 
         {/* Payment & Terms Card */}
-        <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 p-7 border border-gray-100">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-sm">
-              <FileText className="text-white" size={24} />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">Payment Terms & Requirements</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <EditorialCard
+          title="Payment Terms & Requirements"
+          subtitle="Set availability and quality specifications"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Payment Terms <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Payment Terms <span className="text-red-600">*</span>
               </label>
               <select
                 name="payment_terms"
                 value={formData.payment_terms}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm bg-gray-50 hover:bg-white"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white"
               >
                 <option value="">Select payment terms</option>
                 {paymentTermsOptions.map(term => (
@@ -497,15 +480,15 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Availability Status <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Availability Status <span className="text-red-600">*</span>
               </label>
               <select
                 name="availability"
                 value={formData.availability}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm bg-gray-50 hover:bg-white"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white"
               >
                 <option value="Available">Available - Actively Buying</option>
                 <option value="Limited">Limited - Low Demand</option>
@@ -514,47 +497,47 @@ const BuyerPriceListingFormWithClasses: React.FC<BuyerPriceListingFormWithClasse
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Requirements & Specifications
               </label>
               <div className="relative">
-                <FileText className="absolute left-3.5 top-3.5 text-gray-400" size={18} />
+                <FileText className="absolute left-3.5 top-3 text-gray-400" size={16} />
                 <textarea
                   name="requirements"
                   value={formData.requirements}
                   onChange={handleInputChange}
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm bg-gray-50 hover:bg-white resize-none"
+                  className="w-full pl-10 pr-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none text-sm bg-white resize-none"
                   rows={4}
                   placeholder="Enter your specific requirements (e.g., moisture content, fiber length, color, packaging, delivery preferences, etc.)"
                 />
               </div>
             </div>
           </div>
-        </div>
+        </EditorialCard>
 
         {/* Submit Button */}
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex justify-end gap-3 pt-2">
           <button
             type="button"
             onClick={() => onCancel ? onCancel() : window.location.reload()}
-            className="px-8 py-3.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-semibold border border-gray-300"
+            className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-semibold text-sm"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-10 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2.5"
+            className="px-6 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {submitting ? (
               <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                Creating Listing...
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Creating Listing...</span>
               </>
             ) : (
               <>
-                <CheckCircle size={20} />
-                Create Price Listing
+                <CheckCircle size={16} />
+                <span>Create Price Listing</span>
               </>
             )}
           </button>

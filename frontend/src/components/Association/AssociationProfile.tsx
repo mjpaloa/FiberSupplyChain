@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
-  User,
   Mail,
   Phone,
   MapPin,
   Briefcase,
   Building2,
-  Calendar,
-  Clock,
-  Users,
-  CheckCircle,
   AlertCircle,
   Edit,
   ArrowLeft,
   Shield
 } from 'lucide-react';
+import { EditorialCard, StatusPill } from '../Shared/EditorialUI';
 
 interface AssociationOfficer {
   officer_id: string;
@@ -95,165 +91,141 @@ const AssociationProfile: React.FC<AssociationProfileProps> = ({ onBack, onEditP
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 border-t-[#047857]"></div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-600">Failed to load profile</p>
-        </div>
-      </div>
+      <EditorialCard className="py-16 text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+        <p className="text-sm font-medium text-gray-700">Failed to load profile</p>
+      </EditorialCard>
     );
   }
 
   const getVerificationBadge = () => {
     if (profile.is_verified) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs sm:text-sm font-semibold">
-          <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-          Verified
-        </span>
-      );
+      return <StatusPill tone="success">Verified</StatusPill>;
     }
-    return (
-      <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-xs sm:text-sm font-semibold">
-          <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-          {profile.verification_status || 'Pending'}
-        </span>
-    );
+    return <StatusPill tone="warning">{profile.verification_status || 'Pending'}</StatusPill>;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
-      <div className="p-3 sm:p-4 md:p-6">
-        {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </button>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-xs font-semibold"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </button>
+      </div>
 
-        {/* Profile Card */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          {/* Profile Header */}
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 sm:p-6 md:p-8">
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-              {/* Profile Picture */}
-              {profile.profile_picture ? (
-                <img
-                  src={profile.profile_picture}
-                  alt={profile.full_name}
-                  className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white shadow-xl"
-                />
-              ) : (
-                <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-white text-emerald-600 flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-bold border-4 border-white shadow-xl">
-                  {profile.full_name.charAt(0).toUpperCase()}
-                </div>
-              )}
-
-              {/* Basic Info */}
-              <div className="flex-1 text-center sm:text-left">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">
-                  {profile.full_name}
-                </h1>
-                <p className="text-sm sm:text-base text-emerald-100 mb-3">{profile.position}</p>
-                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-                  {getVerificationBadge()}
-                  <span className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold ${
-                    profile.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {profile.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Edit Button */}
-              <button
-                onClick={onEditProfile}
-                className="px-4 sm:px-6 py-2 sm:py-3 bg-white text-emerald-600 rounded-xl hover:bg-emerald-50 transition-all shadow-lg font-semibold text-xs sm:text-sm flex items-center gap-2"
-              >
-                <Edit className="w-4 h-4" />
-                Edit Profile
-              </button>
-            </div>
-          </div>
-
-          {/* Profile Details */}
-          <div className="p-4 sm:p-6 md:p-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-              {/* Contact Information */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-5 md:p-6 rounded-xl border border-blue-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase">Email</h3>
-                </div>
-                <p className="text-sm sm:text-base text-gray-900 font-semibold break-all">{profile.email}</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-5 md:p-6 rounded-xl border border-green-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase">Contact</h3>
-                </div>
-                <p className="text-sm sm:text-base text-gray-900 font-semibold">{profile.contact_number}</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 sm:p-5 md:p-6 rounded-xl border border-purple-200 sm:col-span-2 md:col-span-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase">Address</h3>
-                </div>
-                <p className="text-sm sm:text-base text-gray-900 font-semibold">{profile.address}</p>
-              </div>
-
-              {/* Organization Information */}
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 sm:p-5 md:p-6 rounded-xl border border-orange-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase">Association</h3>
-                </div>
-                <p className="text-sm sm:text-base text-gray-900 font-semibold">{profile.association_name}</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-4 sm:p-5 md:p-6 rounded-xl border border-indigo-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase">Position</h3>
-                </div>
-                <p className="text-sm sm:text-base text-gray-900 font-semibold">{profile.position}</p>
-              </div>
-
-            </div>
-
-            {/* Valid ID Photo */}
-            {profile.valid_id_photo && (
-              <div className="mt-6 sm:mt-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <Shield className="w-5 h-5 text-gray-700" />
-                  <h3 className="text-sm sm:text-base font-bold text-gray-700 uppercase">Valid ID</h3>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <img
-                    src={profile.valid_id_photo}
-                    alt="Valid ID"
-                    className="max-w-full h-auto rounded-lg shadow-md"
-                  />
-                </div>
+      {/* Profile Header & Details */}
+      <EditorialCard noPadding>
+        <div className="p-6 border-b border-gray-200 bg-white">
+          <div className="flex flex-col sm:flex-row items-center gap-5">
+            {profile.profile_picture ? (
+              <img
+                src={profile.profile_picture}
+                alt={profile.full_name}
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border border-gray-200 flex-shrink-0"
+              />
+            ) : (
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center text-3xl font-bold flex-shrink-0">
+                {profile.full_name.charAt(0).toUpperCase()}
               </div>
             )}
+
+            <div className="flex-1 text-center sm:text-left min-w-0">
+              <h2 className="font-serif text-2xl font-bold text-gray-900 truncate">
+                {profile.full_name}
+              </h2>
+              <p className="text-sm text-gray-500 mt-0.5 mb-3">{profile.position}</p>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                {getVerificationBadge()}
+                <StatusPill tone={profile.is_active ? 'success' : 'neutral'}>
+                  {profile.is_active ? 'Active' : 'Inactive'}
+                </StatusPill>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onEditProfile}
+              className="px-4 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors font-semibold text-xs sm:text-sm inline-flex items-center gap-2 flex-shrink-0"
+            >
+              <Edit className="w-4 h-4" />
+              Edit Profile
+            </button>
           </div>
         </div>
-      </div>
+
+        <div className="p-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-[#F8F9FA] p-4 rounded-xl border border-gray-200">
+              <div className="flex items-center gap-2 mb-2 text-gray-500">
+                <Mail className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">Email</span>
+              </div>
+              <p className="text-sm text-gray-900 font-semibold break-all">{profile.email}</p>
+            </div>
+
+            <div className="bg-[#F8F9FA] p-4 rounded-xl border border-gray-200">
+              <div className="flex items-center gap-2 mb-2 text-gray-500">
+                <Phone className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">Contact</span>
+              </div>
+              <p className="text-sm text-gray-900 font-semibold tabular-nums">{profile.contact_number}</p>
+            </div>
+
+            <div className="bg-[#F8F9FA] p-4 rounded-xl border border-gray-200 sm:col-span-2 lg:col-span-1">
+              <div className="flex items-center gap-2 mb-2 text-gray-500">
+                <MapPin className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">Address</span>
+              </div>
+              <p className="text-sm text-gray-900 font-semibold">{profile.address}</p>
+            </div>
+
+            <div className="bg-[#F8F9FA] p-4 rounded-xl border border-gray-200">
+              <div className="flex items-center gap-2 mb-2 text-gray-500">
+                <Building2 className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">Association</span>
+              </div>
+              <p className="text-sm text-gray-900 font-semibold">{profile.association_name}</p>
+            </div>
+
+            <div className="bg-[#F8F9FA] p-4 rounded-xl border border-gray-200">
+              <div className="flex items-center gap-2 mb-2 text-gray-500">
+                <Briefcase className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">Position</span>
+              </div>
+              <p className="text-sm text-gray-900 font-semibold">{profile.position}</p>
+            </div>
+          </div>
+
+          {profile.valid_id_photo && (
+            <div className="pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Shield className="w-4 h-4 text-gray-600" />
+                <h3 className="font-serif text-base font-bold text-gray-900">Valid ID</h3>
+              </div>
+              <div className="bg-[#F8F9FA] rounded-xl p-4 border border-gray-200 inline-block">
+                <img
+                  src={profile.valid_id_photo}
+                  alt="Valid ID"
+                  className="max-w-full max-h-72 h-auto rounded-lg border border-gray-200"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </EditorialCard>
     </div>
   );
 };

@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
   Search,
-  Filter,
   Eye,
   Trash2,
-  Calendar,
   Package,
   Users,
   X,
-  CheckCircle,
-  Sprout,
-  MapPin
+  Sprout
 } from 'lucide-react';
+import {
+  KpiStrip,
+  EditorialCard,
+  StatusPill,
+  EditorialCallout
+} from '../Shared/EditorialUI';
 
 interface FarmerInfo {
   farmer_id: string;
@@ -47,30 +49,30 @@ interface FarmerDistribution {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  distributed_to_farmer: '🌱 Distributed',
-  planted: '✅ Planted',
-  damaged: '❌ Damaged',
-  replanted: '🔄 Replanted',
-  lost: '⚠️ Lost',
-  other: '📋 Other'
+  distributed_to_farmer: 'Distributed',
+  planted: 'Planted',
+  damaged: 'Damaged',
+  replanted: 'Replanted',
+  lost: 'Lost',
+  other: 'Other'
 };
 
-const STATUS_CLASSES: Record<string, string> = {
-  distributed_to_farmer: 'bg-blue-500 text-white',
-  planted: 'bg-emerald-500 text-white',
-  damaged: 'bg-red-500 text-white',
-  replanted: 'bg-amber-500 text-white',
-  lost: 'bg-gray-600 text-white',
-  other: 'bg-purple-500 text-white'
+const STATUS_TONES: Record<string, 'info' | 'success' | 'danger' | 'warning' | 'neutral'> = {
+  distributed_to_farmer: 'info',
+  planted: 'success',
+  damaged: 'danger',
+  replanted: 'warning',
+  lost: 'neutral',
+  other: 'neutral'
 };
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Status' },
-  { value: 'distributed_to_farmer', label: '🌱 Distributed' },
-  { value: 'planted', label: '✅ Planted' },
-  { value: 'damaged', label: '❌ Damaged' },
-  { value: 'replanted', label: '🔄 Replanted' },
-  { value: 'lost', label: '⚠️ Lost' }
+  { value: 'distributed_to_farmer', label: 'Distributed' },
+  { value: 'planted', label: 'Planted' },
+  { value: 'damaged', label: 'Damaged' },
+  { value: 'replanted', label: 'Replanted' },
+  { value: 'lost', label: 'Lost' }
 ];
 
 const AssociationSeedlingDistribution: React.FC = () => {
@@ -177,7 +179,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
         throw new Error(message || 'Failed to delete farmer distribution.');
       }
 
-      alert('? Farmer distribution deleted successfully.');
+      alert('✅ Farmer distribution deleted successfully.');
       fetchFarmerDistributions();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete farmer distribution.';
@@ -216,9 +218,9 @@ const AssociationSeedlingDistribution: React.FC = () => {
   };
 
   const renderStatusBadge = (status: string) => (
-    <span className={`inline-block px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${STATUS_CLASSES[status] || 'bg-gray-500 text-white'}`}>
-      {STATUS_LABELS[status] || '? Unknown'}
-    </span>
+    <StatusPill tone={STATUS_TONES[status] || 'neutral'}>
+      {STATUS_LABELS[status] || 'Unknown'}
+    </StatusPill>
   );
 
   const stats = {
@@ -232,75 +234,53 @@ const AssociationSeedlingDistribution: React.FC = () => {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-700 font-medium">
+        <EditorialCallout tone="rose" title="Error">
           {error}
-        </div>
+        </EditorialCallout>
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Package size={24} />
-            </div>
-          </div>
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">TOTAL DISTRIBUTIONS</p>
-          <p className="text-4xl font-black mb-3">{stats.total}</p>
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <Package size={16} />
-            <span>To farmers</span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <CheckCircle size={24} />
-            </div>
-          </div>
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">PLANTED</p>
-          <p className="text-4xl font-black mb-3">{stats.planted}</p>
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <CheckCircle size={16} />
-            <span>Successfully planted</span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-6 shadow-lg text-white">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Sprout size={24} />
-            </div>
-          </div>
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-2">TOTAL SEEDLINGS</p>
-          <p className="text-4xl font-black mb-3">{stats.totalQuantity.toLocaleString()}</p>
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <Sprout size={16} />
-            <span>Distributed overall</span>
-          </div>
-        </div>
-      </div>
+      <KpiStrip
+        columns={3}
+        items={[
+          {
+            label: 'Total Distributions',
+            value: stats.total.toLocaleString(),
+            subtext: 'To farmers',
+          },
+          {
+            label: 'Planted',
+            value: stats.planted.toLocaleString(),
+            subtext: 'Successfully planted',
+          },
+          {
+            label: 'Total Seedlings',
+            value: stats.totalQuantity.toLocaleString(),
+            subtext: 'Distributed overall',
+          },
+        ]}
+      />
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 mb-6">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+      <EditorialCard>
+        <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
               placeholder="Search variety or farmer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm bg-gray-50 hover:bg-white"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
             />
           </div>
 
-          <div className="flex gap-4 w-full md:w-auto">
+          <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full md:w-auto">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm bg-gray-50 hover:bg-white"
+              aria-label="Filter distributions by status"
+              className="w-full md:w-auto px-3.5 py-2.5 border border-gray-300 rounded-xl bg-white text-sm text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -310,11 +290,12 @@ const AssociationSeedlingDistribution: React.FC = () => {
             </select>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 whitespace-nowrap">Show:</span>
+              <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Show:</span>
               <select
                 value={itemsPerPage}
                 onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm bg-gray-50 hover:bg-white"
+                aria-label="Items per page"
+                className="px-3 py-2.5 border border-gray-300 rounded-xl bg-white text-sm text-gray-800 font-medium tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-[#047857] transition-colors"
               >
                 <option value={10}>10</option>
                 <option value={20}>20</option>
@@ -323,98 +304,100 @@ const AssociationSeedlingDistribution: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </EditorialCard>
 
       {/* Table Container */}
-      <div className="bg-white rounded-2xl shadow-md p-7 border border-gray-100">
+      <EditorialCard noPadding>
         {loading ? (
           <div className="p-12 text-center">
-            <div className="relative w-16 h-16 mx-auto mb-4">
-              <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
-              <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-            </div>
-            <p className="text-gray-600 font-medium">Loading farmer distributions...</p>
+            <div className="w-10 h-10 mx-auto mb-3 rounded-full border-2 border-gray-200 border-t-[#047857] animate-spin"></div>
+            <p className="text-sm text-gray-500 font-medium">Loading farmer distributions...</p>
           </div>
         ) : filteredDistributions.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <Users className="w-10 h-10 text-gray-400" />
+            <div className="w-14 h-14 mx-auto mb-4 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center">
+              <Users className="w-7 h-7 text-gray-400" />
             </div>
-            <p className="text-gray-700 font-semibold text-lg mb-2">No farmer distributions found</p>
-            <p className="text-sm text-gray-500">Use the inventory page to distribute seedlings to farmers.</p>
+            <p className="text-gray-700 font-semibold text-base mb-1">No farmer distributions found</p>
+            <p className="text-xs text-gray-500">Use the inventory page to distribute seedlings to farmers.</p>
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div className="table-wrapper" tabIndex={0} role="region" aria-label="Farmer seedling distributions">
               <table className="w-full">
-                  <thead className="bg-gray-50 rounded-t-xl">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Variety</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Farmer</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Location</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Variety</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Quantity</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Farmer</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {currentDistributions.map((distribution) => (
+                    <tr key={distribution.distribution_id} className="hover:bg-gray-50/70 transition-colors">
+                      <td className="px-4 py-3.5 text-sm text-gray-900">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                          {distribution.variety}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-xs sm:text-sm text-gray-600 tabular-nums whitespace-nowrap">
+                        {formatDate(distribution.date_distributed)}
+                      </td>
+                      <td className="px-4 py-3.5 text-sm text-gray-900 font-semibold tabular-nums">
+                        {distribution.quantity_distributed.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3.5 text-sm text-gray-900 font-medium">
+                        {distribution.farmers?.full_name || 'N/A'}
+                      </td>
+                      <td className="px-4 py-3.5 text-sm text-gray-600">
+                        {distribution.farmers?.municipality || 'N/A'}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        {renderStatusBadge(distribution.status)}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openViewModal(distribution)}
+                            className="p-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+                            title="View Details"
+                            aria-label="View details"
+                          >
+                            <Eye size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteFarmerDistribution(distribution.distribution_id)}
+                            className="p-2 rounded-xl border border-gray-200 bg-white text-red-600 hover:bg-red-50 transition-colors"
+                            title="Delete"
+                            aria-label="Delete distribution"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="bg-white">
-                    {currentDistributions.map((distribution) => (
-                      <tr key={distribution.distribution_id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-lg text-xs font-semibold">
-                            {distribution.variety}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900">
-                          {formatDate(distribution.date_distributed)}
-                        </td>
-                        <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900 font-semibold">
-                          {distribution.quantity_distributed.toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900">
-                          {distribution.farmers?.full_name || 'N/A'}
-                        </td>
-                        <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-900">
-                          {distribution.farmers?.municipality || 'N/A'}
-                        </td>
-                        <td className="px-4 py-3 border-b border-gray-100">
-                          {renderStatusBadge(distribution.status)}
-                        </td>
-                        <td className="px-4 py-3 border-b border-gray-100">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => openViewModal(distribution)}
-                              className="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-blue-100 text-blue-700 hover:bg-blue-200"
-                              title="View Details"
-                            >
-                              <Eye size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteFarmerDistribution(distribution.distribution_id)}
-                              className="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-red-100 text-red-700 hover:bg-red-200"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             {/* Pagination Footer */}
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 border-t border-gray-200 bg-[#FAFAFA]">
+              <p className="text-xs text-gray-500 tabular-nums">
                 Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredDistributions.length)} of {filteredDistributions.length} entries
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
+                  type="button"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  className="px-3.5 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium text-gray-700"
                 >
                   Previous
                 </button>
@@ -431,12 +414,13 @@ const AssociationSeedlingDistribution: React.FC = () => {
                   }
                   return (
                     <button
+                      type="button"
                       key={page}
                       onClick={() => handlePageChange(page)}
-                      className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium ${
+                      className={`px-3 py-1.5 rounded-xl border transition-colors text-xs font-semibold tabular-nums ${
                         currentPage === page
-                          ? 'bg-emerald-500 text-white border-emerald-500'
-                          : 'border-gray-300 hover:bg-gray-50'
+                          ? 'bg-[#E59500] text-gray-900 border-[#E59500]'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                       }`}
                     >
                       {page}
@@ -444,9 +428,10 @@ const AssociationSeedlingDistribution: React.FC = () => {
                   );
                 })}
                 <button
+                  type="button"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages || totalPages === 0}
-                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  className="px-3.5 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium text-gray-700"
                 >
                   Next
                 </button>
@@ -454,144 +439,154 @@ const AssociationSeedlingDistribution: React.FC = () => {
             </div>
           </>
         )}
-      </div>
+      </EditorialCard>
 
       {showViewModal && selectedDistribution && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl sm:rounded-t-3xl">
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-2xl w-full max-h-[92vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
               <div className="flex-1 min-w-0 mr-2">
-                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 truncate">Farmer Distribution Details</h2>
-                <p className="text-xs sm:text-sm text-gray-500 truncate">{selectedDistribution.variety}</p>
+                <h2 className="font-serif text-xl font-bold text-gray-900 truncate">Farmer Distribution Details</h2>
+                <p className="text-xs text-gray-500 truncate mt-0.5">{selectedDistribution.variety}</p>
               </div>
-              <button onClick={closeViewModal} className="p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0">
-                <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+              <button
+                type="button"
+                onClick={closeViewModal}
+                aria-label="Close modal"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500 flex-shrink-0"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div className="p-6 space-y-5">
               {/* Distribution Summary */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-blue-200">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
-                  <Package className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+              <div className="bg-[#F8F9FA] rounded-xl p-4 sm:p-5 border border-gray-200">
+                <h3 className="font-serif text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Package className="w-4 h-4 text-[#047857]" />
                   Distribution Summary
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Variety</p>
-                    <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{selectedDistribution.variety}</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Variety</p>
+                    <p className="font-semibold text-sm text-gray-900 break-words">{selectedDistribution.variety}</p>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Quantity</p>
-                    <p className="font-semibold text-sm sm:text-base text-gray-900">{selectedDistribution.quantity_distributed.toLocaleString()} seedlings</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Quantity</p>
+                    <p className="font-semibold text-sm text-gray-900 tabular-nums">{selectedDistribution.quantity_distributed.toLocaleString()} seedlings</p>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Date Distributed</p>
-                    <p className="font-semibold text-sm sm:text-base text-gray-900">{formatDate(selectedDistribution.date_distributed)}</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Date Distributed</p>
+                    <p className="font-semibold text-sm text-gray-900 tabular-nums">{formatDate(selectedDistribution.date_distributed)}</p>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Status</p>
+                    <p className="text-xs text-gray-500 mb-1">Status</p>
                     {renderStatusBadge(selectedDistribution.status)}
                   </div>
                 </div>
               </div>
 
               {/* Farmer Information */}
-              <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-emerald-200">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
-                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+              <div className="bg-[#F8F9FA] rounded-xl p-4 sm:p-5 border border-gray-200">
+                <h3 className="font-serif text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#047857]" />
                   Farmer Information
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Name</p>
-                    <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{selectedDistribution.farmers?.full_name || 'N/A'}</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Name</p>
+                    <p className="font-semibold text-sm text-gray-900 break-words">{selectedDistribution.farmers?.full_name || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Contact Number</p>
-                    <p className="font-semibold text-sm sm:text-base text-gray-900 break-all">{selectedDistribution.farmers?.contact_number || 'N/A'}</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Contact Number</p>
+                    <p className="font-semibold text-sm text-gray-900 break-all tabular-nums">{selectedDistribution.farmers?.contact_number || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Email</p>
-                    <p className="font-semibold text-sm sm:text-base text-gray-900 break-all">{selectedDistribution.farmers?.email || 'N/A'}</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Email</p>
+                    <p className="font-semibold text-sm text-gray-900 break-all">{selectedDistribution.farmers?.email || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Barangay</p>
-                    <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{selectedDistribution.farmers?.barangay || 'N/A'}</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Barangay</p>
+                    <p className="font-semibold text-sm text-gray-900 break-words">{selectedDistribution.farmers?.barangay || 'N/A'}</p>
                   </div>
                   <div className="sm:col-span-2">
-                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Municipality</p>
-                    <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{selectedDistribution.farmers?.municipality || 'N/A'}</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Municipality</p>
+                    <p className="font-semibold text-sm text-gray-900 break-words">{selectedDistribution.farmers?.municipality || 'N/A'}</p>
                   </div>
                 </div>
               </div>
 
               {/* Planting Information - Always show */}
-              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-teal-200">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
-                  <Sprout className="w-4 h-4 sm:w-5 sm:h-5 text-teal-600" />
-                  🌱 Planting Information
+              <div className="bg-[#F8F9FA] rounded-xl p-4 sm:p-5 border border-gray-200">
+                <h3 className="font-serif text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Sprout className="w-4 h-4 text-[#047857]" />
+                  Planting Information
                 </h3>
                 {selectedDistribution.planting_date ? (
-                  <div className="space-y-3 sm:space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-3.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-1">Planting Date</p>
-                        <p className="font-semibold text-sm sm:text-base text-gray-900">{formatDate(selectedDistribution.planting_date)}</p>
+                        <p className="text-xs text-gray-500 mb-0.5">Planting Date</p>
+                        <p className="font-semibold text-sm text-gray-900 tabular-nums">{formatDate(selectedDistribution.planting_date)}</p>
                       </div>
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-1">Planting Location</p>
-                        <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{selectedDistribution.planting_location || 'Not specified'}</p>
+                        <p className="text-xs text-gray-500 mb-0.5">Planting Location</p>
+                        <p className="font-semibold text-sm text-gray-900 break-words">{selectedDistribution.planting_location || 'Not specified'}</p>
                       </div>
                     </div>
                     {selectedDistribution.planting_notes && (
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-1">Planting Notes</p>
-                        <p className="font-semibold text-sm sm:text-base text-gray-900 bg-white rounded-lg p-3 border border-teal-200 break-words">{selectedDistribution.planting_notes}</p>
+                        <p className="text-xs text-gray-500 mb-1">Planting Notes</p>
+                        <p className="text-sm text-gray-900 bg-white rounded-xl p-3 border border-gray-200 break-words">{selectedDistribution.planting_notes}</p>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-4">
-                    <p className="text-gray-500 text-sm">Not yet planted</p>
-                  </div>
+                  <p className="text-gray-500 text-xs py-2">Not yet planted</p>
                 )}
               </div>
 
               {/* Remarks */}
               {selectedDistribution.remarks && (
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-purple-200">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-                    Remarks
-                  </h3>
-                  <p className="font-medium text-sm sm:text-base text-gray-900 bg-white rounded-lg p-3 border border-purple-200 break-words">{selectedDistribution.remarks}</p>
+                <div className="bg-[#F8F9FA] rounded-xl p-4 sm:p-5 border border-gray-200">
+                  <h3 className="font-serif text-base font-bold text-gray-900 mb-2">Remarks</h3>
+                  <p className="text-sm text-gray-900 bg-white rounded-xl p-3 border border-gray-200 break-words">{selectedDistribution.remarks}</p>
                 </div>
               )}
 
               {/* Source Distribution */}
               {selectedDistribution.association_seedling_distributions && (
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-amber-200">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
-                    <Package className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
-                    📦 Source Distribution
+                <div className="bg-[#F8F9FA] rounded-xl p-4 sm:p-5 border border-gray-200">
+                  <h3 className="font-serif text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <Package className="w-4 h-4 text-[#E59500]" />
+                    Source Distribution
                   </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <p className="text-xs sm:text-sm text-gray-600 mb-1">Variety</p>
-                      <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{selectedDistribution.association_seedling_distributions.variety}</p>
+                      <p className="text-xs text-gray-500 mb-0.5">Variety</p>
+                      <p className="font-semibold text-sm text-gray-900 break-words">{selectedDistribution.association_seedling_distributions.variety}</p>
                     </div>
                     <div>
-                      <p className="text-xs sm:text-sm text-gray-600 mb-1">Supplier</p>
-                      <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{selectedDistribution.association_seedling_distributions.source_supplier || 'N/A'}</p>
+                      <p className="text-xs text-gray-500 mb-0.5">Supplier</p>
+                      <p className="font-semibold text-sm text-gray-900 break-words">{selectedDistribution.association_seedling_distributions.source_supplier || 'N/A'}</p>
                     </div>
                     <div className="sm:col-span-2">
-                      <p className="text-xs sm:text-sm text-gray-600 mb-1">Distribution Date</p>
-                      <p className="font-semibold text-sm sm:text-base text-gray-900">{formatDate(selectedDistribution.association_seedling_distributions.date_distributed)}</p>
+                      <p className="text-xs text-gray-500 mb-0.5">Distribution Date</p>
+                      <p className="font-semibold text-sm text-gray-900 tabular-nums">{formatDate(selectedDistribution.association_seedling_distributions.date_distributed)}</p>
                     </div>
                   </div>
                 </div>
               )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 bg-[#FAFAFA] flex justify-end rounded-b-2xl">
+              <button
+                type="button"
+                onClick={closeViewModal}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

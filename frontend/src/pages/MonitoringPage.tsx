@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import MonitoringDashboard from '../components/MAO/MonitoringDashboard';
 import { MonitoringRecord } from '../types/monitoring';
 import { generateMonitoringId } from '../utils/monitoringHelpers';
-import { cacheData, getCachedData } from '../utils/cookieManager';
+import { EditorialCard } from '../components/Shared/EditorialUI';
 
 /**
  * Monitoring Page - Main page for field monitoring system
@@ -86,17 +86,7 @@ const MonitoringPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // Try to get cached data first for better performance
-      const cached = getCachedData('monitoring_records');
-      if (cached) {
-        setRecords(cached);
-        setLoading(false);
-        // Still fetch fresh data in background
-        fetchFreshData();
-        return;
-      }
-
-      // Fetch from API
+      // Fetch from API (cached automatically by apiCache; invalidated on mutations)
       await fetchFreshData();
     } catch (err) {
       setError('Failed to load monitoring records. Please try again.');
@@ -155,9 +145,6 @@ const MonitoringPage: React.FC = () => {
       })) || [];
 
       setRecords(mappedRecords);
-      
-      // Cache the data for 30 minutes
-      cacheData('monitoring_records', mappedRecords, 30);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching fresh data:', err);
@@ -352,34 +339,33 @@ const MonitoringPage: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading monitoring records...</p>
-        </div>
-      </div>
+      <EditorialCard className="py-14 text-center">
+        <div className="w-12 h-12 border-4 border-gray-200 border-t-[#047857] rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-sm text-gray-600 font-medium">Loading monitoring records...</p>
+      </EditorialCard>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="py-12 flex items-center justify-center p-4">
+        <EditorialCard className="max-w-md w-full text-center">
+          <div className="w-14 h-14 bg-red-50 border border-red-200 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Data</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h2 className="font-serif text-xl font-bold text-gray-900 mb-2">Error Loading Data</h2>
+          <p className="text-sm text-gray-600 mb-6">{error}</p>
           <button
+            type="button"
             onClick={loadMonitoringRecords}
-            className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition-all font-semibold"
+            className="px-5 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold"
           >
             Try Again
           </button>
-        </div>
+        </EditorialCard>
       </div>
     );
   }

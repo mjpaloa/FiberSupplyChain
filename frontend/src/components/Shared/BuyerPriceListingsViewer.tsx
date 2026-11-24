@@ -2,23 +2,14 @@ import React, { useState, useEffect } from 'react';
 import {
   Phone,
   MapPin,
-  FileText,
-  Calendar,
   Building,
   Search,
   TrendingUp,
-  CheckCircle,
-  Clock,
-  XCircle,
-  ChevronLeft,
-  ChevronRight,
-  Activity,
-  Award,
   X,
-  ZoomIn,
   Coins,
   ClipboardList
 } from 'lucide-react';
+import { EditorialCard, KpiStrip, StatusPill } from './EditorialUI';
 
 interface BuyerListing {
   listing_id: string;
@@ -102,23 +93,11 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
   const getAvailabilityBadge = (availability: string) => {
     switch (availability) {
       case 'Available':
-        return (
-          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-800">
-            Available
-          </span>
-        );
+        return <StatusPill tone="success">Available</StatusPill>;
       case 'Limited':
-        return (
-          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-yellow-100 text-yellow-800">
-            Limited
-          </span>
-        );
+        return <StatusPill tone="warning">Limited</StatusPill>;
       case 'Not Buying':
-        return (
-          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-100 text-red-800">
-            Not Buying
-          </span>
-        );
+        return <StatusPill tone="danger">Not Buying</StatusPill>;
       default:
         return null;
     }
@@ -197,119 +176,130 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
   };
 
 
+  const getRankBadgeClass = (rank: number) => {
+    if (rank === 1) return 'bg-[#E59500] text-gray-900';
+    if (rank === 2) return 'bg-gray-200 text-gray-800';
+    return 'bg-amber-100 text-[#78350F]';
+  };
+
   return (
-    <div className="space-y-6 p-2 md:space-y-8 md:p-6">
+    <div className="space-y-6">
+      <KpiStrip
+        columns={4}
+        items={[
+          {
+            label: 'Active Listings',
+            value: stats.total,
+            subtext: `${municipalities.length} municipalities`,
+          },
+          {
+            label: 'Available Buyers',
+            value: stats.available,
+            accentSubtext: 'Currently purchasing',
+          },
+          {
+            label: 'Top Class A Offer',
+            value: topClassA[0] ? `₱${topClassA[0].price.toFixed(2)}` : '—',
+            subtext: topClassA[0]?.company || 'No active offers',
+          },
+          {
+            label: 'Top Class B Offer',
+            value: topClassB[0] ? `₱${topClassB[0].price.toFixed(2)}` : '—',
+            subtext: topClassB[0]?.company || 'No active offers',
+          },
+        ]}
+      />
+
       {/* Top Buyers Ranking Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Class A Top Buyers */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-          <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 px-6 py-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-                <TrendingUp className="text-white" size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-emerald-900">Class A</h3>
-                <p className="text-xs text-emerald-700 font-medium">Premium Fiber</p>
-              </div>
-            </div>
-          </div>
-          <div className="p-6 space-y-3">
+        <EditorialCard
+          title="Class A"
+          subtitle="Premium Fiber"
+          actions={<TrendingUp className="w-4 h-4 text-[#047857]" />}
+        >
+          <div className="space-y-2.5">
             {topClassA.length > 0 ? (
               topClassA.map((buyer) => (
-                <div key={buyer.rank} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-emerald-50 hover:border-emerald-300 transition-all">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
-                    buyer.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
-                      'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
-                    }`}>
+                <div
+                  key={buyer.rank}
+                  className="flex items-center gap-3 p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200 hover:border-gray-300 transition-colors"
+                >
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs tabular-nums flex-shrink-0 ${getRankBadgeClass(buyer.rank)}`}>
                     {buyer.rank}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">{buyer.company}</p>
-                    <p className="text-xs text-emerald-600 font-semibold">₱{buyer.price.toFixed(2)}/kg</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{buyer.company}</p>
+                    <p className="text-xs text-[#047857] font-semibold tabular-nums">₱{buyer.price.toFixed(2)}/kg</p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500 text-center py-8">No buyers available</p>
+              <p className="text-sm text-gray-500 text-center py-6">No buyers available</p>
             )}
           </div>
-        </div>
+        </EditorialCard>
 
         {/* Class B Top Buyers */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-                <TrendingUp className="text-white" size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-blue-900">Class B</h3>
-                <p className="text-xs text-blue-700 font-medium">Standard Fiber</p>
-              </div>
-            </div>
-          </div>
-          <div className="p-6 space-y-3">
+        <EditorialCard
+          title="Class B"
+          subtitle="Standard Fiber"
+          actions={<TrendingUp className="w-4 h-4 text-sky-700" />}
+        >
+          <div className="space-y-2.5">
             {topClassB.length > 0 ? (
               topClassB.map((buyer) => (
-                <div key={buyer.rank} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-all">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
-                    buyer.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
-                      'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
-                    }`}>
+                <div
+                  key={buyer.rank}
+                  className="flex items-center gap-3 p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200 hover:border-gray-300 transition-colors"
+                >
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs tabular-nums flex-shrink-0 ${getRankBadgeClass(buyer.rank)}`}>
                     {buyer.rank}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">{buyer.company}</p>
-                    <p className="text-xs text-blue-600 font-semibold">₱{buyer.price.toFixed(2)}/kg</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{buyer.company}</p>
+                    <p className="text-xs text-sky-700 font-semibold tabular-nums">₱{buyer.price.toFixed(2)}/kg</p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500 text-center py-8">No buyers available</p>
+              <p className="text-sm text-gray-500 text-center py-6">No buyers available</p>
             )}
           </div>
-        </div>
+        </EditorialCard>
 
         {/* Class C Top Buyers */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-          <div className="bg-gradient-to-r from-amber-50 to-amber-100 px-6 py-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
-                <TrendingUp className="text-white" size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-amber-900">Class C</h3>
-                <p className="text-xs text-amber-700 font-medium">Basic Fiber</p>
-              </div>
-            </div>
-          </div>
-          <div className="p-6 space-y-3">
+        <EditorialCard
+          title="Class C"
+          subtitle="Basic Fiber"
+          actions={<TrendingUp className="w-4 h-4 text-[#92400E]" />}
+        >
+          <div className="space-y-2.5">
             {topClassC.length > 0 ? (
               topClassC.map((buyer) => (
-                <div key={buyer.rank} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-amber-50 hover:border-amber-300 transition-all">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md ${buyer.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' :
-                    buyer.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
-                      'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'
-                    }`}>
+                <div
+                  key={buyer.rank}
+                  className="flex items-center gap-3 p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200 hover:border-gray-300 transition-colors"
+                >
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs tabular-nums flex-shrink-0 ${getRankBadgeClass(buyer.rank)}`}>
                     {buyer.rank}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">{buyer.company}</p>
-                    <p className="text-xs text-amber-600 font-semibold">₱{buyer.price.toFixed(2)}/kg</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{buyer.company}</p>
+                    <p className="text-xs text-[#92400E] font-semibold tabular-nums">₱{buyer.price.toFixed(2)}/kg</p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500 text-center py-8">No buyers available</p>
+              <p className="text-sm text-gray-500 text-center py-6">No buyers available</p>
             )}
           </div>
-        </div>
+        </EditorialCard>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200 mb-8">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+        <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
@@ -317,15 +307,15 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
               placeholder="Search company, municipality..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm bg-gray-50 hover:bg-white"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition-colors text-sm bg-white text-gray-900"
             />
           </div>
 
-          <div className="flex gap-4 w-full md:w-auto">
+          <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full md:w-auto">
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm bg-gray-50 hover:bg-white"
+              className="w-full sm:w-auto px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition-colors text-sm bg-white text-gray-700"
             >
               <option value="all">All Types</option>
               <option value="class_a">Class A</option>
@@ -334,9 +324,20 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
             </select>
 
             <select
+              value={filterMunicipality}
+              onChange={(e) => setFilterMunicipality(e.target.value)}
+              className="w-full sm:w-auto px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition-colors text-sm bg-white text-gray-700"
+            >
+              <option value="all">All Municipalities</option>
+              {municipalities.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+
+            <select
               value={filterAvailability}
               onChange={(e) => setFilterAvailability(e.target.value)}
-              className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm bg-gray-50 hover:bg-white"
+              className="w-full sm:w-auto px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition-colors text-sm bg-white text-gray-700"
             >
               <option value="all">All Status</option>
               <option value="Available">Available</option>
@@ -350,16 +351,16 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
       {/* Listings Grid */}
       {loading ? (
         <div className="flex justify-center items-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#047857] border-t-transparent"></div>
         </div>
       ) : filteredListings.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-          <Building className="mx-auto text-gray-400 mb-4" size={48} />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Listings Found</h3>
-          <p className="text-gray-600">No buyer price listings match your current filters.</p>
+        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+          <Building className="mx-auto text-gray-400 mb-3" size={40} />
+          <h3 className="font-serif text-lg font-bold text-gray-900 mb-1">No Listings Found</h3>
+          <p className="text-sm text-gray-500">No buyer price listings match your current filters.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredListings.map((listing) => {
             // Get all available class types with their prices
             type ClassInfo = {
@@ -382,9 +383,9 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                 price: listing.class_a_price,
                 image: listing.class_a_image,
                 quality: 'Premium Quality',
-                bgColor: 'bg-emerald-50',
-                textColor: 'text-emerald-700',
-                borderColor: 'border-emerald-300'
+                bgColor: 'bg-[#EAF6F0]/60',
+                textColor: 'text-[#047857]',
+                borderColor: 'border-[#CBEAD9]'
               } : null,
               listing.class_b_enabled ? {
                 type: 'b',
@@ -393,9 +394,9 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                 price: listing.class_b_price,
                 image: listing.class_b_image,
                 quality: 'Standard Quality',
-                bgColor: 'bg-blue-50',
-                textColor: 'text-blue-700',
-                borderColor: 'border-blue-300'
+                bgColor: 'bg-sky-50/60',
+                textColor: 'text-sky-800',
+                borderColor: 'border-sky-200'
               } : null,
               listing.class_c_enabled ? {
                 type: 'c',
@@ -404,24 +405,29 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                 price: listing.class_c_price,
                 image: listing.class_c_image,
                 quality: 'Basic Quality',
-                bgColor: 'bg-amber-50',
-                textColor: 'text-amber-700',
-                borderColor: 'border-amber-300'
+                bgColor: 'bg-[#FFFBEB]',
+                textColor: 'text-[#92400E]',
+                borderColor: 'border-[#FDE68A]'
               } : null
             ].filter((item): item is ClassInfo => item !== null && item.price !== null && item.price > 0);
 
             return (
-              <div key={listing.listing_id} className="bg-white rounded-xl md:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200">
+              <div
+                key={listing.listing_id}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col"
+              >
                 {/* Card Header */}
-                <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-5 md:p-6">
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                      <div className="p-2 bg-white/20 rounded-lg flex-shrink-0">
-                        <Building className="text-white" size={20} />
+                <div className="bg-white border-b border-gray-100 px-5 py-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="p-2 bg-gray-100 border border-gray-200 rounded-xl flex-shrink-0">
+                        <Building className="text-gray-700" size={18} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h2 className="text-base md:text-lg font-bold text-white truncate">{listing.company_name}</h2>
-                        <p className="text-xs md:text-sm text-blue-100 truncate">{listing.contact_person}</p>
+                        <h2 className="font-serif text-base md:text-lg font-bold text-gray-900 truncate">
+                          {listing.company_name}
+                        </h2>
+                        <p className="text-xs text-gray-500 truncate">{listing.contact_person}</p>
                       </div>
                     </div>
                     {getAvailabilityBadge(listing.availability)}
@@ -429,22 +435,24 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                 </div>
 
                 {/* Card Content */}
-                <div className="p-5 md:p-6 space-y-5">
+                <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
                   {/* Classes with Rankings */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {classesInfo.map((classInfo) => {
                       const rank = getRankForListing(listing.listing_id, classInfo.type);
 
                       return (
-                        <div key={classInfo.typeKey} className={`relative ${classInfo.bgColor} ${classInfo.borderColor} border-2 rounded-xl p-4 md:p-5 transition-all hover:shadow-md`}>
+                        <div
+                          key={classInfo.typeKey}
+                          className={`relative ${classInfo.bgColor} ${classInfo.borderColor} border rounded-xl p-4`}
+                        >
                           {/* Ranking Badge */}
                           {rank && (
-                            <div className="absolute -top-2 -right-2 md:-top-3 md:-right-3 z-10">
-                              <div className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full font-black text-sm md:text-base shadow-lg ${rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white ring-4 ring-yellow-200' :
-                                rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white ring-4 ring-gray-200' :
-                                  'bg-gradient-to-br from-orange-400 to-orange-600 text-white ring-4 ring-orange-200'
-                                }`}>
-                                {rank}
+                            <div className="absolute -top-2 -right-2 z-10">
+                              <div
+                                className={`flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs tabular-nums border border-white ${getRankBadgeClass(rank)}`}
+                              >
+                                #{rank}
                               </div>
                             </div>
                           )}
@@ -452,12 +460,12 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                           <div className="flex items-center justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className={`px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-bold ${classInfo.textColor} bg-white`}>
+                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border border-gray-200 ${classInfo.textColor} bg-white`}>
                                   {classInfo.label}
                                 </span>
+                                <span className="text-xs text-gray-500">{classInfo.quality}</span>
                               </div>
-                              <p className="text-xs text-gray-600 mb-1">{classInfo.quality}</p>
-                              <p className={`text-2xl md:text-3xl font-black ${classInfo.textColor}`}>
+                              <p className={`text-2xl font-bold tabular-nums ${classInfo.textColor}`}>
                                 ₱{classInfo.price?.toFixed(2)}
                               </p>
                               <p className="text-xs text-gray-500">per kilogram</p>
@@ -465,16 +473,18 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
 
                             {/* Image Thumbnail */}
                             {classInfo.image && (
-                              <div
-                                className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform flex-shrink-0"
+                              <button
+                                type="button"
+                                className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0 bg-white"
                                 onClick={() => setImageModal({ isOpen: true, imageUrl: classInfo.image!, label: `${listing.company_name} - ${classInfo.label}` })}
+                                aria-label={`View ${listing.company_name} ${classInfo.label} image`}
                               >
                                 <img
                                   src={classInfo.image}
                                   alt={classInfo.label}
                                   className="w-full h-full object-cover"
                                 />
-                              </div>
+                              </button>
                             )}
                           </div>
                         </div>
@@ -483,36 +493,36 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                   </div>
 
                   {/* Details Grid - 2 Column Layout */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
                     <div className="flex items-start gap-2">
-                      <Phone size={14} className="text-indigo-600 mt-0.5 flex-shrink-0" />
+                      <Phone size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 font-medium">Contact</p>
-                        <p className="text-xs md:text-sm text-gray-900 font-semibold">{listing.phone}</p>
+                        <p className="text-[11px] text-gray-500 font-medium">Contact</p>
+                        <p className="text-xs md:text-sm text-gray-900 font-medium tabular-nums truncate">{listing.phone}</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <MapPin size={14} className="text-indigo-600 mt-0.5 flex-shrink-0" />
+                      <MapPin size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 font-medium">Location</p>
-                        <p className="text-xs md:text-sm text-gray-900 font-semibold">{listing.barangay}, {listing.municipality}</p>
+                        <p className="text-[11px] text-gray-500 font-medium">Location</p>
+                        <p className="text-xs md:text-sm text-gray-900 font-medium truncate">{listing.barangay}, {listing.municipality}</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <Coins size={14} className="text-indigo-600 mt-0.5 flex-shrink-0" />
+                      <Coins size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 font-medium">Payment</p>
-                        <p className="text-xs md:text-sm text-gray-900 font-semibold">{listing.payment_terms}</p>
+                        <p className="text-[11px] text-gray-500 font-medium">Payment</p>
+                        <p className="text-xs md:text-sm text-gray-900 font-medium truncate">{listing.payment_terms}</p>
                       </div>
                     </div>
 
                     {listing.requirements && (
                       <div className="flex items-start gap-2">
-                        <ClipboardList size={14} className="text-indigo-600 mt-0.5 flex-shrink-0" />
+                        <ClipboardList size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 font-medium">Requirements</p>
+                          <p className="text-[11px] text-gray-500 font-medium">Requirements</p>
                           <p className="text-xs md:text-sm text-gray-700 line-clamp-2">{listing.requirements}</p>
                         </div>
                       </div>
@@ -528,24 +538,31 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
       {/* Image Modal */}
       {imageModal.isOpen && (
         <div
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 animate-fadeIn"
+          className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] z-50 flex items-center justify-center p-4"
           onClick={() => setImageModal({ isOpen: false, imageUrl: '', label: '' })}
         >
-          <button
-            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-200"
-            onClick={() => setImageModal({ isOpen: false, imageUrl: '', label: '' })}
+          <div
+            className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
           >
-            <X className="text-white" size={24} />
-          </button>
-          <div className="max-w-6xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="bg-white rounded-t-2xl p-4">
-              <h3 className="text-lg font-bold text-gray-900">{imageModal.label}</h3>
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4">
+              <h3 className="font-serif text-lg font-bold text-gray-900 truncate">{imageModal.label}</h3>
+              <button
+                type="button"
+                aria-label="Close image preview"
+                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
+                onClick={() => setImageModal({ isOpen: false, imageUrl: '', label: '' })}
+              >
+                <X size={20} />
+              </button>
             </div>
-            <img
-              src={imageModal.imageUrl}
-              alt={imageModal.label}
-              className="w-full h-auto max-h-[80vh] object-contain bg-gray-100"
-            />
+            <div className="p-4 bg-[#F8F9FA] flex items-center justify-center overflow-auto">
+              <img
+                src={imageModal.imageUrl}
+                alt={imageModal.label}
+                className="w-full h-auto max-h-[75vh] object-contain rounded-xl"
+              />
+            </div>
           </div>
         </div>
       )}

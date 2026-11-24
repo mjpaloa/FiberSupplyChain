@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
   UserCheck,
@@ -77,19 +77,27 @@ if (typeof document !== 'undefined') {
 
 import UserManagement from './UserManagement';
 import OfficerManagement from './OfficerManagement';
-import MaintenanceToggle from './MaintenanceToggle';
+import AdminUserManual from './AdminUserManual';
 import AssociationSeedlingManagement from './AssociationSeedlingManagement';
 import PlantedSeedlings from './PlantedSeedlings';
 import MonitoringPage from '../../pages/MonitoringPage';
-import ArticleManagement from './ArticleManagement';
-import TeamManagement from './TeamManagement';
 import MAOHarvestVerificationPage from '../../pages/MAOHarvestVerificationPage';
 import UnifiedSalesManagement from './UnifiedSalesManagement';
 import BuyerPriceListingsViewer from '../Shared/BuyerPriceListingsViewer';
 import DeliveryTrackingMonitor from './DeliveryTrackingMonitor';
-import ActivityLogsManagement from './ActivityLogsManagement';
 import UserAnalyticsDashboard from './UserAnalyticsDashboard';
 import SalesAnalyticsDashboard from './SalesAnalyticsDashboard';
+import {
+  EditorialShell,
+  EditorialNavItem,
+  KpiStrip,
+  EditorialCard,
+  SegmentedToggle,
+  StatusPill,
+  KeepAlivePages,
+  useCacheState,
+  EDITORIAL_CHART,
+} from '../Shared/EditorialUI';
 
 
 interface MAODashboardProps {
@@ -152,8 +160,7 @@ interface DashboardState {
 const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'users' | 'officers' | 'maintenance' | 'seedlings' | 'seedlings-overview' | 'monitoring' | 'content' | 'harvests' | 'sales-analytics' | 'sales-performance' | 'buyer-prices' | 'delivery-tracking' | 'activity-logs'>('dashboard');
-  const [contentTab, setContentTab] = useState<'articles' | 'team'>('articles');
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'manual' | 'users' | 'officers' | 'seedlings' | 'seedlings-overview' | 'monitoring' | 'harvests' | 'sales-analytics' | 'sales-performance' | 'buyer-prices' | 'delivery-tracking'>('dashboard');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -500,50 +507,50 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     if (!isOpen) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-        <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-          <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 rounded-t-3xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                  <Eye className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-white">{title}</h3>
-                  <p className="text-sm text-white/80 font-medium">
-                    {view === 'monthly' ? 'Monthly' : 'Yearly'} Insights
-                  </p>
-                </div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[1px]" onClick={onClose}>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-[#EAF6F0] rounded-xl text-[#047857]">
+                <Eye className="w-5 h-5" />
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-white/20 rounded-xl transition-all"
-              >
-                <X className="w-6 h-6 text-white" />
-              </button>
+              <div>
+                <h3 className="font-serif text-lg font-bold text-gray-900">{title}</h3>
+                <p className="text-xs text-gray-500 font-medium">
+                  {view === 'monthly' ? 'Monthly' : 'Yearly'} Insights
+                </p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-3">
             {insights.map((insight, idx) => (
               <div
                 key={idx}
-                className="flex gap-4 p-4 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200/50 hover:shadow-md transition-all"
+                className="flex gap-3.5 p-4 bg-[#F8F9FA] rounded-xl border border-gray-200"
               >
-                <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg">
+                <div className="flex-shrink-0 w-7 h-7 bg-[#EAF6F0] border border-[#CBEAD9] rounded-full flex items-center justify-center text-[#047857] font-bold text-xs tabular-nums">
                   {idx + 1}
                 </div>
-                <p className="text-gray-700 font-medium leading-relaxed flex-1">
+                <p className="text-sm text-gray-700 leading-relaxed flex-1">
                   {insight}
                 </p>
               </div>
             ))}
           </div>
 
-          <div className="sticky bottom-0 bg-gray-50 p-4 rounded-b-3xl border-t border-gray-200">
+          <div className="sticky bottom-0 bg-white px-6 py-4 border-t border-gray-200 flex justify-end">
             <button
+              type="button"
               onClick={onClose}
-              className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg"
+              className="px-5 py-2 bg-[#047857] text-white text-sm font-semibold rounded-xl hover:bg-[#065F46] transition-colors"
             >
               Close Insights
             </button>
@@ -886,37 +893,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     return insights.length > 0 ? insights : ['No data available for insights'];
   };
 
-  // Modern Stats Card Component - Premium Design
-  const StatsCard: React.FC<{
-    title: string;
-    value: string | number;
-    subValue: string | React.ReactNode;
-    icon: React.ReactNode;
-    gradient: string;
-    unit?: string;
-  }> = ({ title, value, subValue, icon, gradient, unit }) => (
-    <div className={`group relative bg-gradient-to-br ${gradient} rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 overflow-hidden`}>
-      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm shadow-inner group-hover:bg-white/30 transition-all">
-            {icon}
-          </div>
-          <Activity size={20} className="opacity-40 group-hover:opacity-100 transition-opacity" />
-        </div>
-        <h3 className="text-xs md:text-sm font-semibold opacity-90 mb-2 tracking-wide uppercase">{title}</h3>
-        <p className="text-3xl md:text-4xl font-black mb-1 drop-shadow-sm">
-          {value} {unit && <span className="text-xl md:text-2xl font-bold opacity-80">{unit}</span>}
-        </p>
-        <div className="flex items-center gap-2 text-xs opacity-80 mt-1 font-medium">
-          <Clock size={12} />
-          <span>{subValue}</span>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Modern Animated Pie Chart Component - Same as Buyer Dashboard
+  // Flat Editorial Donut Chart Component
   const AnimatedPieChart: React.FC<{
     data: { name: string; value: number; fill: string; percentage: number }[],
     centerLabel?: string,
@@ -925,49 +902,21 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     let currentAngle = -90;
 
-    // Filter out items with 0 value to avoid display issues
     const validData = data.filter(item => item.value > 0);
     const total = validData.reduce((sum, item) => sum + item.value, 0);
 
     return (
-      <div className="relative w-full h-80 flex items-center justify-center">
-        <svg viewBox="0 0 240 240" className="w-64 h-64 drop-shadow-2xl" style={{ filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.15))' }}>
-          <defs>
-            {validData.map((item, idx) => (
-              <linearGradient key={`grad-${idx}`} id={`pie-grad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor={item.fill} />
-                <stop offset="100%" stopColor={`${item.fill}dd`} />
-              </linearGradient>
-            ))}
-            <filter id="shadow-pie" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
-              <feOffset dx="0" dy="4" result="offsetblur" />
-              <feComponentTransfer>
-                <feFuncA type="linear" slope="0.3" />
-              </feComponentTransfer>
-              <feMerge>
-                <feMergeNode />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <radialGradient id="gradient-center">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="100%" stopColor="#f3f4f6" />
-            </radialGradient>
-          </defs>
-
+      <div className="relative w-full h-64 flex items-center justify-center">
+        <svg viewBox="0 0 240 240" className="w-56 h-56">
           {validData.length === 1 ? (
-            // Full Circle special case
             <circle
               cx="120"
               cy="120"
-              r={hoveredIndex === 0 ? 95 : 90}
-              fill="url(#pie-grad-0)"
-              filter="url(#shadow-pie)"
+              r={hoveredIndex === 0 ? 92 : 88}
+              fill={validData[0].fill}
               onMouseEnter={() => setHoveredIndex(0)}
               onMouseLeave={() => setHoveredIndex(null)}
-              className="cursor-pointer transition-all duration-500 ease-out"
-              style={{ transformOrigin: '120px 120px' }}
+              className="cursor-pointer transition-all duration-200"
             />
           ) : (
             validData.map((item, index) => {
@@ -975,82 +924,56 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
               const angle = (percentage / 100) * 360;
               const startAngle = currentAngle;
               const endAngle = currentAngle + angle;
-              const midAngle = (startAngle + endAngle) / 2;
               currentAngle = endAngle;
 
               const startRad = (startAngle * Math.PI) / 180;
               const endRad = (endAngle * Math.PI) / 180;
-              const midRad = (midAngle * Math.PI) / 180;
 
-              const radius = hoveredIndex === index ? 95 : 90;
+              const radius = hoveredIndex === index ? 92 : 88;
               const x1 = 120 + radius * Math.cos(startRad);
               const y1 = 120 + radius * Math.sin(startRad);
               const x2 = 120 + radius * Math.cos(endRad);
               const y2 = 120 + radius * Math.sin(endRad);
 
-              const labelRadius = 68;
-              const labelX = 120 + labelRadius * Math.cos(midRad);
-              const labelY = 120 + labelRadius * Math.sin(midRad);
-
               const largeArc = angle > 180 ? 1 : 0;
 
               return (
-                <g
+                <path
                   key={index}
+                  d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                  fill={item.fill}
+                  stroke="#FFFFFF"
+                  strokeWidth={2}
                   onMouseEnter={() => setHoveredIndex(index)}
                   onMouseLeave={() => setHoveredIndex(null)}
-                  className="cursor-pointer outline-none"
-                >
-                  <path
-                    d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                    fill={`url(#pie-grad-${index})`}
-                    filter="url(#shadow-pie)"
-                    className="transition-all duration-500 ease-out"
-                    style={{
-                      transform: hoveredIndex === index ? 'scale(1.05)' : 'scale(1)',
-                      transformOrigin: '120px 120px',
-                      opacity: hoveredIndex === null || hoveredIndex === index ? 1 : 0.7
-                    }}
-                  />
-                  {percentage > 10 && (
-                    <text
-                      x={labelX}
-                      y={labelY}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      className="text-[10px] font-bold fill-white"
-                      style={{ pointerEvents: 'none', textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
-                    >
-                      {percentage.toFixed(0)}%
-                    </text>
-                  )}
-                </g>
+                  className="cursor-pointer transition-opacity duration-200"
+                  style={{
+                    opacity: hoveredIndex === null || hoveredIndex === index ? 1 : 0.65
+                  }}
+                />
               );
             })
           )}
 
-          {/* Inner Circle for Donut Effect */}
-          <circle cx="120" cy="120" r="58" fill="white" />
-          <circle cx="120" cy="120" r="55" fill="url(#gradient-center)" className="shadow-inner" />
+          <circle cx="120" cy="120" r="56" fill="#FFFFFF" />
         </svg>
 
-        {/* Center Label */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full max-w-[100px] flex flex-col items-center justify-center">
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full max-w-[104px] flex flex-col items-center justify-center">
           {hoveredIndex !== null && validData[hoveredIndex] ? (
             <>
-              <p className="text-2xl font-black text-gray-900 leading-none">
+              <p className="text-xl font-bold text-gray-900 tabular-nums leading-none">
                 {((validData[hoveredIndex].value / total) * 100).toFixed(1)}%
               </p>
-              <p className="text-[10px] text-gray-600 font-bold uppercase tracking-wider mt-1 break-words w-full">
+              <p className="text-[11px] text-gray-500 font-medium mt-1 break-words w-full">
                 {validData[hoveredIndex].name}
               </p>
             </>
           ) : (
             <>
-              <p className={`${(centerLabel?.length || 0) > 12 ? 'text-base' : (centerLabel?.length || 0) > 8 ? 'text-lg' : 'text-xl'} font-black text-gray-800 leading-tight mb-0.5 px-1`}>
+              <p className={`${(centerLabel?.length || 0) > 12 ? 'text-sm' : (centerLabel?.length || 0) > 8 ? 'text-base' : 'text-xl'} font-bold text-gray-900 tabular-nums leading-tight mb-0.5 px-1`}>
                 {centerLabel}
               </p>
-              <p className="text-[8px] text-gray-500 font-bold uppercase tracking-tight leading-tight break-words w-full">{centerSubLabel}</p>
+              <p className="text-[10px] text-gray-500 font-medium leading-tight break-words w-full">{centerSubLabel}</p>
             </>
           )}
         </div>
@@ -1481,12 +1404,38 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const { version, manualTick } = useCacheState();
+  const lastDashboardVersionRef = useRef(version);
+  const prevManualTickRef = useRef(manualTick);
+
   // Load profile photo and dashboard data on component mount
   useEffect(() => {
     fetchOfficerProfile();
     fetchDashboardData();
     fetchNotifications();
   }, []);
+
+  // Re-fetch overview dashboard & notifications only when cache invalidates (mutation / manual refresh)
+  useEffect(() => {
+    const manualChanged = prevManualTickRef.current !== manualTick;
+    if (manualChanged) {
+      prevManualTickRef.current = manualTick;
+      lastDashboardVersionRef.current = version;
+      fetchOfficerProfile();
+      fetchNotifications();
+      if (currentPage === 'dashboard') {
+        fetchDashboardData();
+      }
+      return;
+    }
+
+    if (currentPage === 'dashboard' && lastDashboardVersionRef.current !== version) {
+      lastDashboardVersionRef.current = version;
+      fetchDashboardData();
+      fetchNotifications();
+      fetchOfficerProfile();
+    }
+  }, [currentPage, version, manualTick]);
 
   // Sync selected years to latest available data when dashboard data loads
   useEffect(() => {
@@ -1577,852 +1526,486 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     }
   }, [showProfileModal]);
 
+  const maoNavItems: EditorialNavItem[] = [
+    { id: 'dashboard', label: 'Overview', category: 'General', icon: <LayoutDashboard className="w-[18px] h-[18px]" /> },
+    { id: 'manual', label: 'User Manual', category: 'General', icon: <BookOpen className="w-[18px] h-[18px]" /> },
+    { id: 'users', label: 'User Management', category: 'Field Operations', icon: <UserCheck className="w-[18px] h-[18px]" /> },
+    { id: 'seedlings', label: 'Seedling Distribution', category: 'Field Operations', icon: <Sprout className="w-[18px] h-[18px]" /> },
+    { id: 'seedlings-overview', label: 'Planted Seedlings', category: 'Field Operations', icon: <BarChart3 className="w-[18px] h-[18px]" /> },
+    { id: 'monitoring', label: 'Field Monitoring', category: 'Field Operations', icon: <Calendar className="w-[18px] h-[18px]" /> },
+    { id: 'harvests', label: 'Harvest Verification', category: 'Field Operations', icon: <CheckCircle className="w-[18px] h-[18px]" /> },
+    { id: 'sales-analytics', label: 'Sales Management', category: 'Market & Logistics', icon: <TrendingUp className="w-[18px] h-[18px]" /> },
+    { id: 'buyer-prices', label: 'Buyer Price Listings', category: 'Market & Logistics', icon: <Coins className="w-[18px] h-[18px]" /> },
+    { id: 'delivery-tracking', label: 'Delivery Tracking', category: 'Market & Logistics', icon: <Truck className="w-[18px] h-[18px]" /> },
+    { id: 'officers', label: 'Staff Management', category: 'Administration', icon: <Shield className="w-[18px] h-[18px]" />, hidden: !isSuperAdmin },
+  ];
+
+  const pageMeta: Record<string, { title: string; subtitle: string }> = {
+    dashboard: { title: 'Reports & Analytics', subtitle: 'Production, field monitoring, deliveries, and sales for MAO Culiram.' },
+    users: { title: 'User Management', subtitle: 'Manage farmers, buyers, and association coordinator accounts.' },
+    seedlings: { title: 'Seedling Distribution', subtitle: 'Track seedling batches allocated and distributed to associations.' },
+    'seedlings-overview': { title: 'Planted Seedlings', subtitle: 'Monitor farmer planting progress and area coverage.' },
+    monitoring: { title: 'Field Monitoring', subtitle: 'Field visit logs, farm conditions, and support tracking.' },
+    harvests: { title: 'Harvest Verification', subtitle: 'Review and verify submitted farmer abaca fiber harvests.' },
+    'sales-analytics': { title: 'Sales Management', subtitle: 'Review, verify, and manage farmer abaca sales reports.' },
+    'sales-performance': { title: 'Sales Performance Analytics', subtitle: 'Fiber sales breakdown by classification and period.' },
+    'buyer-prices': { title: 'Buyer Price Listings', subtitle: 'Current buying prices published by registered fiber buyers.' },
+    'delivery-tracking': { title: 'Delivery Tracking Monitor', subtitle: 'Track active and completed fiber deliveries across associations.' },
+    officers: { title: 'Staff Management', subtitle: 'Manage MAO administrator and coordinator accounts.' },
+    manual: { title: 'User Manual', subtitle: 'Step-by-step guide sa admin portal, may mga larawan at paliwanag.' },
+  };
+
+  const activeMeta = pageMeta[currentPage] || pageMeta.dashboard;
+
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50">
-      {/* Mobile Backdrop */}
-      {isMobile && sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
-
-      {/* Sidebar */}
-      <aside className={`
-        ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-64' : sidebarOpen ? 'w-64' : 'w-20'}
-        ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
-        bg-gradient-to-b from-slate-800 to-slate-900 text-white 
-        transition-all duration-300 ease-in-out flex flex-col overflow-hidden
-        md:relative md:translate-x-0
-      `}>
-        {/* Logo */}
-        <div className="p-4 md:p-6 flex items-center justify-between border-b border-slate-700">
-          <div className={`transition-all duration-300 ease-in-out ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
-            <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">MAO Culiram</h1>
-            <p className="text-xs text-slate-400 whitespace-nowrap flex items-center gap-1">
-              {isSuperAdmin ? (
-                <><Shield className="w-3 h-3" /> Super Admin Panel</>
+    <>
+      <EditorialShell
+        brandTitle="MAO Culiram"
+        brandSubtitle={isSuperAdmin ? 'Super Admin panel' : 'Admin panel'}
+        navItems={maoNavItems}
+        activeNavId={currentPage}
+        onSelectNav={(id) => setCurrentPage(id as any)}
+        pageTitle={activeMeta.title}
+        pageSubtitle={activeMeta.subtitle}
+        headerActions={
+          currentPage === 'dashboard' ? (
+            <button
+              type="button"
+              onClick={fetchDashboardData}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-xs font-semibold"
+            >
+              <Clock className="w-3.5 h-3.5 text-gray-500" />
+              Refresh data
+            </button>
+          ) : undefined
+        }
+        unreadCount={unreadCount}
+        showNotifications={showNotifications}
+        onToggleNotifications={() => {
+          setShowNotifications(!showNotifications);
+          if (!showNotifications) {
+            setUnreadCount(0);
+            setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+            localStorage.setItem('mao_last_read_at', new Date().toISOString());
+          }
+        }}
+        notificationContent={
+          <div>
+            <div className="px-4 py-3 border-b border-gray-200 bg-[#FAFAFA] flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-900">System Updates</h3>
+              <button
+                type="button"
+                onClick={() => setShowNotifications(false)}
+                className="text-gray-400 hover:text-gray-700 rounded-lg p-1 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-80">
+              {notifications.length === 0 ? (
+                <div className="text-center py-8 px-4">
+                  <Bell className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-gray-500">No new updates</p>
+                </div>
               ) : (
-                <><User className="w-3 h-3" /> Admin Panel</>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 flex-shrink-0 md:block hidden"
-          >
-            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-          {isMobile && (
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-2 hover:bg-slate-700 rounded-lg transition-all duration-200 flex-shrink-0 md:hidden"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-hide">
-          <button
-            onClick={() => setCurrentPage('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'dashboard' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Dashboard</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('users')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'users' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <UserCheck className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>User Management</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('seedlings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'seedlings' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <Sprout className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Seedling Distribution</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('seedlings-overview')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'seedlings-overview' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <BarChart3 className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Planted Seedlings</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('monitoring')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'monitoring' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <Calendar className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Field Monitoring</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('harvests')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'harvests' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <CheckCircle className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Harvest Verification</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('sales-analytics')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${currentPage === 'sales-analytics' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <TrendingUp className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Sales Management</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('buyer-prices')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'buyer-prices' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <Coins className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Buyer Price Listings</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('delivery-tracking')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'delivery-tracking' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <Truck className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Delivery Tracking</span>
-          </button>
-
-          {/* Content Management - Available to all admins */}
-          <button
-            onClick={() => setCurrentPage('content')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'content' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-              } ${!sidebarOpen && 'justify-center'}`}
-          >
-            <FileText className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Content Management</span>
-          </button>
-
-          {/* Staff Management - Super Admin only */}
-          {isSuperAdmin && (
-            <button
-              onClick={() => setCurrentPage('officers')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'officers' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-                } ${!sidebarOpen && 'justify-center'}`}
-            >
-              <Shield className="w-5 h-5 flex-shrink-0" />
-              <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Staff Management</span>
-            </button>
-          )}
-
-          {isSuperAdmin && (
-            <button
-              onClick={() => setCurrentPage('activity-logs')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'activity-logs' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-                } ${!sidebarOpen && 'justify-center'}`}
-            >
-              <Activity className="w-5 h-5 flex-shrink-0" />
-              <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Activity Logs</span>
-            </button>
-          )}
-
-          {/* Maintenance Mode - Super Admin only */}
-          {isSuperAdmin && (
-            <button
-              onClick={() => setCurrentPage('maintenance')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'maintenance' ? 'bg-emerald-600' : 'hover:bg-slate-700'
-                } ${!sidebarOpen && 'justify-center'}`}
-            >
-              <Settings className="w-5 h-5 flex-shrink-0" />
-              <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Maintenance Mode</span>
-            </button>
-          )}
-        </nav>
-
-        {/* Logout */}
-        <div className="p-4 border-t border-slate-700">
-          <button
-            onClick={onLogout}
-            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-red-600 rounded-lg transition-all duration-200 ${!sidebarOpen && 'justify-center'}`}
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {/* Header - Always visible on all pages */}
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 md:px-8 py-4 md:py-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition mr-2"
-            >
-              <Menu className="w-6 h-6 text-gray-600" />
-            </button>
-            <div className="flex-1">
-              <h2 className="text-lg md:text-2xl font-bold text-gray-800">
-                {currentPage === 'dashboard' ? 'Dashboard' :
-                  currentPage === 'users' ? 'User Management' :
-                    currentPage === 'seedlings' ? 'Seedling Distribution' :
-                      currentPage === 'seedlings-overview' ? 'Planted Seedlings' :
-                        currentPage === 'monitoring' ? 'Field Monitoring' :
-                          currentPage === 'harvests' ? 'Harvest Management' :
-                            currentPage === 'sales-analytics' ? 'Sales Management' :
-                              currentPage === 'sales-performance' ? 'Sales Performance Analytics' :
-                                currentPage === 'buyer-prices' ? 'Buyer Price Listings' :
-                                  currentPage === 'delivery-tracking' ? 'Delivery Tracking Monitor' :
-                                    currentPage === 'officers' ? 'Staff Management' :
-                                      currentPage === 'activity-logs' ? 'Activity Logs & Security' :
-                                        currentPage === 'maintenance' ? 'Maintenance Mode' :
-                                          currentPage === 'content' ? 'Content Management' :
-                                            'Dashboard'}
-              </h2>
-              <p className="text-xs md:text-sm text-gray-600 hidden sm:block">
-                Welcome back, {isSuperAdmin ? 'Super Admin' : 'Admin'}
-              </p>
-            </div>
-
-            {/* Notification Bell with Dropdown */}
-            <div className="relative mr-2 md:mr-4">
-              <button
-                onClick={() => {
-                  setShowNotifications(!showNotifications);
-                  if (!showNotifications) {
-                    setUnreadCount(0);
-                    // Update current list to show as read
-                    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
-                    // Save timestamp of when we opened the dropdown
-                    localStorage.setItem('mao_last_read_at', new Date().toISOString());
-                  }
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition relative"
-              >
-                <Bell className="w-5 h-5 md:w-6 md:h-6 text-gray-600" />
-                {unreadCount > 0 && (
-                  <>
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                      {unreadCount}
-                    </span>
-                  </>
-                )}
-              </button>
-
-              {/* Notification Dropdown */}
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-96 overflow-hidden">
-                  {/* Header */}
-                  <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 flex items-center justify-between">
-                    <h3 className="text-white font-bold text-sm">System Updates</h3>
-                    <button
-                      onClick={() => setShowNotifications(false)}
-                      className="text-white hover:bg-white/20 rounded-lg p-1 transition"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Notifications List */}
-                  <div className="overflow-y-auto max-h-80">
-                    {notifications.length === 0 ? (
-                      <div className="text-center py-8 px-4">
-                        <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-sm text-gray-500">No new updates</p>
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-100">
-                        {notifications.map((notif) => (
-                          <div
-                            key={notif.id}
-                            className="px-4 py-3 hover:bg-gray-50 transition cursor-pointer"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${notif.color === 'blue' ? 'bg-blue-100' :
-                                notif.color === 'green' ? 'bg-green-100' :
-                                  notif.color === 'emerald' ? 'bg-emerald-100' :
-                                    notif.color === 'teal' ? 'bg-teal-100' :
-                                      notif.color === 'amber' ? 'bg-amber-100' :
-                                        notif.color === 'purple' ? 'bg-purple-100' :
-                                          notif.color === 'indigo' ? 'bg-indigo-100' :
-                                            notif.color === 'cyan' ? 'bg-cyan-100' : 'bg-gray-100'
-                                }`}>
-                                {notif.icon}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between mb-1">
-                                  <p className="text-sm font-black text-gray-900 leading-tight">
-                                    {notif.title}
-                                  </p>
-                                  {notif.unread && (
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                  )}
-                                </div>
-                                <p className="text-xs text-gray-600 mb-1 leading-relaxed">
-                                  {notif.message}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  {new Date(notif.date).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                  })}
-                                </p>
-                              </div>
-                            </div>
+                <div className="divide-y divide-gray-100">
+                  {notifications.map((notif) => (
+                    <div key={notif.id} className="px-4 py-3 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-sm flex-shrink-0">
+                          {notif.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                            <p className="text-xs font-semibold text-gray-900 leading-tight">{notif.title}</p>
+                            {notif.unread && <span className="w-2 h-2 bg-emerald-600 rounded-full flex-shrink-0" />}
                           </div>
-                        ))}
+                          <p className="text-xs text-gray-600 leading-relaxed">{notif.message}</p>
+                          <p className="text-[11px] text-gray-400 mt-1">
+                            {new Date(notif.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        </div>
                       </div>
-                    )}
-                  </div>
-
-                  {/* Footer */}
-                  {notifications.length > 0 && (
-                    <div className="border-t border-gray-200 px-4 py-2 bg-gray-50">
-                      <button
-                        onClick={() => {
-                          setUnreadCount(0);
-                          setShowNotifications(false);
-                        }}
-                        className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold"
-                      >
-                        Mark all as read
-                      </button>
                     </div>
-                  )}
+                  ))}
                 </div>
               )}
             </div>
-
-            {/* Profile Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                className="flex items-center gap-2 md:gap-3 hover:bg-gray-50 rounded-xl p-2 transition-all duration-200"
-              >
-                <div className="text-right hidden lg:block">
-                  <p className="text-sm font-semibold text-gray-800">
-                    {user?.fullName || 'Coordinator'}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {isSuperAdmin ? (
-                      <span className="text-amber-600 font-semibold flex items-center gap-1"><Shield className="w-3 h-3" /> Super Admin</span>
-                    ) : (
-                      <span className="text-blue-600 font-semibold flex items-center gap-1"><User className="w-3 h-3" /> Admin</span>
-                    )}
-                  </p>
-                </div>
-                {profilePhoto ? (
-                  <img
-                    src={profilePhoto}
-                    alt="Profile"
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-emerald-500 shadow-lg"
-                  />
-                ) : (
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg text-sm md:text-base">
-                    {user?.fullName?.charAt(0) || 'A'}
-                  </div>
-                )}
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showProfileDropdown ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Dropdown Menu */}
-              {showProfileDropdown && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-800">{user?.fullName}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setIsEditMode(false);
-                      setShowProfileModal(true);
-                      setShowProfileDropdown(false);
-                    }}
-                    className="w-full px-4 py-2.5 text-left hover:bg-emerald-50 transition-colors flex items-center gap-3 text-gray-700"
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="text-sm font-medium">View Profile</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditMode(true);
-                      setShowProfileModal(true);
-                      setShowProfileDropdown(false);
-                    }}
-                    className="w-full px-4 py-2.5 text-left hover:bg-emerald-50 transition-colors flex items-center gap-3 text-gray-700"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span className="text-sm font-medium">Edit Profile</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        {currentPage === 'users' ? (
-          <UserManagement />
-        ) : currentPage === 'seedlings' ? (
-          <AssociationSeedlingManagement />
-        ) : currentPage === 'seedlings-overview' ? (
-          <PlantedSeedlings />
-        ) : currentPage === 'monitoring' ? (
-          <MonitoringPage />
-        ) : currentPage === 'harvests' ? (
-          <MAOHarvestVerificationPage />
-        ) : currentPage === 'sales-analytics' ? (
-          <UnifiedSalesManagement />
-        ) : currentPage === 'sales-performance' ? (
-          <SalesAnalyticsDashboard />
-        ) : currentPage === 'buyer-prices' ? (
-          <BuyerPriceListingsViewer userRole="mao" />
-        ) : currentPage === 'delivery-tracking' ? (
-          <DeliveryTrackingMonitor />
-        ) : currentPage === 'officers' ? (
-          <OfficerManagement />
-        ) : currentPage === 'activity-logs' ? (
-          <ActivityLogsManagement />
-        ) : currentPage === 'maintenance' ? (
-          <MaintenanceToggle />
-        ) : currentPage === 'content' ? (
-          /* Content Management with Tabs */
-          <div className="bg-gray-50 min-h-screen">
-            {/* Tabs */}
-            <div className="bg-white border-b border-gray-200 px-8 py-4">
-              <div className="flex gap-4">
+            {notifications.length > 0 && (
+              <div className="border-t border-gray-200 px-4 py-2.5 bg-[#FAFAFA]">
                 <button
-                  onClick={() => setContentTab('articles')}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${contentTab === 'articles'
-                    ? 'bg-emerald-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                  type="button"
+                  onClick={() => {
+                    setUnreadCount(0);
+                    setShowNotifications(false);
+                  }}
+                  className="text-xs text-[#047857] hover:text-[#065F46] font-semibold"
                 >
-                  <BookOpen className="w-5 h-5" />
-                  Articles & News
-                </button>
-                <button
-                  onClick={() => setContentTab('team')}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${contentTab === 'team'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                >
-                  <Users className="w-5 h-5" />
-                  Team Members
+                  Mark all as read
                 </button>
               </div>
-            </div>
-
-            {/* Tab Content */}
-            {contentTab === 'articles' ? <ArticleManagement /> : <TeamManagement />}
+            )}
           </div>
-        ) : (
-          /* Dashboard Content - Simple & Clean Design */
-          <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-            {/* Top Section - Title & Tabs */}
-            <div className="mb-4 md:mb-8">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <div className="flex items-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide pb-2 w-full">
-                  <button
-                    onClick={() => setDashboardSection('production')}
-                    className={`px-3 md:px-4 py-2 text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${dashboardSection === 'production'
-                      ? 'text-emerald-600 border-b-2 border-emerald-600'
-                      : 'text-gray-600 hover:text-gray-800'
-                      }`}
-                  >
-                    Abaca Production
-                  </button>
-                  <button
-                    onClick={() => setDashboardSection('reports')}
-                    className={`px-3 md:px-4 py-2 text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${dashboardSection === 'reports'
-                      ? 'text-emerald-600 border-b-2 border-emerald-600'
-                      : 'text-gray-600 hover:text-gray-800'
-                      }`}
-                  >
-                    <span className="hidden sm:inline">Sales & Delivery</span>
-                    <span className="sm:hidden">Sales & Delivery</span>
-                  </button>
-                  <button
-                    onClick={() => setDashboardSection('users')}
-                    className={`px-3 md:px-4 py-2 text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${dashboardSection === 'users'
-                      ? 'text-emerald-600 border-b-2 border-emerald-600'
-                      : 'text-gray-600 hover:text-gray-800'
-                      }`}
-                  >
-                    <span className="hidden lg:inline">Users (MAO/CUSAFA/Farmers/Buyers)</span>
-                    <span className="lg:hidden">Users</span>
-                  </button>
-                </div>
+        }
+        profileName={user?.fullName || 'Coordinator'}
+        profileRole={isSuperAdmin ? 'Superadmin' : 'MAO Admin'}
+        profileAvatar={profilePhoto}
+        showProfileMenu={showProfileDropdown}
+        onToggleProfileMenu={() => setShowProfileDropdown(!showProfileDropdown)}
+        profileMenuContent={
+          <div className="py-1.5">
+            <div className="px-3.5 py-2 border-b border-gray-100">
+              <p className="text-xs font-semibold text-gray-900 truncate">{user?.fullName}</p>
+              <p className="text-[11px] text-gray-500 truncate">{user?.email}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditMode(false);
+                setShowProfileModal(true);
+                setShowProfileDropdown(false);
+              }}
+              className="w-full px-3.5 py-2 text-left hover:bg-gray-50 transition-colors flex items-center gap-2.5 text-xs font-medium text-gray-700"
+            >
+              <User className="w-3.5 h-3.5 text-gray-500" />
+              View Profile
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditMode(true);
+                setShowProfileModal(true);
+                setShowProfileDropdown(false);
+              }}
+              className="w-full px-3.5 py-2 text-left hover:bg-gray-50 transition-colors flex items-center gap-2.5 text-xs font-medium text-gray-700"
+            >
+              <Settings className="w-3.5 h-3.5 text-gray-500" />
+              Edit Profile
+            </button>
+          </div>
+        }
+        onLogout={onLogout}
+      >
+        {/* Page Content */}
+        <KeepAlivePages
+          activeId={currentPage}
+          pages={{
+            users: () => <UserManagement />,
+            seedlings: () => <AssociationSeedlingManagement />,
+            'seedlings-overview': () => <PlantedSeedlings />,
+            monitoring: () => <MonitoringPage />,
+            harvests: () => <MAOHarvestVerificationPage />,
+            'sales-analytics': () => <UnifiedSalesManagement />,
+            'sales-performance': () => <SalesAnalyticsDashboard />,
+            'buyer-prices': () => <BuyerPriceListingsViewer userRole="mao" />,
+            'delivery-tracking': () => <DeliveryTrackingMonitor />,
+            officers: () => <OfficerManagement />,
+            manual: () => <AdminUserManual />,
+          }}
+        />
+        <div
+          className={currentPage === 'dashboard' ? 'space-y-6' : 'hidden'}
+          aria-hidden={currentPage !== 'dashboard'}
+        >
+            {/* Accessible Dashboard Section Tabs */}
+            <div className="border-b border-gray-200 overflow-x-auto scrollbar-hide">
+              <div role="tablist" aria-label="Analytics sections" className="flex items-center gap-6 min-w-max">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={dashboardSection === 'production'}
+                  onClick={() => setDashboardSection('production')}
+                  className={`relative pb-3 text-sm font-medium transition-colors whitespace-nowrap ${dashboardSection === 'production'
+                    ? 'text-[#047857] font-semibold'
+                    : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                >
+                  Abaca Production
+                  {dashboardSection === 'production' && (
+                    <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#047857] rounded-full" aria-hidden="true" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={dashboardSection === 'reports'}
+                  onClick={() => setDashboardSection('reports')}
+                  className={`relative pb-3 text-sm font-medium transition-colors whitespace-nowrap ${dashboardSection === 'reports'
+                    ? 'text-[#047857] font-semibold'
+                    : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                >
+                  Sales & Delivery
+                  {dashboardSection === 'reports' && (
+                    <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#047857] rounded-full" aria-hidden="true" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={dashboardSection === 'users'}
+                  onClick={() => setDashboardSection('users')}
+                  className={`relative pb-3 text-sm font-medium transition-colors whitespace-nowrap ${dashboardSection === 'users'
+                    ? 'text-[#047857] font-semibold'
+                    : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                >
+                  <span className="hidden lg:inline">Users (MAO / CUSAFA / Farmers / Buyers)</span>
+                  <span className="lg:hidden">Users</span>
+                  {dashboardSection === 'users' && (
+                    <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#047857] rounded-full" aria-hidden="true" />
+                  )}
+                </button>
               </div>
             </div>
 
             {loadingDashboard ? (
               <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#047857]"></div>
               </div>
             ) : (
               <>
                 {/* Abaca Production Section */}
                 {dashboardSection === 'production' && (
-                  <>
-                    {/* 📊 SEEDLING ANALYTICS - Next-Gen Modern Design */}
-                    <div className="mb-6">
-                      <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-semibold text-gray-900">Seedling Analytics</h2>
-                        <button
-                          onClick={fetchDashboardData}
-                          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all shadow-sm"
-                        >
-                          <Clock className="w-4 h-4" />
-                          <span className="text-sm font-medium">Refresh Data</span>
-                        </button>
-                      </div>
+                  <div className="space-y-6">
+                    <KpiStrip
+                      columns={6}
+                      items={[
+                        {
+                          label: 'Received Seedlings (Assoc)',
+                          value: (dashboardData.production?.totalSeedlingsReceived || 0).toLocaleString(),
+                          subtext: 'Total seedlings',
+                        },
+                        {
+                          label: 'Completely Distributed',
+                          value: (dashboardData.production?.totalSeedlingsDistributed || 0).toLocaleString(),
+                          subtext: 'To farmers',
+                        },
+                        {
+                          label: 'Total Monitoring',
+                          value: (dashboardData.production?.totalMonitoringVisits || 0).toLocaleString(),
+                          subtext: 'Monitoring records',
+                        },
+                        {
+                          label: 'Planted Seedlings',
+                          value: (dashboardData.production?.totalSeedlingsPlanted || 0).toLocaleString(),
+                          subtext: 'Successfully planted',
+                        },
+                        {
+                          label: 'Area Planted',
+                          value: `${(dashboardData.production?.totalAreaPlanted || 0).toLocaleString()} ha`,
+                          subtext: 'Total hectares',
+                        },
+                        {
+                          label: 'Harvest Fiber',
+                          value: `${(dashboardData.production?.totalHarvestFiber || 0).toLocaleString()} kg`,
+                          subtext: 'Total harvested',
+                        },
+                      ]}
+                    />
 
-                      {/* Top Stats Cards - Vibrant Gradient Design */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-                        <StatsCard
-                          title="Received Seedlings (Assoc)"
-                          value={(dashboardData.production?.totalSeedlingsReceived || 0).toLocaleString()}
-                          subValue="Total seedlings"
-                          icon={<Package className="w-6 h-6 text-white" />}
-                          gradient="from-orange-500 via-orange-600 to-orange-700"
-                        />
-                        <StatsCard
-                          title="Completely Distributed"
-                          value={(dashboardData.production?.totalSeedlingsDistributed || 0).toLocaleString()}
-                          subValue="To farmers"
-                          icon={<Truck className="w-6 h-6 text-white" />}
-                          gradient="from-blue-500 via-blue-600 to-blue-700"
-                        />
-                        <StatsCard
-                          title="Total Monitoring"
-                          value={(dashboardData.production?.totalMonitoringVisits || 0).toLocaleString()}
-                          subValue="Monitoring records"
-                          icon={<Eye className="w-6 h-6 text-white" />}
-                          gradient="from-indigo-500 via-indigo-600 to-indigo-700"
-                        />
-                        <StatsCard
-                          title="Planted"
-                          value={(dashboardData.production?.totalSeedlingsPlanted || 0).toLocaleString()}
-                          subValue="Seedlings planted"
-                          icon={<Sprout className="w-6 h-6 text-white" />}
-                          gradient="from-purple-500 via-purple-600 to-purple-700"
-                        />
-                        <StatsCard
-                          title="Area Planted"
-                          value={(dashboardData.production?.totalAreaPlanted || 0).toLocaleString()}
-                          subValue="Total hectares"
-                          icon={<BarChart3 className="w-6 h-6 text-white" />}
-                          gradient="from-emerald-500 via-emerald-600 to-emerald-700"
-                          unit="ha"
-                        />
-                        <StatsCard
-                          title="Harvest Fiber"
-                          value={(dashboardData.production?.totalHarvestFiber || 0).toLocaleString()}
-                          subValue="Total harvested"
-                          icon={<Award className="w-6 h-6 text-white" />}
-                          gradient="from-orange-500 via-orange-600 to-orange-700"
-                          unit="kg"
-                        />
-                      </div>
-
-                      {/* Charts Row - Line Chart & Donut Chart */}
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Seedling Analytics Line Chart - Enhanced */}
-                        <div className="lg:col-span-2 bg-white rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                            <div className="flex items-center gap-4">
-                              <div className="w-1.5 h-10 bg-gradient-to-b from-orange-400 to-orange-600 rounded-full shadow-lg shadow-orange-200"></div>
-                              <div>
-                                <h3 className="text-xl font-black text-gray-900 tracking-tight">Seedling Distribution Overview</h3>
-                                <p className="text-sm text-gray-500 font-medium mt-0.5">Monthly seedling distribution statistics</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              {chartView === 'monthly' && (
-                                <select
-                                  className="text-gray-700 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-xl px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                  value={seedlingMonthYear}
-                                  onChange={(e) => setSeedlingMonthYear(parseInt(e.target.value))}
-                                >
-                                  {Array.from(new Set([
-                                    new Date().getFullYear(),
-                                    ...Object.keys(dashboardData.production.monthlyStatsByYear || {}).map(Number),
-                                    ...Object.keys(dashboardData.production.yearlyReceived || {}).map(Number),
-                                    ...Object.keys(dashboardData.production.yearlyDistributed || {}).map(Number)
-                                  ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
-                                    <option key={year} value={year}>{year}</option>
-                                  ))}
-                                </select>
-                              )}
-                              <div className="flex gap-1 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-100">
-                                <button
-                                  onClick={() => setChartView('monthly')}
-                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${chartView === 'monthly'
-                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                                >
-                                  Monthly
-                                </button>
-                                <button
-                                  onClick={() => setChartView('yearly')}
-                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${chartView === 'yearly'
-                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                                >
-                                  Yearly
-                                </button>
-                              </div>
-                              <button
-                                onClick={() => {
-                                  setCurrentInsight({
-                                    title: 'Seedling Distribution Overview',
-                                    insights: generateSeedlingInsights(chartView, chartView === 'monthly' ? seedlingMonthYear : undefined),
-                                    view: chartView
-                                  });
-                                  setShowInsightModal(true);
-                                }}
-                                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-black hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                    {/* Charts Row - Bar Chart & Donut Chart */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <EditorialCard
+                        className="lg:col-span-2 flex flex-col"
+                        title="Seedling Distribution Overview"
+                        subtitle="Received vs. completely distributed seedlings"
+                        actions={
+                          <div className="flex flex-wrap items-center gap-2">
+                            {chartView === 'monthly' && (
+                              <select
+                                className="text-gray-700 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857]"
+                                value={seedlingMonthYear}
+                                onChange={(e) => setSeedlingMonthYear(parseInt(e.target.value))}
+                                aria-label="Seedling year"
                               >
-                                <Eye className="w-4 h-4" />
-                                Insights
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Premium Legend Badges with Icons */}
-                          <div className="flex flex-wrap items-center gap-3 mb-8">
-                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-50 to-orange-100/50 rounded-xl border border-orange-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                              <Package className="w-3.5 h-3.5 text-orange-600" />
-                              <span className="text-xs font-black text-orange-700 uppercase tracking-wider">Received (Assoc)</span>
-                            </div>
-                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                              <Truck className="w-3.5 h-3.5 text-blue-600" />
-                              <span className="text-xs font-black text-blue-700 uppercase tracking-wider">Completely Distributed</span>
-                            </div>
-                          </div>
-
-                          <div className="w-full">
-                            {(() => {
-                              let chartData: any[] = [];
-                              const prodData: any = dashboardData.production;
-
-                              if (chartView === 'yearly') {
-                                const yearlyReceived = prodData.yearlyReceived || {};
-                                const yearlyDistributed = prodData.yearlyDistributed || {};
-                                const yearlyHarvest = prodData.yearlyHarvest || {};
-
-                                // Get all unique years from all data sources
-                                const years = Array.from(new Set([
+                                {Array.from(new Set([
                                   new Date().getFullYear(),
-                                  ...Object.keys(yearlyReceived || {}).map(Number),
-                                  ...Object.keys(yearlyDistributed || {}).map(Number),
-                                  ...Object.keys(yearlyHarvest || {}).map(Number),
-                                  ...Object.keys(prodData.monthlyStatsByYear || {}).map(Number)
-                                ])).filter(y => y > 2000).sort((a, b) => a - b);
-
-                                chartData = years.map(year => ({
-                                  period: year.toString(),
-                                  received: yearlyReceived[year] || 0,
-                                  distributed: yearlyDistributed[year] || 0
-                                }));
-                              } else {
-                                const stats = prodData.monthlyStatsByYear?.[seedlingMonthYear] || {
-                                  received: new Array(12).fill(0),
-                                  distributed: new Array(12).fill(0)
-                                };
-                                const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-                                chartData = labels.map((label, i) => ({
-                                  period: label,
-                                  received: stats.received[i],
-                                  distributed: stats.distributed[i]
-                                }));
-                              }
-
-                              return (
-                                <div className="overflow-x-auto rounded-3xl bg-white/50 backdrop-blur-sm p-4 border border-white/60 shadow-inner">
-                                  <div style={{ minWidth: chartView === 'monthly' ? '700px' : '100%', width: '100%' }}>
-                                    <ResponsiveContainer width="100%" height={420}>
-                                      <RechartsBarChart
-                                        data={chartData}
-                                        margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-                                        barGap={chartView === 'monthly' ? 12 : 4}
-                                        barCategoryGap={chartData.length < 5 ? "30%" : "20%"}
-                                      >
-                                        <defs>
-                                          <linearGradient id="receivedGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#fb923c" stopOpacity={0.9} />
-                                            <stop offset="100%" stopColor="#f97316" stopOpacity={0.7} />
-                                          </linearGradient>
-                                          <linearGradient id="distributedGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
-                                            <stop offset="100%" stopColor="#2563eb" stopOpacity={0.7} />
-                                          </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
-                                        <XAxis
-                                          dataKey="period"
-                                          stroke="#6b7280"
-                                          style={{ fontSize: '13px', fontWeight: 600 }}
-                                          axisLine={false}
-                                          tickLine={false}
-                                          dy={10}
-                                        />
-                                        <YAxis
-                                          stroke="#6b7280"
-                                          style={{ fontSize: '13px', fontWeight: 600 }}
-                                          axisLine={false}
-                                          tickLine={false}
-                                          dx={-5}
-                                        />
-                                        <Tooltip
-                                          contentStyle={{
-                                            backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: 'none',
-                                            borderRadius: '16px',
-                                            padding: '12px 16px',
-                                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-                                            fontWeight: 600
-                                          }}
-                                          itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
-                                          cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
-                                          formatter={(value: any) => `${Math.round(Number(value)).toLocaleString()} seedlings`}
-                                        />
-                                        <Bar
-                                          dataKey="received"
-                                          name="Received (Assoc)"
-                                          fill="url(#receivedGradient)"
-                                          radius={[8, 8, 0, 0]}
-                                          barSize={chartData.length < 5 ? 55 : 38}
-                                          stroke="#fff"
-                                          strokeWidth={4}
-                                        />
-                                        <Bar
-                                          dataKey="distributed"
-                                          name="Completely Distributed"
-                                          fill="url(#distributedGradient)"
-                                          radius={[8, 8, 0, 0]}
-                                          barSize={chartData.length < 5 ? 55 : 38}
-                                          stroke="#fff"
-                                          strokeWidth={4}
-                                        />
-                                      </RechartsBarChart>
-                                    </ResponsiveContainer>
-                                  </div>
-                                </div>
-                              );
-                            })()}
+                                  ...Object.keys(dashboardData.production.monthlyStatsByYear || {}).map(Number),
+                                  ...Object.keys(dashboardData.production.yearlyReceived || {}).map(Number),
+                                  ...Object.keys(dashboardData.production.yearlyDistributed || {}).map(Number)
+                                ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
+                                  <option key={year} value={year}>{year}</option>
+                                ))}
+                              </select>
+                            )}
+                            <SegmentedToggle
+                              options={[
+                                { value: 'monthly', label: 'Monthly' },
+                                { value: 'yearly', label: 'Yearly' },
+                              ]}
+                              value={chartView}
+                              onChange={(v) => setChartView(v as 'monthly' | 'yearly')}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCurrentInsight({
+                                  title: 'Seedling Distribution Overview',
+                                  insights: generateSeedlingInsights(chartView, chartView === 'monthly' ? seedlingMonthYear : undefined),
+                                  view: chartView
+                                });
+                                setShowInsightModal(true);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-gray-500" />
+                              Insights
+                            </button>
                           </div>
+                        }
+                      >
+                        <div className="flex flex-wrap items-center justify-end gap-4 text-xs text-gray-600 mb-4">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.amber }} />
+                            Received (Assoc)
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.emerald }} />
+                            Completely Distributed
+                          </span>
                         </div>
 
+                        {(() => {
+                          let chartData: any[] = [];
+                          const prodData: any = dashboardData.production;
 
-                        {/* Production Overview Donut Chart - Clean Design */}
-                        <div className="bg-white rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col h-full">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <h3 className="text-xl font-black text-gray-900">Production Overview</h3>
-                              <p className="text-xs text-gray-500 font-medium italic">Planted Units vs Harvested Kg</p>
+                          if (chartView === 'yearly') {
+                            const yearlyReceived = prodData.yearlyReceived || {};
+                            const yearlyDistributed = prodData.yearlyDistributed || {};
+                            const yearlyHarvest = prodData.yearlyHarvest || {};
+                            const years = Array.from(new Set([
+                              new Date().getFullYear(),
+                              ...Object.keys(yearlyReceived || {}).map(Number),
+                              ...Object.keys(yearlyDistributed || {}).map(Number),
+                              ...Object.keys(yearlyHarvest || {}).map(Number),
+                              ...Object.keys(prodData.monthlyStatsByYear || {}).map(Number)
+                            ])).filter(y => y > 2000).sort((a, b) => a - b);
+
+                            chartData = years.map(year => ({
+                              period: year.toString(),
+                              received: yearlyReceived[year] || 0,
+                              distributed: yearlyDistributed[year] || 0
+                            }));
+                          } else {
+                            const stats = prodData.monthlyStatsByYear?.[seedlingMonthYear] || {
+                              received: new Array(12).fill(0),
+                              distributed: new Array(12).fill(0)
+                            };
+                            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                            chartData = labels.map((label, i) => ({
+                              period: label,
+                              received: stats.received[i],
+                              distributed: stats.distributed[i]
+                            }));
+                          }
+
+                          return (
+                            <div className="overflow-x-auto">
+                              <div style={{ minWidth: chartView === 'monthly' ? '640px' : '100%', width: '100%' }}>
+                                <ResponsiveContainer width="100%" height={360}>
+                                  <RechartsBarChart
+                                    data={chartData}
+                                    margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
+                                    barGap={chartView === 'monthly' ? 8 : 4}
+                                    barCategoryGap={chartData.length < 5 ? '30%' : '20%'}
+                                  >
+                                    <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                    <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
+                                    <YAxis {...EDITORIAL_CHART.yAxisProps} />
+                                    <Tooltip
+                                      contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                      cursor={{ fill: '#F9FAFB' }}
+                                      formatter={(value: any) => `${Math.round(Number(value)).toLocaleString()} seedlings`}
+                                    />
+                                    <Bar
+                                      dataKey="received"
+                                      name="Received (Assoc)"
+                                      fill={EDITORIAL_CHART.colors.amber}
+                                      radius={[4, 4, 0, 0]}
+                                      barSize={chartView === 'monthly' ? 22 : 40}
+                                    />
+                                    <Bar
+                                      dataKey="distributed"
+                                      name="Completely Distributed"
+                                      fill={EDITORIAL_CHART.colors.emerald}
+                                      radius={[4, 4, 0, 0]}
+                                      barSize={chartView === 'monthly' ? 22 : 40}
+                                    />
+                                  </RechartsBarChart>
+                                </ResponsiveContainer>
+                              </div>
                             </div>
-                            <div className="p-2 bg-emerald-50 rounded-xl">
-                              <TrendingUp className="text-emerald-500" size={24} />
-                            </div>
-                          </div>
+                          );
+                        })()}
+                      </EditorialCard>
 
-                          {(() => {
-                            const totalPlanted = dashboardData.production.totalSeedlingsPlanted || 0;
-                            const totalHarvested = dashboardData.production.totalHarvestFiber || 0;
-                            const total = totalPlanted + totalHarvested;
+                      <EditorialCard
+                        title="Production Overview"
+                        subtitle="Planted units vs. harvested kg"
+                        className="flex flex-col h-full"
+                        bodyClassName="flex-1 flex flex-col justify-center"
+                      >
+                        {(() => {
+                          const totalPlanted = dashboardData.production.totalSeedlingsPlanted || 0;
+                          const totalHarvested = dashboardData.production.totalHarvestFiber || 0;
+                          const total = totalPlanted + totalHarvested;
 
-                            const chartData = [
-                              { name: 'Planted', value: totalPlanted, fill: '#10b981', percentage: total > 0 ? (totalPlanted / total) * 100 : 0 },
-                              { name: 'Harvested Total', value: totalHarvested, fill: '#fb923c', percentage: total > 0 ? (totalHarvested / total) * 100 : 0 }
-                            ];
+                          const chartData = [
+                            { name: 'Planted', value: totalPlanted, fill: EDITORIAL_CHART.colors.emerald, percentage: total > 0 ? (totalPlanted / total) * 100 : 0 },
+                            { name: 'Harvested Total', value: totalHarvested, fill: EDITORIAL_CHART.colors.amber, percentage: total > 0 ? (totalHarvested / total) * 100 : 0 }
+                          ];
 
-                            if (total === 0) {
-                              return (
-                                <div className="flex flex-col items-center justify-center flex-1 text-gray-400">
-                                  <div className="p-6 bg-gray-50 rounded-full mb-4">
-                                    <Activity className="w-12 h-12 text-gray-200" />
-                                  </div>
-                                  <p className="font-semibold text-gray-500">No production data</p>
-                                </div>
-                              );
-                            }
-
+                          if (total === 0) {
                             return (
-                              <div className="flex-1 flex flex-col items-center justify-center p-4">
-                                <AnimatedPieChart
-                                  data={chartData}
-                                  centerLabel={totalHarvested.toLocaleString()}
-                                  centerSubLabel="Fiber Harvested (Kg)"
-                                />
-
-                                {/* Custom Legend */}
-                                <div className="grid grid-cols-1 gap-3 w-full mt-4">
-                                  {chartData.map((item, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 transition-all hover:bg-white hover:shadow-md">
-                                      <div className="flex items-center gap-3">
-                                        <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: item.fill }}></div>
-                                        <div className="flex flex-col">
-                                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.name}</span>
-                                          <span className="text-lg font-black text-gray-900 leading-tight">{item.value.toLocaleString()}</span>
-                                        </div>
-                                      </div>
-                                      <div className="px-3 py-1 bg-white border border-gray-100 rounded-lg shadow-sm">
-                                        <span className="text-xs font-black text-emerald-600 block">{item.name === 'Planted' ? 'seedlings' : 'kg fiber'}</span>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
+                              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                                <Activity className="w-10 h-10 text-gray-300 mb-2" />
+                                <p className="text-sm font-medium text-gray-500">No production data</p>
                               </div>
                             );
-                          })()}
-                        </div>
-                      </div>
+                          }
+
+                          return (
+                            <div className="flex flex-col items-center">
+                              <AnimatedPieChart
+                                data={chartData}
+                                centerLabel={totalHarvested.toLocaleString()}
+                                centerSubLabel="Fiber Harvested (kg)"
+                              />
+                              <div className="grid grid-cols-1 gap-2.5 w-full mt-4">
+                                {chartData.map((item, idx) => (
+                                  <div key={idx} className="flex items-center justify-between p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200">
+                                    <div className="flex items-center gap-2.5">
+                                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                                      <div>
+                                        <span className="text-xs font-medium text-gray-500 block">{item.name}</span>
+                                        <span className="text-base font-bold text-gray-900 tabular-nums">{item.value.toLocaleString()}</span>
+                                      </div>
+                                    </div>
+                                    <span className="text-xs font-medium text-gray-500 bg-white border border-gray-200 px-2.5 py-1 rounded-lg">
+                                      {item.name === 'Planted' ? 'seedlings' : 'kg fiber'}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </EditorialCard>
                     </div>
 
-                    {/* Planted vs Harvested Trend Chart - New Addition */}
-                    <div className="bg-white rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col mt-6">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-1.5 h-10 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full shadow-lg shadow-emerald-200"></div>
-                          <div>
-                            <h3 className="text-xl font-black text-gray-900 tracking-tight">Production Trends</h3>
-                            <p className="text-sm text-gray-500 font-medium mt-0.5">Planted vs Harvested Comparative Analysis</p>
-                          </div>
-                        </div>
-
-                        {/* Controls */}
-                        <div className="flex items-center gap-3">
+                    {/* Production Trends */}
+                    <EditorialCard
+                      title="Production Trends"
+                      subtitle="Planted vs. harvested and unplanted comparison"
+                      actions={
+                        <div className="flex flex-wrap items-center gap-2">
                           {trendsView === 'monthly' && (
                             <select
-                              className="text-gray-700 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-xl px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              className="text-gray-700 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857]"
                               value={trendsYear}
                               onChange={(e) => setTrendsYear(parseInt(e.target.value))}
+                              aria-label="Production trends year"
                             >
                               {Array.from(new Set([
                                 new Date().getFullYear(),
@@ -2433,27 +2016,16 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               ))}
                             </select>
                           )}
-                          <div className="flex gap-1 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-100">
-                            <button
-                              onClick={() => setTrendsView('monthly')}
-                              className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${trendsView === 'monthly'
-                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                }`}
-                            >
-                              Monthly
-                            </button>
-                            <button
-                              onClick={() => setTrendsView('yearly')}
-                              className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${trendsView === 'yearly'
-                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                }`}
-                            >
-                              Yearly
-                            </button>
-                          </div>
+                          <SegmentedToggle
+                            options={[
+                              { value: 'monthly', label: 'Monthly' },
+                              { value: 'yearly', label: 'Yearly' },
+                            ]}
+                            value={trendsView}
+                            onChange={(v) => setTrendsView(v as 'monthly' | 'yearly')}
+                          />
                           <button
+                            type="button"
                             onClick={() => {
                               setCurrentInsight({
                                 title: 'Production Trends',
@@ -2462,213 +2034,121 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               });
                               setShowInsightModal(true);
                             }}
-                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-black hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5 text-gray-500" />
                             Insights
                           </button>
                         </div>
+                      }
+                    >
+                      <div className="flex flex-wrap items-center justify-end gap-4 text-xs text-gray-600 mb-4">
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.emerald }} />
+                          Planted
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.amber }} />
+                          Harvested
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.slate }} />
+                          Unplanted / Damage
+                        </span>
                       </div>
 
-                      {/* Legend */}
-                      <div className="flex flex-wrap items-center gap-3 mb-6">
-                        <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                          <Sprout className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">Planted</span>
-                        </div>
-                        <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-50 to-orange-100/50 rounded-xl border border-orange-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                          <Award className="w-3.5 h-3.5 text-orange-600" />
-                          <span className="text-xs font-black text-orange-700 uppercase tracking-wider">Harvested</span>
-                        </div>
-                        <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-50 to-red-100/50 rounded-xl border border-red-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                          <Clock className="w-3.5 h-3.5 text-red-600" />
-                          <span className="text-xs font-black text-red-700 uppercase tracking-wider">Unplanted/Damage</span>
-                        </div>
-                      </div>
+                      {(() => {
+                        let chartData: any[] = [];
+                        const prodData: any = dashboardData.production;
 
-                      <div className="w-full">
-                        {(() => {
-                          let chartData: any[] = [];
-                          const prodData: any = dashboardData.production;
+                        if (trendsView === 'yearly') {
+                          const yearlyPlanted = prodData.yearlyPlanted || {};
+                          const yearlyHarvest = prodData.yearlyHarvest || {};
+                          const years = Array.from(new Set([
+                            new Date().getFullYear(),
+                            ...Object.keys(yearlyPlanted || {}).map(Number),
+                            ...Object.keys(yearlyHarvest || {}).map(Number)
+                          ])).filter(y => y > 2000).sort((a, b) => a - b);
 
-                          if (trendsView === 'yearly') {
-                            const yearlyPlanted = prodData.yearlyPlanted || {};
-                            const yearlyHarvest = prodData.yearlyHarvest || {};
+                          chartData = years.map(year => ({
+                            period: year.toString(),
+                            planted: yearlyPlanted[year] || 0,
+                            harvested: yearlyHarvest[year] || 0,
+                            unplanted: prodData.yearlyUnplanted?.[year] || 0
+                          }));
+                        } else {
+                          const stats = prodData.monthlyStatsByYear?.[trendsYear] || {
+                            planted: new Array(12).fill(0),
+                            harvested: new Array(12).fill(0),
+                            unplanted: new Array(12).fill(0)
+                          };
+                          const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                          chartData = labels.map((label, i) => ({
+                            period: label,
+                            planted: stats.planted ? stats.planted[i] : (stats.distributed ? stats.distributed[i] : 0),
+                            harvested: stats.harvested[i],
+                            unplanted: stats.unplanted ? stats.unplanted[i] : 0
+                          }));
+                        }
 
-                            const years = Array.from(new Set([
-                              new Date().getFullYear(),
-                              ...Object.keys(yearlyPlanted || {}).map(Number),
-                              ...Object.keys(yearlyHarvest || {}).map(Number)
-                            ])).filter(y => y > 2000).sort((a, b) => a - b);
-
-                            chartData = years.map(year => ({
-                              period: year.toString(),
-                              planted: yearlyPlanted[year] || 0,
-                              harvested: yearlyHarvest[year] || 0,
-                              unplanted: prodData.yearlyUnplanted?.[year] || 0
-                            }));
-                          } else {
-                            const stats = prodData.monthlyStatsByYear?.[trendsYear] || {
-                              planted: new Array(12).fill(0),
-                              harvested: new Array(12).fill(0),
-                              unplanted: new Array(12).fill(0)
-                            };
-                            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-                            chartData = labels.map((label, i) => ({
-                              period: label,
-                              planted: stats.planted ? stats.planted[i] : (stats.distributed ? stats.distributed[i] : 0),
-                              harvested: stats.harvested[i],
-                              unplanted: stats.unplanted ? stats.unplanted[i] : 0
-                            }));
-                          }
-
-                          return (
-                            <div className="overflow-x-auto rounded-3xl bg-white/50 backdrop-blur-sm p-4 border border-white/60 shadow-inner">
-                              <div style={{ minWidth: trendsView === 'monthly' ? '800px' : '100%', width: '100%' }}>
-                                <ResponsiveContainer width="100%" height={420}>
-                                  <RechartsBarChart
-                                    data={chartData}
-                                    margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-                                    barGap={6}
-                                    barCategoryGap={chartData.length < 5 ? "30%" : "15%"}
-                                  >
-                                    <defs>
-                                      <linearGradient id="plantedGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                                        <stop offset="100%" stopColor="#059669" stopOpacity={0.7} />
-                                      </linearGradient>
-                                      <linearGradient id="harvestedGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#fb923c" stopOpacity={0.9} />
-                                        <stop offset="100%" stopColor="#f97316" stopOpacity={0.7} />
-                                      </linearGradient>
-                                      <linearGradient id="unplantedGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9} />
-                                        <stop offset="100%" stopColor="#dc2626" stopOpacity={0.7} />
-                                      </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
-                                    <XAxis
-                                      dataKey="period"
-                                      stroke="#6b7280"
-                                      style={{ fontSize: '13px', fontWeight: 600 }}
-                                      axisLine={false}
-                                      tickLine={false}
-                                      dy={10}
-                                    />
-                                    <YAxis
-                                      stroke="#6b7280"
-                                      style={{ fontSize: '13px', fontWeight: 600 }}
-                                      axisLine={false}
-                                      tickLine={false}
-                                      dx={-5}
-                                    />
-                                    <Tooltip
-                                      contentStyle={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                                        backdropFilter: 'blur(10px)',
-                                        border: 'none',
-                                        borderRadius: '16px',
-                                        padding: '12px 16px',
-                                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-                                        fontWeight: 600
-                                      }}
-                                      itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
-                                      cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
-                                      formatter={(value: any, name: string) => {
-                                        const formattedValue = Math.round(Number(value)).toLocaleString();
-                                        if (name === 'Planted' || name === 'Unplanted/Damage') {
-                                          return `${formattedValue} seedlings`;
-                                        } else if (name === 'Harvested') {
-                                          return `${formattedValue} kg`;
-                                        }
-                                        return formattedValue;
-                                      }}
-                                    />
-                                    <Bar
-                                      dataKey="planted"
-                                      name="Planted"
-                                      fill="url(#plantedGradient)"
-                                      radius={[8, 8, 0, 0]}
-                                      barSize={chartData.length < 5 ? 60 : 30}
-                                    />
-                                    <Bar
-                                      dataKey="harvested"
-                                      name="Harvested"
-                                      fill="url(#harvestedGradient)"
-                                      radius={[8, 8, 0, 0]}
-                                      barSize={chartData.length < 5 ? 60 : 30}
-                                    />
-                                    <Bar
-                                      dataKey="unplanted"
-                                      name="Unplanted/Damage"
-                                      fill="url(#unplantedGradient)"
-                                      radius={[8, 8, 0, 0]}
-                                      barSize={chartData.length < 5 ? 60 : 30}
-                                    />
-                                  </RechartsBarChart>
-                                </ResponsiveContainer>
-                              </div>
+                        return (
+                          <div className="overflow-x-auto">
+                            <div style={{ minWidth: trendsView === 'monthly' ? '700px' : '100%', width: '100%' }}>
+                              <ResponsiveContainer width="100%" height={360}>
+                                <RechartsBarChart
+                                  data={chartData}
+                                  margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
+                                  barGap={6}
+                                  barCategoryGap={chartData.length < 5 ? '30%' : '18%'}
+                                >
+                                  <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                  <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
+                                  <YAxis {...EDITORIAL_CHART.yAxisProps} />
+                                  <Tooltip
+                                    contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                    cursor={{ fill: '#F9FAFB' }}
+                                    formatter={(value: any, name: string) => {
+                                      const formattedValue = Math.round(Number(value)).toLocaleString();
+                                      if (name === 'Planted' || name === 'Unplanted/Damage') return `${formattedValue} seedlings`;
+                                      if (name === 'Harvested') return `${formattedValue} kg`;
+                                      return formattedValue;
+                                    }}
+                                  />
+                                  <Bar dataKey="planted" name="Planted" fill={EDITORIAL_CHART.colors.emerald} radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 42 : 20} />
+                                  <Bar dataKey="harvested" name="Harvested" fill={EDITORIAL_CHART.colors.amber} radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 42 : 20} />
+                                  <Bar dataKey="unplanted" name="Unplanted/Damage" fill={EDITORIAL_CHART.colors.slate} radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 42 : 20} />
+                                </RechartsBarChart>
+                              </ResponsiveContainer>
                             </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-
-                    {/* FIELD MONITORING - Simple */}
-                    <div className="mt-16 mb-8">
-                      <h2 className="text-2xl font-semibold text-gray-900 mb-6">Field Monitoring</h2>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <StatsCard
-                          title="Total Monitoring"
-                          value={dashboardData.production.totalMonitoringVisits}
-                          subValue="Monitoring records"
-                          icon={<Activity className="w-6 h-6 text-white" />}
-                          gradient="from-slate-500 via-slate-600 to-slate-700"
-                        />
-                        <StatsCard
-                          title="Healthy Farms"
-                          value={dashboardData.production.healthyFarms}
-                          subValue="In good condition"
-                          icon={<Sprout className="w-6 h-6 text-white" />}
-                          gradient="from-emerald-500 via-emerald-600 to-emerald-700"
-                        />
-                        <StatsCard
-                          title="Needs Support"
-                          value={dashboardData.production.needsSupportFarms}
-                          subValue="Requires attention"
-                          icon={<AlertCircle className="w-6 h-6 text-white" />}
-                          gradient="from-amber-500 via-amber-600 to-amber-700"
-                        />
-                        <StatsCard
-                          title="Damaged Farms"
-                          value={dashboardData.production.damagedFarms}
-                          subValue="Critical condition"
-                          icon={<X className="w-6 h-6 text-white" />}
-                          gradient="from-red-500 via-red-600 to-red-700"
-                        />
-                      </div>
-
-                      {/* Monitoring Bar Chart - Enhanced Modern Design */}
-                      <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 rounded-2xl shadow-xl p-6 sm:p-8 border border-white/60 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                          <div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-1.5 h-8 bg-gradient-to-b from-blue-500 via-purple-500 to-pink-500 rounded-full"></div>
-                              <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">Monitoring Status Overview</h3>
-                            </div>
-                            <p className="text-xs sm:text-sm text-gray-600 ml-6 font-medium">Track farm health and monitoring visits</p>
                           </div>
-                          <div className="flex items-center gap-3">
+                        );
+                      })()}
+                    </EditorialCard>
+
+                    {/* Field Monitoring */}
+                    <div className="space-y-4">
+                      <h2 className="font-serif text-xl font-bold text-gray-900">Field Monitoring</h2>
+                      <KpiStrip
+                        columns={4}
+                        items={[
+                          { label: 'Total Monitoring', value: dashboardData.production.totalMonitoringVisits.toLocaleString(), subtext: 'Monitoring records' },
+                          { label: 'Healthy Farms', value: dashboardData.production.healthyFarms.toLocaleString(), subtext: 'In good condition' },
+                          { label: 'Needs Support', value: dashboardData.production.needsSupportFarms.toLocaleString(), subtext: 'Requires attention' },
+                          { label: 'Damaged Farms', value: dashboardData.production.damagedFarms.toLocaleString(), subtext: 'Critical condition' },
+                        ]}
+                      />
+
+                      <EditorialCard
+                        title="Monitoring Status Overview"
+                        subtitle="Track farm health and monitoring visits over time"
+                        actions={
+                          <div className="flex flex-wrap items-center gap-2">
                             {monitoringView === 'monthly' && (
                               <select
-                                className="text-gray-700 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-700 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857]"
                                 value={monitoringMonthYear}
                                 onChange={(e) => setMonitoringMonthYear(parseInt(e.target.value))}
+                                aria-label="Monitoring year"
                               >
                                 {Array.from(new Set([
                                   new Date().getFullYear(),
@@ -2679,27 +2159,16 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 ))}
                               </select>
                             )}
-                            <div className="flex gap-1 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-200">
-                              <button
-                                onClick={() => setMonitoringView('monthly')}
-                                className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${monitoringView === 'monthly'
-                                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
-                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                  }`}
-                              >
-                                Monthly
-                              </button>
-                              <button
-                                onClick={() => setMonitoringView('yearly')}
-                                className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${monitoringView === 'yearly'
-                                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
-                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                  }`}
-                              >
-                                Yearly
-                              </button>
-                            </div>
+                            <SegmentedToggle
+                              options={[
+                                { value: 'monthly', label: 'Monthly' },
+                                { value: 'yearly', label: 'Yearly' },
+                              ]}
+                              value={monitoringView}
+                              onChange={(v) => setMonitoringView(v as 'monthly' | 'yearly')}
+                            />
                             <button
+                              type="button"
                               onClick={() => {
                                 setCurrentInsight({
                                   title: 'Monitoring Status Overview',
@@ -2708,245 +2177,139 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 });
                                 setShowInsightModal(true);
                               }}
-                              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-black hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors"
                             >
-                              <Eye className="w-4 h-4" />
+                              <Eye className="w-3.5 h-3.5 text-gray-500" />
                               Insights
                             </button>
                           </div>
+                        }
+                      >
+                        <div className="flex flex-wrap items-center justify-end gap-4 text-xs text-gray-600 mb-4">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.mutedSlate }} />
+                            Total
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.emerald }} />
+                            Healthy
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.amber }} />
+                            Needs Support
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.danger }} />
+                            Damaged
+                          </span>
                         </div>
 
-                        {/* Enhanced Legend Badges with Icons */}
-                        <div className="flex flex-wrap items-center gap-3 mb-8">
-                          <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                            <Activity className="w-3.5 h-3.5 text-blue-600" />
-                            <span className="text-xs font-black text-blue-700">Total</span>
-                          </div>
-                          <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                            <Sprout className="w-3.5 h-3.5 text-emerald-600" />
-                            <span className="text-xs font-black text-emerald-700">Healthy</span>
-                          </div>
-                          <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-xl border border-amber-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                            <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                            <span className="text-xs font-black text-amber-700">Needs Support</span>
-                          </div>
-                          <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-50 to-red-100/50 rounded-xl border border-red-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                            <X className="w-3.5 h-3.5 text-red-600" />
-                            <span className="text-xs font-black text-red-700">Damaged</span>
-                          </div>
-                        </div>
+                        {(() => {
+                          let chartData: any[] = [];
 
-                        <div className="w-full">
-                          {(() => {
-                            let chartData: any[] = [];
+                          if (monitoringView === 'yearly') {
+                            const yearlyMonitoring = (dashboardData.production as any).yearlyMonitoring || {};
+                            const yearlyHealthy = (dashboardData.production as any).yearlyHealthy || {};
+                            const yearlyNeedsSupport = (dashboardData.production as any).yearlyNeedsSupport || {};
+                            const yearlyDamaged = (dashboardData.production as any).yearlyDamaged || {};
 
-                            if (monitoringView === 'yearly') {
-                              const yearlyMonitoring = (dashboardData.production as any).yearlyMonitoring || {};
-                              const yearlyHealthy = (dashboardData.production as any).yearlyHealthy || {};
-                              const yearlyNeedsSupport = (dashboardData.production as any).yearlyNeedsSupport || {};
-                              const yearlyDamaged = (dashboardData.production as any).yearlyDamaged || {};
+                            const years = Array.from(new Set([
+                              new Date().getFullYear(),
+                              ...Object.keys(yearlyMonitoring || {}).map(Number),
+                              ...Object.keys((dashboardData.production as any).monitoringStatsByYear || {}).map(Number)
+                            ])).filter(y => y > 2000).sort((a, b) => a - b);
 
-                              // Get all unique years from both stats sources
-                              const years = Array.from(new Set([
-                                new Date().getFullYear(),
-                                ...Object.keys(yearlyMonitoring || {}).map(Number),
-                                ...Object.keys((dashboardData.production as any).monitoringStatsByYear || {}).map(Number)
-                              ])).filter(y => y > 2000).sort((a, b) => a - b);
+                            chartData = years.map(year => ({
+                              period: year.toString(),
+                              total: yearlyMonitoring[year] || 0,
+                              healthy: yearlyHealthy[year] || 0,
+                              needsSupport: yearlyNeedsSupport[year] || 0,
+                              damaged: yearlyDamaged[year] || 0
+                            }));
+                          } else {
+                            const stats = ((dashboardData.production as any).monitoringStatsByYear)?.[monitoringMonthYear] || {
+                              total: new Array(12).fill(0),
+                              healthy: new Array(12).fill(0),
+                              needsSupport: new Array(12).fill(0),
+                              damaged: new Array(12).fill(0)
+                            };
+                            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                            chartData = labels.map((label, i) => ({
+                              period: label,
+                              total: stats.total[i],
+                              healthy: stats.healthy[i],
+                              needsSupport: stats.needsSupport[i],
+                              damaged: stats.damaged[i]
+                            }));
+                          }
 
-                              chartData = years.map(year => ({
-                                period: year.toString(),
-                                total: yearlyMonitoring[year] || 0,
-                                healthy: yearlyHealthy[year] || 0,
-                                needsSupport: yearlyNeedsSupport[year] || 0,
-                                damaged: yearlyDamaged[year] || 0
-                              }));
-                            } else {
-                              const stats = ((dashboardData.production as any).monitoringStatsByYear)?.[monitoringMonthYear] || {
-                                total: new Array(12).fill(0),
-                                healthy: new Array(12).fill(0),
-                                needsSupport: new Array(12).fill(0),
-                                damaged: new Array(12).fill(0)
-                              };
-                              const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-                              chartData = labels.map((label, i) => ({
-                                period: label,
-                                total: stats.total[i],
-                                healthy: stats.healthy[i],
-                                needsSupport: stats.needsSupport[i],
-                                damaged: stats.damaged[i]
-                              }));
-                            }
-
-                            return (
-                              <div className="overflow-x-auto rounded-xl bg-white/50 backdrop-blur-sm p-4">
-                                <div style={{ minWidth: monitoringView === 'monthly' ? '700px' : '100%', width: '100%' }}>
-                                  <ResponsiveContainer width="100%" height={420}>
-                                    <RechartsBarChart
-                                      data={chartData}
-                                      margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-                                      barGap={6}
-                                      barCategoryGap={chartData.length < 5 ? "35%" : "15%"}
-                                    >
-                                      <defs>
-                                        <linearGradient id="totalGradient" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
-                                          <stop offset="100%" stopColor="#2563eb" stopOpacity={0.7} />
-                                        </linearGradient>
-                                        <linearGradient id="healthyGradient" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                                          <stop offset="100%" stopColor="#059669" stopOpacity={0.7} />
-                                        </linearGradient>
-                                        <linearGradient id="supportGradient" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.9} />
-                                          <stop offset="100%" stopColor="#d97706" stopOpacity={0.7} />
-                                        </linearGradient>
-                                        <linearGradient id="damagedGradient" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9} />
-                                          <stop offset="100%" stopColor="#dc2626" stopOpacity={0.7} />
-                                        </linearGradient>
-                                      </defs>
-                                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
-                                      <XAxis
-                                        dataKey="period"
-                                        stroke="#6b7280"
-                                        style={{ fontSize: '13px', fontWeight: 600 }}
-                                        axisLine={false}
-                                        tickLine={false}
-                                        dy={10}
-                                      />
-                                      <YAxis
-                                        stroke="#6b7280"
-                                        style={{ fontSize: '13px', fontWeight: 600 }}
-                                        axisLine={false}
-                                        tickLine={false}
-                                        dx={-5}
-                                      />
-                                      <Tooltip
-                                        contentStyle={{
-                                          backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                                          border: 'none',
-                                          borderRadius: '16px',
-                                          fontSize: '13px',
-                                          fontWeight: 600,
-                                          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                                          padding: '12px 16px',
-                                          backdropFilter: 'blur(10px)'
-                                        }}
-                                        cursor={{ fill: 'rgba(59, 130, 246, 0.05)', radius: 8 }}
-                                        labelStyle={{ fontWeight: 700, color: '#111827', marginBottom: '8px' }}
-                                        formatter={(value: any) => Math.round(Number(value)).toLocaleString()}
-                                      />
-
-                                      <Bar
-                                        dataKey="total"
-                                        fill="url(#totalGradient)"
-                                        name="Total Monitoring"
-                                        radius={[8, 8, 0, 0]}
-                                        barSize={chartData.length < 5 ? 55 : 24}
-                                        animationDuration={800}
-                                      />
-                                      <Bar
-                                        dataKey="healthy"
-                                        fill="url(#healthyGradient)"
-                                        name="Healthy Farms"
-                                        radius={[8, 8, 0, 0]}
-                                        barSize={chartData.length < 5 ? 55 : 24}
-                                        animationDuration={1000}
-                                      />
-                                      <Bar
-                                        dataKey="needsSupport"
-                                        fill="url(#supportGradient)"
-                                        name="Needs Support"
-                                        radius={[8, 8, 0, 0]}
-                                        barSize={chartData.length < 5 ? 55 : 24}
-                                        animationDuration={1200}
-                                      />
-                                      <Bar
-                                        dataKey="damaged"
-                                        fill="url(#damagedGradient)"
-                                        name="Damaged Farms"
-                                        radius={[8, 8, 0, 0]}
-                                        barSize={chartData.length < 5 ? 55 : 24}
-                                        animationDuration={1400}
-                                      />
-                                    </RechartsBarChart>
-                                  </ResponsiveContainer>
-                                </div>
+                          return (
+                            <div className="overflow-x-auto">
+                              <div style={{ minWidth: monitoringView === 'monthly' ? '640px' : '100%', width: '100%' }}>
+                                <ResponsiveContainer width="100%" height={360}>
+                                  <RechartsBarChart
+                                    data={chartData}
+                                    margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
+                                    barGap={4}
+                                    barCategoryGap={chartData.length < 5 ? '30%' : '18%'}
+                                  >
+                                    <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                    <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
+                                    <YAxis {...EDITORIAL_CHART.yAxisProps} />
+                                    <Tooltip
+                                      contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                      cursor={{ fill: '#F9FAFB' }}
+                                      formatter={(value: any) => Math.round(Number(value)).toLocaleString()}
+                                    />
+                                    <Bar dataKey="total" fill={EDITORIAL_CHART.colors.mutedSlate} name="Total Monitoring" radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 32 : 16} />
+                                    <Bar dataKey="healthy" fill={EDITORIAL_CHART.colors.emerald} name="Healthy Farms" radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 32 : 16} />
+                                    <Bar dataKey="needsSupport" fill={EDITORIAL_CHART.colors.amber} name="Needs Support" radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 32 : 16} />
+                                    <Bar dataKey="damaged" fill={EDITORIAL_CHART.colors.danger} name="Damaged Farms" radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 32 : 16} />
+                                  </RechartsBarChart>
+                                </ResponsiveContainer>
                               </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
+                            </div>
+                          );
+                        })()}
+                      </EditorialCard>
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {/* Sales & Delivery Reports Section */}
                 {dashboardSection === 'reports' && (
                   <div className="space-y-6">
-                    {/* Delivery Tracking Analytics Section - Simple */}
-                    <div>
-                      <h2 className="text-2xl font-semibold text-gray-900 mb-6">Delivery Tracking Analytics</h2>
+                    <div className="space-y-4">
+                      <h2 className="font-serif text-xl font-bold text-gray-900">Delivery Tracking Analytics</h2>
 
-                      {/* Top Stats Cards - Delivery Tracking */}
+                      <KpiStrip
+                        columns={4}
+                        items={[
+                          { label: 'Total Deliveries', value: dashboardData.deliveries.totalDeliveries.toLocaleString(), subtext: 'Overall delivery records' },
+                          { label: 'Abaca Delivered', value: `${dashboardData.deliveries.deliveredFiberKg.toLocaleString()} kg`, subtext: 'Successfully delivered' },
+                          { label: 'Cancelled Deliveries', value: (dashboardData.deliveries.cancelled || 0).toLocaleString(), subtext: 'Cancelled records' },
+                          {
+                            label: 'Completion Rate',
+                            value: `${(((dashboardData.deliveries.completed || 0) + (dashboardData.deliveries.delivered || 0)) / (dashboardData.deliveries.totalDeliveries || 1) * 100).toFixed(0)}%`,
+                            subtext: `${dashboardData.deliveries.cancelled || 0} cancelled`,
+                          },
+                        ]}
+                      />
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <StatsCard
-                          title="Total Deliveries"
-                          value={dashboardData.deliveries.totalDeliveries}
-                          subValue="records (overall count)"
-                          icon={<Package className="w-6 h-6 text-white" />}
-                          gradient="from-blue-500 via-blue-600 to-blue-700"
-                        />
-                        <StatsCard
-                          title="Abaca Delivered (kg)"
-                          value={dashboardData.deliveries.deliveredFiberKg.toLocaleString()}
-                          subValue="Total fiber successfully delivered"
-                          icon={<CheckCircle className="w-6 h-6 text-white" />}
-                          gradient="from-emerald-500 via-emerald-600 to-emerald-700"
-                          unit="kg"
-                        />
-                        <StatsCard
-                          title="Cancelled Deliveries"
-                          value={dashboardData.deliveries.cancelled || 0}
-                          subValue="total cancelled delivery transactions"
-                          icon={<X className="w-6 h-6 text-white" />}
-                          gradient="from-red-500 via-red-600 to-red-700"
-                        />
-                        <StatsCard
-                          title="Delivery Completion Rate"
-                          value={`${(((dashboardData.deliveries.completed || 0) + (dashboardData.deliveries.delivered || 0)) / (dashboardData.deliveries.totalDeliveries || 1) * 100).toFixed(0)}%`}
-                          subValue={
-                            <div className="flex flex-col gap-0.5">
-                              <span className="font-bold text-white uppercase tracking-tighter text-[10px]">Completion Rate</span>
-                              <span className="opacity-80 text-[10px] mt-0.5">{dashboardData.deliveries.cancelled || 0} cancelled records</span>
-                            </div>
-                          }
-                          icon={<TrendingUp className="w-6 h-6 text-white" />}
-                          gradient="from-amber-500 via-amber-600 to-amber-700"
-                        />
-                      </div>
-
-                      {/* Charts Section - Enhanced */}
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Delivery Status - Modern Recharts Design */}
-                        <div className="bg-white rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col h-full">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <h3 className="text-xl font-black text-gray-900">Delivery Status</h3>
-                              <p className="text-xs text-gray-500 font-medium italic">Breakdown by current status</p>
-                            </div>
-                            <div className="flex items-center gap-2">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <EditorialCard
+                          title="Delivery Status"
+                          subtitle="Breakdown by completion status"
+                          className="flex flex-col h-full"
+                          bodyClassName="flex-1 flex flex-col justify-center"
+                          actions={
+                            <div className="flex items-center gap-1.5">
                               {deliveryStatusView === 'monthly' && (
                                 <select
-                                  className="text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="text-gray-700 bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-semibold"
                                   value={selectedMonth}
                                   onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                                  aria-label="Delivery month"
                                 >
                                   {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, i) => (
                                     <option key={month} value={i}>{month}</option>
@@ -2954,9 +2317,10 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 </select>
                               )}
                               <select
-                                className="text-gray-700 bg-gray-100 border-none rounded-lg px-2 py-1 text-xs font-bold focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-700 bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-semibold"
                                 value={deliveryMonthYear}
                                 onChange={(e) => setDeliveryMonthYear(parseInt(e.target.value))}
+                                aria-label="Delivery status year"
                               >
                                 {Array.from(new Set([
                                   new Date().getFullYear(),
@@ -2965,22 +2329,17 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   <option key={year} value={year}>{year}</option>
                                 ))}
                               </select>
-                              <div className="p-2 bg-blue-50 rounded-xl">
-                                <Truck className="text-blue-500" size={24} />
-                              </div>
                             </div>
-                          </div>
-
+                          }
+                        >
                           {(() => {
                             const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
-                            const currentYear = new Date().getFullYear();
                             const filteredDeliveries = rawDeliveries.filter((d: any) => {
                               const deliveryDate = new Date(d.created_at || d.delivery_date);
                               if (deliveryStatusView === 'monthly') {
                                 return deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === deliveryMonthYear;
-                              } else {
-                                return deliveryDate.getFullYear() === deliveryMonthYear;
                               }
+                              return deliveryDate.getFullYear() === deliveryMonthYear;
                             });
 
                             const completed = filteredDeliveries.filter((d: any) => d.status === 'Completed').length;
@@ -2988,40 +2347,36 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             const total = completed + cancelled;
 
                             const chartData = [
-                              { name: 'Completed', value: completed, fill: '#10b981', percentage: total > 0 ? (completed / total) * 100 : 0 },
-                              { name: 'Cancelled', value: cancelled, fill: '#ef4444', percentage: total > 0 ? (cancelled / total) * 100 : 0 }
+                              { name: 'Completed', value: completed, fill: EDITORIAL_CHART.colors.emerald, percentage: total > 0 ? (completed / total) * 100 : 0 },
+                              { name: 'Cancelled', value: cancelled, fill: EDITORIAL_CHART.colors.danger, percentage: total > 0 ? (cancelled / total) * 100 : 0 }
                             ];
 
-                            if (chartData.length === 0 || total === 0) {
+                            if (total === 0) {
                               return (
-                                <div className="flex flex-col items-center justify-center flex-1 text-gray-400">
-                                  <div className="p-6 bg-gray-50 rounded-full mb-4">
-                                    <Activity className="w-12 h-12 text-gray-200" />
-                                  </div>
-                                  <p className="font-semibold text-gray-500">No delivery data</p>
+                                <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                                  <Activity className="w-10 h-10 text-gray-300 mb-2" />
+                                  <p className="text-sm font-medium text-gray-500">No delivery data</p>
                                 </div>
                               );
                             }
 
                             return (
-                              <div className="flex-1 flex flex-col items-center justify-center p-4">
+                              <div className="flex flex-col items-center">
                                 <AnimatedPieChart
                                   data={chartData}
                                   centerLabel={total.toLocaleString()}
                                   centerSubLabel="Total Deliveries"
                                 />
-
-                                {/* Custom Legend */}
-                                <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                                <div className="grid grid-cols-2 gap-3 w-full mt-4">
                                   {chartData.map((item, idx) => (
-                                    <div key={idx} className="flex flex-col p-5 bg-gray-50 rounded-2xl border border-gray-100 transition-all hover:bg-white hover:shadow-md">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }}></div>
-                                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">{item.name}</span>
+                                    <div key={idx} className="p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                                        <span className="text-xs font-medium text-gray-600">{item.name}</span>
                                       </div>
-                                      <div className="flex items-end justify-between">
-                                        <span className="text-xl font-black text-gray-900">{item.value.toLocaleString()}</span>
-                                        <span className="text-xs font-bold text-gray-400 mb-0.5">{item.percentage.toFixed(0)}%</span>
+                                      <div className="flex items-baseline justify-between">
+                                        <span className="text-lg font-bold text-gray-900 tabular-nums">{item.value.toLocaleString()}</span>
+                                        <span className="text-xs text-gray-500 tabular-nums">{item.percentage.toFixed(0)}%</span>
                                       </div>
                                     </div>
                                   ))}
@@ -3029,24 +2384,20 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               </div>
                             );
                           })()}
-                        </div>
+                        </EditorialCard>
 
-                        {/* Fiber Delivery Analytics - Enhanced Bar Chart */}
-                        <div className="lg:col-span-2 bg-gradient-to-br from-white via-emerald-50/30 to-blue-50/30 rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                            <div className="flex items-center gap-4">
-                              <div className="w-1.5 h-10 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full shadow-lg shadow-emerald-200"></div>
-                              <div>
-                                <h3 className="text-xl font-black text-gray-900 tracking-tight">Delivery Analytics</h3>
-                                <p className="text-sm text-gray-500 font-medium mt-0.5">Fiber quantity (kg) over time</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
+                        <EditorialCard
+                          className="lg:col-span-2 flex flex-col"
+                          title="Delivery Analytics"
+                          subtitle="Fiber quantity (kg) by grade over time"
+                          actions={
+                            <div className="flex flex-wrap items-center gap-2">
                               {deliveryView === 'monthly' && (
                                 <select
-                                  className="text-gray-700 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-xl px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                  className="text-gray-700 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857]"
                                   value={deliveryMonthYear}
                                   onChange={(e) => setDeliveryMonthYear(parseInt(e.target.value))}
+                                  aria-label="Delivery analytics year"
                                 >
                                   {Array.from(new Set([
                                     new Date().getFullYear(),
@@ -3056,27 +2407,16 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   ))}
                                 </select>
                               )}
-                              <div className="flex gap-1 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-100">
-                                <button
-                                  onClick={() => setDeliveryView('monthly')}
-                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${deliveryView === 'monthly'
-                                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 scale-105'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                                >
-                                  Monthly
-                                </button>
-                                <button
-                                  onClick={() => setDeliveryView('yearly')}
-                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${deliveryView === 'yearly'
-                                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 scale-105'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                                >
-                                  Yearly
-                                </button>
-                              </div>
+                              <SegmentedToggle
+                                options={[
+                                  { value: 'monthly', label: 'Monthly' },
+                                  { value: 'yearly', label: 'Yearly' },
+                                ]}
+                                value={deliveryView}
+                                onChange={(v) => setDeliveryView(v as 'monthly' | 'yearly')}
+                              />
                               <button
+                                type="button"
                                 onClick={() => {
                                   setCurrentInsight({
                                     title: 'Delivery Analytics',
@@ -3085,305 +2425,185 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   });
                                   setShowInsightModal(true);
                                 }}
-                                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-black hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors"
                               >
-                                <Eye className="w-4 h-4" />
+                                <Eye className="w-3.5 h-3.5 text-gray-500" />
                                 Insights
                               </button>
                             </div>
+                          }
+                        >
+                          <div className="flex flex-wrap items-center justify-end gap-4 text-xs text-gray-600 mb-4">
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.emerald }} />
+                              Class A
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.amber }} />
+                              Class B
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.espresso }} />
+                              Class C
+                            </span>
                           </div>
 
-                          {/* Premium Legend Badges - Serving as Custom Legend */}
-                          <div className="flex flex-wrap items-center gap-3 mb-8">
-                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                              <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">Class A</span>
-                            </div>
-                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                              <span className="text-xs font-black text-blue-700 uppercase tracking-wider">Class B</span>
-                            </div>
-                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-xl border border-amber-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                              <span className="text-xs font-black text-amber-700 uppercase tracking-wider">Class C</span>
-                            </div>
-                          </div>
+                          {(() => {
+                            const currentYear = new Date().getFullYear();
+                            let chartData: any[] = [];
+                            const rawDists = dashboardData.deliveries?.rawDeliveries || [];
 
-                          <div className="w-full">
-                            {(() => {
-                              const currentYear = new Date().getFullYear();
-                              let chartData: any[] = [];
-                              const rawDists = dashboardData.deliveries?.rawDeliveries || [];
+                            if (deliveryView === 'monthly') {
+                              const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                              const monthlyA = new Array(12).fill(0);
+                              const monthlyB = new Array(12).fill(0);
+                              const monthlyC = new Array(12).fill(0);
 
-                              if (deliveryView === 'monthly') {
-                                const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                const monthlyA = new Array(12).fill(0);
-                                const monthlyB = new Array(12).fill(0);
-                                const monthlyC = new Array(12).fill(0);
+                              rawDists.forEach((d: any) => {
+                                const date = new Date(d.created_at || d.delivery_date);
+                                if (date.getFullYear() === deliveryMonthYear) {
+                                  const month = date.getMonth();
+                                  const qty = parseFloat(d.quantity_kg || 0);
+                                  if (d.grade === 'Class A') monthlyA[month] += qty;
+                                  else if (d.grade === 'Class B') monthlyB[month] += qty;
+                                  else if (d.grade === 'Class C') monthlyC[month] += qty;
+                                }
+                              });
 
-                                rawDists.forEach((d: any) => {
-                                  // Use consistent date parsing
-                                  const date = new Date(d.created_at || d.delivery_date);
-                                  if (date.getFullYear() === deliveryMonthYear) {
-                                    const month = date.getMonth();
-                                    const qty = parseFloat(d.quantity_kg || 0);
+                              chartData = labels.map((label, i) => ({
+                                period: label,
+                                classA: monthlyA[i],
+                                classB: monthlyB[i],
+                                classC: monthlyC[i]
+                              }));
+                            } else {
+                              const years = Array.from(new Set([
+                                currentYear,
+                                ...rawDists.map((d: any) => new Date(d.created_at || d.delivery_date).getFullYear())
+                              ])).sort((a, b) => a - b);
 
-                                    // Aggregate by class
-                                    if (d.grade === 'Class A') monthlyA[month] += qty;
-                                    else if (d.grade === 'Class B') monthlyB[month] += qty;
-                                    else if (d.grade === 'Class C') monthlyC[month] += qty;
-                                  }
-                                });
+                              chartData = years.map(year => {
+                                const yearDeliveries = rawDists.filter((d: any) => new Date(d.created_at || d.delivery_date).getFullYear() === year);
+                                return {
+                                  period: year.toString(),
+                                  classA: yearDeliveries.filter((d: any) => d.grade === 'Class A').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+                                  classB: yearDeliveries.filter((d: any) => d.grade === 'Class B').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+                                  classC: yearDeliveries.filter((d: any) => d.grade === 'Class C').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0)
+                                };
+                              });
+                            }
 
-                                chartData = labels.map((label, i) => ({
-                                  period: label,
-                                  classA: monthlyA[i],
-                                  classB: monthlyB[i],
-                                  classC: monthlyC[i]
-                                }));
-                              } else {
-                                const years = Array.from(new Set([
-                                  currentYear,
-                                  ...rawDists.map((d: any) => new Date(d.created_at || d.delivery_date).getFullYear())
-                                ])).sort((a, b) => a - b);
-
-                                // Group by Year and Class
-                                chartData = years.map(year => {
-                                  const yearDeliveries = rawDists.filter((d: any) => new Date(d.created_at || d.delivery_date).getFullYear() === year);
-
-                                  const classA = yearDeliveries.filter((d: any) => d.grade === 'Class A').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0);
-                                  const classB = yearDeliveries.filter((d: any) => d.grade === 'Class B').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0);
-                                  const classC = yearDeliveries.filter((d: any) => d.grade === 'Class C').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0);
-
-                                  return {
-                                    period: year.toString(),
-                                    classA,
-                                    classB,
-                                    classC
-                                  };
-                                });
-                              }
-
-                              return (
-                                <div className="overflow-x-auto rounded-3xl bg-white/50 backdrop-blur-sm p-4 border border-white/60 shadow-inner">
-                                  <div style={{ minWidth: deliveryView === 'monthly' ? '700px' : '100%', width: '100%' }}>
-                                    <ResponsiveContainer width="100%" height={450}>
-                                      <RechartsBarChart
-                                        data={chartData}
-                                        margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-                                        barGap={deliveryView === 'monthly' ? 12 : 4}
-                                        barCategoryGap={chartData.length < 5 ? "35%" : "20%"}
-                                      >
-                                        <defs>
-                                          <linearGradient id="classAGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                                            <stop offset="100%" stopColor="#059669" stopOpacity={0.7} />
-                                          </linearGradient>
-                                          <linearGradient id="classBGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
-                                            <stop offset="100%" stopColor="#2563eb" stopOpacity={0.7} />
-                                          </linearGradient>
-                                          <linearGradient id="classCGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.9} />
-                                            <stop offset="100%" stopColor="#d97706" stopOpacity={0.7} />
-                                          </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
-                                        <XAxis
-                                          dataKey="period"
-                                          stroke="#6b7280"
-                                          style={{ fontSize: '13px', fontWeight: 600 }}
-                                          axisLine={false}
-                                          tickLine={false}
-                                          dy={10}
-                                        />
-                                        <YAxis
-                                          stroke="#6b7280"
-                                          style={{ fontSize: '13px', fontWeight: 600 }}
-                                          axisLine={false}
-                                          tickLine={false}
-                                          dx={-5}
-                                          tickFormatter={(value) => `${value}`}
-                                        />
-                                        {/* Legend removed as requested, using custom badges above */}
-                                        <Tooltip
-                                          contentStyle={{
-                                            backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: 'none',
-                                            borderRadius: '16px',
-                                            padding: '12px 16px',
-                                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-                                            fontWeight: 600
-                                          }}
-                                          itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
-                                          cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
-                                          formatter={(value: any) => `${Math.round(value)} kg`}
-                                        />
-                                        <Bar
-                                          dataKey="classA"
-                                          name="Class A"
-                                          fill="url(#classAGradient)"
-                                          radius={[6, 6, 0, 0]}
-                                          barSize={deliveryView === 'monthly' ? 32 : 50}
-                                          stroke="#fff"
-                                          strokeWidth={4}
-                                          animationDuration={1500}
-                                        />
-                                        <Bar
-                                          dataKey="classB"
-                                          name="Class B"
-                                          fill="url(#classBGradient)"
-                                          radius={[6, 6, 0, 0]}
-                                          barSize={deliveryView === 'monthly' ? 32 : 50}
-                                          stroke="#fff"
-                                          strokeWidth={4}
-                                          animationDuration={1700}
-                                        />
-                                        <Bar
-                                          dataKey="classC"
-                                          name="Class C"
-                                          fill="url(#classCGradient)"
-                                          radius={[6, 6, 0, 0]}
-                                          barSize={deliveryView === 'monthly' ? 32 : 50}
-                                          stroke="#fff"
-                                          strokeWidth={4}
-                                          animationDuration={1900}
-                                        />
-                                      </RechartsBarChart>
-                                    </ResponsiveContainer>
-                                  </div>
+                            return (
+                              <div className="overflow-x-auto">
+                                <div style={{ minWidth: deliveryView === 'monthly' ? '640px' : '100%', width: '100%' }}>
+                                  <ResponsiveContainer width="100%" height={360}>
+                                    <RechartsBarChart
+                                      data={chartData}
+                                      margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
+                                      barGap={6}
+                                      barCategoryGap={chartData.length < 5 ? '30%' : '18%'}
+                                    >
+                                      <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                      <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
+                                      <YAxis {...EDITORIAL_CHART.yAxisProps} />
+                                      <Tooltip
+                                        contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                        cursor={{ fill: '#F9FAFB' }}
+                                        formatter={(value: any) => `${Math.round(Number(value))} kg`}
+                                      />
+                                      <Bar dataKey="classA" name="Class A" fill={EDITORIAL_CHART.colors.emerald} radius={[4, 4, 0, 0]} barSize={deliveryView === 'monthly' ? 20 : 38} />
+                                      <Bar dataKey="classB" name="Class B" fill={EDITORIAL_CHART.colors.amber} radius={[4, 4, 0, 0]} barSize={deliveryView === 'monthly' ? 20 : 38} />
+                                      <Bar dataKey="classC" name="Class C" fill={EDITORIAL_CHART.colors.espresso} radius={[4, 4, 0, 0]} barSize={deliveryView === 'monthly' ? 20 : 38} />
+                                    </RechartsBarChart>
+                                  </ResponsiveContainer>
                                 </div>
-                              );
-                            })()}
-                          </div>
-                        </div>
+                              </div>
+                            );
+                          })()}
+                        </EditorialCard>
                       </div>
                     </div>
 
-                    {/* Sales Report Section - Bottom */}
-                    <div>
-                      <h2 className="text-2xl font-semibold text-gray-900 mb-6">Sales Analytics</h2>
+                    {/* Sales Report Section */}
+                    <div className="space-y-4">
+                      <h2 className="font-serif text-xl font-bold text-gray-900">Sales Analytics</h2>
 
-                      {/* Stats Cards - Vibrant Gradient Design */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <StatsCard
-                          title="Sales"
-                          value={`₱${(dashboardData.sales?.totalAmount || 0).toLocaleString()}`}
-                          subValue="Total sales amount"
-                          icon={<TrendingUp className="w-6 h-6 text-white" />}
-                          gradient="from-purple-500 via-purple-600 to-purple-700"
-                        />
-                        <StatsCard
-                          title="Active Farmers"
-                          value={dashboardData.users.totalFarmers}
-                          subValue="Registered farmers"
-                          icon={<User className="w-6 h-6 text-white" />}
-                          gradient="from-emerald-500 via-emerald-600 to-emerald-700"
-                        />
-                        <StatsCard
-                          title="Abaca Sold"
-                          value={(dashboardData.sales?.totalKgSold || 0).toLocaleString()}
-                          subValue="Total fiber sold"
-                          icon={<Package className="w-6 h-6 text-white" />}
-                          gradient="from-blue-500 via-blue-600 to-blue-700"
-                          unit="kg"
-                        />
-                        <StatsCard
-                          title="Transactions"
-                          value={dashboardData.sales?.recentSales?.length || 0}
-                          subValue="Total sales records"
-                          icon={<FileText className="w-6 h-6 text-white" />}
-                          gradient="from-orange-500 via-orange-600 to-orange-700"
-                        />
-                      </div>
+                      <KpiStrip
+                        columns={4}
+                        items={[
+                          { label: 'Total Sales', value: `₱${(dashboardData.sales?.totalAmount || 0).toLocaleString()}`, subtext: 'Approved revenue' },
+                          { label: 'Active Farmers', value: (dashboardData.users.totalFarmers || 0).toLocaleString(), subtext: 'Registered farmers' },
+                          { label: 'Abaca Sold', value: `${(dashboardData.sales?.totalKgSold || 0).toLocaleString()} kg`, subtext: 'Total fiber sold' },
+                          { label: 'Transactions', value: (dashboardData.sales?.recentSales?.length || 0).toLocaleString(), subtext: 'Recent sales records' },
+                        ]}
+                      />
 
-                      {/* Analytics Charts */}
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Sales Overview Donut */}
-                        <div className="bg-white rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col h-full">
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h3 className="text-xl font-black text-gray-900">Sales Status</h3>
-                              <p className="text-xs text-gray-500 font-medium italic">Approval status distribution</p>
-                            </div>
-                            <div className="p-2 bg-purple-50 rounded-xl">
-                              <TrendingUp className="text-purple-500" size={24} />
-                            </div>
-                          </div>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <EditorialCard
+                          title="Sales Status"
+                          subtitle="Approval status distribution"
+                          className="flex flex-col h-full"
+                          bodyClassName="flex-1 flex flex-col justify-center"
+                        >
+                          {(() => {
+                            const approved = dashboardData.sales?.totalAmount || 0;
+                            const pending = dashboardData.sales?.pendingAmount || 0;
+                            const total = approved + pending;
 
-                          <div className="flex-1 flex flex-col items-center justify-center">
-                            {(() => {
-                              const approved = dashboardData.sales?.totalAmount || 0;
-                              const pending = dashboardData.sales?.pendingAmount || 0;
-                              const total = approved + pending;
+                            const chartData = [
+                              { name: 'Approved', value: approved, fill: EDITORIAL_CHART.colors.emerald, percentage: total > 0 ? (approved / total) * 100 : 0 },
+                              { name: 'Pending', value: pending, fill: EDITORIAL_CHART.colors.amber, percentage: total > 0 ? (pending / total) * 100 : 0 }
+                            ];
 
-                              const chartData = [
-                                { name: 'Approved', value: approved, fill: '#10b981', percentage: total > 0 ? (approved / total) * 100 : 0 },
-                                { name: 'Pending', value: pending, fill: '#fbbf24', percentage: total > 0 ? (pending / total) * 100 : 0 }
-                              ];
-
-                              if (total === 0) {
-                                return (
-                                  <div className="flex flex-col items-center justify-center p-8 text-gray-400">
-                                    <Activity className="w-12 h-12 text-gray-200 mb-2" />
-                                    <p className="text-sm font-semibold">No sales data</p>
-                                  </div>
-                                );
-                              }
-
+                            if (total === 0) {
                               return (
-                                <div className="w-full flex-1 flex flex-col items-center">
-                                  <AnimatedPieChart
-                                    data={chartData}
-                                    centerLabel={`₱${total.toLocaleString()}`}
-                                    centerSubLabel="Total Sales Amount"
-                                  />
-
-                                  {/* Custom Legend */}
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mt-4">
-                                    {chartData.map((item, idx) => (
-                                      <div key={idx} className="flex flex-col p-4 bg-gray-50/50 rounded-2xl border border-gray-100/80 transition-all hover:bg-white hover:shadow-lg hover:border-purple-200 group">
-                                        <div className="flex items-center justify-between mb-3">
-                                          <div className="flex items-center gap-2">
-                                            <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.fill }}></div>
-                                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{item.name}</span>
-                                          </div>
-                                          <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
-                                            {item.percentage.toFixed(0)}%
-                                          </span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                          <span className={`${item.value > 1000000 ? 'text-lg' : 'text-xl'} font-black text-gray-900 tracking-tight`}>
-                                            ₱{item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                          </span>
-                                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mt-0.5">Contribution Amount</span>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
+                                <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                                  <Activity className="w-10 h-10 text-gray-300 mb-2" />
+                                  <p className="text-sm font-medium text-gray-500">No sales data</p>
                                 </div>
                               );
-                            })()}
-                          </div>
-                        </div>
+                            }
 
-                        {/* Unified Sales Performance Analytics - Redesigned */}
-                        <div className="lg:col-span-2 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 rounded-3xl shadow-2xl p-6 border border-white/60 flex flex-col hover:shadow-purple-500/10 transition-all duration-500">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                            <div className="flex items-center gap-4">
-                              <div className="w-1.5 h-10 bg-gradient-to-b from-purple-400 to-purple-600 rounded-full shadow-lg shadow-purple-200"></div>
-                              <div>
-                                <h3 className="text-xl font-black text-gray-900 tracking-tight">Sales Performance Analytics</h3>
-                                <p className="text-sm text-gray-500 font-medium mt-0.5">Fiber Sales (₱) by Class A, B, and C</p>
+                            return (
+                              <div className="flex flex-col items-center">
+                                <AnimatedPieChart
+                                  data={chartData}
+                                  centerLabel={`₱${total.toLocaleString()}`}
+                                  centerSubLabel="Total Sales Amount"
+                                />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-4">
+                                  {chartData.map((item, idx) => (
+                                    <div key={idx} className="p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                                          <span className="text-xs font-medium text-gray-600">{item.name}</span>
+                                        </div>
+                                        <span className="text-xs text-gray-500 tabular-nums">{item.percentage.toFixed(0)}%</span>
+                                      </div>
+                                      <p className="text-base font-bold text-gray-900 tabular-nums">
+                                        ₱{item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-3">
+                            );
+                          })()}
+                        </EditorialCard>
+
+                        <EditorialCard
+                          className="lg:col-span-2 flex flex-col"
+                          title="Sales Performance Analytics"
+                          subtitle="Fiber sales (₱) by Class A, B, and C"
+                          actions={
+                            <div className="flex flex-wrap items-center gap-2">
                               {abacaSoldView === 'monthly' && (
                                 <select
-                                  className="text-gray-700 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-xl px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 hover:border-purple-200 transition-colors"
+                                  className="text-gray-700 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857]"
                                   value={salesMonthYear}
                                   onChange={(e) => setSalesMonthYear(parseInt(e.target.value))}
+                                  aria-label="Sales analytics year"
                                 >
                                   {Array.from(new Set([
                                     new Date().getFullYear(),
@@ -3394,33 +2614,20 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   ))}
                                 </select>
                               )}
-                              <div className="flex gap-1 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-100">
-                                <button
-                                  onClick={() => {
-                                    setAbacaSoldView('monthly');
-                                    setSalesChartView('monthly');
-                                  }}
-                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${abacaSoldView === 'monthly'
-                                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30 scale-105'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                                >
-                                  Monthly
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setAbacaSoldView('yearly');
-                                    setSalesChartView('yearly');
-                                  }}
-                                  className={`px-4 py-2 rounded-lg text-xs font-black transition-all duration-300 ${abacaSoldView === 'yearly'
-                                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30 scale-105'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                                >
-                                  Yearly
-                                </button>
-                              </div>
+                              <SegmentedToggle
+                                options={[
+                                  { value: 'monthly', label: 'Monthly' },
+                                  { value: 'yearly', label: 'Yearly' },
+                                ]}
+                                value={abacaSoldView}
+                                onChange={(v) => {
+                                  const mode = v as 'monthly' | 'yearly';
+                                  setAbacaSoldView(mode);
+                                  setSalesChartView(mode);
+                                }}
+                              />
                               <button
+                                type="button"
                                 onClick={() => {
                                   setCurrentInsight({
                                     title: 'Sales Performance Analytics',
@@ -3429,334 +2636,247 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   });
                                   setShowInsightModal(true);
                                 }}
-                                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-black hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors"
                               >
-                                <Eye className="w-4 h-4" />
+                                <Eye className="w-3.5 h-3.5 text-gray-500" />
                                 Insights
                               </button>
                             </div>
+                          }
+                        >
+                          <div className="flex flex-wrap items-center justify-end gap-4 text-xs text-gray-600 mb-4">
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.amber }} />
+                              Class A
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.emerald }} />
+                              Class B
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EDITORIAL_CHART.colors.espresso }} />
+                              Class C
+                            </span>
                           </div>
 
-                          {/* Premium Legend Badges with Icons */}
-                          <div className="flex flex-wrap items-center gap-3 mb-8">
-                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                              <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">Class A</span>
-                            </div>
-                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                              <span className="text-xs font-black text-blue-700 uppercase tracking-wider">Class B</span>
-                            </div>
-                            <div className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-xl border border-purple-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 shadow-md group-hover:scale-110 transition-transform"></div>
-                              <span className="text-xs font-black text-purple-700 uppercase tracking-wider">Class C</span>
-                            </div>
-                          </div>
+                          {(() => {
+                            const allSales = [
+                              ...(dashboardData.sales?.allSales || dashboardData.sales?.recentSales || []),
+                              ...(dashboardData.deliveries?.rawDeliveries?.filter((d: any) => d.status === 'Completed' || d.status === 'Delivered') || []).map((d: any) => ({
+                                ...d,
+                                sale_date: d.delivery_date,
+                                total_amount: parseFloat(d.total_amount || 0),
+                                abaca_type: d.grade || d.fiber_class
+                              }))
+                            ];
+                            const currentYear = new Date().getFullYear();
+                            let chartData: any[] = [];
 
-                          <div className="w-full">
-                            {(() => {
-                              const allSales = [
-                                ...(dashboardData.sales?.allSales || dashboardData.sales?.recentSales || []),
-                                ...(dashboardData.deliveries?.rawDeliveries?.filter((d: any) => d.status === 'Completed' || d.status === 'Delivered') || []).map((d: any) => ({
-                                  ...d,
-                                  sale_date: d.delivery_date,
-                                  total_amount: parseFloat(d.total_amount || 0),
-                                  abaca_type: d.grade || d.fiber_class
-                                }))
-                              ];
-                              const currentYear = new Date().getFullYear();
-                              let chartData = [];
+                            if (abacaSoldView === 'monthly') {
+                              const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                              const salesA = Array(12).fill(0);
+                              const salesB = Array(12).fill(0);
+                              const salesC = Array(12).fill(0);
 
-                              if (abacaSoldView === 'monthly') {
-                                const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                const salesA = Array(12).fill(0);
-                                const salesB = Array(12).fill(0);
-                                const salesC = Array(12).fill(0);
+                              allSales.forEach((sale: any) => {
+                                const saleDate = new Date(sale.sale_date);
+                                if (saleDate.getFullYear() === salesMonthYear) {
+                                  const month = saleDate.getMonth();
+                                  const amount = (sale.total_amount || 0);
+                                  const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
+                                  if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) salesA[month] += amount;
+                                  else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[month] += amount;
+                                  else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[month] += amount;
+                                }
+                              });
 
-                                allSales.forEach((sale: any) => {
-                                  const saleDate = new Date(sale.sale_date);
-                                  if (saleDate.getFullYear() === salesMonthYear) {
-                                    const month = saleDate.getMonth();
-                                    const amount = (sale.total_amount || 0);
-                                    const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
+                              chartData = labels.map((l, i) => ({
+                                period: l,
+                                salesA: salesA[i],
+                                salesB: salesB[i],
+                                salesC: salesC[i]
+                              }));
+                            } else {
+                              const years = Array.from(new Set([
+                                currentYear,
+                                ...allSales.map((s: any) => new Date(s.sale_date).getFullYear())
+                              ])).filter(y => y > 2020 && !isNaN(y)).sort((a, b) => a - b);
 
-                                    if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) salesA[month] += amount;
-                                    else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[month] += amount;
-                                    else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[month] += amount;
-                                  }
-                                });
+                              const salesA = Array(years.length).fill(0);
+                              const salesB = Array(years.length).fill(0);
+                              const salesC = Array(years.length).fill(0);
 
-                                chartData = labels.map((l, i) => ({
-                                  period: l,
-                                  salesA: salesA[i],
-                                  salesB: salesB[i],
-                                  salesC: salesC[i]
-                                }));
-                              } else {
-                                const years = Array.from(new Set([
-                                  currentYear,
-                                  ...allSales.map((s: any) => new Date(s.sale_date).getFullYear())
-                                ])).sort((a, b) => a - b);
+                              allSales.forEach((sale: any) => {
+                                const saleDate = new Date(sale.sale_date);
+                                const yearIdx = years.indexOf(saleDate.getFullYear());
+                                if (yearIdx !== -1) {
+                                  const amount = (sale.total_amount || 0);
+                                  const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
+                                  if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) salesA[yearIdx] += amount;
+                                  else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[yearIdx] += amount;
+                                  else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[yearIdx] += amount;
+                                }
+                              });
 
-                                const salesA = Array(years.length).fill(0);
-                                const salesB = Array(years.length).fill(0);
-                                const salesC = Array(years.length).fill(0);
+                              chartData = years.map((y, i) => ({
+                                period: y.toString(),
+                                salesA: salesA[i],
+                                salesB: salesB[i],
+                                salesC: salesC[i]
+                              }));
+                            }
 
-                                allSales.forEach((sale: any) => {
-                                  const saleDate = new Date(sale.sale_date);
-                                  const yearIdx = years.indexOf(saleDate.getFullYear());
-                                  if (yearIdx !== -1) {
-                                    const amount = (sale.total_amount || 0);
-                                    const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
-
-                                    if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) salesA[yearIdx] += amount;
-                                    else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[yearIdx] += amount;
-                                    else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[yearIdx] += amount;
-                                  }
-                                });
-
-                                chartData = years.map((y, i) => ({
-                                  period: y.toString(),
-                                  salesA: salesA[i],
-                                  salesB: salesB[i],
-                                  salesC: salesC[i]
-                                }));
-                              }
-
-                              return (
-                                <div className="overflow-x-auto rounded-3xl bg-white/50 backdrop-blur-sm p-4 border border-white/60 shadow-inner">
-                                  <div style={{ minWidth: abacaSoldView === 'monthly' ? '700px' : '100%', width: '100%' }}>
-                                    <ResponsiveContainer width="100%" height={450}>
-                                      <RechartsBarChart
-                                        data={chartData}
-                                        margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-                                        barGap={abacaSoldView === 'monthly' ? 12 : 4}
-                                        barCategoryGap={chartData.length < 5 ? "35%" : "20%"}
-                                      >
-                                        <defs>
-                                          <linearGradient id="salesAGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                                            <stop offset="100%" stopColor="#059669" stopOpacity={0.7} />
-                                          </linearGradient>
-                                          <linearGradient id="salesBGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
-                                            <stop offset="100%" stopColor="#2563eb" stopOpacity={0.7} />
-                                          </linearGradient>
-                                          <linearGradient id="salesCGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#a855f7" stopOpacity={0.9} />
-                                            <stop offset="100%" stopColor="#9333ea" stopOpacity={0.7} />
-                                          </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} opacity={0.5} />
-                                        <XAxis
-                                          dataKey="period"
-                                          stroke="#6b7280"
-                                          style={{ fontSize: '13px', fontWeight: 600 }}
-                                          axisLine={false}
-                                          tickLine={false}
-                                          dy={10}
-                                        />
-                                        <YAxis
-                                          stroke="#6b7280"
-                                          style={{ fontSize: '13px', fontWeight: 600 }}
-                                          axisLine={false}
-                                          tickLine={false}
-                                          dx={-5}
-                                          tickFormatter={(value) => `₱${Math.round(value / 1000)}k`}
-                                        />
-                                        <Tooltip
-                                          contentStyle={{
-                                            backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: 'none',
-                                            borderRadius: '16px',
-                                            padding: '12px 16px',
-                                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-                                            fontWeight: 600
-                                          }}
-                                          itemStyle={{ fontWeight: 'bold', fontSize: '13px' }}
-                                          cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
-                                          formatter={(value: any) => `₱${Math.round(value).toLocaleString()}`}
-                                        />
-                                        <Bar
-                                          name="Class A"
-                                          dataKey="salesA"
-                                          fill="url(#salesAGradient)"
-                                          radius={[6, 6, 0, 0]}
-                                          animationDuration={1500}
-                                          barSize={abacaSoldView === 'monthly' ? 32 : 50}
-                                          stroke="#fff"
-                                          strokeWidth={4}
-                                        />
-                                        <Bar
-                                          name="Class B"
-                                          dataKey="salesB"
-                                          fill="url(#salesBGradient)"
-                                          radius={[6, 6, 0, 0]}
-                                          animationDuration={1800}
-                                          barSize={abacaSoldView === 'monthly' ? 32 : 50}
-                                          stroke="#fff"
-                                          strokeWidth={4}
-                                        />
-                                        <Bar
-                                          name="Class C"
-                                          dataKey="salesC"
-                                          fill="url(#salesCGradient)"
-                                          radius={[6, 6, 0, 0]}
-                                          animationDuration={2100}
-                                          barSize={abacaSoldView === 'monthly' ? 32 : 50}
-                                          stroke="#fff"
-                                          strokeWidth={4}
-                                        />
-                                      </RechartsBarChart>
-                                    </ResponsiveContainer>
-                                  </div>
+                            return (
+                              <div className="overflow-x-auto">
+                                <div style={{ minWidth: abacaSoldView === 'monthly' ? '640px' : '100%', width: '100%' }}>
+                                  <ResponsiveContainer width="100%" height={360}>
+                                    <RechartsBarChart
+                                      data={chartData}
+                                      margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
+                                      barGap={6}
+                                      barCategoryGap={chartData.length < 5 ? '30%' : '18%'}
+                                    >
+                                      <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                      <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
+                                      <YAxis
+                                        {...EDITORIAL_CHART.yAxisProps}
+                                        tickFormatter={(value) => `₱${Math.round(value / 1000)}k`}
+                                      />
+                                      <Tooltip
+                                        contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                        cursor={{ fill: '#F9FAFB' }}
+                                        formatter={(value: any) => `₱${Math.round(Number(value)).toLocaleString()}`}
+                                      />
+                                      <Bar name="Class A" dataKey="salesA" fill={EDITORIAL_CHART.colors.amber} radius={[4, 4, 0, 0]} barSize={abacaSoldView === 'monthly' ? 20 : 38} />
+                                      <Bar name="Class B" dataKey="salesB" fill={EDITORIAL_CHART.colors.emerald} radius={[4, 4, 0, 0]} barSize={abacaSoldView === 'monthly' ? 20 : 38} />
+                                      <Bar name="Class C" dataKey="salesC" fill={EDITORIAL_CHART.colors.espresso} radius={[4, 4, 0, 0]} barSize={abacaSoldView === 'monthly' ? 20 : 38} />
+                                    </RechartsBarChart>
+                                  </ResponsiveContainer>
                                 </div>
-                              );
-                            })()}
-                          </div>
-                        </div>
+                              </div>
+                            );
+                          })()}
+                        </EditorialCard>
                       </div>
 
-                      {/* Recent Sales Table - Premium Style */}
-                      <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 border border-white/60 hover:shadow-emerald-500/5 transition-all duration-500">
-                        <div className="flex items-center justify-between mb-8">
-                          <div className="flex items-center gap-4">
-                            <div className="w-1.5 h-10 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full shadow-lg shadow-emerald-200"></div>
-                            <div>
-                              <h3 className="text-2xl font-black text-gray-900 tracking-tight">Recent Sales Transactions</h3>
-                              <p className="text-sm text-gray-500 font-medium">Detailed log of approved fiber sales</p>
-                            </div>
-                          </div>
-                          <div className="p-3 bg-emerald-50 rounded-2xl">
-                            <TrendingUp className="text-emerald-500 w-6 h-6" />
-                          </div>
-                        </div>
-                        <div className="overflow-x-auto rounded-2xl border border-gray-100 shadow-sm bg-gray-50/30">
-                          <table className="w-full">
+                      <EditorialCard
+                        title="Recent Sales Transactions"
+                        subtitle="Detailed log of approved fiber sales"
+                        badge={(dashboardData.sales?.recentSales || []).length}
+                        noPadding
+                      >
+                        <div className="table-wrapper" tabIndex={0} role="region" aria-label="Recent sales transactions">
+                          <table className="w-full text-left">
                             <thead>
-                              <tr className="bg-white/80">
-                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Farmer</th>
-                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Buyer</th>
-                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Amount</th>
-                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Quantity</th>
-                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Status</th>
-                                <th className="text-left py-5 px-6 text-xs font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">Date</th>
+                              <tr className="border-b border-gray-200 bg-[#FAFAFA]">
+                                <th className="py-3.5 px-5 text-xs font-semibold text-gray-500">Farmer</th>
+                                <th className="py-3.5 px-5 text-xs font-semibold text-gray-500">Buyer</th>
+                                <th className="py-3.5 px-5 text-xs font-semibold text-gray-500">Amount</th>
+                                <th className="py-3.5 px-5 text-xs font-semibold text-gray-500">Quantity</th>
+                                <th className="py-3.5 px-5 text-xs font-semibold text-gray-500">Status</th>
+                                <th className="py-3.5 px-5 text-xs font-semibold text-gray-500">Date</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-gray-100 bg-white">
                               {(dashboardData.sales?.recentSales || []).map((sale: any, index: number) => (
-                                <tr key={index} className="hover:bg-white transition-all duration-200 group">
-                                  <td className="py-5 px-6">
-                                    <div className="flex items-center gap-4">
-                                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center text-emerald-700 font-black text-sm shadow-sm group-hover:scale-110 transition-transform">
+                                <tr key={index} className="hover:bg-gray-50/70 transition-colors">
+                                  <td className="py-4 px-5 whitespace-nowrap">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-bold text-xs">
                                         {sale.farmer_name?.charAt(0) || 'F'}
                                       </div>
-                                      <span className="text-sm font-bold text-gray-900">{sale.farmer_name || 'N/A'}</span>
+                                      <span className="text-sm font-semibold text-gray-900">{sale.farmer_name || 'N/A'}</span>
                                     </div>
                                   </td>
-                                  <td className="py-5 px-6">
-                                    <div className="flex flex-col">
-                                      <span className="text-sm font-bold text-gray-900 truncate max-w-[150px]">{sale.buyer_company_name || sale.buyer_name || 'N/A'}</span>
-                                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Verified Buyer</span>
-                                    </div>
+                                  <td className="py-4 px-5 whitespace-nowrap">
+                                    <div className="text-sm font-medium text-gray-900 truncate max-w-[180px]">{sale.buyer_company_name || sale.buyer_name || 'N/A'}</div>
+                                    <div className="text-xs text-gray-500">Verified Buyer</div>
                                   </td>
-                                  <td className="py-5 px-6">
-                                    <div className="flex flex-col">
-                                      <span className="text-base font-black text-gray-900 tracking-tight">₱{sale.total_amount?.toLocaleString() || '0'}</span>
-                                      <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter">Total Gross</span>
-                                    </div>
+                                  <td className="py-4 px-5 whitespace-nowrap">
+                                    <div className="text-sm font-semibold text-gray-900 tabular-nums">₱{sale.total_amount?.toLocaleString() || '0'}</div>
+                                    <div className="text-xs text-gray-500">Total gross</div>
                                   </td>
-                                  <td className="py-5 px-6">
-                                    <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-black shadow-sm border border-blue-100">
-                                      {sale.quantity_sold || 0} kg
-                                    </span>
+                                  <td className="py-4 px-5 whitespace-nowrap text-sm text-gray-700 tabular-nums">
+                                    {sale.quantity_sold || 0} kg
                                   </td>
-                                  <td className="py-5 px-6">
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                      Approved
-                                    </span>
+                                  <td className="py-4 px-5 whitespace-nowrap">
+                                    <StatusPill tone="success">Approved</StatusPill>
                                   </td>
-                                  <td className="py-5 px-6">
-                                    <div className="flex flex-col">
-                                      <span className="text-sm font-bold text-gray-700">{new Date(sale.sale_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                      <span className="text-[10px] text-gray-400 font-bold uppercase">Sale Date</span>
-                                    </div>
+                                  <td className="py-4 px-5 whitespace-nowrap text-sm text-gray-600">
+                                    {new Date(sale.sale_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                   </td>
                                 </tr>
                               ))}
                             </tbody>
                           </table>
                         </div>
-                      </div>
+                      </EditorialCard>
                     </div>
                   </div>
                 )}
 
                 {dashboardSection === 'users' && (
-                  <UserAnalyticsDashboard />
+                  <UserAnalyticsDashboard key={version} />
                 )}
               </>
             )}
           </div>
-        )
-        }
-      </main >
+      </EditorialShell>
 
       {showProfileModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-3xl w-full max-h-[90vh] overflow-hidden">
             {/* Modal Header */}
-            <div className="bg-emerald-600 px-8 py-6 flex items-center justify-between">
+            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/10 rounded-xl">
-                  <User className="w-6 h-6 text-white" />
+                <div className="p-2 bg-[#EAF6F0] rounded-xl text-[#047857]">
+                  <User className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">
+                  <h2 className="font-serif text-xl font-bold text-gray-900">
                     {isEditMode ? 'Edit Profile' : 'My Profile'}
                   </h2>
-                  <p className="text-emerald-50 text-sm opacity-90">Manage your account information</p>
+                  <p className="text-gray-500 text-xs">Manage your account information</p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setShowProfileModal(false);
                   setIsEditMode(false);
                 }}
-                className="text-white hover:bg-white/10 rounded-xl p-2 transition-colors"
+                className="text-gray-500 hover:bg-gray-100 rounded-lg p-2 transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-8 bg-white overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
+            <div className="p-6 sm:p-8 bg-white overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
               {loadingProfile ? (
                 <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#047857]"></div>
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-6">
                   {/* Profile Picture Section */}
-                  <div className="flex flex-col items-center mb-8 pb-8 border-b-2 border-gray-200">
+                  <div className="flex flex-col items-center pb-6 border-b border-gray-200">
                     <div className="relative">
                       {profilePhoto ? (
                         <img
                           src={profilePhoto}
                           alt="Profile"
-                          className="w-40 h-40 rounded-full object-cover border-4 border-emerald-500 shadow-2xl"
+                          className="w-28 h-28 rounded-full object-cover border border-gray-200"
                         />
                       ) : (
-                        <div className="w-40 h-40 rounded-full bg-emerald-500 flex items-center justify-center text-white text-5xl font-bold border-4 border-gray-50 shadow-md">
+                        <div className="w-28 h-28 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 text-3xl font-bold">
                           {user?.fullName?.charAt(0) || 'A'}
                         </div>
                       )}
                       {isEditMode && (
-                        <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-lg">
-                          <label className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-full transition-colors flex items-center justify-center shadow-lg">
-                            <Upload className="w-5 h-5" />
+                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 border border-gray-200">
+                          <label className="cursor-pointer bg-[#047857] hover:bg-[#065F46] text-white p-2 rounded-full transition-colors flex items-center justify-center">
+                            <Upload className="w-4 h-4" />
                             <input
                               type="file"
                               accept="image/*"
@@ -3768,11 +2888,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         </div>
                       )}
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-800 mt-4">{editFormData.full_name || user?.fullName || 'MAO Coordinator'}</h3>
-                    <p className="text-emerald-600 font-semibold">{editFormData.position || 'Municipal Agriculture Officer'}</p>
+                    <h3 className="font-serif text-xl font-bold text-gray-900 mt-3">{editFormData.full_name || user?.fullName || 'MAO Coordinator'}</h3>
+                    <p className="text-xs text-[#047857] font-semibold mt-0.5">{editFormData.position || 'Municipal Agriculture Officer'}</p>
                     {uploadingPhoto && (
-                      <p className="text-sm text-emerald-600 mt-2 flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
+                      <p className="text-xs text-[#047857] mt-2 flex items-center gap-2">
+                        <span className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-[#047857]"></span>
                         Uploading photo...
                       </p>
                     )}
@@ -3780,85 +2900,77 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
                   {/* Profile Information Section */}
                   <div>
-                    <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                      <div className="p-2 bg-emerald-100 rounded-lg">
-                        <User className="w-5 h-5 text-emerald-600" />
-                      </div>
+                    <h4 className="font-serif text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <User className="w-4 h-4 text-[#047857]" />
                       Personal & Professional Information
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Full Name */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Full Name</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Full Name</label>
                         <input
                           type="text"
                           value={editFormData.full_name || ''}
                           onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
                           disabled={!isEditMode}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] disabled:bg-gray-50 disabled:text-gray-600 text-sm outline-none"
                           placeholder="Enter your full name"
                         />
                       </div>
 
-                      {/* Email */}
                       <div>
-                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Email Address</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email Address</label>
                         <input
                           type="email"
                           value={editFormData.email || ''}
                           disabled={true}
-                          className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-gray-700 font-medium"
+                          className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 text-sm"
                         />
                       </div>
 
-                      {/* Position */}
                       <div>
-                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Position / Role</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Position / Role</label>
                         <input
                           type="text"
                           value={editFormData.position || ''}
                           onChange={(e) => setEditFormData({ ...editFormData, position: e.target.value })}
                           disabled={!isEditMode}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] disabled:bg-gray-50 disabled:text-gray-600 text-sm outline-none"
                           placeholder="e.g., Municipal Agriculturist"
                         />
                       </div>
 
-                      {/* Organization */}
                       <div>
-                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Organization</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Organization</label>
                         <input
                           type="text"
                           value={editFormData.association_name || ''}
                           onChange={(e) => setEditFormData({ ...editFormData, association_name: e.target.value })}
                           disabled={!isEditMode}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] disabled:bg-gray-50 disabled:text-gray-600 text-sm outline-none"
                           placeholder="e.g., Municipal Agriculture Office"
                         />
                       </div>
 
-                      {/* Contact Number */}
                       <div>
-                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Contact Number</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Contact Number</label>
                         <input
                           type="tel"
                           value={editFormData.contact_number || ''}
                           onChange={(e) => setEditFormData({ ...editFormData, contact_number: e.target.value })}
                           disabled={!isEditMode}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium transition-all"
+                          className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] disabled:bg-gray-50 disabled:text-gray-600 text-sm outline-none"
                           placeholder="e.g., 09171234567"
                         />
                       </div>
 
-                      {/* Address */}
                       <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Complete Address</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Complete Address</label>
                         <textarea
                           value={editFormData.address || ''}
                           onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
                           disabled={!isEditMode}
                           rows={3}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-700 font-medium resize-none transition-all"
+                          className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] disabled:bg-gray-50 disabled:text-gray-600 text-sm resize-none outline-none"
                           placeholder="Enter your complete address (Purok, Barangay, Municipality)"
                         />
                       </div>
@@ -3866,45 +2978,44 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex justify-between items-center pt-6 mt-6 border-t-2 border-gray-200">
+                  <div className="flex justify-between items-center pt-5 border-t border-gray-200">
                     {!isEditMode && (
                       <button
+                        type="button"
                         onClick={() => setShowChangePasswordModal(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-amber-50 text-amber-700 rounded-xl hover:bg-amber-100 transition-colors font-bold border border-amber-200 shadow-sm"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] rounded-xl hover:bg-[#FDE68A]/70 transition-colors text-xs font-semibold"
                       >
-                        <Lock className="w-5 h-5" />
+                        <Lock className="w-4 h-4" />
                         Change Password
                       </button>
                     )}
-                    <div className="flex gap-3 ml-auto">
+                    <div className="flex gap-2.5 ml-auto">
                       {isEditMode ? (
                         <>
                           <button
+                            type="button"
                             onClick={() => {
                               setIsEditMode(false);
                               fetchOfficerProfile();
                             }}
-                            className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-bold shadow-md hover:shadow-lg"
+                            className="px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-semibold"
                           >
                             Cancel
                           </button>
                           <button
+                            type="button"
                             onClick={_handleSaveProfile}
                             disabled={savingProfile}
-                            className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-5 py-2 bg-[#047857] text-white rounded-xl hover:bg-[#065F46] transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {savingProfile ? (
-                              <span className="flex items-center gap-2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                Saving...
-                              </span>
-                            ) : 'Save Changes'}
+                            {savingProfile ? 'Saving...' : 'Save Changes'}
                           </button>
                         </>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => setIsEditMode(true)}
-                          className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-bold shadow-md"
+                          className="px-5 py-2 bg-[#047857] text-white rounded-xl hover:bg-[#065F46] transition-colors text-sm font-semibold"
                         >
                           Edit Profile
                         </button>
@@ -3918,109 +3029,108 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         </div>
       )}
 
-      {
-        showChangePasswordModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
-              <div className="bg-amber-600 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-white">
-                  <Lock className="w-5 h-5" />
-                  <h3 className="text-xl font-bold">Change Password</h3>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowChangePasswordModal(false);
-                    setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
-                  }}
-                  className="text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+      {showChangePasswordModal && (
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-md w-full overflow-hidden">
+            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 text-gray-900">
+                <Lock className="w-4 h-4 text-[#92400E]" />
+                <h3 className="font-serif text-lg font-bold">Change Password</h3>
               </div>
-              <form onSubmit={_handleChangePassword} className="p-6 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Current Password</label>
-                  <div className="relative">
-                    <input
-                      type={showOldPassword ? "text" : "password"}
-                      required
-                      value={passwordForm.oldPassword}
-                      onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
-                      className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all pr-12"
-                      placeholder="Enter current password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowOldPassword(!showOldPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-600 transition-colors"
-                    >
-                      {showOldPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">New Password</label>
-                  <div className="relative">
-                    <input
-                      type={showNewPassword ? "text" : "password"}
-                      required
-                      minLength={4}
-                      value={passwordForm.newPassword}
-                      onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                      className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all pr-12"
-                      placeholder="Enter new password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-600 transition-colors"
-                    >
-                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Confirm New Password</label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      required
-                      minLength={4}
-                      value={passwordForm.confirmPassword}
-                      onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                      className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all pr-12"
-                      placeholder="Confirm new password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-600 transition-colors"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="pt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowChangePasswordModal(false);
+                  setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                }}
+                className="text-gray-500 hover:bg-gray-100 rounded-lg p-1.5 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={_handleChangePassword} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Current Password</label>
+                <div className="relative">
+                  <input
+                    type={showOldPassword ? "text" : "password"}
+                    required
+                    value={passwordForm.oldPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none pr-11 text-sm"
+                    placeholder="Enter current password"
+                  />
                   <button
                     type="button"
-                    onClick={() => setShowChangePasswordModal(false)}
-                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={changingPassword}
-                    className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-colors shadow-md disabled:opacity-50"
-                  >
-                    {changingPassword ? 'Updating...' : 'Update Password'}
+                    {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-              </form>
-            </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">New Password</label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    required
+                    minLength={4}
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none pr-11 text-sm"
+                    placeholder="Enter new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Confirm New Password</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    minLength={4}
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] outline-none pr-11 text-sm"
+                    placeholder="Confirm new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="pt-2 flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowChangePasswordModal(false)}
+                  className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={changingPassword}
+                  className="flex-1 px-4 py-2.5 bg-[#047857] text-white rounded-xl text-sm font-semibold hover:bg-[#065F46] transition-colors disabled:opacity-50"
+                >
+                  {changingPassword ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* Insight Modal */}
       {currentInsight && (
@@ -4035,7 +3145,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           view={currentInsight.view}
         />
       )}
-    </div >
+    </>
   );
 };
 

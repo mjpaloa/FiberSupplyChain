@@ -12,6 +12,7 @@ import {
   X,
   Edit
 } from 'lucide-react';
+import { KpiStrip, EditorialCard, StatusPill } from '../components/Shared/EditorialUI';
 
 interface Harvest {
   harvest_id: string;
@@ -325,18 +326,18 @@ export default function MAOHarvestVerificationPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    const styles = {
-      'Pending Verification': 'bg-yellow-100 text-yellow-800',
-      'Verified': 'bg-green-100 text-green-800',
-      'Rejected': 'bg-red-100 text-red-800',
-      'In Inventory': 'bg-blue-100 text-blue-800'
-    };
+    const tone =
+      status === 'Verified'
+        ? 'success'
+        : status === 'Pending Verification'
+          ? 'warning'
+          : status === 'Rejected'
+            ? 'danger'
+            : status === 'In Inventory'
+              ? 'info'
+              : 'neutral';
 
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[status as keyof typeof styles]}`}>
-        {status}
-      </span>
-    );
+    return <StatusPill tone={tone}>{status}</StatusPill>;
   };
 
   const filteredHarvests = harvests.filter(harvest =>
@@ -389,219 +390,162 @@ export default function MAOHarvestVerificationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      {/* Stats Cards - Matching User Management */}
+    <div className="space-y-6">
+      {/* KPI Strip */}
       {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          {/* Total Harvests Card - Blue */}
-          <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <Package className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <p className="text-white/90 text-sm font-medium mb-1">Total Harvests</p>
-              <p className="text-4xl font-bold text-white">{statistics.total_harvests}</p>
-            </div>
-          </div>
-
-          {/* Total Farmers Card - Emerald */}
-          <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-6 shadow-lg overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <UsersIcon className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <p className="text-white/90 text-sm font-medium mb-1">Total Farmers</p>
-              <p className="text-4xl font-bold text-white">{statistics.total_farmers}</p>
-            </div>
-          </div>
-
-          {/* Total Fiber Card - Purple */}
-          <div className="group relative bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 shadow-lg overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <Sprout className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <p className="text-white/90 text-sm font-medium mb-1">Total Fiber (kg)</p>
-              <p className="text-4xl font-bold text-white">{statistics.total_fiber_kg?.toFixed(2)}</p>
-            </div>
-          </div>
-
-          {/* Pending Card - Amber */}
-          <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl p-6 shadow-lg overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <CheckCircle className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <p className="text-white/90 text-sm font-medium mb-1">Pending</p>
-              <p className="text-4xl font-bold text-white">{statistics.pending_verification}</p>
-            </div>
-          </div>
-
-          {/* Last 30 Days Card - Slate */}
-          <div className="group relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-2xl p-6 shadow-lg overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <p className="text-white/90 text-sm font-medium mb-1">Last 30 Days</p>
-              <p className="text-4xl font-bold text-white">{statistics.harvests_last_30_days}</p>
-            </div>
-          </div>
-        </div>
+        <KpiStrip
+          columns={5}
+          items={[
+            {
+              label: 'Total Harvests',
+              value: statistics.total_harvests.toLocaleString(),
+              subtext: 'Submitted records',
+            },
+            {
+              label: 'Total Farmers',
+              value: statistics.total_farmers.toLocaleString(),
+              subtext: 'Active growers',
+            },
+            {
+              label: 'Total Fiber (kg)',
+              value: statistics.total_fiber_kg?.toFixed(2) ?? '0.00',
+              subtext: 'Dry fiber output',
+            },
+            {
+              label: 'Pending',
+              value: statistics.pending_verification.toLocaleString(),
+              accentSubtext: statistics.pending_verification > 0 ? 'Needs review' : undefined,
+              subtext: statistics.pending_verification === 0 ? 'All reviewed' : undefined,
+            },
+            {
+              label: 'Last 30 Days',
+              value: statistics.harvests_last_30_days.toLocaleString(),
+              subtext: 'Recent harvests',
+            },
+          ]}
+        />
       )}
 
-      {/* Neumorphic Search and Filters Section */}
-      <div className="bg-gradient-to-r from-blue-50 via-emerald-50 to-purple-50 border-2 border-blue-200 rounded-3xl p-6 mb-8 shadow-lg">
-        <div className="flex flex-col md:flex-row gap-4">
+      {/* Search and Filters */}
+      <EditorialCard>
+        <div className="flex flex-col md:flex-row gap-3">
           {/* Search Bar */}
           <div className="flex-1">
             <div className="relative">
-              <Package className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 w-5 h-5 pointer-events-none" />
+              <Package className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search farmer, location, variety..."
-                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-blue-200 rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-medium shadow-md"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
               />
             </div>
           </div>
 
           {/* Status Filter Dropdown */}
-          <div className="w-full md:w-56">
+          <div className="w-full md:w-52">
             <div className="relative">
-              <CheckCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-500 w-5 h-5 pointer-events-none" />
+              <CheckCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-emerald-200 rounded-2xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all duration-200 appearance-none cursor-pointer font-medium text-gray-800 shadow-md"
+                className="w-full pl-10 pr-8 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] cursor-pointer transition-colors"
               >
                 <option value="all">All Status</option>
-                <option value="Pending Verification">⏳ Pending</option>
-                <option value="Verified">✓ Verified</option>
-                <option value="Rejected">✗ Rejected</option>
+                <option value="Pending Verification">Pending</option>
+                <option value="Verified">Verified</option>
+                <option value="Rejected">Rejected</option>
               </select>
             </div>
           </div>
 
           {/* Export Button */}
           <button
+            type="button"
             onClick={exportToCSV}
-            className="px-6 py-4 bg-gradient-to-r from-purple-400 to-purple-500 text-white rounded-2xl hover:from-purple-500 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold whitespace-nowrap group border-2 border-purple-300"
+            className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 whitespace-nowrap"
             title="Export to CSV"
           >
-            <Download className="w-5 h-5 group-hover:animate-bounce" />
+            <Download className="w-4 h-4 text-gray-500" />
             <span className="hidden md:inline">Export CSV</span>
           </button>
         </div>
-      </div>
+      </EditorialCard>
 
-      {/* Compact Table with Pagination */}
+      {/* Harvests Table */}
       {loading ? (
-        <div className="bg-gradient-to-br from-gray-50 to-slate-100 border-2 border-gray-200 rounded-3xl p-12 text-center shadow-lg">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center shadow-lg">
-            <Package className="w-10 h-10 text-gray-500" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Loading harvests...</h3>
-        </div>
+        <EditorialCard className="p-12 text-center">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-[#047857] rounded-full animate-spin mx-auto mb-4"></div>
+          <h3 className="font-serif text-lg font-bold text-gray-900 mb-1">Loading harvests...</h3>
+        </EditorialCard>
       ) : filteredHarvests.length === 0 ? (
-        <div className="bg-gradient-to-br from-gray-50 to-slate-100 border-2 border-gray-200 rounded-3xl p-12 text-center shadow-lg">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center shadow-lg">
-            <Package className="w-10 h-10 text-gray-500" />
+        <EditorialCard className="p-12 text-center">
+          <div className="w-14 h-14 mx-auto mb-4 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center">
+            <Package className="w-7 h-7 text-gray-400" />
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">No harvests found</h3>
-          <p className="text-gray-600">Try adjusting your search or filter criteria</p>
-        </div>
+          <h3 className="font-serif text-lg font-bold text-gray-900 mb-1">No harvests found</h3>
+          <p className="text-sm text-gray-500">Try adjusting your search or filter criteria</p>
+        </EditorialCard>
       ) : (
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden">
-
-          {/* Compact Table */}
-          <div className="overflow-x-auto">
+        <EditorialCard noPadding>
+          <div className="table-wrapper" tabIndex={0} role="region" aria-label="Harvest verification records table">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-blue-100 via-emerald-100 to-purple-100">
+              <thead className="bg-[#FAFAFA] border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <UsersIcon className="w-4 h-4" />
-                      Farmer
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Date
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Variety</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Area (ha)</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <Sprout className="w-4 h-4" />
-                      Fiber (kg)
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Farmer</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Variety</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Area (ha)</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fiber (kg)</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-indigo-100">
-                {currentHarvests.map((harvest, index) => (
-                  <tr key={harvest.harvest_id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
-                    }`}>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {currentHarvests.map((harvest) => (
+                  <tr key={harvest.harvest_id} className="hover:bg-gray-50/80 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-bold text-blue-900 text-sm">{harvest.farmer_name}</div>
-                      <div className="text-purple-600 text-xs font-mono">{generateReadableId(harvest.harvest_id)}</div>
+                      <div className="font-semibold text-gray-900 text-sm">{harvest.farmer_name}</div>
+                      <div className="text-gray-400 text-xs font-mono tabular-nums">{generateReadableId(harvest.harvest_id)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{harvest.municipality}</div>
-                      <div className="text-xs text-emerald-600">{harvest.barangay}</div>
+                      <div className="text-xs text-gray-500">{harvest.barangay}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900">
+                      <div className="text-sm font-medium text-gray-900 tabular-nums">
                         {new Date(harvest.harvest_date).toLocaleDateString()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{harvest.abaca_variety}</div>
+                      <div className="text-sm text-gray-900">{harvest.abaca_variety}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900">{harvest.area_hectares}</div>
+                      <div className="text-sm font-medium text-gray-900 tabular-nums">{harvest.area_hectares}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-purple-900">{harvest.dry_fiber_output_kg?.toFixed(2)}</div>
-                      <div className="text-xs text-purple-600">{harvest.fiber_grade}</div>
+                      <div className="text-sm font-semibold text-gray-900 tabular-nums">{harvest.dry_fiber_output_kg?.toFixed(2)}</div>
+                      <div className="text-xs text-gray-500">{harvest.fiber_grade}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(harvest.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <button
+                          type="button"
                           onClick={() => handleViewClick(harvest)}
-                          className="p-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
+                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleEditClick(harvest)}
-                          className="p-2 bg-emerald-100 text-emerald-600 rounded-xl hover:bg-emerald-200 hover:shadow-md transition-all duration-200"
+                          className="p-2 text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
@@ -609,15 +553,17 @@ export default function MAOHarvestVerificationPage() {
                         {harvest.status === 'Pending Verification' && (
                           <>
                             <button
+                              type="button"
                               onClick={() => handleVerifyClick(harvest)}
-                              className="p-2 bg-green-100 text-green-600 rounded-xl hover:bg-green-200 hover:shadow-md transition-all duration-200"
+                              className="p-2 text-[#047857] hover:bg-[#EAF6F0] rounded-lg transition-colors"
                               title="Verify"
                             >
                               <CheckCircle className="w-4 h-4" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => handleRejectClick(harvest)}
-                              className="p-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title="Reject"
                             >
                               <XCircle className="w-4 h-4" />
@@ -625,8 +571,9 @@ export default function MAOHarvestVerificationPage() {
                           </>
                         )}
                         <button
+                          type="button"
                           onClick={() => handleDelete(harvest.harvest_id)}
-                          className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 hover:shadow-md transition-all duration-200"
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -639,20 +586,20 @@ export default function MAOHarvestVerificationPage() {
             </table>
           </div>
 
-          {/* Pagination Footer - Matching User Management */}
-          <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-6 py-4">
+          {/* Pagination Footer */}
+          <div className="bg-white border-t border-gray-200 px-6 py-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              {/* Items per page selector */}
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700">Show entries:</span>
-                <div className="flex gap-2">
+                <span className="text-xs font-medium text-gray-600">Show entries:</span>
+                <div className="flex gap-1.5">
                   {[10, 20, 30].map((size) => (
                     <button
+                      type="button"
                       key={size}
                       onClick={() => handleItemsPerPageChange(size)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${itemsPerPage === size
-                          ? 'bg-emerald-500 text-white shadow-lg'
-                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold tabular-nums transition-colors ${itemsPerPage === size
+                          ? 'bg-[#E59500] text-gray-900'
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                         }`}
                     >
                       {size}
@@ -661,28 +608,29 @@ export default function MAOHarvestVerificationPage() {
                 </div>
               </div>
 
-              {/* Page info and navigation */}
               <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">
+                <span className="text-xs text-gray-600 tabular-nums">
                   Showing {startIndex + 1} to {Math.min(endIndex, filteredHarvests.length)} of {filteredHarvests.length} entries
                 </span>
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors ${currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     Previous
                   </button>
                   <button
+                    type="button"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors ${currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     Next
@@ -691,72 +639,76 @@ export default function MAOHarvestVerificationPage() {
               </div>
             </div>
           </div>
-        </div>
+        </EditorialCard>
       )}
 
       {/* Verification Modal */}
       {showVerifyModal && selectedHarvest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-md w-full">
-            <div className="flex items-center gap-3 mb-6">
-              <div className={`p-3 rounded-xl ${actionType === 'verify' ? 'bg-emerald-100' : 'bg-red-100'}`}>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-md w-full overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+              <div className={`p-2 rounded-xl ${actionType === 'verify' ? 'bg-[#EAF6F0] text-[#047857]' : 'bg-red-50 text-red-600'}`}>
                 {actionType === 'verify' ? (
-                  <CheckCircle className="w-6 h-6 text-emerald-600" />
+                  <CheckCircle className="w-5 h-5" />
                 ) : (
-                  <XCircle className="w-6 h-6 text-red-600" />
+                  <XCircle className="w-5 h-5" />
                 )}
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="font-serif text-xl font-bold text-gray-900">
                 {actionType === 'verify' ? 'Verify Harvest' : 'Reject Harvest'}
               </h2>
             </div>
 
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 mb-6 space-y-2">
-              <div className="flex items-center gap-2 mb-2">
-                <UsersIcon className="w-4 h-4 text-gray-600" />
-                <span className="text-sm text-gray-600">Farmer:</span>
-                <span className="font-semibold text-gray-900">{selectedHarvest.farmer_name}</span>
+            <div className="p-6 space-y-5">
+              <div className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <UsersIcon className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-500">Farmer:</span>
+                  <span className="font-semibold text-gray-900">{selectedHarvest.farmer_name}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm tabular-nums">
+                  <Package className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-500">Fiber:</span>
+                  <span className="font-semibold text-gray-900">{selectedHarvest.dry_fiber_output_kg} kg</span>
+                  <span className="text-gray-500">({selectedHarvest.fiber_grade})</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Package className="w-4 h-4 text-gray-600" />
-                <span className="text-sm text-gray-600">Fiber:</span>
-                <span className="font-semibold text-gray-900">{selectedHarvest.dry_fiber_output_kg} kg</span>
-                <span className="text-sm text-gray-600">({selectedHarvest.fiber_grade})</span>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                  Verification Notes {actionType === 'reject' && <span className="text-red-500">*</span>}
+                </label>
+                <textarea
+                  value={verificationNotes}
+                  onChange={(e) => setVerificationNotes(e.target.value)}
+                  rows={4}
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors resize-none"
+                  placeholder={actionType === 'verify'
+                    ? 'Optional notes about the verification...'
+                    : 'Please provide reason for rejection...'}
+                  required={actionType === 'reject'}
+                />
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Verification Notes {actionType === 'reject' && <span className="text-red-500">*</span>}
-              </label>
-              <textarea
-                value={verificationNotes}
-                onChange={(e) => setVerificationNotes(e.target.value)}
-                rows={4}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                placeholder={actionType === 'verify'
-                  ? 'Optional notes about the verification...'
-                  : 'Please provide reason for rejection...'}
-                required={actionType === 'reject'}
-              />
-            </div>
-
-            <div className="flex gap-3">
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
               <button
-                onClick={handleSubmitVerification}
-                disabled={actionType === 'reject' && !verificationNotes.trim()}
-                className={`flex-1 px-6 py-3 rounded-xl text-white font-semibold transition-all duration-200 ${actionType === 'verify'
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700'
-                    : 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700'
-                  } disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl`}
-              >
-                {actionType === 'verify' ? '✓ Verify' : '✗ Reject'}
-              </button>
-              <button
+                type="button"
                 onClick={() => setShowVerifyModal(false)}
-                className="px-6 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-semibold transition-all"
+                className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-semibold transition-colors"
               >
                 Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmitVerification}
+                disabled={actionType === 'reject' && !verificationNotes.trim()}
+                className={`px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-colors ${actionType === 'verify'
+                    ? 'bg-[#047857] hover:bg-[#065F46]'
+                    : 'bg-red-600 hover:bg-red-700'
+                  } disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed`}
+              >
+                {actionType === 'verify' ? 'Verify Harvest' : 'Reject Harvest'}
               </button>
             </div>
           </div>
@@ -765,203 +717,205 @@ export default function MAOHarvestVerificationPage() {
 
       {/* View Details Modal - Comprehensive */}
       {showViewModal && selectedHarvest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
-                  <Eye className="w-6 h-6 text-blue-600" />
+                <div className="p-2 bg-[#EAF6F0] text-[#047857] rounded-xl">
+                  <Eye className="w-5 h-5" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Harvest Record Details</h2>
+                <h2 className="font-serif text-xl font-bold text-gray-900">Harvest Record Details</h2>
               </div>
               <button
+                type="button"
                 onClick={() => setShowViewModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close modal"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="p-6 space-y-5">
               {/* Farmer Information */}
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-5">
-                <h3 className="font-bold text-emerald-900 mb-4 flex items-center gap-2 text-lg">
-                  <UsersIcon className="w-5 h-5" />
+              <div className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-5">
+                <h3 className="font-serif font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
+                  <UsersIcon className="w-4 h-4 text-[#047857]" />
                   Farmer Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Name</p>
-                    <p className="font-semibold text-gray-900">{selectedHarvest.farmer_name}</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Name</p>
+                    <p className="font-semibold text-sm text-gray-900">{selectedHarvest.farmer_name}</p>
                   </div>
                   {selectedHarvest.farmer_contact && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Contact</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.farmer_contact}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Contact</p>
+                      <p className="font-semibold text-sm text-gray-900 tabular-nums">{selectedHarvest.farmer_contact}</p>
                     </div>
                   )}
                   {selectedHarvest.farmer_email && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Email</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Email</p>
                       <p className="font-semibold text-gray-900 text-sm">{selectedHarvest.farmer_email}</p>
                     </div>
                   )}
                   {selectedHarvest.cooperative_name && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Cooperative</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.cooperative_name}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Cooperative</p>
+                      <p className="font-semibold text-sm text-gray-900">{selectedHarvest.cooperative_name}</p>
                     </div>
                   )}
                   {selectedHarvest.farmer_registration_id && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Registration ID</p>
-                      <p className="font-mono text-sm text-gray-900">{selectedHarvest.farmer_registration_id}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Registration ID</p>
+                      <p className="font-mono text-sm text-gray-900 tabular-nums">{selectedHarvest.farmer_registration_id}</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Farm Location */}
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5">
-                <h3 className="font-bold text-blue-900 mb-4 flex items-center gap-2 text-lg">
-                  <Package className="w-5 h-5" />
+              <div className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-5">
+                <h3 className="font-serif font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
+                  <Package className="w-4 h-4 text-[#047857]" />
                   Farm Location
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Area (Hectares)</p>
-                    <p className="font-semibold text-gray-900 text-lg">{selectedHarvest.area_hectares} ha</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Area (Hectares)</p>
+                    <p className="font-semibold text-gray-900 text-base tabular-nums">{selectedHarvest.area_hectares} ha</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Municipality</p>
-                    <p className="font-semibold text-gray-900">{selectedHarvest.municipality}</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Municipality</p>
+                    <p className="font-semibold text-sm text-gray-900">{selectedHarvest.municipality}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Barangay</p>
-                    <p className="font-semibold text-gray-900">{selectedHarvest.barangay}</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Barangay</p>
+                    <p className="font-semibold text-sm text-gray-900">{selectedHarvest.barangay}</p>
                   </div>
                   {selectedHarvest.farm_coordinates && (
                     <div className="md:col-span-2">
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Farm Coordinates (GPS)</p>
-                      <p className="font-mono text-sm text-gray-900">{selectedHarvest.farm_coordinates}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Farm Coordinates (GPS)</p>
+                      <p className="font-mono text-sm text-gray-900 tabular-nums">{selectedHarvest.farm_coordinates}</p>
                     </div>
                   )}
                   {selectedHarvest.farm_name && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Farm Name</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.farm_name}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Farm Name</p>
+                      <p className="font-semibold text-sm text-gray-900">{selectedHarvest.farm_name}</p>
                     </div>
                   )}
                   {selectedHarvest.landmark && (
                     <div className="md:col-span-3">
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Landmark</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.landmark}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Landmark</p>
+                      <p className="font-semibold text-sm text-gray-900">{selectedHarvest.landmark}</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Planting Information */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5">
-                <h3 className="font-bold text-purple-900 mb-4 flex items-center gap-2 text-lg">
-                  <Sprout className="w-5 h-5" />
+              <div className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-5">
+                <h3 className="font-serif font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
+                  <Sprout className="w-4 h-4 text-[#047857]" />
                   Planting Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Abaca Variety</p>
-                    <p className="font-semibold text-gray-900">{selectedHarvest.abaca_variety}</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Abaca Variety</p>
+                    <p className="font-semibold text-sm text-gray-900">{selectedHarvest.abaca_variety}</p>
                   </div>
                   {selectedHarvest.planting_date && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Planting Date</p>
-                      <p className="font-semibold text-gray-900">{new Date(selectedHarvest.planting_date).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Planting Date</p>
+                      <p className="font-semibold text-sm text-gray-900 tabular-nums">{new Date(selectedHarvest.planting_date).toLocaleDateString()}</p>
                     </div>
                   )}
                   {selectedHarvest.planting_material_source && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Planting Method</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.planting_material_source}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Planting Method</p>
+                      <p className="font-semibold text-sm text-gray-900">{selectedHarvest.planting_material_source}</p>
                     </div>
                   )}
                   {selectedHarvest.planting_spacing && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Location</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.planting_spacing}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Location</p>
+                      <p className="font-semibold text-sm text-gray-900">{selectedHarvest.planting_spacing}</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Harvest Details */}
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5">
-                <h3 className="font-bold text-amber-900 mb-4 flex items-center gap-2 text-lg">
-                  <Calendar className="w-5 h-5" />
+              <div className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-5">
+                <h3 className="font-serif font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
+                  <Calendar className="w-4 h-4 text-[#047857]" />
                   Harvest Details
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Harvest Date</p>
-                    <p className="font-semibold text-gray-900">{new Date(selectedHarvest.harvest_date).toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Harvest Date</p>
+                    <p className="font-semibold text-sm text-gray-900 tabular-nums">{new Date(selectedHarvest.harvest_date).toLocaleDateString()}</p>
                   </div>
                   {selectedHarvest.harvest_method && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Harvest Method</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.harvest_method}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Harvest Method</p>
+                      <p className="font-semibold text-sm text-gray-900">{selectedHarvest.harvest_method}</p>
                     </div>
                   )}
                   {selectedHarvest.stalks_harvested && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Stalks Harvested</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.stalks_harvested}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Stalks Harvested</p>
+                      <p className="font-semibold text-sm text-gray-900 tabular-nums">{selectedHarvest.stalks_harvested}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Dry Fiber Output</p>
-                    <p className="font-semibold text-gray-900 text-lg">{selectedHarvest.dry_fiber_output_kg?.toFixed(2)} kg</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Dry Fiber Output</p>
+                    <p className="font-semibold text-gray-900 text-base tabular-nums">{selectedHarvest.dry_fiber_output_kg?.toFixed(2)} kg</p>
                   </div>
                   {selectedHarvest.wet_weight_kg && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Wet Weight</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.wet_weight_kg?.toFixed(2)} kg</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Wet Weight</p>
+                      <p className="font-semibold text-sm text-gray-900 tabular-nums">{selectedHarvest.wet_weight_kg?.toFixed(2)} kg</p>
                     </div>
                   )}
                   {selectedHarvest.yield_per_hectare_kg && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Yield per Hectare</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.yield_per_hectare_kg?.toFixed(2)} kg/ha</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Yield per Hectare</p>
+                      <p className="font-semibold text-sm text-gray-900 tabular-nums">{selectedHarvest.yield_per_hectare_kg?.toFixed(2)} kg/ha</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Quality & Grading */}
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-5">
-                <h3 className="font-bold text-indigo-900 mb-4 flex items-center gap-2 text-lg">
-                  <CheckCircle className="w-5 h-5" />
+              <div className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-5">
+                <h3 className="font-serif font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
+                  <CheckCircle className="w-4 h-4 text-[#047857]" />
                   Quality & Grading
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Fiber Grade</p>
-                    <p className="font-semibold text-gray-900">{selectedHarvest.fiber_grade || 'N/A'}</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Fiber Grade</p>
+                    <p className="font-semibold text-sm text-gray-900">{selectedHarvest.fiber_grade || 'N/A'}</p>
                   </div>
                   {selectedHarvest.moisture_status && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Moisture Status</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.moisture_status}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Moisture Status</p>
+                      <p className="font-semibold text-sm text-gray-900">{selectedHarvest.moisture_status}</p>
                     </div>
                   )}
                   {selectedHarvest.fiber_color && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Fiber Color</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.fiber_color}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Fiber Color</p>
+                      <p className="font-semibold text-sm text-gray-900">{selectedHarvest.fiber_color}</p>
                     </div>
                   )}
                   {selectedHarvest.bales_produced && (
                     <div>
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Bales Produced</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.bales_produced}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Bales Produced</p>
+                      <p className="font-semibold text-sm text-gray-900 tabular-nums">{selectedHarvest.bales_produced}</p>
                     </div>
                   )}
                 </div>
@@ -969,22 +923,22 @@ export default function MAOHarvestVerificationPage() {
 
               {/* Pest & Disease Observations */}
               {(selectedHarvest.pests_observed || selectedHarvest.diseases_observed) && (
-                <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-5">
-                  <h3 className="font-bold text-red-900 mb-4 flex items-center gap-2 text-lg">
-                    <XCircle className="w-5 h-5" />
+                <div className="bg-rose-50 border border-rose-200 rounded-xl p-5">
+                  <h3 className="font-serif font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
+                    <XCircle className="w-4 h-4 text-red-600" />
                     Pest & Disease Observations
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {selectedHarvest.pests_observed && (
                       <div>
                         <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Pests Observed</p>
-                        <p className="font-semibold text-gray-900">{selectedHarvest.pests_description || 'Yes'}</p>
+                        <p className="font-semibold text-sm text-gray-900">{selectedHarvest.pests_description || 'Yes'}</p>
                       </div>
                     )}
                     {selectedHarvest.diseases_observed && (
                       <div>
                         <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Diseases Observed</p>
-                        <p className="font-semibold text-gray-900">{selectedHarvest.diseases_description || 'Yes'}</p>
+                        <p className="font-semibold text-sm text-gray-900">{selectedHarvest.diseases_description || 'Yes'}</p>
                       </div>
                     )}
                   </div>
@@ -993,62 +947,63 @@ export default function MAOHarvestVerificationPage() {
 
               {/* Additional Remarks */}
               {selectedHarvest.remarks && (
-                <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-5">
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
-                    <Package className="w-5 h-5" />
+                <div className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-5">
+                  <h3 className="font-serif font-bold text-gray-900 mb-2 flex items-center gap-2 text-base">
+                    <Package className="w-4 h-4 text-gray-600" />
                     Additional Remarks
                   </h3>
-                  <p className="text-gray-900 whitespace-pre-wrap">{selectedHarvest.remarks}</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedHarvest.remarks}</p>
                 </div>
               )}
 
               {/* System Information */}
-              <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-xl p-5">
-                <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 text-lg">
-                  <Calendar className="w-5 h-5" />
+              <div className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-5">
+                <h3 className="font-serif font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
+                  <Calendar className="w-4 h-4 text-gray-600" />
                   System Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Harvest ID</p>
-                    <p className="text-lg font-bold text-indigo-600">{generateReadableId(selectedHarvest.harvest_id)}</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Harvest ID</p>
+                    <p className="text-sm font-bold text-gray-900 font-mono tabular-nums">{generateReadableId(selectedHarvest.harvest_id)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Status</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Status</p>
                     <div className="mt-1">{getStatusBadge(selectedHarvest.status)}</div>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Created At</p>
-                    <p className="font-semibold text-gray-900">{new Date(selectedHarvest.created_at).toLocaleString()}</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Created At</p>
+                    <p className="font-semibold text-sm text-gray-900 tabular-nums">{new Date(selectedHarvest.created_at).toLocaleString()}</p>
                   </div>
                   {selectedHarvest.verified_by && (
                     <>
                       <div>
-                        <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Verified By</p>
-                        <p className="font-semibold text-gray-900">{selectedHarvest.verifier?.full_name || 'MAO Officer'}</p>
+                        <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Verified By</p>
+                        <p className="font-semibold text-sm text-gray-900">{selectedHarvest.verifier?.full_name || 'MAO Officer'}</p>
                       </div>
                       {selectedHarvest.verified_at && (
                         <div>
-                          <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Verified At</p>
-                          <p className="font-semibold text-gray-900">{new Date(selectedHarvest.verified_at).toLocaleString()}</p>
+                          <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Verified At</p>
+                          <p className="font-semibold text-sm text-gray-900 tabular-nums">{new Date(selectedHarvest.verified_at).toLocaleString()}</p>
                         </div>
                       )}
                     </>
                   )}
                   {selectedHarvest.verification_notes && (
                     <div className="md:col-span-3">
-                      <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Verification Notes</p>
-                      <p className="font-semibold text-gray-900">{selectedHarvest.verification_notes}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Verification Notes</p>
+                      <p className="font-medium text-sm text-gray-900">{selectedHarvest.verification_notes}</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
               <button
+                type="button"
                 onClick={() => setShowViewModal(false)}
-                className="px-6 py-3 bg-gradient-to-r from-gray-600 to-slate-600 text-white rounded-xl hover:from-gray-700 hover:to-slate-700 font-semibold transition-all shadow-lg"
+                className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-semibold transition-colors"
               >
                 Close
               </button>
@@ -1059,31 +1014,41 @@ export default function MAOHarvestVerificationPage() {
 
       {/* Edit Harvest Modal */}
       {showEditModal && selectedHarvest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl">
-                <Edit className="w-6 h-6 text-amber-600" />
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#FEF3C7] text-[#92400E] rounded-xl">
+                  <Edit className="w-5 h-5" />
+                </div>
+                <h2 className="font-serif text-xl font-bold text-gray-900">Edit Harvest</h2>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Edit Harvest</h2>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="space-y-4 mb-6">
+            <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Harvest Date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
                   value={editFormData.harvest_date}
                   onChange={(e) => setEditFormData({ ...editFormData, harvest_date: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Abaca Variety <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1091,14 +1056,14 @@ export default function MAOHarvestVerificationPage() {
                   value={editFormData.abaca_variety}
                   onChange={(e) => setEditFormData({ ...editFormData, abaca_variety: e.target.value })}
                   placeholder="e.g., Musa textilis"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                     Area (hectares) <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1106,13 +1071,13 @@ export default function MAOHarvestVerificationPage() {
                     step="0.01"
                     value={editFormData.area_hectares}
                     onChange={(e) => setEditFormData({ ...editFormData, area_hectares: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                     Dry Fiber Output (kg) <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1120,20 +1085,20 @@ export default function MAOHarvestVerificationPage() {
                     step="0.01"
                     value={editFormData.dry_fiber_output_kg}
                     onChange={(e) => setEditFormData({ ...editFormData, dry_fiber_output_kg: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Fiber Grade <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={editFormData.fiber_grade}
                   onChange={(e) => setEditFormData({ ...editFormData, fiber_grade: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors"
                   required
                 >
                   <option value="">Select Grade</option>
@@ -1145,19 +1110,21 @@ export default function MAOHarvestVerificationPage() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
               <button
-                onClick={handleUpdateHarvest}
-                disabled={!editFormData.harvest_date || !editFormData.abaca_variety || !editFormData.area_hectares || !editFormData.dry_fiber_output_kg || !editFormData.fiber_grade}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl hover:from-amber-700 hover:to-orange-700 font-semibold transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-              >
-                ✓ Update Harvest
-              </button>
-              <button
+                type="button"
                 onClick={() => setShowEditModal(false)}
-                className="px-6 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-semibold transition-all"
+                className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-semibold transition-colors"
               >
                 Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleUpdateHarvest}
+                disabled={!editFormData.harvest_date || !editFormData.abaca_variety || !editFormData.area_hectares || !editFormData.dry_fiber_output_kg || !editFormData.fiber_grade}
+                className="px-5 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl text-sm font-semibold transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+              >
+                Update Harvest
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAuthToken, getAuthHeader } from '../utils/authToken';
+import { EditorialCard } from '../components/Shared/EditorialUI';
 
 interface FarmerProfile {
   full_name: string;
@@ -292,77 +293,61 @@ export default function HarvestSubmissionPage() {
     }
   };
 
+  const inputClass =
+    'w-full px-3.5 py-2.5 text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#047857]/20 focus:border-[#047857] transition-colors';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 py-8 px-4">
-      <div className="max-w-5xl mx-auto">
+    <div className="bg-[#F8F9FA] py-4 px-2 sm:px-4">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Page Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl mb-4 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Submit New Harvest</h1>
-          <p className="text-gray-600 text-lg">Record your abaca harvest details</p>
+        <div className="mb-2">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900">Submit New Harvest</h1>
+          <p className="text-sm text-gray-500 mt-1">Record your abaca harvest details for MAO verification</p>
         </div>
 
         {/* Auto-filled Farmer Info */}
         {farmerProfile && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
-            <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">Farmer Information (Auto-filled)</h2>
-            </div>
+          <EditorialCard
+            title="Farmer Information"
+            subtitle="Auto-filled from your verified farmer profile"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+              <div className="bg-gray-50/70 rounded-xl p-3.5 border border-gray-200">
                 <p className="text-gray-500 text-xs mb-1">Name</p>
-                <p className="font-semibold text-lg text-gray-900">{farmerProfile.full_name}</p>
+                <p className="font-semibold text-sm text-gray-900">{farmerProfile.full_name}</p>
               </div>
-              <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+              <div className="bg-gray-50/70 rounded-xl p-3.5 border border-gray-200">
                 <p className="text-gray-500 text-xs mb-1">Contact</p>
-                <p className="font-semibold text-lg text-gray-900">{farmerProfile.contact_number}</p>
+                <p className="font-semibold text-sm text-gray-900">{farmerProfile.contact_number}</p>
               </div>
-              <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+              <div className="bg-gray-50/70 rounded-xl p-3.5 border border-gray-200">
                 <p className="text-gray-500 text-xs mb-1">Municipality</p>
-                <p className="font-semibold text-lg text-gray-900">{farmerProfile.municipality}</p>
+                <p className="font-semibold text-sm text-gray-900">{farmerProfile.municipality}</p>
               </div>
-              <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+              <div className="bg-gray-50/70 rounded-xl p-3.5 border border-gray-200">
                 <p className="text-gray-500 text-xs mb-1">Barangay</p>
-                <p className="font-semibold text-lg text-gray-900">{farmerProfile.barangay}</p>
+                <p className="font-semibold text-sm text-gray-900">{farmerProfile.barangay}</p>
               </div>
               {farmerProfile.association_name && (
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 md:col-span-2">
+                <div className="bg-gray-50/70 rounded-xl p-3.5 border border-gray-200 md:col-span-2">
                   <p className="text-gray-500 text-xs mb-1">Association</p>
-                  <p className="font-semibold text-lg text-gray-900">{farmerProfile.association_name}</p>
+                  <p className="font-semibold text-sm text-gray-900">{farmerProfile.association_name}</p>
                 </div>
               )}
             </div>
-          </div>
+          </EditorialCard>
         )}
 
         {/* Main Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Farm Location */}
-          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center mb-5">
-              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mr-3">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Farm Location</h2>
-                <p className="text-sm text-emerald-600">Auto-filled from your profile</p>
-              </div>
-            </div>
+          <EditorialCard
+            title="Farm Location"
+            subtitle="Auto-filled from your profile"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Area (Hectares) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -372,11 +357,11 @@ export default function HarvestSubmissionPage() {
                   required
                   value={formData.area_hectares}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Farm Coordinates (GPS or Description)
                 </label>
                 <input
@@ -385,45 +370,37 @@ export default function HarvestSubmissionPage() {
                   placeholder="e.g., 7.6298, 125.4737"
                   value={formData.farm_coordinates}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Farm Name</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Farm Name</label>
                 <input
                   type="text"
                   name="farm_name"
                   value={formData.farm_name}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Landmark</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Landmark</label>
                 <input
                   type="text"
                   name="landmark"
                   value={formData.landmark}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
             </div>
-          </section>
+          </EditorialCard>
 
           {/* Planting Information */}
-          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center mb-5">
-              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mr-3">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">Planting Information</h2>
-            </div>
+          <EditorialCard title="Planting Information">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Abaca Variety <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -433,12 +410,12 @@ export default function HarvestSubmissionPage() {
                   placeholder="e.g., Maguindanao, Abuab, Tangongon, Laylay, etc."
                   value={formData.abaca_variety}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
                 <p className="text-xs text-gray-500 mt-1">Common varieties: Maguindanao, Abuab, Tangongon, Laylay, Inosa, Linawaan</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Planting Date <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -447,11 +424,11 @@ export default function HarvestSubmissionPage() {
                   required
                   value={formData.planting_date}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Planting Source <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -459,7 +436,7 @@ export default function HarvestSubmissionPage() {
                   required
                   value={formData.planting_material_source}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 >
                   <option value="Tissue Culture">Tissue Culture</option>
                   <option value="Sucker">Sucker</option>
@@ -468,32 +445,24 @@ export default function HarvestSubmissionPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Location</label>
                 <input
                   type="text"
                   name="planting_spacing"
                   placeholder="e.g., Farm A, Plot 1"
                   value={formData.planting_spacing}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
             </div>
-          </section>
+          </EditorialCard>
 
           {/* Harvest Details */}
-          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center mb-5">
-              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mr-3">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">Harvest Details</h2>
-            </div>
+          <EditorialCard title="Harvest Details">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Harvest Date <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -502,11 +471,11 @@ export default function HarvestSubmissionPage() {
                   required
                   value={formData.harvest_date}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Harvest Method <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -514,7 +483,7 @@ export default function HarvestSubmissionPage() {
                   required
                   value={formData.harvest_method}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 >
                   <option value="Manual Tuxying + Hand Stripping">Manual Tuxying + Hand Stripping</option>
                   <option value="Mechanical Stripping">Mechanical Stripping</option>
@@ -523,17 +492,17 @@ export default function HarvestSubmissionPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Stalks Harvested</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Stalks Harvested</label>
                 <input
                   type="number"
                   name="stalks_harvested"
                   value={formData.stalks_harvested}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Dry Fiber Output (kg) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -543,52 +512,44 @@ export default function HarvestSubmissionPage() {
                   required
                   value={formData.dry_fiber_output_kg}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Wet Weight (kg)</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Wet Weight (kg)</label>
                 <input
                   type="number"
                   name="wet_weight_kg"
                   step="0.01"
                   value={formData.wet_weight_kg}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Yield per Hectare (kg/ha)</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Yield per Hectare (kg/ha)</label>
                 <input
                   type="number"
                   name="yield_per_hectare_kg"
                   step="0.01"
                   value={formData.yield_per_hectare_kg}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
             </div>
-          </section>
+          </EditorialCard>
 
           {/* Quality & Grading */}
-          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center mb-5">
-              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mr-3">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">Quality & Grading</h2>
-            </div>
+          <EditorialCard title="Quality & Grading">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fiber Grade</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Fiber Grade</label>
                 <select
                   name="fiber_grade"
                   value={formData.fiber_grade}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 >
                   <option value="Grade A">Grade A</option>
                   <option value="Grade B">Grade B</option>
@@ -596,7 +557,7 @@ export default function HarvestSubmissionPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Moisture Status <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -604,7 +565,7 @@ export default function HarvestSubmissionPage() {
                   required
                   value={formData.moisture_status}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 >
                   <option value="Sun-dried">Sun-dried</option>
                   <option value="Semi-dried">Semi-dried</option>
@@ -613,48 +574,43 @@ export default function HarvestSubmissionPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fiber Color</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Fiber Color</label>
                 <input
                   type="text"
                   name="fiber_color"
                   value={formData.fiber_color}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bales Produced</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Bales Produced</label>
                 <input
                   type="number"
                   name="bales_produced"
                   value={formData.bales_produced}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               </div>
             </div>
-          </section>
+          </EditorialCard>
 
           {/* Pest & Disease Observations */}
-          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center mb-5">
-              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center mr-3">
-                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">Pest & Disease Observations</h2>
-            </div>
+          <EditorialCard title="Pest & Disease Observations">
             <div className="space-y-4">
               <div className="flex items-center">
                 <input
                   type="checkbox"
+                  id="pests_observed"
                   name="pests_observed"
                   checked={formData.pests_observed}
                   onChange={handleChange}
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-[#047857] focus:ring-[#047857] border-gray-300 rounded"
                 />
-                <label className="ml-2 block text-sm text-gray-700">Pests Observed</label>
+                <label htmlFor="pests_observed" className="ml-2.5 block text-sm font-medium text-gray-700">
+                  Pests Observed
+                </label>
               </div>
               {formData.pests_observed && (
                 <textarea
@@ -663,18 +619,21 @@ export default function HarvestSubmissionPage() {
                   value={formData.pests_description}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               )}
               <div className="flex items-center">
                 <input
                   type="checkbox"
+                  id="diseases_observed"
                   name="diseases_observed"
                   checked={formData.diseases_observed}
                   onChange={handleChange}
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-[#047857] focus:ring-[#047857] border-gray-300 rounded"
                 />
-                <label className="ml-2 block text-sm text-gray-700">Diseases Observed</label>
+                <label htmlFor="diseases_observed" className="ml-2.5 block text-sm font-medium text-gray-700">
+                  Diseases Observed
+                </label>
               </div>
               {formData.diseases_observed && (
                 <textarea
@@ -683,50 +642,46 @@ export default function HarvestSubmissionPage() {
                   value={formData.diseases_description}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+                  className={inputClass}
                 />
               )}
             </div>
-          </section>
+          </EditorialCard>
 
           {/* Remarks */}
-          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                </svg>
-              </div>
-              <label className="text-xl font-bold text-gray-900">Additional Remarks</label>
-            </div>
+          <EditorialCard title="Additional Remarks">
             <textarea
               name="remarks"
               value={formData.remarks}
               onChange={handleChange}
               rows={4}
-              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+              className={inputClass}
               placeholder="Any additional notes or observations..."
             />
-          </section>
+          </EditorialCard>
 
           {/* Submit Button */}
-          <div className="flex gap-4 pt-2">
+          <div className="flex pt-2">
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-4 px-8 rounded-xl hover:shadow-2xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-bold text-lg transition-all duration-200 flex items-center justify-center gap-3"
+              className="w-full bg-[#047857] hover:bg-[#065F46] text-white py-3.5 px-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm sm:text-base transition-colors flex items-center justify-center gap-2.5"
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   <span>Submitting...</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span>Submit Harvest</span>

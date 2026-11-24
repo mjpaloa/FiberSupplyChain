@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Truck, Package, CheckCircle, XCircle, User,
-  Download, Search, Eye, Leaf, Award
+  Truck, Package, User,
+  Download, Search, Eye, Leaf, Award, X
 } from 'lucide-react';
+import { KpiStrip, EditorialCard, SegmentedToggle, StatusPill } from '../Shared/EditorialUI';
 
 interface Delivery {
   delivery_id: string;
@@ -72,23 +73,14 @@ const DeliveryTrackingMonitor: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      'In Transit': 'bg-purple-100 text-purple-800 border-purple-300',
-      'Delivered': 'bg-green-100 text-green-800 border-green-300',
-      'Completed': 'bg-emerald-100 text-emerald-800 border-emerald-300',
-      'Cancelled': 'bg-red-100 text-red-800 border-red-300'
+  const getStatusTone = (status: string): 'info' | 'success' | 'danger' | 'neutral' => {
+    const tones: Record<string, 'info' | 'success' | 'danger' | 'neutral'> = {
+      'In Transit': 'info',
+      'Delivered': 'success',
+      'Completed': 'success',
+      'Cancelled': 'danger',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800 border-gray-300';
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      'Partial': 'bg-yellow-100 text-yellow-800',
-      'Paid': 'bg-green-100 text-green-800',
-      'Unpaid': 'bg-orange-100 text-orange-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return tones[status] || 'neutral';
   };
 
   const getStatusProgress = (status: string) => {
@@ -153,246 +145,220 @@ const DeliveryTrackingMonitor: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-16">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#047857] border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {/* Total Deliveries Card */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Truck className="text-white" size={24} />
-            </div>
-          </div>
-          <p className="text-white/90 text-sm font-medium mb-1">Total Deliveries</p>
-          <p className="text-4xl font-bold text-white mb-2">{stats.total}</p>
-          <p className="text-white/70 text-xs">All time deliveries</p>
-        </div>
+    <div className="space-y-6">
+      {/* KPI Strip */}
+      <KpiStrip
+        columns={4}
+        items={[
+          {
+            label: 'Total Deliveries',
+            value: stats.total,
+            subtext: 'All time deliveries',
+          },
+          {
+            label: 'In Transit',
+            value: stats.in_transit,
+            subtext: 'Currently shipping',
+          },
+          {
+            label: 'Delivered',
+            value: stats.delivered,
+            accentSubtext: 'Successfully delivered',
+          },
+          {
+            label: 'Total Fiber',
+            value: `${stats.total_fiber_kg.toFixed(1)} kg`,
+            subtext: 'Kilograms delivered',
+          },
+        ]}
+      />
 
-        {/* In Transit Card */}
-        <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Package className="text-white" size={24} />
-            </div>
-          </div>
-          <p className="text-white/90 text-sm font-medium mb-1">In Transit</p>
-          <p className="text-4xl font-bold text-white mb-2">{stats.in_transit}</p>
-          <p className="text-white/70 text-xs">Currently shipping</p>
-        </div>
-
-        {/* Delivered Card */}
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <CheckCircle className="text-white" size={24} />
-            </div>
-          </div>
-          <p className="text-white/90 text-sm font-medium mb-1">Delivered</p>
-          <p className="text-4xl font-bold text-white mb-2">{stats.delivered}</p>
-          <p className="text-white/70 text-xs">Successfully delivered</p>
-        </div>
-
-        {/* Total Fiber Card */}
-        <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Leaf className="text-white" size={24} />
-            </div>
-          </div>
-          <p className="text-white/90 text-sm font-medium mb-1">Total Fiber</p>
-          <p className="text-4xl font-bold text-white mb-2">{stats.total_fiber_kg.toFixed(1)}</p>
-          <p className="text-white/70 text-xs">Kilograms delivered</p>
-        </div>
-      </div>
-
-      {/* Enhanced Filters & Search Section */}
-      <div className="bg-gradient-to-r from-blue-50 via-emerald-50 to-purple-50 border-2 border-blue-200 rounded-3xl p-6 mb-8 shadow-lg">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          {/* Status Filter Buttons - Left Side */}
-          <div className="flex gap-2 flex-wrap">
-            {['all', 'In Transit', 'Delivered', 'Completed', 'Cancelled'].map(status => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`px-5 py-4 rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 ${statusFilter === status
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
-                  }`}
-              >
-                {status === 'all' ? 'All Deliveries' : status}
-              </button>
-            ))}
+      {/* Filters & Search Section */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+        <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+          <div className="overflow-x-auto scrollbar-hide">
+            <SegmentedToggle
+              variant="amber"
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val)}
+              options={[
+                { value: 'all', label: 'All Deliveries' },
+                { value: 'In Transit', label: 'In Transit' },
+                { value: 'Delivered', label: 'Delivered' },
+                { value: 'Completed', label: 'Completed' },
+                { value: 'Cancelled', label: 'Cancelled' },
+              ]}
+            />
           </div>
 
-          {/* Search & Export - Right Side */}
-          <div className="flex gap-3 w-full lg:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <div className="relative flex-1 lg:w-80">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 w-5 h-5 pointer-events-none" />
+              <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search farmers, buyers, variety, location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-blue-200 rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-medium shadow-md"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#047857] focus:ring-2 focus:ring-[#047857] transition-colors placeholder:text-gray-400 text-gray-900 text-sm"
               />
             </div>
 
             <button
+              type="button"
               onClick={downloadCSV}
-              className="flex items-center px-6 py-4 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-2xl hover:from-blue-500 hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold border-2 border-blue-300 whitespace-nowrap"
+              className="inline-flex items-center justify-center px-4 py-2.5 bg-[#047857] hover:bg-[#065F46] text-white rounded-xl transition-colors text-sm font-semibold whitespace-nowrap"
             >
-              <Download className="w-5 h-5 mr-2" />
+              <Download className="w-4 h-4 mr-2" />
               Export CSV
             </button>
           </div>
         </div>
       </div>
 
-      {/* Deliveries List - Sales Management Style */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden">
-        <div className="overflow-x-auto">
+      {/* Deliveries List */}
+      <EditorialCard noPadding>
+        <div className="table-wrapper" tabIndex={0} role="region" aria-label="Fiber delivery tracking table">
           <table className="w-full">
-            <thead className="bg-gradient-to-r from-blue-100 via-emerald-100 to-purple-100">
+            <thead className="bg-[#FAFAFA] border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Buyer/Farmer
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" />
+                    Buyer / Farmer
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Variety & Grade</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4" />
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Variety & Grade</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5">
+                    <Package className="w-3.5 h-3.5" />
                     Quantity
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Progress</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Progress</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-indigo-100">
-              {paginatedDeliveries.map((delivery, index) => (
-                <tr
-                  key={delivery.delivery_id}
-                  className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
-                    }`}
-                >
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0">
-                        {delivery.buyers?.profile_photo ? (
-                          <img
-                            src={delivery.buyers.profile_photo}
-                            alt={delivery.buyers.business_name}
-                            className="w-12 h-12 rounded-full object-cover shadow-lg border-2 border-white"
-                            onError={(e) => {
-                              // Fallback to gradient avatar if image fails to load
-                              const target = e.currentTarget as HTMLImageElement;
-                              target.style.display = 'none';
-                              const sibling = target.nextElementSibling as HTMLDivElement;
-                              if (sibling) sibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div
-                          className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-lg border-2 border-white"
-                          style={{ display: delivery.buyers?.profile_photo ? 'none' : 'flex' }}
-                        >
-                          {delivery.buyers?.business_name?.charAt(0) || 'B'}
+            <tbody className="bg-white divide-y divide-gray-100">
+              {paginatedDeliveries.map((delivery) => {
+                const progress = getStatusProgress(delivery.status);
+                return (
+                  <tr
+                    key={delivery.delivery_id}
+                    className="hover:bg-gray-50/80 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          {delivery.buyers?.profile_photo ? (
+                            <img
+                              src={delivery.buyers.profile_photo}
+                              alt={delivery.buyers.business_name}
+                              className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                              onError={(e) => {
+                                const target = e.currentTarget as HTMLImageElement;
+                                target.style.display = 'none';
+                                const sibling = target.nextElementSibling as HTMLDivElement;
+                                if (sibling) sibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className="w-10 h-10 rounded-full bg-[#EAF6F0] border border-[#CBEAD9] flex items-center justify-center text-[#047857] font-bold text-sm"
+                            style={{ display: delivery.buyers?.profile_photo ? 'none' : 'flex' }}
+                          >
+                            {delivery.buyers?.business_name?.charAt(0) || 'B'}
+                          </div>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm">{delivery.buyers?.business_name || 'Buyer'}</div>
+                          <div className="text-gray-500 text-xs">
+                            Farmer: {delivery.farmers?.full_name || delivery.harvests?.farmer_name || 'Farmer'}
+                          </div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="font-bold text-blue-900 text-sm">{delivery.buyers?.business_name || 'Buyer'}</div>
-                        <div className="text-emerald-600 text-xs font-medium">
-                          👨‍🌾 {delivery.farmers?.full_name || delivery.harvests?.farmer_name || 'Farmer'}
+                        <div className="text-sm font-medium text-gray-900">{delivery.variety}</div>
+                        <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                          <Award size={12} className="text-[#E59500]" />
+                          {delivery.grade}
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-semibold text-gray-900">{delivery.variety}</div>
-                      <div className="text-xs text-gray-500 flex items-center gap-1">
-                        <Award size={12} className="text-amber-500" />
-                        {delivery.grade}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="text-sm font-semibold text-gray-900">{delivery.quantity_kg} kg</div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="text-sm font-semibold text-gray-900">{new Date(delivery.delivery_date).toLocaleDateString()}</div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      {delivery.status === 'In Transit' && <Truck className="w-4 h-4 text-purple-500" />}
-                      {delivery.status === 'Delivered' && <Package className="w-4 h-4 text-green-500" />}
-                      {delivery.status === 'Completed' && <CheckCircle className="w-4 h-4 text-emerald-500" />}
-                      {delivery.status === 'Cancelled' && <XCircle className="w-4 h-4 text-red-500" />}
-                      <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full shadow-md ${getStatusColor(delivery.status)}`}>
-                        {delivery.status}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2 w-20 overflow-hidden">
-                        <div
-                          className={`h-2 rounded-full transition-all duration-500 ${getStatusProgress(delivery.status) === 100
-                            ? 'bg-gradient-to-r from-emerald-500 to-green-600'
-                            : getStatusProgress(delivery.status) >= 50
-                              ? 'bg-gradient-to-r from-blue-500 to-emerald-500'
-                              : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-semibold text-gray-900 tabular-nums">{delivery.quantity_kg} kg</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-700 tabular-nums">{new Date(delivery.delivery_date).toLocaleDateString()}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusPill tone={getStatusTone(delivery.status)}>{delivery.status}</StatusPill>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex-1 bg-gray-100 rounded-full h-2 w-20 overflow-hidden border border-gray-200">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              progress === 100
+                                ? 'bg-[#047857]'
+                                : progress >= 50
+                                  ? 'bg-[#059669]'
+                                  : progress > 0
+                                    ? 'bg-[#E59500]'
+                                    : 'bg-gray-300'
                             }`}
-                          style={{ width: `${getStatusProgress(delivery.status)}%` }}
-                        ></div>
+                            style={{ width: `${progress}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs font-semibold text-gray-700 tabular-nums">{progress}%</span>
                       </div>
-                      <span className="text-xs font-bold text-gray-700">{getStatusProgress(delivery.status)}%</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <button
-                      onClick={() => { setSelectedDelivery(delivery); setShowDetailsModal(true); }}
-                      className="p-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
-                      title="View Details"
-                    >
-                      <Eye size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedDelivery(delivery); setShowDetailsModal(true); }}
+                        className="p-2 bg-white border border-gray-200 text-gray-600 rounded-xl hover:text-[#047857] hover:border-[#047857] hover:bg-[#EAF6F0]/40 transition-colors"
+                        title="View Details"
+                        aria-label={`View delivery details for ${delivery.buyers?.business_name || 'delivery'}`}
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Footer - Sales Management Style */}
-        <div className="p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+        {/* Pagination Footer */}
+        <div className="px-5 sm:px-6 py-4 border-t border-gray-200 bg-[#FAFAFA]">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Items per page selector */}
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">Show entries:</span>
-              <div className="flex gap-2">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-medium text-gray-600">Show entries:</span>
+              <div className="flex gap-1.5">
                 {[10, 20, 30].map((size) => (
                   <button
                     key={size}
+                    type="button"
                     onClick={() => {
                       setEntriesPerPage(size);
                       setCurrentPage(1);
                     }}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${entriesPerPage === size
-                      ? 'bg-indigo-500 text-white shadow-lg'
-                      : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
-                      }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold tabular-nums transition-colors ${
+                      entriesPerPage === size
+                        ? 'bg-[#E59500] text-gray-900'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
                   >
                     {size}
                   </button>
@@ -400,29 +366,32 @@ const DeliveryTrackingMonitor: React.FC = () => {
               </div>
             </div>
 
-            {/* Page info and navigation */}
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
+              <span className="text-xs text-gray-600 tabular-nums">
                 Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
               </span>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                    }`}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
                 >
                   Previous
                 </button>
                 <button
+                  type="button"
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages || totalPages === 0}
-                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${currentPage === totalPages || totalPages === 0
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
-                    }`}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                    currentPage === totalPages || totalPages === 0
+                      ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
                 >
                   Next
                 </button>
@@ -430,103 +399,97 @@ const DeliveryTrackingMonitor: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </EditorialCard>
 
       {totalEntries === 0 && (
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-          <Truck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-4">No deliveries found</p>
+        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+          <Truck className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <p className="font-serif text-lg font-bold text-gray-900 mb-1">No deliveries found</p>
           <p className="text-sm text-gray-500">{searchQuery ? 'Try adjusting your search criteria' : 'Deliveries will appear here once created'}</p>
         </div>
       )}
 
       {/* Details Modal */}
       {showDetailsModal && selectedDelivery && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[2.5rem] max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-white/20 flex flex-col">
-            {/* Header - Premium Gradient */}
-            <div className="p-8 bg-gradient-to-r from-slate-800 to-slate-900 text-white flex justify-between items-center relative overflow-hidden">
-              {/* Decorative background element */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-lg border border-gray-200 flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-5 bg-white border-b border-gray-200 flex justify-between items-center gap-4">
               <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <div className="p-2 bg-emerald-500/20 rounded-xl">
-                    <Truck className="text-emerald-400 w-6 h-6" />
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-[#EAF6F0] border border-[#CBEAD9] rounded-xl">
+                    <Truck className="text-[#047857] w-5 h-5" />
                   </div>
-                  <h2 className="text-3xl font-extrabold tracking-tight">Delivery Details</h2>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-900">Delivery Details</h2>
                 </div>
-                <p className="text-slate-400 text-sm font-medium">Tracking ID: <span className="text-emerald-400">#{selectedDelivery.delivery_id.slice(0, 8)}</span></p>
+                <p className="text-gray-500 text-xs sm:text-sm mt-1 tabular-nums">
+                  Tracking ID: <span className="text-gray-900 font-semibold">#{selectedDelivery.delivery_id.slice(0, 8)}</span>
+                </p>
               </div>
 
               <button
+                type="button"
+                aria-label="Close delivery details"
                 onClick={() => setShowDetailsModal(false)}
-                className="p-3 hover:bg-white/10 rounded-2xl transition-all duration-200 group"
+                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
               >
-                <XCircle size={28} className="text-slate-400 group-hover:text-white transition-colors" />
+                <X size={20} />
               </button>
             </div>
 
-            <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
+            <div className="p-6 space-y-6 overflow-y-auto">
               {/* Status Header */}
-              <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+              <div className="flex flex-wrap items-center justify-between gap-4 bg-[#F8F9FA] p-5 rounded-2xl border border-gray-200">
                 <div className="flex items-center gap-6">
                   <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Current Status</p>
-                    <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-sm border ${getStatusColor(selectedDelivery.status)}`}>
-                      {selectedDelivery.status}
-                    </span>
+                    <p className="text-xs font-medium text-gray-500 mb-1.5">Current Status</p>
+                    <StatusPill tone={getStatusTone(selectedDelivery.status)}>{selectedDelivery.status}</StatusPill>
                   </div>
-                  <div className="h-10 w-[2px] bg-slate-200 hidden sm:block"></div>
+                  <div className="h-9 w-px bg-gray-200 hidden sm:block"></div>
                   <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Date Created</p>
-                    <p className="text-slate-700 font-bold">{new Date(selectedDelivery.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs font-medium text-gray-500 mb-1">Date Created</p>
+                    <p className="text-sm text-gray-900 font-semibold tabular-nums">{new Date(selectedDelivery.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest text-right hidden sm:block">Fulfillment<br />Progress</p>
-                  <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="flex items-center gap-3">
+                  <p className="text-xs font-medium text-gray-500 text-right hidden sm:block">Fulfillment<br />Progress</p>
+                  <div className="flex items-center gap-3 bg-white px-3.5 py-2 rounded-xl border border-gray-200">
+                    <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
+                        className="h-full bg-[#047857] rounded-full transition-all duration-500"
                         style={{ width: `${getStatusProgress(selectedDelivery.status)}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-black text-slate-700">{getStatusProgress(selectedDelivery.status)}%</span>
+                    <span className="text-xs font-bold text-gray-900 tabular-nums">{getStatusProgress(selectedDelivery.status)}%</span>
                   </div>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-5">
                 {/* Farmer Info */}
-                <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                  <div className="bg-emerald-50 px-6 py-4 flex items-center justify-between border-b border-emerald-100">
-                    <h3 className="font-bold text-emerald-900 flex items-center gap-2">
-                      <User size={20} className="text-emerald-600" />
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                  <div className="bg-[#FAFAFA] px-5 py-3.5 flex items-center justify-between border-b border-gray-200">
+                    <h3 className="font-serif font-bold text-gray-900 flex items-center gap-2 text-base">
+                      <User size={18} className="text-[#047857]" />
                       Farmer Information
                     </h3>
                   </div>
-                  <div className="p-6 space-y-4">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-emerald-100 text-emerald-600 rounded-2xl">
-                        <User size={24} />
+                  <div className="p-5 space-y-4">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Farmer Name</p>
+                      <p className="font-semibold text-base text-gray-900 mt-0.5">
+                        {selectedDelivery.farmers?.full_name || selectedDelivery.harvests?.farmer_name || 'N/A'}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100">
+                      <div>
+                        <p className="text-xs font-medium text-gray-500">Contact</p>
+                        <p className="text-sm font-medium text-gray-900 tabular-nums mt-0.5">{selectedDelivery.farmer_contact || 'None'}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Farmer Name</p>
-                        <p className="font-bold text-lg text-slate-800">
-                          {selectedDelivery.farmers?.full_name || selectedDelivery.harvests?.farmer_name || 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Contact</p>
-                        <p className="font-bold text-slate-700">{selectedDelivery.farmer_contact || 'None'}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Location</p>
-                        <p className="font-bold text-slate-700">
+                        <p className="text-xs font-medium text-gray-500">Location</p>
+                        <p className="text-sm font-medium text-gray-900 mt-0.5">
                           {selectedDelivery.farmers ? `${selectedDelivery.farmers.barangay}, ${selectedDelivery.farmers.municipality}` : selectedDelivery.pickup_location}
                         </p>
                       </div>
@@ -535,31 +498,26 @@ const DeliveryTrackingMonitor: React.FC = () => {
                 </div>
 
                 {/* Buyer Info */}
-                <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                  <div className="bg-blue-50 px-6 py-4 flex items-center justify-between border-b border-blue-100">
-                    <h3 className="font-bold text-blue-900 flex items-center gap-2">
-                      <Truck size={20} className="text-blue-600" />
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                  <div className="bg-[#FAFAFA] px-5 py-3.5 flex items-center justify-between border-b border-gray-200">
+                    <h3 className="font-serif font-bold text-gray-900 flex items-center gap-2 text-base">
+                      <Truck size={18} className="text-[#047857]" />
                       Buyer Information
                     </h3>
                   </div>
-                  <div className="p-6 space-y-4">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl">
-                        <Award size={24} />
+                  <div className="p-5 space-y-4">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Business Name</p>
+                      <p className="font-semibold text-base text-gray-900 mt-0.5">{selectedDelivery.buyers?.business_name || 'N/A'}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100">
+                      <div>
+                        <p className="text-xs font-medium text-gray-500">Contact</p>
+                        <p className="text-sm font-medium text-gray-900 tabular-nums mt-0.5">{selectedDelivery.buyer_contact || 'None'}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Business Name</p>
-                        <p className="font-bold text-lg text-slate-800">{selectedDelivery.buyers?.business_name || 'N/A'}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Contact</p>
-                        <p className="font-bold text-slate-700">{selectedDelivery.buyer_contact || 'None'}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Address</p>
-                        <p className="font-bold text-slate-700 truncate" title={selectedDelivery.buyers?.business_address}>
+                        <p className="text-xs font-medium text-gray-500">Address</p>
+                        <p className="text-sm font-medium text-gray-900 truncate mt-0.5" title={selectedDelivery.buyers?.business_address}>
                           {selectedDelivery.buyers?.business_address || 'None'}
                         </p>
                       </div>
@@ -568,53 +526,50 @@ const DeliveryTrackingMonitor: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid lg:grid-cols-3 gap-8">
+              <div className="grid lg:grid-cols-3 gap-5">
                 {/* Fiber Details */}
-                <div className="lg:col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-xl">
-                  {/* Decorative background */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-
-                  <h3 className="font-bold text-xl mb-6 flex items-center gap-2">
-                    <Leaf size={22} className="text-emerald-400" />
+                <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-200">
+                  <h3 className="font-serif font-bold text-gray-900 text-lg mb-5 flex items-center gap-2">
+                    <Leaf size={18} className="text-[#047857]" />
                     Fiber Details
                   </h3>
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-8 text-center sm:text-left">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                     <div>
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Variety</p>
-                      <p className="text-xl font-black">{selectedDelivery.variety}</p>
+                      <p className="text-gray-500 text-xs font-medium mb-1">Variety</p>
+                      <p className="text-lg font-bold text-gray-900">{selectedDelivery.variety}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Weight</p>
-                      <p className="text-xl font-black text-emerald-400">{selectedDelivery.quantity_kg} kg</p>
+                      <p className="text-gray-500 text-xs font-medium mb-1">Weight</p>
+                      <p className="text-lg font-bold text-[#047857] tabular-nums">{selectedDelivery.quantity_kg} kg</p>
                     </div>
                     <div>
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Grade</p>
-                      <div className="flex items-center gap-2 justify-center sm:justify-start">
-                        <span className="text-xl font-black text-amber-400">{selectedDelivery.grade}</span>
-                      </div>
+                      <p className="text-gray-500 text-xs font-medium mb-1">Grade</p>
+                      <p className="text-lg font-bold text-[#92400E]">{selectedDelivery.grade}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Delivery Logistics */}
-                <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
-                  <h3 className="font-bold text-slate-800 text-xl mb-6 flex items-center gap-2">
-                    <Truck size={22} className="text-purple-500" />
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                  <h3 className="font-serif font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
+                    <Truck size={18} className="text-[#047857]" />
                     Logistics
                   </h3>
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Method</p>
-                      <p className="font-bold text-slate-800">{selectedDelivery.delivery_method}</p>
+                      <p className="text-xs font-medium text-gray-500">Method</p>
+                      <p className="text-sm font-semibold text-gray-900 mt-0.5">{selectedDelivery.delivery_method}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Date & Time</p>
-                      <p className="font-bold text-slate-800">{new Date(selectedDelivery.delivery_date).toLocaleDateString()} at {selectedDelivery.delivery_time || 'N/A'}</p>
+                      <p className="text-xs font-medium text-gray-500">Date & Time</p>
+                      <p className="text-sm font-semibold text-gray-900 tabular-nums mt-0.5">
+                        {new Date(selectedDelivery.delivery_date).toLocaleDateString()} at {selectedDelivery.delivery_time || 'N/A'}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Delivery Location</p>
-                      <p className="font-bold text-slate-800 leading-tight">{selectedDelivery.delivery_location}</p>
+                      <p className="text-xs font-medium text-gray-500">Delivery Location</p>
+                      <p className="text-sm font-semibold text-gray-900 mt-0.5 leading-snug">{selectedDelivery.delivery_location}</p>
                     </div>
                   </div>
                 </div>
@@ -622,21 +577,22 @@ const DeliveryTrackingMonitor: React.FC = () => {
 
               {/* Notes Section */}
               {selectedDelivery.notes && (
-                <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
-                  <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
-                    <Package size={18} className="text-slate-500" />
+                <div className="bg-[#F8F9FA] rounded-2xl p-5 border border-gray-200">
+                  <h3 className="font-serif font-bold text-gray-900 text-base mb-2 flex items-center gap-2">
+                    <Package size={16} className="text-gray-500" />
                     Notes
                   </h3>
-                  <p className="text-slate-600 italic whitespace-pre-wrap leading-relaxed">{selectedDelivery.notes}</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedDelivery.notes}</p>
                 </div>
               )}
             </div>
 
             {/* Footer */}
-            <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <div className="px-6 py-4 bg-[#FAFAFA] border-t border-gray-200 flex justify-end">
               <button
+                type="button"
                 onClick={() => setShowDetailsModal(false)}
-                className="px-10 py-4 bg-slate-800 text-white rounded-[1.25rem] font-black hover:bg-slate-900 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
+                className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
               >
                 Close Details
               </button>
