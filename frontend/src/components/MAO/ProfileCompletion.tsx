@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState } from 'react';
 import { User, MapPin, Phone, Building2, Upload, X, ChevronRight, ChevronLeft } from 'lucide-react';
 
@@ -75,7 +76,7 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({ onComplete }) => 
         });
       }
       
-      const response = await fetch('https://fibersupplychain.onrender.com/api/mao/complete-profile', {
+      const response = await fetch(`${API_BASE_URL}/api/mao/complete-profile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

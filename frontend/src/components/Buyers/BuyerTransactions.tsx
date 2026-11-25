@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { Search, Download, Eye, ChevronLeft, ChevronRight, ArrowUpDown, Package, Trash2, X, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -49,7 +50,7 @@ const BuyerTransactions: React.FC = () => {
       
       // Fetch purchases
       const purchasesResponse = await fetch(
-        `https://fibersupplychain.onrender.com/api/buyer-purchases/transactions?status=${statusFilter}`,
+        `${API_BASE_URL}/api/buyer-purchases/transactions?status=${statusFilter}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const purchasesData = await purchasesResponse.json();
@@ -76,7 +77,7 @@ const BuyerTransactions: React.FC = () => {
       let sales: any[] = [];
       try {
         const salesResponse = await fetch(
-          `https://fibersupplychain.onrender.com/api/buyer-purchases/sales`,
+          `${API_BASE_URL}/api/buyer-purchases/sales`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
@@ -407,8 +408,8 @@ const BuyerTransactions: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const endpoint = transactionToDelete.type === 'purchase'
-        ? `https://fibersupplychain.onrender.com/api/buyer-purchases/${transactionToDelete.id}`
-        : `https://fibersupplychain.onrender.com/api/buyer-purchases/sales/${transactionToDelete.id}`;
+        ? `${API_BASE_URL}/api/buyer-purchases/${transactionToDelete.id}`
+        : `${API_BASE_URL}/api/buyer-purchases/sales/${transactionToDelete.id}`;
       
       const response = await fetch(endpoint, {
         method: 'DELETE',

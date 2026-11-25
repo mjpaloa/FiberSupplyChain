@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { Lock, AlertTriangle, RefreshCw } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
@@ -46,7 +47,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = () => {
     try {
       console.log('Attempting login with:', { email, userType: 'officer' });
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

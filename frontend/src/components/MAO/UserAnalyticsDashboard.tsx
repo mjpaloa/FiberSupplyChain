@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Users,
   RefreshCw,
@@ -19,6 +19,7 @@ interface UserStats {
   totalBuyers: number;
   totalCusafa: number;
   totalMao: number;
+  monthlyTrends?: MonthlyData[];
   recentUsers: Array<{
     full_name: string;
     email: string;
@@ -37,32 +38,156 @@ interface MonthlyData {
   mao: number;
 }
 
-const UserAnalyticsDashboard: React.FC = () => {
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(true);
+const AnimatedPieChart: React.FC<{
+  data: { name: string; value: number; fill: string; percentage: number }[];
+  centerLabel?: string;
+  centerSubLabel?: string;
+}> = React.memo(({ data, centerLabel, centerSubLabel }) => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  let currentAngle = -90;
+
+  const validData = data.filter(item => item.value > 0);
+  const total = validData.reduce((sum, item) => sum + item.value, 0);
+
+  return (
+    <div className="relative w-full h-64 flex items-center justify-center">
+      <svg viewBox="0 0 240 240" className="w-56 h-56">
+        {validData.length === 1 ? (
+          <circle
+            cx="120"
+            cy="120"
+            r={hoveredIndex === 0 ? 92 : 88}
+            fill={validData[0].fill}
+            onMouseEnter={() => setHoveredIndex(0)}
+            onMouseLeave={() => setHoveredIndex(null)}
+            className="cursor-pointer transition-all duration-200"
+          />
+        ) : (
+          validData.map((item, index) => {
+            const percentage = (item.value / total) * 100;
+            const angle = (percentage / 100) * 360;
+            const startAngle = currentAngle;
+            const endAngle = currentAngle + angle;
+            currentAngle = endAngle;
+
+            const startRad = (startAngle * Math.PI) / 180;
+            const endRad = (endAngle * Math.PI) / 180;
+
+            const radius = hoveredIndex === index ? 92 : 88;
+            const x1 = 120 + radius * Math.cos(startRad);
+            const y1 = 120 + radius * Math.sin(startRad);
+            const x2 = 120 + radius * Math.cos(endRad);
+            const y2 = 120 + radius * Math.sin(endRad);
+            const largeArc = angle > 180 ? 1 : 0;
+
+            return (
+              <path
+                key={index}
+                d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                fill={item.fill}
+                stroke="#FFFFFF"
+                strokeWidth={2}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                className="cursor-pointer transition-opacity duration-200"
+                style={{
+                  opacity: hoveredIndex === null || hoveredIndex === index ? 1 : 0.65
+                }}
+              />
+            );
+          })
+        )}
+
+        <circle cx="120" cy="120" r="56" fill="#FFFFFF" />
+      </svg>
+
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-[104px] flex flex-col items-center justify-center">
+        {hoveredIndex !== null && validData[hoveredIndex] ? (
+          <>
+            <p className="text-xl font-bold text-gray-900 tabular-nums leading-none">
+              {((validData[hoveredIndex].value / total) * 100).toFixed(1)}%
+            </p>
+            <p className="text-[11px] text-gray-500 font-medium mt-1 break-words w-full">
+              {validData[hoveredIndex].name}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-2xl font-bold text-gray-900 tabular-nums leading-none mb-1">{centerLabel}</p>
+            <p className="text-[10px] text-gray-500 font-medium leading-tight break-words w-full">{centerSubLabel}</p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+});
+
+interface UserAnalyticsDashboardProps {
+  initialData?: UserStats | null;
+}
+
+const buildFallbackMonthlyData = (): MonthlyData[] => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentYear = new Date().getFullYear();
+  return months.map((month) => ({
+    month,
+    year: currentYear,
+    farmers: 0,
+    buyers: 0,
+    cusafa: 0,
+    mao: 0,
+  }));
+};
+
+const extractAvailableYears = (trendsData: MonthlyData[]): number[] => {
+  const uniqueYears = new Set<number>(trendsData.map(d => d.year));
+  return Array.from(uniqueYears).sort((a, b) => b - a);
+};
+
+const UserAnalyticsDashboard: React.FC<UserAnalyticsDashboardProps> = ({ initialData }) => {
+  const hasHydratedInitial = Boolean(
+    initialData && Array.isArray(initialData.monthlyTrends)
+  );
+  const currentYear = new Date().getFullYear();
+
+  const [stats, setStats] = useState<UserStats | null>(() =>
+    hasHydratedInitial ? (initialData as UserStats) : null
+  );
+  const [loading, setLoading] = useState(!hasHydratedInitial);
   const [error, setError] = useState<string | null>(null);
-  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
-  const [allMonthlyData, setAllMonthlyData] = useState<MonthlyData[]>([]); // Store all data
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [allMonthlyData, setAllMonthlyData] = useState<MonthlyData[]>(() =>
+    hasHydratedInitial ? (initialData!.monthlyTrends as MonthlyData[]) : []
+  );
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [availableYears, setAvailableYears] = useState<number[]>(() =>
+    hasHydratedInitial ? extractAvailableYears(initialData!.monthlyTrends as MonthlyData[]) : []
+  );
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly');
 
-  useEffect(() => {
-    fetchUserStats();
-  }, []);
-
-  // Filter data when selectedYear changes
-  useEffect(() => {
-    if (allMonthlyData.length > 0) {
-      if (selectedYear === 0) {
-        // Show all years
-        setMonthlyData(allMonthlyData);
-      } else {
-        // Filter by specific year
-        const filteredData = allMonthlyData.filter(d => d.year === selectedYear);
-        setMonthlyData(filteredData);
-      }
+  const applyUserStatsPayload = (data: UserStats, yearFilter: number) => {
+    setStats(data);
+    if (data.monthlyTrends && Array.isArray(data.monthlyTrends)) {
+      const trendsData = data.monthlyTrends as MonthlyData[];
+      setAllMonthlyData(trendsData);
+      setAvailableYears(extractAvailableYears(trendsData));
+    } else {
+      setAllMonthlyData(buildFallbackMonthlyData().map(d => ({ ...d, year: yearFilter || currentYear })));
     }
+  };
+
+  useEffect(() => {
+    if (initialData && Array.isArray(initialData.monthlyTrends)) {
+      applyUserStatsPayload(initialData, selectedYear);
+      setLoading(false);
+      return;
+    }
+    fetchUserStats();
+  }, [initialData]);
+
+  const monthlyData = useMemo(() => {
+    if (allMonthlyData.length === 0) return buildFallbackMonthlyData();
+    if (selectedYear === 0) return allMonthlyData;
+    return allMonthlyData.filter(d => d.year === selectedYear);
   }, [selectedYear, allMonthlyData]);
 
   const fetchUserStats = async () => {
@@ -76,38 +201,7 @@ const UserAnalyticsDashboard: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ User stats data received:', data);
-        setStats(data);
-
-        // Use monthly trends data from backend
-        if (data.monthlyTrends && Array.isArray(data.monthlyTrends)) {
-          console.log('📊 Monthly trends data received:', data.monthlyTrends);
-          const trendsData = data.monthlyTrends as MonthlyData[];
-          setAllMonthlyData(trendsData);
-
-          // Extract unique years and sort
-          const yearValues = trendsData.map(d => d.year);
-          const uniqueYears = new Set<number>(yearValues);
-          const years = Array.from(uniqueYears).sort((a, b) => b - a);
-          setAvailableYears(years);
-
-          // Filter by selected year
-          const filteredData = trendsData.filter(d => d.year === selectedYear);
-          setMonthlyData(filteredData);
-        } else {
-          // Fallback: Generate empty monthly data if backend doesn't provide it
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const currentYear = new Date().getFullYear();
-          const monthlyStats = months.map((month) => ({
-            month,
-            year: currentYear,
-            farmers: 0,
-            buyers: 0,
-            cusafa: 0,
-            mao: 0,
-          }));
-          setMonthlyData(monthlyStats);
-        }
+        applyUserStatsPayload(data, selectedYear);
       } else {
         const errData = await response.json().catch(() => ({}));
         setError(errData.error || `Failed to fetch user statistics (Status ${response.status})`);
@@ -119,91 +213,6 @@ const UserAnalyticsDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Flat Editorial Donut Chart Component
-  const AnimatedPieChart: React.FC<{
-    data: { name: string; value: number; fill: string; percentage: number }[],
-    centerLabel?: string,
-    centerSubLabel?: string
-  }> = ({ data, centerLabel, centerSubLabel }) => {
-    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-    let currentAngle = -90;
-
-    const validData = data.filter(item => item.value > 0);
-    const total = validData.reduce((sum, item) => sum + item.value, 0);
-
-    return (
-      <div className="relative w-full h-64 flex items-center justify-center">
-        <svg viewBox="0 0 240 240" className="w-56 h-56">
-          {validData.length === 1 ? (
-            <circle
-              cx="120"
-              cy="120"
-              r={hoveredIndex === 0 ? 92 : 88}
-              fill={validData[0].fill}
-              onMouseEnter={() => setHoveredIndex(0)}
-              onMouseLeave={() => setHoveredIndex(null)}
-              className="cursor-pointer transition-all duration-200"
-            />
-          ) : (
-            validData.map((item, index) => {
-              const percentage = (item.value / total) * 100;
-              const angle = (percentage / 100) * 360;
-              const startAngle = currentAngle;
-              const endAngle = currentAngle + angle;
-              currentAngle = endAngle;
-
-              const startRad = (startAngle * Math.PI) / 180;
-              const endRad = (endAngle * Math.PI) / 180;
-
-              const radius = hoveredIndex === index ? 92 : 88;
-              const x1 = 120 + radius * Math.cos(startRad);
-              const y1 = 120 + radius * Math.sin(startRad);
-              const x2 = 120 + radius * Math.cos(endRad);
-              const y2 = 120 + radius * Math.sin(endRad);
-              const largeArc = angle > 180 ? 1 : 0;
-
-              return (
-                <path
-                  key={index}
-                  d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                  fill={item.fill}
-                  stroke="#FFFFFF"
-                  strokeWidth={2}
-                  onMouseEnter={() => setHoveredIndex(index)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                  className="cursor-pointer transition-opacity duration-200"
-                  style={{
-                    opacity: hoveredIndex === null || hoveredIndex === index ? 1 : 0.65
-                  }}
-                />
-              );
-            })
-          )}
-
-          <circle cx="120" cy="120" r="56" fill="#FFFFFF" />
-        </svg>
-
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-[104px] flex flex-col items-center justify-center">
-          {hoveredIndex !== null && validData[hoveredIndex] ? (
-            <>
-              <p className="text-xl font-bold text-gray-900 tabular-nums leading-none">
-                {((validData[hoveredIndex].value / total) * 100).toFixed(1)}%
-              </p>
-              <p className="text-[11px] text-gray-500 font-medium mt-1 break-words w-full">
-                {validData[hoveredIndex].name}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-2xl font-bold text-gray-900 tabular-nums leading-none mb-1">{centerLabel}</p>
-              <p className="text-[10px] text-gray-500 font-medium leading-tight break-words w-full">{centerSubLabel}</p>
-            </>
-          )}
-        </div>
-      </div>
-    );
   };
 
   // Aggregate data by year for yearly view

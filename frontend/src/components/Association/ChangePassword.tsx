@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState } from 'react';
 import {
   ArrowLeft,
@@ -84,7 +85,7 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ onBack }) => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/association/profile/change-password', {
+      const response = await fetch(`${API_BASE_URL}/api/association/profile/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

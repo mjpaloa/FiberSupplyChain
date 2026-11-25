@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
@@ -56,7 +57,7 @@ const EditAssociationProfile: React.FC<EditAssociationProfileProps> = ({ onBack 
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/association/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/association/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -108,7 +109,7 @@ const EditAssociationProfile: React.FC<EditAssociationProfileProps> = ({ onBack 
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/association/profile/upload-picture', {
+      const response = await fetch(`${API_BASE_URL}/api/association/profile/upload-picture`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -144,7 +145,7 @@ const EditAssociationProfile: React.FC<EditAssociationProfileProps> = ({ onBack 
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/association/profile/upload-id', {
+      const response = await fetch(`${API_BASE_URL}/api/association/profile/upload-id`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -171,7 +172,7 @@ const EditAssociationProfile: React.FC<EditAssociationProfileProps> = ({ onBack 
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/association/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/association/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

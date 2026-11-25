@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { Package, Search, Eye, Calendar, X } from 'lucide-react';
 import { KpiStrip, EditorialCard, StatusPill } from '../Shared/EditorialUI';
@@ -40,7 +41,7 @@ const BuyerSalesPage: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `https://fibersupplychain.onrender.com/api/buyer-purchases?quality=${qualityFilter}&date=${dateFilter}`,
+        `${API_BASE_URL}/api/buyer-purchases?quality=${qualityFilter}&date=${dateFilter}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();

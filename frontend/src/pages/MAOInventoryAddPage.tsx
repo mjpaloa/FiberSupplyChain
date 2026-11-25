@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import { useState, useEffect } from 'react';
 
 interface Harvest {
@@ -41,7 +42,7 @@ export default function MAOInventoryAddPage() {
   const fetchHarvestDetails = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/harvests/mao/harvests?status=Verified`, {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/mao/harvests?status=Verified`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -93,7 +94,7 @@ export default function MAOInventoryAddPage() {
         remarks: formData.remarks
       };
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/inventory/inventory', {
+      const response = await fetch(`${API_BASE_URL}/api/inventory/inventory`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

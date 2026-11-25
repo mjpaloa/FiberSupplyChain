@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../../config/api';
 import { Activity, Search, Globe, Monitor, Clock, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { EditorialCard, StatusPill } from '../Shared/EditorialUI';
 
@@ -12,8 +13,6 @@ const ActivityLogsManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalLogs, setTotalLogs] = useState(0);
-
-  const API_URL = 'https://fibersupplychain.onrender.com/api';
 
   useEffect(() => {
     fetchActivityLogs();

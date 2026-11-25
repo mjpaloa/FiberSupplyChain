@@ -19,7 +19,8 @@ import {
   Filter,
   Truck,
   Lock,
-  Bell
+  Bell,
+  BookOpen
 } from 'lucide-react';
 import {
   XAxis,
@@ -52,13 +53,14 @@ import FarmerDeliveryTracking from './FarmerDeliveryTracking';
 import FarmerProfile from './FarmerProfile';
 import EditFarmerProfile from './EditFarmerProfile';
 import FarmerChangePassword from './FarmerChangePassword';
+import FarmerUserManual from './FarmerUserManual';
 
 interface FarmerDashboardProps {
   onLogout: () => void;
 }
 
 const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'seedlings' | 'harvest' | 'harvest-submit' | 'monitoring' | 'sales-report' | 'track-deliveries' | 'analytics' | 'profile'>('dashboard');
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'manual' | 'seedlings' | 'harvest' | 'harvest-submit' | 'monitoring' | 'sales-report' | 'track-deliveries' | 'analytics' | 'profile'>('dashboard');
   const [showSalesForm, setShowSalesForm] = useState(false);
   const [seedlings, setSeedlings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -189,7 +191,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
       // Fetch recent seedling distributions
       try {
-        const seedlingsRes = await apiGet('https://fibersupplychain.onrender.com/api/association-seedlings/farmer/received');
+        const seedlingsRes = await apiGet('/api/association-seedlings/farmer/received');
 
         if (seedlingsRes.ok) {
           const seedlingsData = await seedlingsRes.json();
@@ -215,7 +217,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
       // Fetch recent monitoring records (using correct endpoint)
       try {
-        const monitoringRes = await apiGet('https://fibersupplychain.onrender.com/api/farmers/monitoring');
+        const monitoringRes = await apiGet('/api/farmers/monitoring');
 
         if (monitoringRes.ok) {
           const monitoringData = await monitoringRes.json();
@@ -459,7 +461,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
       let totalRevenue = 0;
       if (farmerId) {
-        const salesResponse = await apiGet(`https://fibersupplychain.onrender.com/api/sales/farmer-reports/${farmerId}`);
+        const salesResponse = await apiGet(`/api/sales/farmer-reports/${farmerId}`);
 
         if (salesResponse.ok) {
           const result = await salesResponse.json();
@@ -537,7 +539,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   // Fetch farm status data from monitoring records (farmer's own farms only)
   const fetchLatestFarmStatus = async () => {
     try {
-      const response = await apiGet('https://fibersupplychain.onrender.com/api/farmers/monitoring');
+      const response = await apiGet('/api/farmers/monitoring');
 
       if (response.ok) {
         const result = await response.json();
@@ -561,7 +563,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
   const fetchLatestDeliveryStatus = async () => {
     try {
-      const response = await apiGet('https://fibersupplychain.onrender.com/api/fiber-deliveries/farmer/my-deliveries');
+      const response = await apiGet('/api/fiber-deliveries/farmer/my-deliveries');
 
       if (response.ok) {
         const result = await response.json();
@@ -589,7 +591,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
         return;
       }
 
-      const response = await apiGet('https://fibersupplychain.onrender.com/api/farmers/monitoring');
+      const response = await apiGet('/api/farmers/monitoring');
 
       if (response.ok) {
         const result = await response.json();
@@ -706,7 +708,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       }
 
       // Fetch harvest data for fiber production (only verified harvests)
-      const harvestResponse = await apiGet(`https://fibersupplychain.onrender.com/api/harvests/farmer/harvests`);
+      const harvestResponse = await apiGet(`/api/harvests/farmer/harvests`);
 
       if (!harvestResponse.ok) {
         console.log('No harvest data available');
@@ -736,7 +738,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       console.log('✅ Valid harvests for charts:', validHarvests.length, 'items', validHarvests.length > 0 ? { harvest_date: validHarvests[0].harvest_date, fiber: validHarvests[0].dry_fiber_output_kg } : 'no data');
 
       // Fetch sales data for revenue
-      const salesResponse = await apiGet(`https://fibersupplychain.onrender.com/api/sales/farmer-reports/${farmerId}`);
+      const salesResponse = await apiGet(`/api/sales/farmer-reports/${farmerId}`);
 
       const salesResult = await salesResponse.json();
       const salesData = salesResult.success && Array.isArray(salesResult.reports) ? salesResult.reports : [];
@@ -865,7 +867,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
 
       // Fetch delivery data for this farmer
-      const deliveryResponse = await apiGet(`https://fibersupplychain.onrender.com/api/fiber-deliveries/farmer/my-deliveries`);
+      const deliveryResponse = await apiGet(`/api/fiber-deliveries/farmer/my-deliveries`);
 
       if (!deliveryResponse.ok) {
         console.log('No delivery data available');
@@ -1097,6 +1099,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
   const navItems: EditorialNavItem[] = [
     { id: 'dashboard', label: 'Dashboard', category: 'General', icon: <LayoutDashboard className="w-[18px] h-[18px]" /> },
+    { id: 'manual', label: 'User Manual', category: 'General', icon: <BookOpen className="w-[18px] h-[18px]" /> },
     { id: 'seedlings', label: 'My Seedlings', category: 'Farm Operations', icon: <Sprout className="w-[18px] h-[18px]" /> },
     { id: 'monitoring', label: 'Farm Monitoring', category: 'Farm Operations', icon: <Calendar className="w-[18px] h-[18px]" /> },
     { id: 'harvest', label: 'Harvest Records', category: 'Farm Operations', icon: <Package className="w-[18px] h-[18px]" /> },
@@ -1108,6 +1111,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     dashboard: {
       title: 'Dashboard',
       subtitle: `Welcome back, ${user?.fullName || farmerData?.full_name || 'Farmer'}!`
+    },
+    manual: {
+      title: 'User Manual',
+      subtitle: 'Step-by-step guide to the Farmer Portal with screenshots and explanations.'
     },
     seedlings: {
       title: 'My Seedlings',
@@ -2130,6 +2137,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
             activeId={currentPage}
             noKeepAlive={['profile']}
             pages={{
+              manual: () => <FarmerUserManual />,
               harvest: () => <FarmerHarvestView />,
               monitoring: () => <FarmerMonitoringView />,
               'sales-report': () =>

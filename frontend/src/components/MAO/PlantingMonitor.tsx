@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   Sprout,
@@ -81,7 +82,7 @@ const PlantingMonitor: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/seedlings/all?status=planted', {
+      const response = await fetch(`${API_BASE_URL}/api/seedlings/all?status=planted`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

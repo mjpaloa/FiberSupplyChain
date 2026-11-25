@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   TrendingUp,
@@ -126,7 +127,7 @@ const BuyerAnalytics: React.FC = () => {
       const token = localStorage.getItem('accessToken');
 
       const purchasesResponse = await fetch(
-        'https://fibersupplychain.onrender.com/api/buyer-purchases',
+        `${API_BASE_URL}/api/buyer-purchases`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -140,7 +141,7 @@ const BuyerAnalytics: React.FC = () => {
       let sales: any[] = [];
       try {
         const salesResponse = await fetch(
-          'https://fibersupplychain.onrender.com/api/buyer-purchases/sales',
+          `${API_BASE_URL}/api/buyer-purchases/sales`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (salesResponse.ok) {

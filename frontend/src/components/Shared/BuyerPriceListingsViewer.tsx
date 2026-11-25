@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   Phone,
@@ -66,7 +67,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
       if (filterMunicipality !== 'all') params.append('municipality', filterMunicipality);
       if (filterAvailability !== 'all') params.append('availability', filterAvailability);
 
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/buyer-listings/all?${params}`, {
+      const response = await fetch(`${API_BASE_URL}/api/buyer-listings/all?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

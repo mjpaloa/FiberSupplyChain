@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config/api';
 import {
     BarChart as RechartsBarChart,
     Bar,
@@ -89,7 +90,7 @@ const SalesAnalyticsDashboard: React.FC = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('accessToken');
-            const apiUrl = import.meta.env.VITE_API_URL || 'https://fibersupplychain.onrender.com';
+            const apiUrl = API_BASE_URL;
 
             // Try the new specialized endpoint first
             try {

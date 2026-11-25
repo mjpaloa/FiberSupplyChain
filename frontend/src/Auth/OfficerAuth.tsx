@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState } from 'react';
 import { ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
@@ -39,7 +40,7 @@ export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onBack, onLoginSuccess
       // Get reCAPTCHA v3 token (invisible)
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

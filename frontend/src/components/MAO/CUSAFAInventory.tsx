@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   Package,
@@ -71,7 +72,7 @@ const CUSAFAInventory: React.FC = () => {
   const fetchInventory = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/cusafa-inventory', {
+      const response = await fetch(`${API_BASE_URL}/api/cusafa-inventory`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -93,7 +94,7 @@ const CUSAFAInventory: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       console.log('🔍 Fetching buyers from API...');
       
-      const response = await fetch('https://fibersupplychain.onrender.com/api/buyers/all', {
+      const response = await fetch(`${API_BASE_URL}/api/buyers/all`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -124,7 +125,7 @@ const CUSAFAInventory: React.FC = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/fiber-deliveries/create', {
+      const response = await fetch(`${API_BASE_URL}/api/fiber-deliveries/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -390,7 +391,7 @@ const CUSAFAInventory: React.FC = () => {
                               const token = localStorage.getItem('accessToken');
 
                               // First, try to get from farmers table via harvest
-                              const farmerResponse = await fetch(`https://fibersupplychain.onrender.com/api/farmers/${item.farmer_id}`, {
+                              const farmerResponse = await fetch(`${API_BASE_URL}/api/farmers/${item.farmer_id}`, {
                                 headers: { Authorization: `Bearer ${token}` }
                               });
 

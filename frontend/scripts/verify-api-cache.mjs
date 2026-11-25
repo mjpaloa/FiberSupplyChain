@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { API_BASE_URL } from '../src/config/api.ts';
 import {
   clearApiCache,
   createCachedFetch,
@@ -30,7 +31,7 @@ async function runTests() {
       return makeJsonResponse({ items: [1, 2, 3], call: networkCalls });
     });
 
-    const url = 'https://fibersupplychain.onrender.com/api/harvests/farmer/harvests';
+    const url = `${API_BASE_URL}/api/harvests/farmer/harvests`;
     const token = makeJwt({ userType: 'farmer', userId: 'f-1' });
 
     const res1 = await cachedFetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -52,7 +53,7 @@ async function runTests() {
       return makeJsonResponse({ concurrent: true, call: networkCalls });
     });
 
-    const url = 'https://fibersupplychain.onrender.com/api/buyers/profile';
+    const url = `${API_BASE_URL}/api/buyers/profile`;
     const token = makeJwt({ userType: 'buyer', userId: 'b-1' });
 
     const [r1, r2] = await Promise.all([
@@ -77,8 +78,8 @@ async function runTests() {
       return makeJsonResponse({ ok: true }, 201);
     });
 
-    const getUrl = 'https://fibersupplychain.onrender.com/api/inventory/inventory';
-    const postUrl = 'https://fibersupplychain.onrender.com/api/inventory/inventory';
+    const getUrl = `${API_BASE_URL}/api/inventory/inventory`;
+    const postUrl = `${API_BASE_URL}/api/inventory/inventory`;
     const token = makeJwt({ userType: 'association_officer', userId: 'a-1' });
 
     const vBefore = getCacheState().version;
@@ -111,7 +112,7 @@ async function runTests() {
       return makeJsonResponse({ error: 'boom' }, 500);
     });
 
-    const url = 'https://fibersupplychain.onrender.com/api/sales/reports';
+    const url = `${API_BASE_URL}/api/sales/reports`;
     const token = makeJwt({ userType: 'farmer', userId: 'f-2' });
 
     await cachedFetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -137,7 +138,7 @@ async function runTests() {
       return makeJsonResponse({ calls });
     });
 
-    const url = 'https://fibersupplychain.onrender.com/api/farmers/monitoring';
+    const url = `${API_BASE_URL}/api/farmers/monitoring`;
     const farmer1a = makeJwt({ userType: 'farmer', userId: 'u-1', iat: 100 });
     const farmer1b = makeJwt({ userType: 'farmer', userId: 'u-1', iat: 200 });
     const farmer2 = makeJwt({ userType: 'farmer', userId: 'u-2', iat: 100 });
@@ -159,8 +160,8 @@ async function runTests() {
       return makeJsonResponse({ calls });
     });
 
-    await cachedFetch('https://fibersupplychain.onrender.com/api/maintenance/status');
-    await cachedFetch('https://fibersupplychain.onrender.com/api/maintenance/status');
+    await cachedFetch(`${API_BASE_URL}/api/maintenance/status`);
+    await cachedFetch(`${API_BASE_URL}/api/maintenance/status`);
     await cachedFetch('https://generativelanguage.googleapis.com/v1beta/models/gemini');
     await cachedFetch('https://generativelanguage.googleapis.com/v1beta/models/gemini');
     assert.equal(calls, 4, 'Maintenance status and external URLs must bypass cache');
@@ -174,7 +175,7 @@ async function runTests() {
       return makeJsonResponse({ calls });
     });
 
-    const url = 'https://fibersupplychain.onrender.com/api/mao/officers';
+    const url = `${API_BASE_URL}/api/mao/officers`;
     const headers = { Authorization: `Bearer ${makeJwt({ userType: 'officer', userId: 'o-1' })}` };
 
     assert.equal((await (await cachedFetch(url, { headers })).json()).calls, 1);
@@ -214,7 +215,7 @@ async function runTests() {
       { ttlMs: 25 }
     );
 
-    const url = 'https://fibersupplychain.onrender.com/api/articles';
+    const url = `${API_BASE_URL}/api/articles`;
     await cachedFetch(url);
     await cachedFetch(url);
     assert.equal(calls, 1);

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import { useState, useEffect } from 'react';
 import { getAuthToken, getAuthHeader } from '../utils/authToken';
 import { EditorialCard } from '../components/Shared/EditorialUI';
@@ -108,12 +109,12 @@ export default function HarvestSubmissionPage() {
       if (!token) return;
 
       // 1. Fetch planted seedlings
-      const seedlingsRes = await fetch('https://fibersupplychain.onrender.com/api/association-seedlings/farmer/received', {
+      const seedlingsRes = await fetch(`${API_BASE_URL}/api/association-seedlings/farmer/received`, {
         headers: getAuthHeader()
       });
 
       // 2. Fetch existing harvests to check what's already been harvested
-      const harvestsRes = await fetch('https://fibersupplychain.onrender.com/api/harvests/farmer/harvests', {
+      const harvestsRes = await fetch(`${API_BASE_URL}/api/harvests/farmer/harvests`, {
         headers: getAuthHeader()
       });
 
@@ -170,7 +171,7 @@ export default function HarvestSubmissionPage() {
         return;
       }
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/farmers/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/farmers/profile`, {
         headers: getAuthHeader()
       });
 
@@ -256,7 +257,7 @@ export default function HarvestSubmissionPage() {
 
       console.log('Submitting payload:', payload);
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/harvests/farmer/harvests', {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/farmer/harvests`, {
         method: 'POST',
         headers: {
           ...getAuthHeader(),

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState } from 'react';
 import { Eye, EyeOff, ChevronRight, ChevronLeft, X, Camera, FileText, Building2 } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
@@ -93,7 +94,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
       // Get reCAPTCHA v3 token (invisible)
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -171,7 +172,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
       const recaptchaToken = await executeRecaptcha('register');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/register/officer', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register/officer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

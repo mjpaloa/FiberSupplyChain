@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState } from 'react';
 import { Building2, ChevronRight, ChevronLeft, Upload, X, Camera, FileText, Award, Eye, EyeOff } from 'lucide-react';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
@@ -93,7 +94,7 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
 
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -172,7 +173,7 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
       const recaptchaToken = await executeRecaptcha('login');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/register/buyer', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register/buyer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...submitData, recaptchaToken }),

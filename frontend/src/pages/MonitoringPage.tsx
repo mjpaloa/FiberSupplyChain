@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import MonitoringDashboard from '../components/MAO/MonitoringDashboard';
 import { MonitoringRecord } from '../types/monitoring';
@@ -48,7 +49,7 @@ const MonitoringPage: React.FC = () => {
   const loadFarmers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/mao/farmers', {
+      const response = await fetch(`${API_BASE_URL}/api/mao/farmers`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -102,7 +103,7 @@ const MonitoringPage: React.FC = () => {
   const fetchFreshData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/mao/monitoring', {
+      const response = await fetch(`${API_BASE_URL}/api/mao/monitoring`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -199,7 +200,7 @@ const MonitoringPage: React.FC = () => {
       console.log('  - status:', newRecordData.status);
       console.log('  - nextMonitoringDate:', newRecordData.nextMonitoringDate);
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/mao/monitoring', {
+      const response = await fetch(`${API_BASE_URL}/api/mao/monitoring`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -246,7 +247,7 @@ const MonitoringPage: React.FC = () => {
       }
 
       // Send the update request
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/mao/monitoring/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/mao/monitoring/${id}`, {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -302,7 +303,7 @@ const MonitoringPage: React.FC = () => {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/mao/monitoring/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/mao/monitoring/${id}`, {
         method: 'DELETE',
         headers: { 
           'Authorization': `Bearer ${token}`,

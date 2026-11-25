@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   Truck,
@@ -79,7 +80,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const statusParam = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/fiber-deliveries/all${statusParam}`, {
+      const response = await fetch(`${API_BASE_URL}/api/fiber-deliveries/all${statusParam}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -97,7 +98,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `https://fibersupplychain.onrender.com/api/fiber-deliveries/cusafa/${selectedDelivery.delivery_id}/status`,
+        `${API_BASE_URL}/api/fiber-deliveries/cusafa/${selectedDelivery.delivery_id}/status`,
         {
           method: 'PUT',
           headers: {
@@ -131,7 +132,7 @@ const CUSAFAFiberDeliveries: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `https://fibersupplychain.onrender.com/api/fiber-deliveries/${selectedDelivery.delivery_id}`,
+        `${API_BASE_URL}/api/fiber-deliveries/${selectedDelivery.delivery_id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }

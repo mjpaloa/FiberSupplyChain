@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Calendar, Eye, ArrowRight } from 'lucide-react';
 
@@ -23,7 +24,7 @@ const ArticlesSection: React.FC = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('https://fibersupplychain.onrender.com/api/articles');
+      const response = await fetch(`${API_BASE_URL}/api/articles`);
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (error) {

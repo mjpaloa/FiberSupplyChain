@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   User,
@@ -92,7 +93,7 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
         return;
       }
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/me', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -182,14 +183,14 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
               />
             ) : (
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-[#EAF6F0] border border-[#CBEAD9] text-[#047857] flex items-center justify-center text-3xl sm:text-4xl font-bold flex-shrink-0">
-                {profile.full_name.charAt(0).toUpperCase()}
+                {(profile.full_name || 'F').charAt(0).toUpperCase()}
               </div>
             )}
 
             {/* Basic Info */}
             <div className="flex-1 text-center sm:text-left min-w-0">
               <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-                {profile.full_name}
+                {profile.full_name || 'Farmer'}
               </h2>
               <p className="text-sm text-gray-500 mb-3">Abaca Farmer</p>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
@@ -221,7 +222,7 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
                 <Mail className="w-4 h-4 text-[#047857]" />
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</h3>
               </div>
-              <p className="text-sm text-gray-900 font-semibold break-all">{profile.email}</p>
+              <p className="text-sm text-gray-900 font-semibold break-all">{profile.email || 'N/A'}</p>
             </div>
 
             {/* Contact */}
@@ -230,7 +231,7 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
                 <Phone className="w-4 h-4 text-[#047857]" />
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</h3>
               </div>
-              <p className="text-sm text-gray-900 font-semibold tabular-nums">{profile.contact_number}</p>
+              <p className="text-sm text-gray-900 font-semibold tabular-nums">{profile.contact_number || 'N/A'}</p>
             </div>
 
             {/* Address */}
@@ -240,7 +241,7 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Address</h3>
               </div>
               <p className="text-sm text-gray-900 font-semibold">
-                {profile.address}, {profile.barangay}, {profile.municipality}
+                {[profile.address, profile.barangay, profile.municipality].filter(Boolean).join(', ') || 'N/A'}
               </p>
             </div>
 
@@ -251,7 +252,7 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Sex & Age</h3>
               </div>
               <p className="text-sm text-gray-900 font-semibold">
-                {profile.sex}, {profile.age} years old
+                {profile.sex || 'N/A'}{profile.age ? `, ${profile.age} years old` : ''}
               </p>
             </div>
 
@@ -261,7 +262,7 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
                 <Building2 className="w-4 h-4 text-[#047857]" />
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Association</h3>
               </div>
-              <p className="text-sm text-gray-900 font-semibold">{profile.association_name}</p>
+              <p className="text-sm text-gray-900 font-semibold">{profile.association_name || 'Independent Farmer'}</p>
             </div>
 
             {/* Farm Information */}
@@ -273,24 +274,24 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Farm Area</p>
-                  <p className="text-sm font-bold text-gray-900 tabular-nums">{profile.farm_area_hectares} hectares</p>
+                  <p className="text-sm font-bold text-gray-900 tabular-nums">{profile.farm_area_hectares ?? 0} hectares</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Years Farming</p>
-                  <p className="text-sm font-bold text-gray-900 tabular-nums">{profile.years_in_farming} years</p>
+                  <p className="text-sm font-bold text-gray-900 tabular-nums">{profile.years_in_farming ?? 0} years</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Abaca Type</p>
-                  <p className="text-sm font-bold text-gray-900">{profile.type_of_abaca_planted}</p>
+                  <p className="text-sm font-bold text-gray-900">{profile.type_of_abaca_planted || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Average Harvest</p>
-                  <p className="text-sm font-bold text-gray-900 tabular-nums">{profile.average_harvest_volume_kg} kg</p>
+                  <p className="text-sm font-bold text-gray-900 tabular-nums">{profile.average_harvest_volume_kg ?? 0} kg</p>
                 </div>
               </div>
               <div className="pt-3 border-t border-gray-200">
                 <p className="text-xs text-gray-500 mb-0.5">Farm Location</p>
-                <p className="text-sm font-semibold text-gray-900">{profile.farm_location}</p>
+                <p className="text-sm font-semibold text-gray-900">{profile.farm_location || 'N/A'}</p>
               </div>
             </div>
 
@@ -304,12 +305,12 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Price Range</p>
                   <p className="text-sm font-bold text-gray-900 tabular-nums">
-                    ₱{profile.selling_price_range_min} - ₱{profile.selling_price_range_max}/kg
+                    ₱{profile.selling_price_range_min ?? 0} - ₱{profile.selling_price_range_max ?? 0}/kg
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Harvest Frequency</p>
-                  <p className="text-sm font-bold text-gray-900 tabular-nums">{profile.harvest_frequency_weeks} weeks</p>
+                  <p className="text-sm font-bold text-gray-900 tabular-nums">{profile.harvest_frequency_weeks ?? 0} weeks</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Regular Buyer</p>
@@ -318,7 +319,7 @@ const FarmerProfile: React.FC<FarmerProfileProps> = ({ onBack, onEditProfile }) 
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Income per Cycle</p>
                   <p className="text-sm font-bold text-gray-900 tabular-nums">
-                    ₱{profile.income_per_cycle.toLocaleString()}
+                    ₱{Number(profile.income_per_cycle || 0).toLocaleString()}
                   </p>
                 </div>
               </div>

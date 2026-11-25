@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect, useRef } from 'react';
 import { apiGet } from '../../utils/apiClient';
 import { 
@@ -6,7 +7,8 @@ import {
   FileText, 
   User,
   Package,
-  Bell
+  Bell,
+  BookOpen
 } from 'lucide-react';
 import { EditorialShell, EditorialNavItem, KeepAlivePages, useCacheState } from '../Shared/EditorialUI';
 import BuyerAnalytics from './BuyerAnalytics';
@@ -16,12 +18,13 @@ import BuyerTransactions from './BuyerTransactions';
 import BuyerProfile from './BuyerProfile';
 import BuyerPriceListings from './BuyerPriceListings';
 import BuyerInventory from './BuyerInventory';
+import BuyerUserManual from './BuyerUserManual';
 
 interface BuyerDashboardProps {
   onLogout: () => void;
 }
 
-type DashboardPage = 'dashboard' | 'inventory' | 'purchase' | 'sales' | 'transactions' | 'profile' | 'create-listing' | 'my-listings';
+type DashboardPage = 'dashboard' | 'manual' | 'inventory' | 'purchase' | 'sales' | 'transactions' | 'profile' | 'create-listing' | 'my-listings';
 
 const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
   const [currentPage, setCurrentPage] = useState<DashboardPage>('dashboard');
@@ -118,7 +121,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
       
       // Try to fetch recent purchases (handle 404/500 gracefully)
       try {
-        const purchasesRes = await fetch('https://fibersupplychain.onrender.com/api/buyer-purchases', {
+        const purchasesRes = await fetch(`${API_BASE_URL}/api/buyer-purchases`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -145,7 +148,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
       
       // Try to fetch recent sales (handle 404 gracefully)
       try {
-        const salesRes = await fetch('https://fibersupplychain.onrender.com/api/buyer-sales', {
+        const salesRes = await fetch(`${API_BASE_URL}/api/buyer-sales`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -191,6 +194,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
 
   const navItems: EditorialNavItem[] = [
     { id: 'dashboard', label: 'Dashboard', category: 'General', icon: <LayoutDashboard className="w-[18px] h-[18px]" /> },
+    { id: 'manual', label: 'User Manual', category: 'General', icon: <BookOpen className="w-[18px] h-[18px]" /> },
     { id: 'inventory', label: 'My Inventory', category: 'Inventory & Pricing', icon: <Package className="w-[18px] h-[18px]" /> },
     { id: 'my-listings', label: 'My Price Listings', category: 'Inventory & Pricing', icon: <FileText className="w-[18px] h-[18px]" /> },
     { id: 'purchase', label: 'Purchase Fiber', category: 'Purchasing & Ledger', icon: <ShoppingCart className="w-[18px] h-[18px]" /> },
@@ -199,6 +203,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
 
   const pageMeta: Record<DashboardPage, { title: string; subtitle: string }> = {
     dashboard: { title: 'Dashboard', subtitle: `Welcome back, ${buyerInfo.name || 'Buyer'}` },
+    manual: { title: 'User Manual', subtitle: 'Step-by-step guide to the Buyer Portal with screenshots and explanations.' },
     inventory: { title: 'My Inventory', subtitle: 'Manage fiber stock levels and direct sales' },
     'my-listings': { title: 'My Price Listings', subtitle: 'Published buying offers and class pricing' },
     purchase: { title: 'Purchase Fiber', subtitle: 'Record a new abaca fiber purchase from farmers' },
@@ -210,6 +215,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
 
   const buyerPages = {
     dashboard: () => <BuyerAnalytics />,
+    manual: () => <BuyerUserManual />,
     inventory: () => <BuyerInventory />,
     'my-listings': () => <BuyerPriceListings />,
     purchase: () => <FiberPurchaseForm />,

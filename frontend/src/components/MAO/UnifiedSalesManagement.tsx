@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config/api';
 import {
   FileText,
   Download,
@@ -57,7 +58,7 @@ const UnifiedSalesManagement: React.FC = () => {
       try {
         setLoading(true);
         const token = getAuthToken();
-        const apiUrl = import.meta.env.VITE_API_URL || 'https://fibersupplychain.onrender.com';
+        const apiUrl = API_BASE_URL;
 
         if (!token) {
           console.error('No authentication token found');
@@ -103,7 +104,7 @@ const UnifiedSalesManagement: React.FC = () => {
   const handleApproveReport = async (reportId: string) => {
     try {
       const token = getAuthToken();
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://fibersupplychain.onrender.com';
+      const apiUrl = API_BASE_URL;
 
       const response = await fetch(`${apiUrl}/api/sales/reports/${reportId}/status`, {
         method: 'PUT',
@@ -155,7 +156,7 @@ const UnifiedSalesManagement: React.FC = () => {
 
     try {
       const token = getAuthToken();
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://fibersupplychain.onrender.com';
+      const apiUrl = API_BASE_URL;
 
       const response = await fetch(`${apiUrl}/api/sales/reports/${selectedReport.id}`, {
         method: 'PUT',
@@ -219,7 +220,7 @@ const UnifiedSalesManagement: React.FC = () => {
   const handleRejectReport = async (reportId: string) => {
     try {
       const token = getAuthToken();
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://fibersupplychain.onrender.com';
+      const apiUrl = API_BASE_URL;
 
       const response = await fetch(`${apiUrl}/api/sales/reports/${reportId}/status`, {
         method: 'PUT',

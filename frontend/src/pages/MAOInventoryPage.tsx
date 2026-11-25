@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import { useState, useEffect } from 'react';
 import { Globe, User } from 'lucide-react';
 
@@ -55,8 +56,8 @@ export default function MAOInventoryPage() {
       
       // Use different endpoint based on view mode
       const endpoint = (isSuperAdmin && viewMode === 'all')
-        ? `https://fibersupplychain.onrender.com/api/inventory/admin/inventory/all${statusParam}`
-        : `https://fibersupplychain.onrender.com/api/inventory/inventory${statusParam}`;
+        ? `${API_BASE_URL}/api/inventory/admin/inventory/all${statusParam}`
+        : `${API_BASE_URL}/api/inventory/inventory${statusParam}`;
       
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -76,7 +77,7 @@ export default function MAOInventoryPage() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/inventory/inventory/statistics', {
+      const response = await fetch(`${API_BASE_URL}/api/inventory/inventory/statistics`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

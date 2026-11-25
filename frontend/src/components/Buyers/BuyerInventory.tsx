@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { Package, ShoppingCart, X } from 'lucide-react';
 import { KpiStrip, EditorialCard, StatusPill } from '../Shared/EditorialUI';
@@ -63,7 +64,7 @@ const BuyerInventory: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/buyer-purchases', {
+      const response = await fetch(`${API_BASE_URL}/api/buyer-purchases`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -75,7 +76,7 @@ const BuyerInventory: React.FC = () => {
 
       // Fetch sales data with error handling
       try {
-        const salesResponse = await fetch('https://fibersupplychain.onrender.com/api/buyer-purchases/sales', {
+        const salesResponse = await fetch(`${API_BASE_URL}/api/buyer-purchases/sales`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -169,7 +170,7 @@ const BuyerInventory: React.FC = () => {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/buyer-purchases/inventory/sell', {
+      const response = await fetch(`${API_BASE_URL}/api/buyer-purchases/inventory/sell`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

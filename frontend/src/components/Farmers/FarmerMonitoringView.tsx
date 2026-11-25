@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Calendar,
@@ -213,7 +214,7 @@ const FarmerMonitoringView: React.FC = () => {
       setLoading(true);
 
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/farmers/monitoring', {
+      const response = await fetch(`${API_BASE_URL}/api/farmers/monitoring`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

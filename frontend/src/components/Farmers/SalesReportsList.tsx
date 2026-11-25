@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config/api';
 import { FileText, Calendar, Banknote, Package, Plus, Search, Edit, Trash2, Eye, X, Filter } from 'lucide-react';
 import SalesReportForm from './SalesReportForm';
 import { getUserData } from '../../utils/authToken';
@@ -72,7 +73,7 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
       }
       
       console.log('✅ Using farmer ID:', farmerId);
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://fibersupplychain.onrender.com';
+      const apiUrl = API_BASE_URL;
       const response = await fetch(`${apiUrl}/api/sales/farmer-reports/${farmerId}`);
       
       if (!response.ok) {
@@ -94,7 +95,7 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
       console.error('❌ Error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
         userData: getUserData(),
-        apiUrl: import.meta.env.VITE_API_URL
+        apiUrl: API_BASE_URL
       });
       setReports([]);
     } finally {
@@ -139,7 +140,7 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/sales/delete-report/${reportId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/sales/delete-report/${reportId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

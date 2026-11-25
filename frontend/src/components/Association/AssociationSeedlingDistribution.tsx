@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   Search,
@@ -105,7 +106,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
       }
 
       const response = await fetch(
-        'https://fibersupplychain.onrender.com/api/association-seedlings/association/farmer-distributions',
+        `${API_BASE_URL}/api/association-seedlings/association/farmer-distributions`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -167,7 +168,7 @@ const AssociationSeedlingDistribution: React.FC = () => {
       }
 
       const response = await fetch(
-        `https://fibersupplychain.onrender.com/api/association-seedlings/association/farmer-distributions/${distributionId}`,
+        `${API_BASE_URL}/api/association-seedlings/association/farmer-distributions/${distributionId}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }

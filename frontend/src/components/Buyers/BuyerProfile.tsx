@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { apiGet, apiPut } from '../../utils/apiClient';
 import { 
@@ -321,7 +322,7 @@ const BuyerProfile: React.FC = () => {
 
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/reset-password', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

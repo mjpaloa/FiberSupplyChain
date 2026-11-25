@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   BookOpen,
@@ -44,7 +45,7 @@ const ArticleManagement: React.FC = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('https://fibersupplychain.onrender.com/api/articles');
+      const response = await fetch(`${API_BASE_URL}/api/articles`);
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (error) {
@@ -116,8 +117,8 @@ const ArticleManagement: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const url = editingArticle
-        ? `https://fibersupplychain.onrender.com/api/articles/${editingArticle.article_id}`
-        : 'https://fibersupplychain.onrender.com/api/articles';
+        ? `${API_BASE_URL}/api/articles/${editingArticle.article_id}`
+        : `${API_BASE_URL}/api/articles`;
       
       const method = editingArticle ? 'PUT' : 'POST';
 
@@ -149,7 +150,7 @@ const ArticleManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/articles/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

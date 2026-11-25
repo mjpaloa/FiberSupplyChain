@@ -2,6 +2,7 @@
  * Planted Seedlings Component
  * Shows detailed planted records from farmers in table format
  */
+import { API_BASE_URL } from '../../config/api';
 import React, { useEffect, useState } from 'react';
 import { Sprout, Calendar, MapPin, User, Search, Filter, Camera, Eye, X } from 'lucide-react';
 import { KpiStrip, EditorialCard, StatusPill } from '../Shared/EditorialUI';
@@ -47,7 +48,7 @@ const PlantedSeedlings: React.FC = () => {
     setError(null);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/association-seedlings/cusafa/all-distributions', {
+      const response = await fetch(`${API_BASE_URL}/api/association-seedlings/cusafa/all-distributions`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

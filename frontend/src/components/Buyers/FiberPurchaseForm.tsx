@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { Upload, X, Plus, Package, CheckCircle, User, Leaf, Phone } from 'lucide-react';
 import { EditorialCard } from '../Shared/EditorialUI';
@@ -79,7 +80,7 @@ const FiberPurchaseForm: React.FC = () => {
         imageUrl: null // TODO: Handle image upload separately if needed
       };
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/buyer-purchases', {
+      const response = await fetch(`${API_BASE_URL}/api/buyer-purchases`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

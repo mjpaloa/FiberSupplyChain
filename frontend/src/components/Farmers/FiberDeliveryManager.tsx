@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { apiGet } from '../../utils/apiClient';
 import {
@@ -196,8 +197,8 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const url = isEditMode && selectedDelivery
-        ? `https://fibersupplychain.onrender.com/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
-        : 'https://fibersupplychain.onrender.com/api/fiber-deliveries/create';
+        ? `${API_BASE_URL}/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
+        : `${API_BASE_URL}/api/fiber-deliveries/create`;
 
       const method = isEditMode ? 'PUT' : 'POST';
 
@@ -260,7 +261,7 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `https://fibersupplychain.onrender.com/api/fiber-delivery/farmer/${selectedDelivery.delivery_id}`,
+        `${API_BASE_URL}/api/fiber-delivery/farmer/${selectedDelivery.delivery_id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
@@ -292,7 +293,7 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `https://fibersupplychain.onrender.com/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}/cancel`,
+        `${API_BASE_URL}/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}/cancel`,
         {
           method: 'POST',
           headers: {

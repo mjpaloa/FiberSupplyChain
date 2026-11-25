@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
@@ -12,7 +13,8 @@ import {
   Truck,
   Bell,
   Activity,
-  X
+  X,
+  BookOpen
 } from 'lucide-react';
 import {
   LineChart as RechartsLineChart,
@@ -50,8 +52,9 @@ import CUSAFAFiberDeliveries from './CUSAFAFiberDeliveries';
 import AssociationProfile from './AssociationProfile';
 import EditAssociationProfile from './EditAssociationProfile';
 import ChangePassword from './ChangePassword';
+import CUSAFAUserManual from './CUSAFAUserManual';
 
-type DashboardPage = 'overview' | 'inventory' | 'distribution' | 'fiber-inventory' | 'buyer-prices' | 'fiber-deliveries' | 'analytics' | 'profile' | 'edit-profile' | 'change-password';
+type DashboardPage = 'overview' | 'manual' | 'inventory' | 'distribution' | 'fiber-inventory' | 'buyer-prices' | 'fiber-deliveries' | 'analytics' | 'profile' | 'edit-profile' | 'change-password';
 
 interface DashboardStats {
   totalReceivedCount: number;
@@ -199,7 +202,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   const fetchOfficerProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/association/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/association/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -222,10 +225,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       }
 
       const [associationRes, farmerRes] = await Promise.all([
-        fetch('https://fibersupplychain.onrender.com/api/association-seedlings/association/received', {
+        fetch(`${API_BASE_URL}/api/association-seedlings/association/received`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('https://fibersupplychain.onrender.com/api/association-seedlings/association/farmer-distributions', {
+        fetch(`${API_BASE_URL}/api/association-seedlings/association/farmer-distributions`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -295,7 +298,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
       const notifs: Notification[] = [];
 
-      const seedlingRes = await fetch('https://fibersupplychain.onrender.com/api/association-seedlings/association/farmer-distributions', {
+      const seedlingRes = await fetch(`${API_BASE_URL}/api/association-seedlings/association/farmer-distributions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -327,7 +330,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/fiber-deliveries/all', {
+      const response = await fetch(`${API_BASE_URL}/api/fiber-deliveries/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -377,7 +380,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       let receivedData: any = [];
 
       try {
-        const seedlingRes = await fetch('https://fibersupplychain.onrender.com/api/association-seedlings/association/farmer-distributions', {
+        const seedlingRes = await fetch(`${API_BASE_URL}/api/association-seedlings/association/farmer-distributions`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (seedlingRes.ok) {
@@ -388,7 +391,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       }
 
       try {
-        const receivedRes = await fetch('https://fibersupplychain.onrender.com/api/association-seedlings/association/received', {
+        const receivedRes = await fetch(`${API_BASE_URL}/api/association-seedlings/association/received`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (receivedRes.ok) {
@@ -527,6 +530,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
 
   const editorialNavItems: EditorialNavItem[] = [
     { id: 'overview', label: 'Overview', category: 'General', icon: <LayoutDashboard className="w-[18px] h-[18px]" /> },
+    { id: 'manual', label: 'User Manual', category: 'General', icon: <BookOpen className="w-[18px] h-[18px]" /> },
     { id: 'inventory', label: 'Seedling Inventory', category: 'Seedlings', icon: <Sprout className="w-[18px] h-[18px]" /> },
     { id: 'distribution', label: 'Distribution', category: 'Seedlings', icon: <Share2 className="w-[18px] h-[18px]" /> },
     { id: 'fiber-inventory', label: 'Fiber Inventory', category: 'Fiber & Market', icon: <Package className="w-[18px] h-[18px]" /> },
@@ -980,6 +984,7 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
   );
 
   const cusafaPages = {
+    manual: () => <CUSAFAUserManual />,
     analytics: () => renderAnalytics(),
     inventory: () => <AssociationInventory />,
     'fiber-inventory': () => <CUSAFAInventory />,
@@ -1029,6 +1034,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
     overview: {
       title: 'Overview',
       subtitle: 'Monitor seedling inventory, farmer distributions, and fiber deliveries.',
+    },
+    manual: {
+      title: 'User Manual',
+      subtitle: 'Step-by-step guide to the CUSAFA Association Portal with screenshots and explanations.',
     },
     analytics: {
       title: 'Analytics Dashboard',

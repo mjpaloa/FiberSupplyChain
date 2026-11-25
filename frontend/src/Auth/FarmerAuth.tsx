@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState } from 'react';
 import { User, ChevronRight, ChevronLeft, Upload, X, Camera, FileText, Eye, EyeOff } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
@@ -86,7 +87,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
 
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,7 +166,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
       const recaptchaToken = await executeRecaptcha('login');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch('https://fibersupplychain.onrender.com/api/auth/register/farmer', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register/farmer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...submitData, recaptchaToken }),

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { apiGet, apiDelete } from '../../utils/apiClient';
 import { 
@@ -108,7 +109,7 @@ const BuyerPriceListings: React.FC = () => {
         ...(editModal.class_c_enabled && { class_c_price: editModal.class_c_price })
       };
       
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/buyer-listings/${editModal.listing_id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/buyer-listings/${editModal.listing_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

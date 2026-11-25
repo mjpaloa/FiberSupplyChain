@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { API_BASE_URL } from '../../config/api';
 import {
   LayoutDashboard,
   UserCheck,
@@ -98,6 +99,7 @@ import {
   useCacheState,
   EDITORIAL_CHART,
 } from '../Shared/EditorialUI';
+import { invalidateApiCache } from '../../utils/apiCache';
 
 
 interface MAODashboardProps {
@@ -157,6 +159,160 @@ interface DashboardState {
   };
 }
 
+const CHART_MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+interface InsightModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  insights: string[];
+  view: 'monthly' | 'yearly';
+}
+
+const InsightModal: React.FC<InsightModalProps> = React.memo(({ isOpen, onClose, title, insights, view }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[1px]" onClick={onClose}>
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#EAF6F0] rounded-xl text-[#047857]">
+              <Eye className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-gray-900">{title}</h3>
+              <p className="text-xs text-gray-500 font-medium">
+                {view === 'monthly' ? 'Monthly' : 'Yearly'} Insights
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-3">
+          {insights.map((insight, idx) => (
+            <div
+              key={idx}
+              className="flex gap-3.5 p-4 bg-[#F8F9FA] rounded-xl border border-gray-200"
+            >
+              <div className="flex-shrink-0 w-7 h-7 bg-[#EAF6F0] border border-[#CBEAD9] rounded-full flex items-center justify-center text-[#047857] font-bold text-xs tabular-nums">
+                {idx + 1}
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed flex-1">
+                {insight}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="sticky bottom-0 bg-white px-6 py-4 border-t border-gray-200 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2 bg-[#047857] text-white text-sm font-semibold rounded-xl hover:bg-[#065F46] transition-colors"
+          >
+            Close Insights
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+const AnimatedPieChart: React.FC<{
+  data: { name: string; value: number; fill: string; percentage: number }[];
+  centerLabel?: string;
+  centerSubLabel?: string;
+}> = React.memo(({ data, centerLabel, centerSubLabel }) => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  let currentAngle = -90;
+
+  const validData = data.filter(item => item.value > 0);
+  const total = validData.reduce((sum, item) => sum + item.value, 0);
+
+  return (
+    <div className="relative w-full h-64 flex items-center justify-center">
+      <svg viewBox="0 0 240 240" className="w-56 h-56">
+        {validData.length === 1 ? (
+          <circle
+            cx="120"
+            cy="120"
+            r={hoveredIndex === 0 ? 92 : 88}
+            fill={validData[0].fill}
+            onMouseEnter={() => setHoveredIndex(0)}
+            onMouseLeave={() => setHoveredIndex(null)}
+            className="cursor-pointer transition-all duration-200"
+          />
+        ) : (
+          validData.map((item, index) => {
+            const percentage = (item.value / total) * 100;
+            const angle = (percentage / 100) * 360;
+            const startAngle = currentAngle;
+            const endAngle = currentAngle + angle;
+            currentAngle = endAngle;
+
+            const startRad = (startAngle * Math.PI) / 180;
+            const endRad = (endAngle * Math.PI) / 180;
+
+            const radius = hoveredIndex === index ? 92 : 88;
+            const x1 = 120 + radius * Math.cos(startRad);
+            const y1 = 120 + radius * Math.sin(startRad);
+            const x2 = 120 + radius * Math.cos(endRad);
+            const y2 = 120 + radius * Math.sin(endRad);
+
+            const largeArc = angle > 180 ? 1 : 0;
+
+            return (
+              <path
+                key={index}
+                d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                fill={item.fill}
+                stroke="#FFFFFF"
+                strokeWidth={2}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                className="cursor-pointer transition-opacity duration-200"
+                style={{
+                  opacity: hoveredIndex === null || hoveredIndex === index ? 1 : 0.65
+                }}
+              />
+            );
+          })
+        )}
+
+        <circle cx="120" cy="120" r="56" fill="#FFFFFF" />
+      </svg>
+
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full max-w-[104px] flex flex-col items-center justify-center">
+        {hoveredIndex !== null && validData[hoveredIndex] ? (
+          <>
+            <p className="text-xl font-bold text-gray-900 tabular-nums leading-none">
+              {((validData[hoveredIndex].value / total) * 100).toFixed(1)}%
+            </p>
+            <p className="text-[11px] text-gray-500 font-medium mt-1 break-words w-full">
+              {validData[hoveredIndex].name}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className={`${(centerLabel?.length || 0) > 12 ? 'text-sm' : (centerLabel?.length || 0) > 8 ? 'text-base' : 'text-xl'} font-bold text-gray-900 tabular-nums leading-tight mb-0.5 px-1`}>
+              {centerLabel}
+            </p>
+            <p className="text-[10px] text-gray-500 font-medium leading-tight break-words w-full">{centerSubLabel}</p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+});
+
 const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -215,7 +371,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     setLoadingProfile(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -281,7 +437,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         profilePicture: profilePhoto
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/mao/complete-profile`, {
+      const response = await fetch(`${API_BASE_URL}/api/mao/complete-profile`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -338,7 +494,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         setProfilePhoto(base64String);
 
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/mao/complete-profile`, {
+        const response = await fetch(`${API_BASE_URL}/api/mao/complete-profile`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -377,7 +533,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     setChangingPassword(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/change-password`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -473,6 +629,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     }
   });
   const [loadingDashboard, setLoadingDashboard] = useState(true);
+  const [refreshingDashboard, setRefreshingDashboard] = useState(false);
+  const hasLoadedDashboardRef = useRef(false);
+  const hasInitializedYearsRef = useRef(false);
+  const hasInitializedMonitoringYearRef = useRef(false);
+  const fetchReqIdRef = useRef(0);
   const [dashboardSection, setDashboardSection] = useState<'production' | 'sales' | 'users' | 'reports'>('production');
   const [chartView, setChartView] = useState<'monthly' | 'yearly'>('monthly');
   const [seedlingMonthYear, setSeedlingMonthYear] = useState(new Date().getFullYear());
@@ -495,70 +656,6 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     insights: string[];
     view: 'monthly' | 'yearly';
   } | null>(null);
-
-  // Insight Modal Component
-  const InsightModal: React.FC<{
-    isOpen: boolean;
-    onClose: () => void;
-    title: string;
-    insights: string[];
-    view: 'monthly' | 'yearly';
-  }> = ({ isOpen, onClose, title, insights, view }) => {
-    if (!isOpen) return null;
-
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[1px]" onClick={onClose}>
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-[#EAF6F0] rounded-xl text-[#047857]">
-                <Eye className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-serif text-lg font-bold text-gray-900">{title}</h3>
-                <p className="text-xs text-gray-500 font-medium">
-                  {view === 'monthly' ? 'Monthly' : 'Yearly'} Insights
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="p-6 space-y-3">
-            {insights.map((insight, idx) => (
-              <div
-                key={idx}
-                className="flex gap-3.5 p-4 bg-[#F8F9FA] rounded-xl border border-gray-200"
-              >
-                <div className="flex-shrink-0 w-7 h-7 bg-[#EAF6F0] border border-[#CBEAD9] rounded-full flex items-center justify-center text-[#047857] font-bold text-xs tabular-nums">
-                  {idx + 1}
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed flex-1">
-                  {insight}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="sticky bottom-0 bg-white px-6 py-4 border-t border-gray-200 flex justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2 bg-[#047857] text-white text-sm font-semibold rounded-xl hover:bg-[#065F46] transition-colors"
-            >
-              Close Insights
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   // Helper functions to generate insights
   const generateSeedlingInsights = (view: 'monthly' | 'yearly', year?: number): string[] => {
@@ -893,126 +990,70 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     return insights.length > 0 ? insights : ['No data available for insights'];
   };
 
-  // Flat Editorial Donut Chart Component
-  const AnimatedPieChart: React.FC<{
-    data: { name: string; value: number; fill: string; percentage: number }[],
-    centerLabel?: string,
-    centerSubLabel?: string
-  }> = ({ data, centerLabel, centerSubLabel }) => {
-    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-    let currentAngle = -90;
+  // Fetch dashboard data in parallel (Stage A: core metrics/charts, Stage B: 1000+ monitoring rows)
+  const fetchDashboardData = async (options?: { force?: boolean }) => {
+    const reqId = ++fetchReqIdRef.current;
+    if (!hasLoadedDashboardRef.current) {
+      setLoadingDashboard(true);
+    } else {
+      setRefreshingDashboard(true);
+    }
 
-    const validData = data.filter(item => item.value > 0);
-    const total = validData.reduce((sum, item) => sum + item.value, 0);
+    const readJson = async <T,>(
+      settled: PromiseSettledResult<Response>,
+      fallback: T
+    ): Promise<T> => {
+      if (settled.status !== 'fulfilled' || !settled.value.ok) return fallback;
+      try {
+        return await settled.value.json();
+      } catch {
+        return fallback;
+      }
+    };
 
-    return (
-      <div className="relative w-full h-64 flex items-center justify-center">
-        <svg viewBox="0 0 240 240" className="w-56 h-56">
-          {validData.length === 1 ? (
-            <circle
-              cx="120"
-              cy="120"
-              r={hoveredIndex === 0 ? 92 : 88}
-              fill={validData[0].fill}
-              onMouseEnter={() => setHoveredIndex(0)}
-              onMouseLeave={() => setHoveredIndex(null)}
-              className="cursor-pointer transition-all duration-200"
-            />
-          ) : (
-            validData.map((item, index) => {
-              const percentage = (item.value / total) * 100;
-              const angle = (percentage / 100) * 360;
-              const startAngle = currentAngle;
-              const endAngle = currentAngle + angle;
-              currentAngle = endAngle;
-
-              const startRad = (startAngle * Math.PI) / 180;
-              const endRad = (endAngle * Math.PI) / 180;
-
-              const radius = hoveredIndex === index ? 92 : 88;
-              const x1 = 120 + radius * Math.cos(startRad);
-              const y1 = 120 + radius * Math.sin(startRad);
-              const x2 = 120 + radius * Math.cos(endRad);
-              const y2 = 120 + radius * Math.sin(endRad);
-
-              const largeArc = angle > 180 ? 1 : 0;
-
-              return (
-                <path
-                  key={index}
-                  d={`M 120 120 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                  fill={item.fill}
-                  stroke="#FFFFFF"
-                  strokeWidth={2}
-                  onMouseEnter={() => setHoveredIndex(index)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                  className="cursor-pointer transition-opacity duration-200"
-                  style={{
-                    opacity: hoveredIndex === null || hoveredIndex === index ? 1 : 0.65
-                  }}
-                />
-              );
-            })
-          )}
-
-          <circle cx="120" cy="120" r="56" fill="#FFFFFF" />
-        </svg>
-
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full max-w-[104px] flex flex-col items-center justify-center">
-          {hoveredIndex !== null && validData[hoveredIndex] ? (
-            <>
-              <p className="text-xl font-bold text-gray-900 tabular-nums leading-none">
-                {((validData[hoveredIndex].value / total) * 100).toFixed(1)}%
-              </p>
-              <p className="text-[11px] text-gray-500 font-medium mt-1 break-words w-full">
-                {validData[hoveredIndex].name}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className={`${(centerLabel?.length || 0) > 12 ? 'text-sm' : (centerLabel?.length || 0) > 8 ? 'text-base' : 'text-xl'} font-bold text-gray-900 tabular-nums leading-tight mb-0.5 px-1`}>
-                {centerLabel}
-              </p>
-              <p className="text-[10px] text-gray-500 font-medium leading-tight break-words w-full">{centerSubLabel}</p>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  };
-  // Dashboard data loading helpers
-  // (State removal of duplicates below)
-
-  // Fetch dashboard data
-  const fetchDashboardData = async () => {
-    setLoadingDashboard(true);
     try {
       const token = localStorage.getItem('accessToken');
+      const apiBase = API_BASE_URL;
+      const fetchInit: RequestInit = {
+        headers: { Authorization: `Bearer ${token}` },
+        ...(options?.force ? { cache: 'reload' as RequestCache } : {}),
+      };
 
-      // Fetch production data
-      const productionRes = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/production-report`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const productionData = await productionRes.json();
+      // Start all 9 endpoints at t=0; monitoring settles independently in background
+      const monitoringPromise = fetch(`${apiBase}/api/mao/monitoring`, fetchInit);
 
-      // Fetch sales data
-      const salesRes = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/sales-report`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const salesData = await salesRes.json();
+      const [
+        productionSettled,
+        salesSettled,
+        usersSettled,
+        deliveriesSettled,
+        assocDistSettled,
+        farmerDistSettled,
+        directSeedlingsSettled,
+        harvestsSettled,
+      ] = await Promise.allSettled([
+        fetch(`${apiBase}/api/admin/production-report`, fetchInit),
+        fetch(`${apiBase}/api/admin/sales-report`, fetchInit),
+        fetch(`${apiBase}/api/admin/users-report`, fetchInit),
+        fetch(`${apiBase}/api/fiber-deliveries/all`, fetchInit),
+        fetch(`${apiBase}/api/association-seedlings/mao/associations`, fetchInit),
+        fetch(`${apiBase}/api/association-seedlings/cusafa/all-distributions`, fetchInit),
+        fetch(`${apiBase}/api/seedlings/all`, fetchInit),
+        fetch(`${apiBase}/api/admin/harvests/all`, fetchInit),
+      ]);
 
-      // Fetch users data
-      const usersRes = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users-report`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const usersData = await usersRes.json();
+      if (reqId !== fetchReqIdRef.current) return;
 
-      // Fetch delivery data
-      const deliveriesRes = await fetch(`${import.meta.env.VITE_API_URL}/api/fiber-deliveries/all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const deliveriesData = await deliveriesRes.json();
-      const deliveries = deliveriesData.deliveries || [];
+      const productionData: any = await readJson(productionSettled, {});
+      const salesData: any = await readJson(salesSettled, {});
+      const usersData: any = await readJson(usersSettled, {});
+      const deliveriesPayload: any = await readJson(deliveriesSettled, { deliveries: [] });
+      const associationDist: any = await readJson(assocDistSettled, null);
+      const farmerDistData: any = await readJson(farmerDistSettled, null);
+      const directSeedlings: any = await readJson(directSeedlingsSettled, null);
+      const harvestsPayload: any = await readJson(harvestsSettled, null);
+
+      const deliveries: any[] = deliveriesPayload?.deliveries || [];
 
       const deliveryStats = {
         totalDeliveries: deliveries.length,
@@ -1027,17 +1068,15 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         classB_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && (d.grade || '').match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)).reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
         classC_Kg: deliveries.filter((d: any) => ['Delivered', 'Completed'].includes(d.status) && (d.grade || '').match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)).reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
         totalValue: deliveries.filter((d: any) => d.status === 'Completed' || d.status === 'Delivered').reduce((sum: number, d: any) => sum + parseFloat(d.total_amount || 0), 0),
-        rawDeliveries: deliveries // Store raw deliveries for filtering
+        rawDeliveries: deliveries,
       };
 
-      // Calculate monthly data from actual database dates
       const currentYear = new Date().getFullYear();
       let monthlyReceived = new Array(12).fill(0);
       let monthlyDistributed = new Array(12).fill(0);
       let monthlyHarvest = new Array(12).fill(0);
 
-      // Seedling / Production maps
-      const monthlyStatsByYear: { [year: number]: { received: number[], distributed: number[], harvested: number[], planted: number[], unplanted: number[] } } = {};
+      const monthlyStatsByYear: { [year: number]: { received: number[]; distributed: number[]; harvested: number[]; planted: number[]; unplanted: number[] } } = {};
       const yearlyReceived: { [year: number]: number } = {};
       const yearlyDistributed: { [year: number]: number } = {};
       const yearlyHarvest: { [year: number]: number } = {};
@@ -1045,13 +1084,14 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       const yearlyUnplanted: { [year: number]: number } = {};
 
       const ensureYearInStats = (year: number) => {
+        if (isNaN(year) || year < 2000) return false;
         if (!monthlyStatsByYear[year]) {
           monthlyStatsByYear[year] = {
             received: new Array(12).fill(0),
             distributed: new Array(12).fill(0),
             harvested: new Array(12).fill(0),
             planted: new Array(12).fill(0),
-            unplanted: new Array(12).fill(0)
+            unplanted: new Array(12).fill(0),
           };
         }
         if (!yearlyReceived[year]) yearlyReceived[year] = 0;
@@ -1059,313 +1099,143 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         if (!yearlyHarvest[year]) yearlyHarvest[year] = 0;
         if (!yearlyPlanted[year]) yearlyPlanted[year] = 0;
         if (!yearlyUnplanted[year]) yearlyUnplanted[year] = 0;
+        return true;
       };
 
-      // Process deliveries for monthly harvest (production)
       deliveries.forEach((d: any) => {
         const date = new Date(d.created_at || d.delivery_date);
         if (d.status === 'Completed' || d.status === 'Delivered') {
           const year = date.getFullYear();
+          if (!ensureYearInStats(year)) return;
           const monthIndex = date.getMonth();
           const quantity = parseFloat(d.quantity_kg || 0);
-
-          ensureYearInStats(year);
           monthlyStatsByYear[year].harvested[monthIndex] += quantity;
           yearlyHarvest[year] += quantity;
         }
       });
 
-      try {
-        // Fetch seedling distributions for monthly data
-        const associationDistRes = await fetch(`${import.meta.env.VITE_API_URL}/api/association-seedlings/mao/associations`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (associationDistRes.ok) {
-          const associationDist = await associationDistRes.json();
-
-          // Process association distributions (Received)
-          const distributions = associationDist.distributions || associationDist || [];
-          console.log('📦 Processing association distributions (Received):', distributions.length, 'records');
-
+      if (associationDist) {
+        const distributions = associationDist.distributions || associationDist || [];
+        if (Array.isArray(distributions)) {
           distributions.forEach((dist: any) => {
             const dateStr = dist.date_distributed || dist.created_at;
             if (!dateStr) return;
             const date = new Date(dateStr);
             const year = date.getFullYear();
+            if (!ensureYearInStats(year)) return;
             const monthIndex = date.getMonth();
             const quantity = parseInt(dist.quantity_distributed || 0);
-
-            ensureYearInStats(year);
             monthlyStatsByYear[year].received[monthIndex] += quantity;
             yearlyReceived[year] += quantity;
           });
         }
-
-        // For distributed data, fetch from CUSAFA endpoint which has all farmer distributions
-        try {
-          const farmerDistRes = await fetch(`${import.meta.env.VITE_API_URL}/api/association-seedlings/cusafa/all-distributions`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-
-          if (farmerDistRes.ok) {
-            const farmerDistData = await farmerDistRes.json();
-
-            // Process farmer distributions (Distributed to farmers)
-            const farmerDists = farmerDistData.farmer_distributions || [];
-            console.log('🚜 Processing farmer distributions (Distributed):', farmerDists.length, 'records');
-
-            farmerDists.forEach((dist: any) => {
-              // Process Distributed
-              const dateStr = dist.date_distributed || dist.created_at;
-              if (dateStr) {
-                const date = new Date(dateStr);
-                const year = date.getFullYear();
-                const monthIndex = date.getMonth();
-                const quantity = parseInt(dist.quantity_distributed || 0);
-
-                ensureYearInStats(year);
-                monthlyStatsByYear[year].distributed[monthIndex] += quantity;
-                yearlyDistributed[year] += quantity;
-
-                // Process Unplanted/Damage (Combined losses and pending)
-                // If planted, unplanted/damage is the diff between distributed and planted qty
-                // If not planted yet, everything counts as unplanted/damage until planted
-                const pQuantity = dist.status === 'planted' ? parseInt(dist.planted_quantity ?? dist.quantity_distributed ?? 0) : 0;
-                const unplantedQty = Math.max(0, quantity - pQuantity);
-
-                if (unplantedQty > 0) {
-                  monthlyStatsByYear[year].unplanted[monthIndex] += unplantedQty;
-                  yearlyUnplanted[year] += unplantedQty;
-                }
-              }
-
-              // Process Planted (Only if status is planted)
-              if (dist.status === 'planted') {
-                const plantingDateStr = dist.planting_date || dist.planted_at || dist.date_distributed || dist.created_at;
-                const plantingDate = new Date(plantingDateStr);
-                const pYear = plantingDate.getFullYear();
-                const pMonth = plantingDate.getMonth();
-                const pQuantity = parseInt(dist.planted_quantity ?? dist.quantity_distributed ?? 0);
-
-                ensureYearInStats(pYear);
-                monthlyStatsByYear[pYear].planted[pMonth] += pQuantity;
-                yearlyPlanted[pYear] += pQuantity;
-              }
-            });
-          }
-        } catch (err) {
-          console.log('Could not fetch distributed data:', err);
-        }
-
-        // NEW: Fetch direct MAO distributions (from the 'seedlings' table)
-        try {
-          const directSeedlingsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/seedlings/all`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-
-          if (directSeedlingsRes.ok) {
-            const directSeedlings = await directSeedlingsRes.json();
-            const seedlingsList = Array.isArray(directSeedlings) ? directSeedlings : (directSeedlings.data || []);
-            console.log('🌱 Processing direct MAO distributions:', seedlingsList.length, 'records');
-
-            seedlingsList.forEach((dist: any) => {
-              const dateStr = dist.date_distributed || dist.created_at;
-              if (dateStr) {
-                const date = new Date(dateStr);
-                const year = date.getFullYear();
-                const monthIndex = date.getMonth();
-                const quantity = parseInt(dist.quantity_distributed || 0);
-
-                ensureYearInStats(year);
-                // Also counts as received and distributed for the overview
-                monthlyStatsByYear[year].received[monthIndex] += quantity;
-                monthlyStatsByYear[year].distributed[monthIndex] += quantity;
-                yearlyReceived[year] += quantity;
-                yearlyDistributed[year] += quantity;
-
-                // Process Planted status
-                if (dist.status === 'planted' || dist.status === 'harvested' || (dist.planted_at && !dist.status?.includes('cancelled'))) {
-                  const pDateStr = dist.planting_date || dist.planted_at || dateStr;
-                  const pDate = new Date(pDateStr);
-                  const pYear = pDate.getFullYear();
-                  const pMonth = pDate.getMonth();
-                  const pQuantity = parseInt(dist.planted_quantity ?? dist.quantity_distributed ?? 0);
-
-                  ensureYearInStats(pYear);
-                  monthlyStatsByYear[pYear].planted[pMonth] += pQuantity;
-                  yearlyPlanted[pYear] += pQuantity;
-                } else {
-                  // If not planted, it's pending/unplanted
-                  monthlyStatsByYear[year].unplanted[monthIndex] += quantity;
-                  yearlyUnplanted[year] += quantity;
-                }
-              }
-            });
-          }
-        } catch (err) {
-          console.log('Could not fetch direct seedling data:', err);
-        }
-      } catch (err) {
-        console.log('Using fallback monthly data calculation', err);
       }
 
-      // Fetch monitoring records for real data
-      let monthlyMonitoring = new Array(12).fill(0);
-      let monthlyHealthy = new Array(12).fill(0);
-      let monthlyNeedsSupport = new Array(12).fill(0);
-      let monthlyDamaged = new Array(12).fill(0);
-      let healthyFarms = 0;
-      let needsSupportFarms = 0;
-      let damagedFarms = 0;
-      let totalMonitoring = 0;
+      if (farmerDistData) {
+        const farmerDists = farmerDistData.farmer_distributions || [];
+        farmerDists.forEach((dist: any) => {
+          const dateStr = dist.date_distributed || dist.created_at;
+          if (dateStr) {
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            if (ensureYearInStats(year)) {
+              const monthIndex = date.getMonth();
+              const quantity = parseInt(dist.quantity_distributed || 0);
+              monthlyStatsByYear[year].distributed[monthIndex] += quantity;
+              yearlyDistributed[year] += quantity;
+              const pQuantity = dist.status === 'planted' ? parseInt(dist.planted_quantity ?? dist.quantity_distributed ?? 0) : 0;
+              const unplantedQty = Math.max(0, quantity - pQuantity);
+              if (unplantedQty > 0) {
+                monthlyStatsByYear[year].unplanted[monthIndex] += unplantedQty;
+                yearlyUnplanted[year] += unplantedQty;
+              }
+            }
+          }
 
-      // Yearly aggregation objects
-      const yearlyMonitoringData: { [year: number]: number } = {};
-      const yearlyHealthyData: { [year: number]: number } = {};
-      const yearlyNeedsSupportData: { [year: number]: number } = {};
-      const yearlyDamagedData: { [year: number]: number } = {};
-
-      try {
-        const monitoringRes = await fetch(`${import.meta.env.VITE_API_URL}/api/mao/monitoring`, {
-          headers: { Authorization: `Bearer ${token}` }
+          if (dist.status === 'planted') {
+            const plantingDateStr = dist.planting_date || dist.planted_at || dist.date_distributed || dist.created_at;
+            const plantingDate = new Date(plantingDateStr);
+            const pYear = plantingDate.getFullYear();
+            if (ensureYearInStats(pYear)) {
+              const pMonth = plantingDate.getMonth();
+              const pQuantity = parseInt(dist.planted_quantity ?? dist.quantity_distributed ?? 0);
+              monthlyStatsByYear[pYear].planted[pMonth] += pQuantity;
+              yearlyPlanted[pYear] += pQuantity;
+            }
+          }
         });
+      }
 
-        if (monitoringRes.ok) {
-          const monitoringData = await monitoringRes.json();
-          const records = Array.isArray(monitoringData) ? monitoringData : (monitoringData.records || monitoringData.data || []);
+      if (directSeedlings) {
+        const seedlingsList = Array.isArray(directSeedlings) ? directSeedlings : (directSeedlings.data || []);
+        seedlingsList.forEach((dist: any) => {
+          const dateStr = dist.date_distributed || dist.created_at;
+          if (!dateStr) return;
+          const date = new Date(dateStr);
+          const year = date.getFullYear();
+          if (!ensureYearInStats(year)) return;
+          const monthIndex = date.getMonth();
+          const quantity = parseInt(dist.quantity_distributed || 0);
 
-          // Monitoring maps
-          const monitoringStatsByYear: { [year: number]: { total: number[], healthy: number[], needsSupport: number[], damaged: number[] } } = {};
+          monthlyStatsByYear[year].received[monthIndex] += quantity;
+          monthlyStatsByYear[year].distributed[monthIndex] += quantity;
+          yearlyReceived[year] += quantity;
+          yearlyDistributed[year] += quantity;
 
-          const ensureYearInMonitoring = (year: number) => {
-            if (!monitoringStatsByYear[year]) {
-              monitoringStatsByYear[year] = {
-                total: new Array(12).fill(0),
-                healthy: new Array(12).fill(0),
-                needsSupport: new Array(12).fill(0),
-                damaged: new Array(12).fill(0)
-              };
+          if (dist.status === 'planted' || dist.status === 'harvested' || (dist.planted_at && !dist.status?.includes('cancelled'))) {
+            const pDateStr = dist.planting_date || dist.planted_at || dateStr;
+            const pDate = new Date(pDateStr);
+            const pYear = pDate.getFullYear();
+            if (ensureYearInStats(pYear)) {
+              const pMonth = pDate.getMonth();
+              const pQuantity = parseInt(dist.planted_quantity ?? dist.quantity_distributed ?? 0);
+              monthlyStatsByYear[pYear].planted[pMonth] += pQuantity;
+              yearlyPlanted[pYear] += pQuantity;
             }
-            if (!yearlyMonitoringData[year]) {
-              yearlyMonitoringData[year] = 0;
-              yearlyHealthyData[year] = 0;
-              yearlyNeedsSupportData[year] = 0;
-              yearlyDamagedData[year] = 0;
-            }
-          };
+          } else {
+            monthlyStatsByYear[year].unplanted[monthIndex] += quantity;
+            yearlyUnplanted[year] += quantity;
+          }
+        });
+      }
 
-          records.forEach((record: any) => {
-            const dateStr = record.date_of_visit || record.created_at;
+      if (harvestsPayload) {
+        const harvests = Array.isArray(harvestsPayload) ? harvestsPayload : (harvestsPayload.data || []);
+        if (harvests.length > 0) {
+          harvests.forEach((h: any) => {
+            const dateStr = h.harvest_date || h.created_at;
             if (!dateStr) return;
             const date = new Date(dateStr);
             const year = date.getFullYear();
+            if (!ensureYearInStats(year)) return;
             const monthIndex = date.getMonth();
-            totalMonitoring++;
-
-            ensureYearInMonitoring(year);
-
-            // Aggregate yearly totals
-            yearlyMonitoringData[year]++;
-            monitoringStatsByYear[year].total[monthIndex]++;
-
-            if (record.farm_condition === 'Healthy') {
-              yearlyHealthyData[year]++;
-              monitoringStatsByYear[year].healthy[monthIndex]++;
-              healthyFarms++;
-            } else if (record.farm_condition === 'Needs Support') {
-              yearlyNeedsSupportData[year]++;
-              monitoringStatsByYear[year].needsSupport[monthIndex]++;
-              needsSupportFarms++;
-            } else if (record.farm_condition === 'Damaged') {
-              yearlyDamagedData[year]++;
-              monitoringStatsByYear[year].damaged[monthIndex]++;
-              damagedFarms++;
-            }
+            const quantity = parseFloat(h.dry_fiber_output_kg || 0);
+            monthlyStatsByYear[year].harvested[monthIndex] += quantity;
+            yearlyHarvest[year] += quantity;
           });
-
-          // Pass monitoring results back to production object
-          productionData.monitoringStatsByYear = monitoringStatsByYear;
-
-          // Update current year monthly variables for fallback/backward compat
-          if (monitoringStatsByYear[currentYear]) {
-            monthlyMonitoring = monitoringStatsByYear[currentYear].total;
-            monthlyHealthy = monitoringStatsByYear[currentYear].healthy;
-            monthlyNeedsSupport = monitoringStatsByYear[currentYear].needsSupport;
-            monthlyDamaged = monitoringStatsByYear[currentYear].damaged;
-          }
         }
-      } catch (err) {
-        console.log('Could not fetch monitoring data', err);
       }
 
-      // ---------------------------------------------------------
-      // FETCH RAW HARVESTS AND APPLY FALLBACKS
-      // ---------------------------------------------------------
-
-      // 1. Try to fetch raw harvest data for accurate monthly breakdown
-      try {
-        const harvestsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/harvests/all`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (harvestsRes.ok) {
-          const harvestsData = await harvestsRes.json();
-          // Normalize data structure (array vs {data: []})
-          const harvests = Array.isArray(harvestsData) ? harvestsData : (harvestsData.data || []);
-
-          if (harvests.length > 0) {
-            console.log('🌾 Processing harvest data:', harvests.length, 'records');
-            // Reset to fill with real data
-            monthlyHarvest = new Array(12).fill(0);
-            harvests.forEach((h: any) => {
-              const dateStr = h.harvest_date || h.created_at;
-              if (!dateStr) return;
-
-              const date = new Date(dateStr);
-              const year = date.getFullYear();
-              const monthIndex = date.getMonth();
-              const quantity = parseFloat(h.dry_fiber_output_kg || 0);
-
-              ensureYearInStats(year);
-              monthlyStatsByYear[year].harvested[monthIndex] += quantity;
-              yearlyHarvest[year] += quantity;
-            });
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to fetch harvest breakdown:', e);
-      }
-
-      // Sync monthly variables with current year stats map
       if (monthlyStatsByYear[currentYear]) {
         monthlyReceived = monthlyStatsByYear[currentYear].received;
         monthlyDistributed = monthlyStatsByYear[currentYear].distributed;
         monthlyHarvest = monthlyStatsByYear[currentYear].harvested;
       }
 
-      // 2. Apply "Dump in Jan" Fallbacks if arrays are empty but totals exist
-      // This ensures the Bar Chart shows SOMETHING (Total) instead of 0
-
       const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
-
-      // Check Received
       if (sum(monthlyReceived) === 0 && (productionData.totalSeedlingsReceived || 0) > 0) {
         monthlyReceived[0] = productionData.totalSeedlingsReceived;
       }
-
-      // Check Distributed
       if (sum(monthlyDistributed) === 0 && (productionData.totalSeedlingsDistributed || 0) > 0) {
         monthlyDistributed[0] = productionData.totalSeedlingsDistributed;
       }
-
-      // Check Harvest
       if (sum(monthlyHarvest) === 0 && (productionData.totalHarvestFiber || 0) > 0) {
         monthlyHarvest[0] = productionData.totalHarvestFiber;
       }
 
-      setDashboardData({
+      setDashboardData((prev) => ({
         production: {
+          ...prev.production,
           ...productionData,
           monthlyStatsByYear,
           yearlyReceived,
@@ -1373,34 +1243,136 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           yearlyHarvest,
           yearlyPlanted,
           yearlyUnplanted,
-          yearlyMonitoring: yearlyMonitoringData,
-          yearlyHealthy: yearlyHealthyData,
-          yearlyNeedsSupport: yearlyNeedsSupportData,
-          yearlyDamaged: yearlyDamagedData,
-          healthyFarms,
-          needsSupportFarms,
-          damagedFarms,
-          totalMonitoringVisits: totalMonitoring || productionData.totalMonitoringVisits,
-          // Use calculated total planted for more accuracy
-          totalSeedlingsPlanted: Object.values(yearlyPlanted).reduce((a, b) => a + b, 0) || productionData.totalSeedlingsPlanted,
-          totalHarvestFiber: Object.values(yearlyHarvest).reduce((a, b) => a + b, 0) || productionData.totalHarvestFiber,
-          // Support old variables for backward compatibility if needed, but using currentYear
+          totalSeedlingsPlanted: Object.values(yearlyPlanted).reduce((a, b) => a + b, 0) || productionData.totalSeedlingsPlanted || 0,
+          totalHarvestFiber: Object.values(yearlyHarvest).reduce((a, b) => a + b, 0) || productionData.totalHarvestFiber || 0,
           monthlyReceived: monthlyStatsByYear[currentYear]?.received || new Array(12).fill(0),
           monthlyDistributed: monthlyStatsByYear[currentYear]?.distributed || new Array(12).fill(0),
           monthlyHarvest: monthlyStatsByYear[currentYear]?.harvested || new Array(12).fill(0),
-          monthlyMonitoring: (productionData.monitoringStatsByYear as any)?.[currentYear]?.total || new Array(12).fill(0),
-          monthlyHealthy: (productionData.monitoringStatsByYear as any)?.[currentYear]?.healthy || new Array(12).fill(0),
-          monthlyNeedsSupport: (productionData.monitoringStatsByYear as any)?.[currentYear]?.needsSupport || new Array(12).fill(0),
-          monthlyDamaged: (productionData.monitoringStatsByYear as any)?.[currentYear]?.damaged || new Array(12).fill(0)
         },
         sales: salesData,
         users: usersData,
-        deliveries: deliveryStats
-      });
+        deliveries: deliveryStats,
+      }));
+
+      if (!hasInitializedYearsRef.current) {
+        hasInitializedYearsRef.current = true;
+        const prodYears = Object.keys(monthlyStatsByYear).map(Number);
+        if (prodYears.length > 0) {
+          setSeedlingMonthYear(Math.max(...prodYears));
+        }
+        const allSalesInit = [
+          ...(salesData?.allSales || salesData?.recentSales || []),
+          ...deliveries.filter((d: any) => d.status === 'Completed' || d.status === 'Delivered'),
+        ];
+        const sYears = Array.from(
+          new Set(allSalesInit.map((s: any) => new Date(s.sale_date || s.delivery_date || s.created_at).getFullYear()))
+        ).filter((y) => !isNaN(y) && y > 2000);
+        if (sYears.length > 0) {
+          const latest = Math.max(...sYears);
+          setSalesMonthYear(latest);
+          setDeliveryMonthYear(latest);
+        }
+      }
+
+      hasLoadedDashboardRef.current = true;
+      setLoadingDashboard(false);
+
+      // Stage B: hydrate full monitoring records breakdown in background
+      try {
+        const monitoringRes = await monitoringPromise;
+        if (reqId !== fetchReqIdRef.current || !monitoringRes.ok) return;
+
+        const monitoringData = await monitoringRes.json();
+        const records = Array.isArray(monitoringData) ? monitoringData : (monitoringData.records || monitoringData.data || []);
+        const monitoringStatsByYear: { [year: number]: { total: number[]; healthy: number[]; needsSupport: number[]; damaged: number[] } } = {};
+        const yearlyMonitoringData: { [year: number]: number } = {};
+        const yearlyHealthyData: { [year: number]: number } = {};
+        const yearlyNeedsSupportData: { [year: number]: number } = {};
+        const yearlyDamagedData: { [year: number]: number } = {};
+        let healthyFarms = 0;
+        let needsSupportFarms = 0;
+        let damagedFarms = 0;
+        let totalMonitoring = 0;
+
+        records.forEach((record: any) => {
+          const dateStr = record.date_of_visit || record.created_at;
+          if (!dateStr) return;
+          const date = new Date(dateStr);
+          const year = date.getFullYear();
+          if (isNaN(year) || year < 2000) return;
+          const monthIndex = date.getMonth();
+          totalMonitoring++;
+
+          if (!monitoringStatsByYear[year]) {
+            monitoringStatsByYear[year] = {
+              total: new Array(12).fill(0),
+              healthy: new Array(12).fill(0),
+              needsSupport: new Array(12).fill(0),
+              damaged: new Array(12).fill(0),
+            };
+          }
+          if (!yearlyMonitoringData[year]) {
+            yearlyMonitoringData[year] = 0;
+            yearlyHealthyData[year] = 0;
+            yearlyNeedsSupportData[year] = 0;
+            yearlyDamagedData[year] = 0;
+          }
+
+          yearlyMonitoringData[year]++;
+          monitoringStatsByYear[year].total[monthIndex]++;
+
+          if (record.farm_condition === 'Healthy') {
+            yearlyHealthyData[year]++;
+            monitoringStatsByYear[year].healthy[monthIndex]++;
+            healthyFarms++;
+          } else if (record.farm_condition === 'Needs Support') {
+            yearlyNeedsSupportData[year]++;
+            monitoringStatsByYear[year].needsSupport[monthIndex]++;
+            needsSupportFarms++;
+          } else if (record.farm_condition === 'Damaged') {
+            yearlyDamagedData[year]++;
+            monitoringStatsByYear[year].damaged[monthIndex]++;
+            damagedFarms++;
+          }
+        });
+
+        setDashboardData((prev) => ({
+          ...prev,
+          production: {
+            ...prev.production,
+            monitoringStatsByYear,
+            yearlyMonitoring: yearlyMonitoringData,
+            yearlyHealthy: yearlyHealthyData,
+            yearlyNeedsSupport: yearlyNeedsSupportData,
+            yearlyDamaged: yearlyDamagedData,
+            healthyFarms,
+            needsSupportFarms,
+            damagedFarms,
+            totalMonitoringVisits: totalMonitoring || prev.production.totalMonitoringVisits,
+            monthlyMonitoring: monitoringStatsByYear[currentYear]?.total || new Array(12).fill(0),
+            monthlyHealthy: monitoringStatsByYear[currentYear]?.healthy || new Array(12).fill(0),
+            monthlyNeedsSupport: monitoringStatsByYear[currentYear]?.needsSupport || new Array(12).fill(0),
+            monthlyDamaged: monitoringStatsByYear[currentYear]?.damaged || new Array(12).fill(0),
+          },
+        }));
+
+        if (!hasInitializedMonitoringYearRef.current) {
+          hasInitializedMonitoringYearRef.current = true;
+          const monYears = Object.keys(monitoringStatsByYear).map(Number);
+          if (monYears.length > 0) {
+            setMonitoringMonthYear(Math.max(...monYears));
+          }
+        }
+      } catch (err) {
+        console.log('Could not fetch monitoring data', err);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
-      setLoadingDashboard(false);
+      if (reqId === fetchReqIdRef.current) {
+        setLoadingDashboard(false);
+        setRefreshingDashboard(false);
+      }
     }
   };
 
@@ -1424,7 +1396,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       fetchOfficerProfile();
       fetchNotifications();
       if (currentPage === 'dashboard') {
-        fetchDashboardData();
+        fetchDashboardData({ force: true });
       }
       return;
     }
@@ -1437,46 +1409,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     }
   }, [currentPage, version, manualTick]);
 
-  // Sync selected years to latest available data when dashboard data loads
-  useEffect(() => {
-    if (!loadingDashboard && dashboardData) {
-      // 1. Seedlings / Production latest year
-      const prodYears = Object.keys(dashboardData.production.monthlyStatsByYear || {}).map(Number);
-      if (prodYears.length > 0) {
-        const latest = Math.max(...prodYears);
-        setSeedlingMonthYear(latest);
-      }
-
-      // 2. Monitoring latest year
-      const monYears = Object.keys((dashboardData.production as any).monitoringStatsByYear || {}).map(Number);
-      if (monYears.length > 0) {
-        const latest = Math.max(...monYears);
-        setMonitoringMonthYear(latest);
-      }
-
-      // 3. Sales & Deliveries latest year
-      const allSalesData = [
-        ...(dashboardData.sales?.allSales || dashboardData.sales?.recentSales || []),
-        ...(dashboardData.deliveries?.rawDeliveries || []).filter((d: any) => d.status === 'Completed' || d.status === 'Delivered')
-      ];
-
-      const salesYears = Array.from(new Set(
-        allSalesData.map((s: any) => new Date(s.sale_date || s.delivery_date || s.created_at).getFullYear())
-      )).filter(y => !isNaN(y) && y > 2000);
-
-      if (salesYears.length > 0) {
-        const latest = Math.max(...salesYears);
-        setSalesMonthYear(latest);
-        setDeliveryMonthYear(latest);
-      }
-    }
-  }, [loadingDashboard]);
-
   // Fetch notifications for MAO officer
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/mao/notifications`, {
+      const response = await fetch(`${API_BASE_URL}/api/mao/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -1552,10 +1489,304 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     'buyer-prices': { title: 'Buyer Price Listings', subtitle: 'Current buying prices published by registered fiber buyers.' },
     'delivery-tracking': { title: 'Delivery Tracking Monitor', subtitle: 'Track active and completed fiber deliveries across associations.' },
     officers: { title: 'Staff Management', subtitle: 'Manage MAO administrator and coordinator accounts.' },
-    manual: { title: 'User Manual', subtitle: 'Step-by-step guide sa admin portal, may mga larawan at paliwanag.' },
+    manual: { title: 'User Manual', subtitle: 'Step-by-step guide to the Admin Portal with screenshots and explanations.' },
   };
 
   const activeMeta = pageMeta[currentPage] || pageMeta.dashboard;
+
+  // Memoized chart data & available year selectors (prevents re-computing/re-animating on unrelated renders)
+  const seedlingYears = useMemo(() => {
+    const prod = dashboardData.production;
+    return Array.from(new Set([
+      new Date().getFullYear(),
+      ...Object.keys(prod.monthlyStatsByYear || {}).map(Number),
+      ...Object.keys(prod.yearlyReceived || {}).map(Number),
+      ...Object.keys(prod.yearlyDistributed || {}).map(Number),
+    ])).filter((y) => y > 2020).sort((a, b) => b - a);
+  }, [dashboardData.production]);
+
+  const seedlingChartData = useMemo(() => {
+    const prodData: any = dashboardData.production;
+    if (chartView === 'yearly') {
+      const yearlyReceived = prodData.yearlyReceived || {};
+      const yearlyDistributed = prodData.yearlyDistributed || {};
+      const yearlyHarvest = prodData.yearlyHarvest || {};
+      const years = Array.from(new Set([
+        new Date().getFullYear(),
+        ...Object.keys(yearlyReceived).map(Number),
+        ...Object.keys(yearlyDistributed).map(Number),
+        ...Object.keys(yearlyHarvest).map(Number),
+        ...Object.keys(prodData.monthlyStatsByYear || {}).map(Number),
+      ])).filter((y) => y > 2000).sort((a, b) => a - b);
+
+      return years.map((year) => ({
+        period: year.toString(),
+        received: yearlyReceived[year] || 0,
+        distributed: yearlyDistributed[year] || 0,
+      }));
+    }
+    const stats = prodData.monthlyStatsByYear?.[seedlingMonthYear] || {
+      received: new Array(12).fill(0),
+      distributed: new Array(12).fill(0),
+    };
+    return CHART_MONTH_LABELS.map((label, i) => ({
+      period: label,
+      received: stats.received[i],
+      distributed: stats.distributed[i],
+    }));
+  }, [dashboardData.production, chartView, seedlingMonthYear]);
+
+  const productionPieData = useMemo(() => {
+    const totalPlanted = dashboardData.production.totalSeedlingsPlanted || 0;
+    const totalHarvested = dashboardData.production.totalHarvestFiber || 0;
+    const total = totalPlanted + totalHarvested;
+    return {
+      totalPlanted,
+      totalHarvested,
+      total,
+      items: [
+        { name: 'Planted', value: totalPlanted, fill: EDITORIAL_CHART.colors.emerald, percentage: total > 0 ? (totalPlanted / total) * 100 : 0 },
+        { name: 'Harvested Total', value: totalHarvested, fill: EDITORIAL_CHART.colors.amber, percentage: total > 0 ? (totalHarvested / total) * 100 : 0 },
+      ],
+    };
+  }, [dashboardData.production.totalSeedlingsPlanted, dashboardData.production.totalHarvestFiber]);
+
+  const trendsYears = useMemo(() => {
+    const prod = dashboardData.production;
+    return Array.from(new Set([
+      new Date().getFullYear(),
+      ...Object.keys(prod.monthlyStatsByYear || {}).map(Number),
+      ...Object.keys(prod.yearlyDistributed || {}).map(Number),
+    ])).filter((y) => y > 2020).sort((a, b) => b - a);
+  }, [dashboardData.production]);
+
+  const trendsChartData = useMemo(() => {
+    const prodData: any = dashboardData.production;
+    if (trendsView === 'yearly') {
+      const yearlyPlanted = prodData.yearlyPlanted || {};
+      const yearlyHarvest = prodData.yearlyHarvest || {};
+      const years = Array.from(new Set([
+        new Date().getFullYear(),
+        ...Object.keys(yearlyPlanted).map(Number),
+        ...Object.keys(yearlyHarvest).map(Number),
+      ])).filter((y) => y > 2000).sort((a, b) => a - b);
+
+      return years.map((year) => ({
+        period: year.toString(),
+        planted: yearlyPlanted[year] || 0,
+        harvested: yearlyHarvest[year] || 0,
+        unplanted: prodData.yearlyUnplanted?.[year] || 0,
+      }));
+    }
+    const stats = prodData.monthlyStatsByYear?.[trendsYear] || {
+      planted: new Array(12).fill(0),
+      harvested: new Array(12).fill(0),
+      unplanted: new Array(12).fill(0),
+    };
+    return CHART_MONTH_LABELS.map((label, i) => ({
+      period: label,
+      planted: stats.planted ? stats.planted[i] : (stats.distributed ? stats.distributed[i] : 0),
+      harvested: stats.harvested[i],
+      unplanted: stats.unplanted ? stats.unplanted[i] : 0,
+    }));
+  }, [dashboardData.production, trendsView, trendsYear]);
+
+  const monitoringYears = useMemo(() => {
+    const prod = dashboardData.production as any;
+    return Array.from(new Set([
+      new Date().getFullYear(),
+      ...Object.keys(prod.monitoringStatsByYear || {}).map(Number),
+      ...Object.keys(prod.yearlyMonitoring || {}).map(Number),
+    ])).filter((y) => y > 2020).sort((a, b) => b - a);
+  }, [dashboardData.production]);
+
+  const monitoringChartData = useMemo(() => {
+    const prod: any = dashboardData.production;
+    if (monitoringView === 'yearly') {
+      const yearlyMonitoring = prod.yearlyMonitoring || {};
+      const yearlyHealthy = prod.yearlyHealthy || {};
+      const yearlyNeedsSupport = prod.yearlyNeedsSupport || {};
+      const yearlyDamaged = prod.yearlyDamaged || {};
+      const years = Array.from(new Set([
+        new Date().getFullYear(),
+        ...Object.keys(yearlyMonitoring).map(Number),
+        ...Object.keys(prod.monitoringStatsByYear || {}).map(Number),
+      ])).filter((y) => y > 2000).sort((a, b) => a - b);
+
+      return years.map((year) => ({
+        period: year.toString(),
+        total: yearlyMonitoring[year] || 0,
+        healthy: yearlyHealthy[year] || 0,
+        needsSupport: yearlyNeedsSupport[year] || 0,
+        damaged: yearlyDamaged[year] || 0,
+      }));
+    }
+    const stats = prod.monitoringStatsByYear?.[monitoringMonthYear] || {
+      total: new Array(12).fill(0),
+      healthy: new Array(12).fill(0),
+      needsSupport: new Array(12).fill(0),
+      damaged: new Array(12).fill(0),
+    };
+    return CHART_MONTH_LABELS.map((label, i) => ({
+      period: label,
+      total: stats.total[i],
+      healthy: stats.healthy[i],
+      needsSupport: stats.needsSupport[i],
+      damaged: stats.damaged[i],
+    }));
+  }, [dashboardData.production, monitoringView, monitoringMonthYear]);
+
+  const deliveryYears = useMemo(() => {
+    const rawDeliveries = dashboardData.deliveries?.rawDeliveries || [];
+    return Array.from(new Set([
+      new Date().getFullYear(),
+      ...rawDeliveries.map((d: any) => new Date(d.created_at || d.delivery_date).getFullYear()),
+    ])).filter((y) => !isNaN(y) && y > 2020).sort((a, b) => b - a);
+  }, [dashboardData.deliveries?.rawDeliveries]);
+
+  const deliveryStatusPieData = useMemo(() => {
+    const rawDeliveries = dashboardData.deliveries?.rawDeliveries || [];
+    const filteredDeliveries = rawDeliveries.filter((d: any) => {
+      const deliveryDate = new Date(d.created_at || d.delivery_date);
+      if (deliveryStatusView === 'monthly') {
+        return deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === deliveryMonthYear;
+      }
+      return deliveryDate.getFullYear() === deliveryMonthYear;
+    });
+    const completed = filteredDeliveries.filter((d: any) => d.status === 'Completed').length;
+    const cancelled = filteredDeliveries.filter((d: any) => d.status === 'Cancelled').length;
+    const total = completed + cancelled;
+    return {
+      total,
+      items: [
+        { name: 'Completed', value: completed, fill: EDITORIAL_CHART.colors.emerald, percentage: total > 0 ? (completed / total) * 100 : 0 },
+        { name: 'Cancelled', value: cancelled, fill: EDITORIAL_CHART.colors.danger, percentage: total > 0 ? (cancelled / total) * 100 : 0 },
+      ],
+    };
+  }, [dashboardData.deliveries?.rawDeliveries, deliveryStatusView, selectedMonth, deliveryMonthYear]);
+
+  const deliveryAnalyticsChartData = useMemo(() => {
+    const rawDists = dashboardData.deliveries?.rawDeliveries || [];
+    const currentYear = new Date().getFullYear();
+    if (deliveryView === 'monthly') {
+      const monthlyA = new Array(12).fill(0);
+      const monthlyB = new Array(12).fill(0);
+      const monthlyC = new Array(12).fill(0);
+      rawDists.forEach((d: any) => {
+        const date = new Date(d.created_at || d.delivery_date);
+        if (date.getFullYear() === deliveryMonthYear) {
+          const month = date.getMonth();
+          const qty = parseFloat(d.quantity_kg || 0);
+          if (d.grade === 'Class A') monthlyA[month] += qty;
+          else if (d.grade === 'Class B') monthlyB[month] += qty;
+          else if (d.grade === 'Class C') monthlyC[month] += qty;
+        }
+      });
+      return CHART_MONTH_LABELS.map((label, i) => ({
+        period: label,
+        classA: monthlyA[i],
+        classB: monthlyB[i],
+        classC: monthlyC[i],
+      }));
+    }
+    const years = Array.from(new Set([
+      currentYear,
+      ...rawDists.map((d: any) => new Date(d.created_at || d.delivery_date).getFullYear()),
+    ])).filter((y) => !isNaN(y) && y > 2000).sort((a, b) => a - b);
+
+    return years.map((year) => {
+      const yearDeliveries = rawDists.filter((d: any) => new Date(d.created_at || d.delivery_date).getFullYear() === year);
+      return {
+        period: year.toString(),
+        classA: yearDeliveries.filter((d: any) => d.grade === 'Class A').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+        classB: yearDeliveries.filter((d: any) => d.grade === 'Class B').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+        classC: yearDeliveries.filter((d: any) => d.grade === 'Class C').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
+      };
+    });
+  }, [dashboardData.deliveries?.rawDeliveries, deliveryView, deliveryMonthYear]);
+
+  const combinedSales = useMemo(() => ([
+    ...(dashboardData.sales?.allSales || dashboardData.sales?.recentSales || []),
+    ...(dashboardData.deliveries?.rawDeliveries?.filter((d: any) => d.status === 'Completed' || d.status === 'Delivered') || []).map((d: any) => ({
+      ...d,
+      sale_date: d.delivery_date,
+      total_amount: parseFloat(d.total_amount || 0),
+      abaca_type: d.grade || d.fiber_class,
+    })),
+  ]), [dashboardData.sales, dashboardData.deliveries?.rawDeliveries]);
+
+  const salesYears = useMemo(() => {
+    return Array.from(new Set([
+      new Date().getFullYear(),
+      ...combinedSales.map((s: any) => new Date(s.sale_date).getFullYear()),
+    ])).filter((y) => !isNaN(y) && y > 2020).sort((a, b) => b - a);
+  }, [combinedSales]);
+
+  const salesStatusPieData = useMemo(() => {
+    const approved = dashboardData.sales?.totalAmount || 0;
+    const pending = dashboardData.sales?.pendingAmount || 0;
+    const total = approved + pending;
+    return {
+      total,
+      items: [
+        { name: 'Approved', value: approved, fill: EDITORIAL_CHART.colors.emerald, percentage: total > 0 ? (approved / total) * 100 : 0 },
+        { name: 'Pending', value: pending, fill: EDITORIAL_CHART.colors.amber, percentage: total > 0 ? (pending / total) * 100 : 0 },
+      ],
+    };
+  }, [dashboardData.sales?.totalAmount, dashboardData.sales?.pendingAmount]);
+
+  const salesPerformanceChartData = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    if (abacaSoldView === 'monthly') {
+      const salesA = Array(12).fill(0);
+      const salesB = Array(12).fill(0);
+      const salesC = Array(12).fill(0);
+      combinedSales.forEach((sale: any) => {
+        const saleDate = new Date(sale.sale_date);
+        if (saleDate.getFullYear() === salesMonthYear) {
+          const month = saleDate.getMonth();
+          const amount = sale.total_amount || 0;
+          const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
+          if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) salesA[month] += amount;
+          else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[month] += amount;
+          else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[month] += amount;
+        }
+      });
+      return CHART_MONTH_LABELS.map((l, i) => ({
+        period: l,
+        salesA: salesA[i],
+        salesB: salesB[i],
+        salesC: salesC[i],
+      }));
+    }
+
+    const years = Array.from(new Set([
+      currentYear,
+      ...combinedSales.map((s: any) => new Date(s.sale_date).getFullYear()),
+    ])).filter((y) => y > 2020 && !isNaN(y)).sort((a, b) => a - b);
+
+    const salesA = Array(years.length).fill(0);
+    const salesB = Array(years.length).fill(0);
+    const salesC = Array(years.length).fill(0);
+    combinedSales.forEach((sale: any) => {
+      const saleDate = new Date(sale.sale_date);
+      const yearIdx = years.indexOf(saleDate.getFullYear());
+      if (yearIdx !== -1) {
+        const amount = sale.total_amount || 0;
+        const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
+        if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) salesA[yearIdx] += amount;
+        else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[yearIdx] += amount;
+        else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[yearIdx] += amount;
+      }
+    });
+
+    return years.map((y, i) => ({
+      period: y.toString(),
+      salesA: salesA[i],
+      salesB: salesB[i],
+      salesC: salesC[i],
+    }));
+  }, [combinedSales, abacaSoldView, salesMonthYear]);
 
   return (
     <>
@@ -1571,11 +1802,12 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           currentPage === 'dashboard' ? (
             <button
               type="button"
-              onClick={fetchDashboardData}
-              className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-xs font-semibold"
+              onClick={() => invalidateApiCache('manual')}
+              disabled={refreshingDashboard}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-xs font-semibold disabled:opacity-60"
             >
-              <Clock className="w-3.5 h-3.5 text-gray-500" />
-              Refresh data
+              <Clock className={`w-3.5 h-3.5 text-gray-500 ${refreshingDashboard ? 'animate-spin' : ''}`} />
+              {refreshingDashboard ? 'Refreshing...' : 'Refresh data'}
             </button>
           ) : undefined
         }
@@ -1819,12 +2051,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 onChange={(e) => setSeedlingMonthYear(parseInt(e.target.value))}
                                 aria-label="Seedling year"
                               >
-                                {Array.from(new Set([
-                                  new Date().getFullYear(),
-                                  ...Object.keys(dashboardData.production.monthlyStatsByYear || {}).map(Number),
-                                  ...Object.keys(dashboardData.production.yearlyReceived || {}).map(Number),
-                                  ...Object.keys(dashboardData.production.yearlyDistributed || {}).map(Number)
-                                ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
+                                {seedlingYears.map(year => (
                                   <option key={year} value={year}>{year}</option>
                                 ))}
                               </select>
@@ -1866,78 +2093,43 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           </span>
                         </div>
 
-                        {(() => {
-                          let chartData: any[] = [];
-                          const prodData: any = dashboardData.production;
-
-                          if (chartView === 'yearly') {
-                            const yearlyReceived = prodData.yearlyReceived || {};
-                            const yearlyDistributed = prodData.yearlyDistributed || {};
-                            const yearlyHarvest = prodData.yearlyHarvest || {};
-                            const years = Array.from(new Set([
-                              new Date().getFullYear(),
-                              ...Object.keys(yearlyReceived || {}).map(Number),
-                              ...Object.keys(yearlyDistributed || {}).map(Number),
-                              ...Object.keys(yearlyHarvest || {}).map(Number),
-                              ...Object.keys(prodData.monthlyStatsByYear || {}).map(Number)
-                            ])).filter(y => y > 2000).sort((a, b) => a - b);
-
-                            chartData = years.map(year => ({
-                              period: year.toString(),
-                              received: yearlyReceived[year] || 0,
-                              distributed: yearlyDistributed[year] || 0
-                            }));
-                          } else {
-                            const stats = prodData.monthlyStatsByYear?.[seedlingMonthYear] || {
-                              received: new Array(12).fill(0),
-                              distributed: new Array(12).fill(0)
-                            };
-                            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                            chartData = labels.map((label, i) => ({
-                              period: label,
-                              received: stats.received[i],
-                              distributed: stats.distributed[i]
-                            }));
-                          }
-
-                          return (
-                            <div className="overflow-x-auto">
-                              <div style={{ minWidth: chartView === 'monthly' ? '640px' : '100%', width: '100%' }}>
-                                <ResponsiveContainer width="100%" height={360}>
-                                  <RechartsBarChart
-                                    data={chartData}
-                                    margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
-                                    barGap={chartView === 'monthly' ? 8 : 4}
-                                    barCategoryGap={chartData.length < 5 ? '30%' : '20%'}
-                                  >
-                                    <CartesianGrid {...EDITORIAL_CHART.gridProps} />
-                                    <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
-                                    <YAxis {...EDITORIAL_CHART.yAxisProps} />
-                                    <Tooltip
-                                      contentStyle={EDITORIAL_CHART.tooltipStyle}
-                                      cursor={{ fill: '#F9FAFB' }}
-                                      formatter={(value: any) => `${Math.round(Number(value)).toLocaleString()} seedlings`}
-                                    />
-                                    <Bar
-                                      dataKey="received"
-                                      name="Received (Assoc)"
-                                      fill={EDITORIAL_CHART.colors.amber}
-                                      radius={[4, 4, 0, 0]}
-                                      barSize={chartView === 'monthly' ? 22 : 40}
-                                    />
-                                    <Bar
-                                      dataKey="distributed"
-                                      name="Completely Distributed"
-                                      fill={EDITORIAL_CHART.colors.emerald}
-                                      radius={[4, 4, 0, 0]}
-                                      barSize={chartView === 'monthly' ? 22 : 40}
-                                    />
-                                  </RechartsBarChart>
-                                </ResponsiveContainer>
-                              </div>
-                            </div>
-                          );
-                        })()}
+                        <div className="overflow-x-auto">
+                          <div style={{ minWidth: chartView === 'monthly' ? '640px' : '100%', width: '100%' }}>
+                            <ResponsiveContainer width="100%" height={360}>
+                              <RechartsBarChart
+                                data={seedlingChartData}
+                                margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
+                                barGap={chartView === 'monthly' ? 8 : 4}
+                                barCategoryGap={seedlingChartData.length < 5 ? '30%' : '20%'}
+                              >
+                                <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
+                                <YAxis {...EDITORIAL_CHART.yAxisProps} />
+                                <Tooltip
+                                  contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                  cursor={{ fill: '#F9FAFB' }}
+                                  formatter={(value: any) => `${Math.round(Number(value)).toLocaleString()} seedlings`}
+                                />
+                                <Bar
+                                  dataKey="received"
+                                  name="Received (Assoc)"
+                                  fill={EDITORIAL_CHART.colors.amber}
+                                  radius={[4, 4, 0, 0]}
+                                  barSize={chartView === 'monthly' ? 22 : 40}
+                                  isAnimationActive={false}
+                                />
+                                <Bar
+                                  dataKey="distributed"
+                                  name="Completely Distributed"
+                                  fill={EDITORIAL_CHART.colors.emerald}
+                                  radius={[4, 4, 0, 0]}
+                                  barSize={chartView === 'monthly' ? 22 : 40}
+                                  isAnimationActive={false}
+                                />
+                              </RechartsBarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
                       </EditorialCard>
 
                       <EditorialCard
@@ -1946,51 +2138,36 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         className="flex flex-col h-full"
                         bodyClassName="flex-1 flex flex-col justify-center"
                       >
-                        {(() => {
-                          const totalPlanted = dashboardData.production.totalSeedlingsPlanted || 0;
-                          const totalHarvested = dashboardData.production.totalHarvestFiber || 0;
-                          const total = totalPlanted + totalHarvested;
-
-                          const chartData = [
-                            { name: 'Planted', value: totalPlanted, fill: EDITORIAL_CHART.colors.emerald, percentage: total > 0 ? (totalPlanted / total) * 100 : 0 },
-                            { name: 'Harvested Total', value: totalHarvested, fill: EDITORIAL_CHART.colors.amber, percentage: total > 0 ? (totalHarvested / total) * 100 : 0 }
-                          ];
-
-                          if (total === 0) {
-                            return (
-                              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                                <Activity className="w-10 h-10 text-gray-300 mb-2" />
-                                <p className="text-sm font-medium text-gray-500">No production data</p>
-                              </div>
-                            );
-                          }
-
-                          return (
-                            <div className="flex flex-col items-center">
-                              <AnimatedPieChart
-                                data={chartData}
-                                centerLabel={totalHarvested.toLocaleString()}
-                                centerSubLabel="Fiber Harvested (kg)"
-                              />
-                              <div className="grid grid-cols-1 gap-2.5 w-full mt-4">
-                                {chartData.map((item, idx) => (
-                                  <div key={idx} className="flex items-center justify-between p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200">
-                                    <div className="flex items-center gap-2.5">
-                                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
-                                      <div>
-                                        <span className="text-xs font-medium text-gray-500 block">{item.name}</span>
-                                        <span className="text-base font-bold text-gray-900 tabular-nums">{item.value.toLocaleString()}</span>
-                                      </div>
+                        {productionPieData.total === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                            <Activity className="w-10 h-10 text-gray-300 mb-2" />
+                            <p className="text-sm font-medium text-gray-500">No production data</p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            <AnimatedPieChart
+                              data={productionPieData.items}
+                              centerLabel={productionPieData.totalHarvested.toLocaleString()}
+                              centerSubLabel="Fiber Harvested (kg)"
+                            />
+                            <div className="grid grid-cols-1 gap-2.5 w-full mt-4">
+                              {productionPieData.items.map((item, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                                    <div>
+                                      <span className="text-xs font-medium text-gray-500 block">{item.name}</span>
+                                      <span className="text-base font-bold text-gray-900 tabular-nums">{item.value.toLocaleString()}</span>
                                     </div>
-                                    <span className="text-xs font-medium text-gray-500 bg-white border border-gray-200 px-2.5 py-1 rounded-lg">
-                                      {item.name === 'Planted' ? 'seedlings' : 'kg fiber'}
-                                    </span>
                                   </div>
-                                ))}
-                              </div>
+                                  <span className="text-xs font-medium text-gray-500 bg-white border border-gray-200 px-2.5 py-1 rounded-lg">
+                                    {item.name === 'Planted' ? 'seedlings' : 'kg fiber'}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          );
-                        })()}
+                          </div>
+                        )}
                       </EditorialCard>
                     </div>
 
@@ -2007,11 +2184,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                               onChange={(e) => setTrendsYear(parseInt(e.target.value))}
                               aria-label="Production trends year"
                             >
-                              {Array.from(new Set([
-                                new Date().getFullYear(),
-                                ...Object.keys(dashboardData.production.monthlyStatsByYear || {}).map(Number),
-                                ...Object.keys(dashboardData.production.yearlyDistributed || {}).map(Number)
-                              ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
+                              {trendsYears.map(year => (
                                 <option key={year} value={year}>{year}</option>
                               ))}
                             </select>
@@ -2057,72 +2230,35 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         </span>
                       </div>
 
-                      {(() => {
-                        let chartData: any[] = [];
-                        const prodData: any = dashboardData.production;
-
-                        if (trendsView === 'yearly') {
-                          const yearlyPlanted = prodData.yearlyPlanted || {};
-                          const yearlyHarvest = prodData.yearlyHarvest || {};
-                          const years = Array.from(new Set([
-                            new Date().getFullYear(),
-                            ...Object.keys(yearlyPlanted || {}).map(Number),
-                            ...Object.keys(yearlyHarvest || {}).map(Number)
-                          ])).filter(y => y > 2000).sort((a, b) => a - b);
-
-                          chartData = years.map(year => ({
-                            period: year.toString(),
-                            planted: yearlyPlanted[year] || 0,
-                            harvested: yearlyHarvest[year] || 0,
-                            unplanted: prodData.yearlyUnplanted?.[year] || 0
-                          }));
-                        } else {
-                          const stats = prodData.monthlyStatsByYear?.[trendsYear] || {
-                            planted: new Array(12).fill(0),
-                            harvested: new Array(12).fill(0),
-                            unplanted: new Array(12).fill(0)
-                          };
-                          const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                          chartData = labels.map((label, i) => ({
-                            period: label,
-                            planted: stats.planted ? stats.planted[i] : (stats.distributed ? stats.distributed[i] : 0),
-                            harvested: stats.harvested[i],
-                            unplanted: stats.unplanted ? stats.unplanted[i] : 0
-                          }));
-                        }
-
-                        return (
-                          <div className="overflow-x-auto">
-                            <div style={{ minWidth: trendsView === 'monthly' ? '700px' : '100%', width: '100%' }}>
-                              <ResponsiveContainer width="100%" height={360}>
-                                <RechartsBarChart
-                                  data={chartData}
-                                  margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
-                                  barGap={6}
-                                  barCategoryGap={chartData.length < 5 ? '30%' : '18%'}
-                                >
-                                  <CartesianGrid {...EDITORIAL_CHART.gridProps} />
-                                  <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
-                                  <YAxis {...EDITORIAL_CHART.yAxisProps} />
-                                  <Tooltip
-                                    contentStyle={EDITORIAL_CHART.tooltipStyle}
-                                    cursor={{ fill: '#F9FAFB' }}
-                                    formatter={(value: any, name: string) => {
-                                      const formattedValue = Math.round(Number(value)).toLocaleString();
-                                      if (name === 'Planted' || name === 'Unplanted/Damage') return `${formattedValue} seedlings`;
-                                      if (name === 'Harvested') return `${formattedValue} kg`;
-                                      return formattedValue;
-                                    }}
-                                  />
-                                  <Bar dataKey="planted" name="Planted" fill={EDITORIAL_CHART.colors.emerald} radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 42 : 20} />
-                                  <Bar dataKey="harvested" name="Harvested" fill={EDITORIAL_CHART.colors.amber} radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 42 : 20} />
-                                  <Bar dataKey="unplanted" name="Unplanted/Damage" fill={EDITORIAL_CHART.colors.slate} radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 42 : 20} />
-                                </RechartsBarChart>
-                              </ResponsiveContainer>
-                            </div>
-                          </div>
-                        );
-                      })()}
+                      <div className="overflow-x-auto">
+                        <div style={{ minWidth: trendsView === 'monthly' ? '700px' : '100%', width: '100%' }}>
+                          <ResponsiveContainer width="100%" height={360}>
+                            <RechartsBarChart
+                              data={trendsChartData}
+                              margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
+                              barGap={6}
+                              barCategoryGap={trendsChartData.length < 5 ? '30%' : '18%'}
+                            >
+                              <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                              <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
+                              <YAxis {...EDITORIAL_CHART.yAxisProps} />
+                              <Tooltip
+                                contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                cursor={{ fill: '#F9FAFB' }}
+                                formatter={(value: any, name: string) => {
+                                  const formattedValue = Math.round(Number(value)).toLocaleString();
+                                  if (name === 'Planted' || name === 'Unplanted/Damage') return `${formattedValue} seedlings`;
+                                  if (name === 'Harvested') return `${formattedValue} kg`;
+                                  return formattedValue;
+                                }}
+                              />
+                              <Bar dataKey="planted" name="Planted" fill={EDITORIAL_CHART.colors.emerald} radius={[4, 4, 0, 0]} barSize={trendsChartData.length < 5 ? 42 : 20} isAnimationActive={false} />
+                              <Bar dataKey="harvested" name="Harvested" fill={EDITORIAL_CHART.colors.amber} radius={[4, 4, 0, 0]} barSize={trendsChartData.length < 5 ? 42 : 20} isAnimationActive={false} />
+                              <Bar dataKey="unplanted" name="Unplanted/Damage" fill={EDITORIAL_CHART.colors.slate} radius={[4, 4, 0, 0]} barSize={trendsChartData.length < 5 ? 42 : 20} isAnimationActive={false} />
+                            </RechartsBarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
                     </EditorialCard>
 
                     {/* Field Monitoring */}
@@ -2150,11 +2286,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 onChange={(e) => setMonitoringMonthYear(parseInt(e.target.value))}
                                 aria-label="Monitoring year"
                               >
-                                {Array.from(new Set([
-                                  new Date().getFullYear(),
-                                  ...Object.keys((dashboardData.production as any).monitoringStatsByYear || {}).map(Number),
-                                  ...Object.keys((dashboardData.production as any).yearlyMonitoring || {}).map(Number)
-                                ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
+                                {monitoringYears.map(year => (
                                   <option key={year} value={year}>{year}</option>
                                 ))}
                               </select>
@@ -2204,73 +2336,31 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           </span>
                         </div>
 
-                        {(() => {
-                          let chartData: any[] = [];
-
-                          if (monitoringView === 'yearly') {
-                            const yearlyMonitoring = (dashboardData.production as any).yearlyMonitoring || {};
-                            const yearlyHealthy = (dashboardData.production as any).yearlyHealthy || {};
-                            const yearlyNeedsSupport = (dashboardData.production as any).yearlyNeedsSupport || {};
-                            const yearlyDamaged = (dashboardData.production as any).yearlyDamaged || {};
-
-                            const years = Array.from(new Set([
-                              new Date().getFullYear(),
-                              ...Object.keys(yearlyMonitoring || {}).map(Number),
-                              ...Object.keys((dashboardData.production as any).monitoringStatsByYear || {}).map(Number)
-                            ])).filter(y => y > 2000).sort((a, b) => a - b);
-
-                            chartData = years.map(year => ({
-                              period: year.toString(),
-                              total: yearlyMonitoring[year] || 0,
-                              healthy: yearlyHealthy[year] || 0,
-                              needsSupport: yearlyNeedsSupport[year] || 0,
-                              damaged: yearlyDamaged[year] || 0
-                            }));
-                          } else {
-                            const stats = ((dashboardData.production as any).monitoringStatsByYear)?.[monitoringMonthYear] || {
-                              total: new Array(12).fill(0),
-                              healthy: new Array(12).fill(0),
-                              needsSupport: new Array(12).fill(0),
-                              damaged: new Array(12).fill(0)
-                            };
-                            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                            chartData = labels.map((label, i) => ({
-                              period: label,
-                              total: stats.total[i],
-                              healthy: stats.healthy[i],
-                              needsSupport: stats.needsSupport[i],
-                              damaged: stats.damaged[i]
-                            }));
-                          }
-
-                          return (
-                            <div className="overflow-x-auto">
-                              <div style={{ minWidth: monitoringView === 'monthly' ? '640px' : '100%', width: '100%' }}>
-                                <ResponsiveContainer width="100%" height={360}>
-                                  <RechartsBarChart
-                                    data={chartData}
-                                    margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
-                                    barGap={4}
-                                    barCategoryGap={chartData.length < 5 ? '30%' : '18%'}
-                                  >
-                                    <CartesianGrid {...EDITORIAL_CHART.gridProps} />
-                                    <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
-                                    <YAxis {...EDITORIAL_CHART.yAxisProps} />
-                                    <Tooltip
-                                      contentStyle={EDITORIAL_CHART.tooltipStyle}
-                                      cursor={{ fill: '#F9FAFB' }}
-                                      formatter={(value: any) => Math.round(Number(value)).toLocaleString()}
-                                    />
-                                    <Bar dataKey="total" fill={EDITORIAL_CHART.colors.mutedSlate} name="Total Monitoring" radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 32 : 16} />
-                                    <Bar dataKey="healthy" fill={EDITORIAL_CHART.colors.emerald} name="Healthy Farms" radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 32 : 16} />
-                                    <Bar dataKey="needsSupport" fill={EDITORIAL_CHART.colors.amber} name="Needs Support" radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 32 : 16} />
-                                    <Bar dataKey="damaged" fill={EDITORIAL_CHART.colors.danger} name="Damaged Farms" radius={[4, 4, 0, 0]} barSize={chartData.length < 5 ? 32 : 16} />
-                                  </RechartsBarChart>
-                                </ResponsiveContainer>
-                              </div>
-                            </div>
-                          );
-                        })()}
+                        <div className="overflow-x-auto">
+                          <div style={{ minWidth: monitoringView === 'monthly' ? '640px' : '100%', width: '100%' }}>
+                            <ResponsiveContainer width="100%" height={360}>
+                              <RechartsBarChart
+                                data={monitoringChartData}
+                                margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
+                                barGap={4}
+                                barCategoryGap={monitoringChartData.length < 5 ? '30%' : '18%'}
+                              >
+                                <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
+                                <YAxis {...EDITORIAL_CHART.yAxisProps} />
+                                <Tooltip
+                                  contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                  cursor={{ fill: '#F9FAFB' }}
+                                  formatter={(value: any) => Math.round(Number(value)).toLocaleString()}
+                                />
+                                <Bar dataKey="total" fill={EDITORIAL_CHART.colors.mutedSlate} name="Total Monitoring" radius={[4, 4, 0, 0]} barSize={monitoringChartData.length < 5 ? 32 : 16} isAnimationActive={false} />
+                                <Bar dataKey="healthy" fill={EDITORIAL_CHART.colors.emerald} name="Healthy Farms" radius={[4, 4, 0, 0]} barSize={monitoringChartData.length < 5 ? 32 : 16} isAnimationActive={false} />
+                                <Bar dataKey="needsSupport" fill={EDITORIAL_CHART.colors.amber} name="Needs Support" radius={[4, 4, 0, 0]} barSize={monitoringChartData.length < 5 ? 32 : 16} isAnimationActive={false} />
+                                <Bar dataKey="damaged" fill={EDITORIAL_CHART.colors.danger} name="Damaged Farms" radius={[4, 4, 0, 0]} barSize={monitoringChartData.length < 5 ? 32 : 16} isAnimationActive={false} />
+                              </RechartsBarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
                       </EditorialCard>
                     </div>
                   </div>
@@ -2322,68 +2412,41 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                 onChange={(e) => setDeliveryMonthYear(parseInt(e.target.value))}
                                 aria-label="Delivery status year"
                               >
-                                {Array.from(new Set([
-                                  new Date().getFullYear(),
-                                  ...Object.keys(dashboardData.deliveries.rawDeliveries || {}).map(d => new Date((dashboardData.deliveries.rawDeliveries as any)[d].created_at).getFullYear())
-                                ])).sort((a, b) => b - a).map(year => (
+                                {deliveryYears.map(year => (
                                   <option key={year} value={year}>{year}</option>
                                 ))}
                               </select>
                             </div>
                           }
                         >
-                          {(() => {
-                            const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
-                            const filteredDeliveries = rawDeliveries.filter((d: any) => {
-                              const deliveryDate = new Date(d.created_at || d.delivery_date);
-                              if (deliveryStatusView === 'monthly') {
-                                return deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === deliveryMonthYear;
-                              }
-                              return deliveryDate.getFullYear() === deliveryMonthYear;
-                            });
-
-                            const completed = filteredDeliveries.filter((d: any) => d.status === 'Completed').length;
-                            const cancelled = filteredDeliveries.filter((d: any) => d.status === 'Cancelled').length;
-                            const total = completed + cancelled;
-
-                            const chartData = [
-                              { name: 'Completed', value: completed, fill: EDITORIAL_CHART.colors.emerald, percentage: total > 0 ? (completed / total) * 100 : 0 },
-                              { name: 'Cancelled', value: cancelled, fill: EDITORIAL_CHART.colors.danger, percentage: total > 0 ? (cancelled / total) * 100 : 0 }
-                            ];
-
-                            if (total === 0) {
-                              return (
-                                <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                                  <Activity className="w-10 h-10 text-gray-300 mb-2" />
-                                  <p className="text-sm font-medium text-gray-500">No delivery data</p>
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <div className="flex flex-col items-center">
-                                <AnimatedPieChart
-                                  data={chartData}
-                                  centerLabel={total.toLocaleString()}
-                                  centerSubLabel="Total Deliveries"
-                                />
-                                <div className="grid grid-cols-2 gap-3 w-full mt-4">
-                                  {chartData.map((item, idx) => (
-                                    <div key={idx} className="p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
-                                        <span className="text-xs font-medium text-gray-600">{item.name}</span>
-                                      </div>
-                                      <div className="flex items-baseline justify-between">
-                                        <span className="text-lg font-bold text-gray-900 tabular-nums">{item.value.toLocaleString()}</span>
-                                        <span className="text-xs text-gray-500 tabular-nums">{item.percentage.toFixed(0)}%</span>
-                                      </div>
+                          {deliveryStatusPieData.total === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                              <Activity className="w-10 h-10 text-gray-300 mb-2" />
+                              <p className="text-sm font-medium text-gray-500">No delivery data</p>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center">
+                              <AnimatedPieChart
+                                data={deliveryStatusPieData.items}
+                                centerLabel={deliveryStatusPieData.total.toLocaleString()}
+                                centerSubLabel="Total Deliveries"
+                              />
+                              <div className="grid grid-cols-2 gap-3 w-full mt-4">
+                                {deliveryStatusPieData.items.map((item, idx) => (
+                                  <div key={idx} className="p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                                      <span className="text-xs font-medium text-gray-600">{item.name}</span>
                                     </div>
-                                  ))}
-                                </div>
+                                    <div className="flex items-baseline justify-between">
+                                      <span className="text-lg font-bold text-gray-900 tabular-nums">{item.value.toLocaleString()}</span>
+                                      <span className="text-xs text-gray-500 tabular-nums">{item.percentage.toFixed(0)}%</span>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            );
-                          })()}
+                            </div>
+                          )}
                         </EditorialCard>
 
                         <EditorialCard
@@ -2399,10 +2462,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   onChange={(e) => setDeliveryMonthYear(parseInt(e.target.value))}
                                   aria-label="Delivery analytics year"
                                 >
-                                  {Array.from(new Set([
-                                    new Date().getFullYear(),
-                                    ...(dashboardData.deliveries?.rawDeliveries || []).map((d: any) => new Date(d.created_at || d.delivery_date).getFullYear())
-                                  ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
+                                  {deliveryYears.map(year => (
                                     <option key={year} value={year}>{year}</option>
                                   ))}
                                 </select>
@@ -2448,78 +2508,30 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             </span>
                           </div>
 
-                          {(() => {
-                            const currentYear = new Date().getFullYear();
-                            let chartData: any[] = [];
-                            const rawDists = dashboardData.deliveries?.rawDeliveries || [];
-
-                            if (deliveryView === 'monthly') {
-                              const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                              const monthlyA = new Array(12).fill(0);
-                              const monthlyB = new Array(12).fill(0);
-                              const monthlyC = new Array(12).fill(0);
-
-                              rawDists.forEach((d: any) => {
-                                const date = new Date(d.created_at || d.delivery_date);
-                                if (date.getFullYear() === deliveryMonthYear) {
-                                  const month = date.getMonth();
-                                  const qty = parseFloat(d.quantity_kg || 0);
-                                  if (d.grade === 'Class A') monthlyA[month] += qty;
-                                  else if (d.grade === 'Class B') monthlyB[month] += qty;
-                                  else if (d.grade === 'Class C') monthlyC[month] += qty;
-                                }
-                              });
-
-                              chartData = labels.map((label, i) => ({
-                                period: label,
-                                classA: monthlyA[i],
-                                classB: monthlyB[i],
-                                classC: monthlyC[i]
-                              }));
-                            } else {
-                              const years = Array.from(new Set([
-                                currentYear,
-                                ...rawDists.map((d: any) => new Date(d.created_at || d.delivery_date).getFullYear())
-                              ])).sort((a, b) => a - b);
-
-                              chartData = years.map(year => {
-                                const yearDeliveries = rawDists.filter((d: any) => new Date(d.created_at || d.delivery_date).getFullYear() === year);
-                                return {
-                                  period: year.toString(),
-                                  classA: yearDeliveries.filter((d: any) => d.grade === 'Class A').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
-                                  classB: yearDeliveries.filter((d: any) => d.grade === 'Class B').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
-                                  classC: yearDeliveries.filter((d: any) => d.grade === 'Class C').reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0)
-                                };
-                              });
-                            }
-
-                            return (
-                              <div className="overflow-x-auto">
-                                <div style={{ minWidth: deliveryView === 'monthly' ? '640px' : '100%', width: '100%' }}>
-                                  <ResponsiveContainer width="100%" height={360}>
-                                    <RechartsBarChart
-                                      data={chartData}
-                                      margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
-                                      barGap={6}
-                                      barCategoryGap={chartData.length < 5 ? '30%' : '18%'}
-                                    >
-                                      <CartesianGrid {...EDITORIAL_CHART.gridProps} />
-                                      <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
-                                      <YAxis {...EDITORIAL_CHART.yAxisProps} />
-                                      <Tooltip
-                                        contentStyle={EDITORIAL_CHART.tooltipStyle}
-                                        cursor={{ fill: '#F9FAFB' }}
-                                        formatter={(value: any) => `${Math.round(Number(value))} kg`}
-                                      />
-                                      <Bar dataKey="classA" name="Class A" fill={EDITORIAL_CHART.colors.emerald} radius={[4, 4, 0, 0]} barSize={deliveryView === 'monthly' ? 20 : 38} />
-                                      <Bar dataKey="classB" name="Class B" fill={EDITORIAL_CHART.colors.amber} radius={[4, 4, 0, 0]} barSize={deliveryView === 'monthly' ? 20 : 38} />
-                                      <Bar dataKey="classC" name="Class C" fill={EDITORIAL_CHART.colors.espresso} radius={[4, 4, 0, 0]} barSize={deliveryView === 'monthly' ? 20 : 38} />
-                                    </RechartsBarChart>
-                                  </ResponsiveContainer>
-                                </div>
-                              </div>
-                            );
-                          })()}
+                          <div className="overflow-x-auto">
+                            <div style={{ minWidth: deliveryView === 'monthly' ? '640px' : '100%', width: '100%' }}>
+                              <ResponsiveContainer width="100%" height={360}>
+                                <RechartsBarChart
+                                  data={deliveryAnalyticsChartData}
+                                  margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
+                                  barGap={6}
+                                  barCategoryGap={deliveryAnalyticsChartData.length < 5 ? '30%' : '18%'}
+                                >
+                                  <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                  <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
+                                  <YAxis {...EDITORIAL_CHART.yAxisProps} />
+                                  <Tooltip
+                                    contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                    cursor={{ fill: '#F9FAFB' }}
+                                    formatter={(value: any) => `${Math.round(Number(value))} kg`}
+                                  />
+                                  <Bar dataKey="classA" name="Class A" fill={EDITORIAL_CHART.colors.emerald} radius={[4, 4, 0, 0]} barSize={deliveryView === 'monthly' ? 20 : 38} isAnimationActive={false} />
+                                  <Bar dataKey="classB" name="Class B" fill={EDITORIAL_CHART.colors.amber} radius={[4, 4, 0, 0]} barSize={deliveryView === 'monthly' ? 20 : 38} isAnimationActive={false} />
+                                  <Bar dataKey="classC" name="Class C" fill={EDITORIAL_CHART.colors.espresso} radius={[4, 4, 0, 0]} barSize={deliveryView === 'monthly' ? 20 : 38} isAnimationActive={false} />
+                                </RechartsBarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
                         </EditorialCard>
                       </div>
                     </div>
@@ -2545,51 +2557,36 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           className="flex flex-col h-full"
                           bodyClassName="flex-1 flex flex-col justify-center"
                         >
-                          {(() => {
-                            const approved = dashboardData.sales?.totalAmount || 0;
-                            const pending = dashboardData.sales?.pendingAmount || 0;
-                            const total = approved + pending;
-
-                            const chartData = [
-                              { name: 'Approved', value: approved, fill: EDITORIAL_CHART.colors.emerald, percentage: total > 0 ? (approved / total) * 100 : 0 },
-                              { name: 'Pending', value: pending, fill: EDITORIAL_CHART.colors.amber, percentage: total > 0 ? (pending / total) * 100 : 0 }
-                            ];
-
-                            if (total === 0) {
-                              return (
-                                <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                                  <Activity className="w-10 h-10 text-gray-300 mb-2" />
-                                  <p className="text-sm font-medium text-gray-500">No sales data</p>
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <div className="flex flex-col items-center">
-                                <AnimatedPieChart
-                                  data={chartData}
-                                  centerLabel={`₱${total.toLocaleString()}`}
-                                  centerSubLabel="Total Sales Amount"
-                                />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-4">
-                                  {chartData.map((item, idx) => (
-                                    <div key={idx} className="p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200">
-                                      <div className="flex items-center justify-between mb-1">
-                                        <div className="flex items-center gap-2">
-                                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
-                                          <span className="text-xs font-medium text-gray-600">{item.name}</span>
-                                        </div>
-                                        <span className="text-xs text-gray-500 tabular-nums">{item.percentage.toFixed(0)}%</span>
+                          {salesStatusPieData.total === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                              <Activity className="w-10 h-10 text-gray-300 mb-2" />
+                              <p className="text-sm font-medium text-gray-500">No sales data</p>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center">
+                              <AnimatedPieChart
+                                data={salesStatusPieData.items}
+                                centerLabel={`₱${salesStatusPieData.total.toLocaleString()}`}
+                                centerSubLabel="Total Sales Amount"
+                              />
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-4">
+                                {salesStatusPieData.items.map((item, idx) => (
+                                  <div key={idx} className="p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                                        <span className="text-xs font-medium text-gray-600">{item.name}</span>
                                       </div>
-                                      <p className="text-base font-bold text-gray-900 tabular-nums">
-                                        ₱{item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                      </p>
+                                      <span className="text-xs text-gray-500 tabular-nums">{item.percentage.toFixed(0)}%</span>
                                     </div>
-                                  ))}
-                                </div>
+                                    <p className="text-base font-bold text-gray-900 tabular-nums">
+                                      ₱{item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                  </div>
+                                ))}
                               </div>
-                            );
-                          })()}
+                            </div>
+                          )}
                         </EditorialCard>
 
                         <EditorialCard
@@ -2605,11 +2602,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                                   onChange={(e) => setSalesMonthYear(parseInt(e.target.value))}
                                   aria-label="Sales analytics year"
                                 >
-                                  {Array.from(new Set([
-                                    new Date().getFullYear(),
-                                    ...(dashboardData.sales?.allSales || dashboardData.sales?.recentSales || []).map((s: any) => new Date(s.sale_date).getFullYear()),
-                                    ...(dashboardData.deliveries?.rawDeliveries || []).filter((d: any) => d.status === 'Completed' || d.status === 'Delivered').map((d: any) => new Date(d.delivery_date).getFullYear())
-                                  ])).filter(y => y > 2020).sort((a, b) => b - a).map(year => (
+                                  {salesYears.map(year => (
                                     <option key={year} value={year}>{year}</option>
                                   ))}
                                 </select>
@@ -2659,103 +2652,33 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             </span>
                           </div>
 
-                          {(() => {
-                            const allSales = [
-                              ...(dashboardData.sales?.allSales || dashboardData.sales?.recentSales || []),
-                              ...(dashboardData.deliveries?.rawDeliveries?.filter((d: any) => d.status === 'Completed' || d.status === 'Delivered') || []).map((d: any) => ({
-                                ...d,
-                                sale_date: d.delivery_date,
-                                total_amount: parseFloat(d.total_amount || 0),
-                                abaca_type: d.grade || d.fiber_class
-                              }))
-                            ];
-                            const currentYear = new Date().getFullYear();
-                            let chartData: any[] = [];
-
-                            if (abacaSoldView === 'monthly') {
-                              const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                              const salesA = Array(12).fill(0);
-                              const salesB = Array(12).fill(0);
-                              const salesC = Array(12).fill(0);
-
-                              allSales.forEach((sale: any) => {
-                                const saleDate = new Date(sale.sale_date);
-                                if (saleDate.getFullYear() === salesMonthYear) {
-                                  const month = saleDate.getMonth();
-                                  const amount = (sale.total_amount || 0);
-                                  const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
-                                  if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) salesA[month] += amount;
-                                  else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[month] += amount;
-                                  else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[month] += amount;
-                                }
-                              });
-
-                              chartData = labels.map((l, i) => ({
-                                period: l,
-                                salesA: salesA[i],
-                                salesB: salesB[i],
-                                salesC: salesC[i]
-                              }));
-                            } else {
-                              const years = Array.from(new Set([
-                                currentYear,
-                                ...allSales.map((s: any) => new Date(s.sale_date).getFullYear())
-                              ])).filter(y => y > 2020 && !isNaN(y)).sort((a, b) => a - b);
-
-                              const salesA = Array(years.length).fill(0);
-                              const salesB = Array(years.length).fill(0);
-                              const salesC = Array(years.length).fill(0);
-
-                              allSales.forEach((sale: any) => {
-                                const saleDate = new Date(sale.sale_date);
-                                const yearIdx = years.indexOf(saleDate.getFullYear());
-                                if (yearIdx !== -1) {
-                                  const amount = (sale.total_amount || 0);
-                                  const ft = (sale.abaca_type || sale.grade || sale.fiber_class || '').toLowerCase();
-                                  if (ft.match(/\ba\b|class[-_\s]*a|grade[-_\s]*a|fiber[-_\s]*a|grade\s*1|superior/i)) salesA[yearIdx] += amount;
-                                  else if (ft.match(/\bb\b|class[-_\s]*b|grade[-_\s]*b|fiber[-_\s]*b|grade\s*2/i)) salesB[yearIdx] += amount;
-                                  else if (ft.match(/\bc\b|class[-_\s]*c|grade[-_\s]*c|fiber[-_\s]*c|grade\s*3/i)) salesC[yearIdx] += amount;
-                                }
-                              });
-
-                              chartData = years.map((y, i) => ({
-                                period: y.toString(),
-                                salesA: salesA[i],
-                                salesB: salesB[i],
-                                salesC: salesC[i]
-                              }));
-                            }
-
-                            return (
-                              <div className="overflow-x-auto">
-                                <div style={{ minWidth: abacaSoldView === 'monthly' ? '640px' : '100%', width: '100%' }}>
-                                  <ResponsiveContainer width="100%" height={360}>
-                                    <RechartsBarChart
-                                      data={chartData}
-                                      margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
-                                      barGap={6}
-                                      barCategoryGap={chartData.length < 5 ? '30%' : '18%'}
-                                    >
-                                      <CartesianGrid {...EDITORIAL_CHART.gridProps} />
-                                      <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
-                                      <YAxis
-                                        {...EDITORIAL_CHART.yAxisProps}
-                                        tickFormatter={(value) => `₱${Math.round(value / 1000)}k`}
-                                      />
-                                      <Tooltip
-                                        contentStyle={EDITORIAL_CHART.tooltipStyle}
-                                        cursor={{ fill: '#F9FAFB' }}
-                                        formatter={(value: any) => `₱${Math.round(Number(value)).toLocaleString()}`}
-                                      />
-                                      <Bar name="Class A" dataKey="salesA" fill={EDITORIAL_CHART.colors.amber} radius={[4, 4, 0, 0]} barSize={abacaSoldView === 'monthly' ? 20 : 38} />
-                                      <Bar name="Class B" dataKey="salesB" fill={EDITORIAL_CHART.colors.emerald} radius={[4, 4, 0, 0]} barSize={abacaSoldView === 'monthly' ? 20 : 38} />
-                                      <Bar name="Class C" dataKey="salesC" fill={EDITORIAL_CHART.colors.espresso} radius={[4, 4, 0, 0]} barSize={abacaSoldView === 'monthly' ? 20 : 38} />
-                                    </RechartsBarChart>
-                                  </ResponsiveContainer>
-                                </div>
-                              </div>
-                            );
-                          })()}
+                          <div className="overflow-x-auto">
+                            <div style={{ minWidth: abacaSoldView === 'monthly' ? '640px' : '100%', width: '100%' }}>
+                              <ResponsiveContainer width="100%" height={360}>
+                                <RechartsBarChart
+                                  data={salesPerformanceChartData}
+                                  margin={{ top: 10, right: 16, left: 0, bottom: 8 }}
+                                  barGap={6}
+                                  barCategoryGap={salesPerformanceChartData.length < 5 ? '30%' : '18%'}
+                                >
+                                  <CartesianGrid {...EDITORIAL_CHART.gridProps} />
+                                  <XAxis dataKey="period" {...EDITORIAL_CHART.xAxisProps} dy={8} />
+                                  <YAxis
+                                    {...EDITORIAL_CHART.yAxisProps}
+                                    tickFormatter={(value) => `₱${Math.round(value / 1000)}k`}
+                                  />
+                                  <Tooltip
+                                    contentStyle={EDITORIAL_CHART.tooltipStyle}
+                                    cursor={{ fill: '#F9FAFB' }}
+                                    formatter={(value: any) => `₱${Math.round(Number(value)).toLocaleString()}`}
+                                  />
+                                  <Bar name="Class A" dataKey="salesA" fill={EDITORIAL_CHART.colors.amber} radius={[4, 4, 0, 0]} barSize={abacaSoldView === 'monthly' ? 20 : 38} isAnimationActive={false} />
+                                  <Bar name="Class B" dataKey="salesB" fill={EDITORIAL_CHART.colors.emerald} radius={[4, 4, 0, 0]} barSize={abacaSoldView === 'monthly' ? 20 : 38} isAnimationActive={false} />
+                                  <Bar name="Class C" dataKey="salesC" fill={EDITORIAL_CHART.colors.espresso} radius={[4, 4, 0, 0]} barSize={abacaSoldView === 'monthly' ? 20 : 38} isAnimationActive={false} />
+                                </RechartsBarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
                         </EditorialCard>
                       </div>
 
@@ -2816,7 +2739,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                 )}
 
                 {dashboardSection === 'users' && (
-                  <UserAnalyticsDashboard key={version} />
+                  <UserAnalyticsDashboard key={version} initialData={dashboardData.users} />
                 )}
               </>
             )}

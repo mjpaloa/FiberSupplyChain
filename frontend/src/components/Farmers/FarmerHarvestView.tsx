@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import { useState, useEffect } from 'react';
 import { Package, Search, X, Eye, Edit2, Calendar, MapPin, Sprout, Award, TrendingUp, Trash2, AlertTriangle, CheckCircle } from 'lucide-react';
 import HarvestSubmissionPage from '../../pages/HarvestSubmissionPage';
@@ -73,7 +74,7 @@ export default function FarmerHarvestView() {
       const token = localStorage.getItem('token');
       const statusParam = filter !== 'all' ? `?status=${encodeURIComponent(filter)}` : '';
 
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/harvests/farmer/harvests${statusParam}`, {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/farmer/harvests${statusParam}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -91,7 +92,7 @@ export default function FarmerHarvestView() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/harvests/farmer/harvests/statistics', {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/farmer/harvests/statistics`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -111,7 +112,7 @@ export default function FarmerHarvestView() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/cusafa-inventory/add/${harvest.harvest_id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/cusafa-inventory/add/${harvest.harvest_id}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -158,7 +159,7 @@ export default function FarmerHarvestView() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/harvests/${selectedHarvest.harvest_id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/${selectedHarvest.harvest_id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -187,7 +188,7 @@ export default function FarmerHarvestView() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://fibersupplychain.onrender.com/api/harvests/${selectedHarvest.harvest_id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/${selectedHarvest.harvest_id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

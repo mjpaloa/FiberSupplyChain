@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import { useState, useEffect } from 'react';
 
 interface InventoryItem {
@@ -54,7 +55,7 @@ export default function SuperAdminInventoryDashboard() {
       if (filters.fiber_grade) params.append('fiber_grade', filters.fiber_grade);
       
       const queryString = params.toString();
-      const url = `https://fibersupplychain.onrender.com/api/inventory/admin/inventory/all${queryString ? '?' + queryString : ''}`;
+      const url = `${API_BASE_URL}/api/inventory/admin/inventory/all${queryString ? '?' + queryString : ''}`;
       
       const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -74,7 +75,7 @@ export default function SuperAdminInventoryDashboard() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/inventory/inventory/statistics', {
+      const response = await fetch(`${API_BASE_URL}/api/inventory/inventory/statistics`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

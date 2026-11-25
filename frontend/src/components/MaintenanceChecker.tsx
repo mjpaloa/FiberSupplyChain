@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useEffect, useState } from 'react';
 import MaintenancePage from '../pages/MaintenancePage';
 
@@ -28,7 +29,7 @@ const MaintenanceChecker: React.FC<MaintenanceCheckerProps> = ({ children }) => 
       setIsSuperAdmin(superAdmin);
 
       // Check maintenance status from API
-      const response = await fetch('https://fibersupplychain.onrender.com/api/maintenance/status');
+      const response = await fetch(`${API_BASE_URL}/api/maintenance/status`);
       const data = await response.json();
       
       setIsMaintenanceMode(data.maintenanceMode);

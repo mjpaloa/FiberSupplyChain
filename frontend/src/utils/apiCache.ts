@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../config/api.ts';
+
 export type InvalidationReason = 'init' | 'mutation' | 'broadcast' | 'manual' | 'auth';
 
 export interface CacheState {
@@ -27,7 +29,7 @@ export interface ApiCacheOptions {
 
 const DEFAULT_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const DEFAULT_MAX_ENTRIES = 200;
-const DEFAULT_MAX_ENTRY_BYTES = 2_000_000; // 2 MB
+const DEFAULT_MAX_ENTRY_BYTES = 5_000_000; // 5 MB
 const CHANNEL_NAME = 'abaca_api_cache';
 
 const GET_EXCLUDED_EXACT = new Set([
@@ -55,11 +57,6 @@ let snapshot: CacheState = {
 let installed = false;
 let broadcastChannel: BroadcastChannel | null = null;
 
-function getEnvApiBaseUrl(): string {
-  const meta = import.meta as unknown as { env?: Record<string, string | undefined> };
-  return meta?.env?.VITE_API_URL || 'https://fibersupplychain.onrender.com';
-}
-
 function getBaseOrigin(apiBaseUrl: string): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin;
@@ -69,7 +66,6 @@ function getBaseOrigin(apiBaseUrl: string): string {
 
 function isAllowedApiHost(hostname: string, apiHostname: string): boolean {
   if (hostname === apiHostname) return true;
-  if (hostname === 'fibersupplychain.onrender.com') return true;
   if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
   if (typeof window !== 'undefined' && window.location?.hostname === hostname) return true;
   return false;
@@ -77,7 +73,7 @@ function isAllowedApiHost(hostname: string, apiHostname: string): boolean {
 
 function parseBackendApiUrl(urlStr: string): URL | null {
   try {
-    const apiBaseUrl = getEnvApiBaseUrl();
+    const apiBaseUrl = API_BASE_URL;
     const apiHost = new URL(apiBaseUrl).hostname;
     const parsed = new URL(urlStr, getBaseOrigin(apiBaseUrl));
     if (!parsed.pathname.startsWith('/api/')) return null;

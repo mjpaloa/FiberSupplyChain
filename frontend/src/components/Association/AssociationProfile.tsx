@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   Mail,
@@ -57,7 +58,7 @@ const AssociationProfile: React.FC<AssociationProfileProps> = ({ onBack, onEditP
         return;
       }
       
-      const response = await fetch('https://fibersupplychain.onrender.com/api/association/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/association/profile`, {
         method: 'GET',
         headers: { 
           'Authorization': `Bearer ${token}`,

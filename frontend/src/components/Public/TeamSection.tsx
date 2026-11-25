@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { Users, Mail, Phone, User } from 'lucide-react';
 
@@ -21,7 +22,7 @@ const TeamSection: React.FC = () => {
 
   const fetchTeam = async () => {
     try {
-      const response = await fetch('https://fibersupplychain.onrender.com/api/team');
+      const response = await fetch(`${API_BASE_URL}/api/team`);
       const data = await response.json();
       setTeam(data.team || []);
     } catch (error) {

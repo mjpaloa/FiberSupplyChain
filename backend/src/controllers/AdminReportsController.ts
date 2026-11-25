@@ -12,111 +12,71 @@ export class AdminReportsController {
    */
   static async getProductionReport(req: Request, res: Response) {
     try {
-      // 1. Total Seedlings Received (from association_seedling_distributions)
-      const { data: associationDistributions, error: assocError } = await supabase
-        .from('association_seedling_distributions')
-        .select('quantity_distributed, date_distributed')
-        .range(0, 9999);
+      const [
+        { data: associationDistributions },
+        { data: farmerDistributions },
+        { data: plantedDirectSeedlings },
+        { data: allHarvests },
+        { data: allMonitoringRecords }
+      ] = await Promise.all([
+        supabase
+          .from('association_seedling_distributions')
+          .select('quantity_distributed, date_distributed')
+          .range(0, 9999),
+        supabase
+          .from('farmer_seedling_distributions')
+          .select('quantity_distributed, planted_quantity, status, date_distributed, planting_date')
+          .range(0, 9999),
+        supabase
+          .from('seedlings')
+          .select('quantity_distributed, planted_quantity, planting_date')
+          .eq('status', 'planted')
+          .range(0, 9999),
+        supabase
+          .from('harvests')
+          .select('area_hectares, dry_fiber_output_kg, harvest_date, status')
+          .range(0, 9999),
+        supabase
+          .from('monitoring_records')
+          .select('farmer_id, date_of_visit, farm_condition')
+          .range(0, 9999)
+      ]);
 
       const totalSeedlingsReceived = associationDistributions?.reduce(
         (sum, d) => sum + (d.quantity_distributed || 0), 0
       ) || 0;
 
-      // 2. Total Seedlings Distributed to Farmers (from farmer_seedling_distributions)
-      const { data: farmerDistributions, error: farmerError } = await supabase
-        .from('farmer_seedling_distributions')
-        .select('quantity_distributed, date_distributed')
-        .range(0, 9999);
-
       const totalSeedlingsDistributed = farmerDistributions?.reduce(
         (sum, d) => sum + (d.quantity_distributed || 0), 0
       ) || 0;
 
-      // 3. Total Seedlings Planted (status = 'planted' across all sources)
-      const { data: plantedFarmerSeedlings } = await supabase
-        .from('farmer_seedling_distributions')
-        .select('quantity_distributed, planted_quantity')
-        .eq('status', 'planted')
-        .range(0, 9999);
+      const plantedFarmerSeedlings = (farmerDistributions || []).filter(d => d.status === 'planted');
+      const totalSeedlingsPlanted =
+        plantedFarmerSeedlings.reduce((sum, d) => sum + (d.planted_quantity ?? d.quantity_distributed ?? 0), 0) +
+        (plantedDirectSeedlings?.reduce((sum, d) => sum + (d.planted_quantity ?? d.quantity_distributed ?? 0), 0) || 0);
 
-      const { data: plantedDirectSeedlings } = await supabase
-        .from('seedlings')
-        .select('quantity_distributed, planted_quantity')
-        .eq('status', 'planted')
-        .range(0, 9999);
+      let totalAreaPlanted = 0;
+      let totalHarvestFiber = 0;
+      let actualHarvested = 0;
+      const verifiedStatuses = new Set(['Verified', 'In Inventory', 'Delivered', 'Sold']);
 
-      const totalSeedlingsPlanted = (
-        (plantedFarmerSeedlings?.reduce((sum, d) => sum + (d.planted_quantity ?? d.quantity_distributed ?? 0), 0) || 0) +
-        (plantedDirectSeedlings?.reduce((sum, d) => sum + (d.planted_quantity ?? d.quantity_distributed ?? 0), 0) || 0)
-      );
+      (allHarvests || []).forEach(h => {
+        totalAreaPlanted += parseFloat(h.area_hectares) || 0;
+        const fiber = parseFloat(h.dry_fiber_output_kg) || 0;
+        totalHarvestFiber += fiber;
+        if (verifiedStatuses.has(h.status)) {
+          actualHarvested += fiber;
+        }
+      });
 
-      // 4. Total Area Planted (from harvests)
-      const { data: harvests, error: harvestsError } = await supabase
-        .from('harvests')
-        .select('area_hectares')
-        .range(0, 9999);
+      const thirtyDaysAgoStr = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const uniqueFarmerIds = new Set<string>();
+      let recentMonitoringVisits = 0;
 
-      const totalAreaPlanted = harvests?.reduce(
-        (sum, h) => sum + (parseFloat(h.area_hectares) || 0), 0
-      ) || 0;
-
-      // 5. Total Harvest Fiber (ALL harvests regardless of status)
-      const { data: allHarvests, error: allHarvestsError } = await supabase
-        .from('harvests')
-        .select('dry_fiber_output_kg, harvest_date')
-        .range(0, 9999);
-
-      const totalHarvestFiber = allHarvests?.reduce(
-        (sum, h) => sum + (parseFloat(h.dry_fiber_output_kg) || 0), 0
-      ) || 0;
-
-      // 6. Actual Harvested Fiber (from harvests with status 'Verified' or 'In Inventory')
-      const { data: verifiedHarvests, error: verifiedError } = await supabase
-        .from('harvests')
-        .select('dry_fiber_output_kg')
-        .in('status', ['Verified', 'In Inventory', 'Delivered', 'Sold'])
-        .range(0, 9999);
-
-      const actualHarvested = verifiedHarvests?.reduce(
-        (sum, h) => sum + (parseFloat(h.dry_fiber_output_kg) || 0), 0
-      ) || 0;
-
-      // 7. Field Monitoring Statistics
-      const { count: totalMonitoringVisits } = await supabase
-        .from('monitoring_records')
-        .select('*', { count: 'exact', head: true });
-
-      // Count farms monitored (unique farmer_ids)
-      const { data: monitoredFarms } = await supabase
-        .from('monitoring_records')
-        .select('farmer_id')
-        .range(0, 9999);
-
-      const uniqueFarmsMonitored = new Set(monitoredFarms?.map(m => m.farmer_id) || []).size;
-
-      // Recent monitoring visits (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const { count: recentMonitoringVisits } = await supabase
-        .from('monitoring_records')
-        .select('*', { count: 'exact', head: true })
-        .gte('date_of_visit', thirtyDaysAgo.toISOString().split('T')[0]);
-
-      // 8. Farm Condition Breakdown
-      const { data: allMonitoringRecords } = await supabase
-        .from('monitoring_records')
-        .select('farm_condition')
-        .range(0, 9999);
-
-      let healthyFarms = 0;
-      let needsSupportFarms = 0;
-
-      allMonitoringRecords?.forEach(record => {
-        if (record.farm_condition === 'Healthy') {
-          healthyFarms++;
-        } else if (record.farm_condition === 'Needs Support' || record.farm_condition === 'Damaged') {
-          needsSupportFarms++;
+      (allMonitoringRecords || []).forEach(record => {
+        if (record.farmer_id) uniqueFarmerIds.add(record.farmer_id);
+        if (record.date_of_visit && record.date_of_visit >= thirtyDaysAgoStr) {
+          recentMonitoringVisits++;
         }
       });
 
@@ -124,18 +84,17 @@ export class AdminReportsController {
         totalSeedlingsReceived,
         totalSeedlingsDistributed,
         totalSeedlingsPlanted,
-        totalAreaPlanted: Math.round(totalAreaPlanted * 100) / 100, // Round to 2 decimals
+        totalAreaPlanted: Math.round(totalAreaPlanted * 100) / 100,
         totalHarvestFiber: Math.round(totalHarvestFiber * 100) / 100,
         actualHarvested: Math.round(actualHarvested * 100) / 100,
-        totalMonitoringVisits: totalMonitoringVisits || 0,
-        farmsMonitored: uniqueFarmsMonitored,
-        recentMonitoringVisits: recentMonitoringVisits || 0,
-        // Monthly breakdowns for charts
+        totalMonitoringVisits: allMonitoringRecords?.length || 0,
+        farmsMonitored: uniqueFarmerIds.size,
+        recentMonitoringVisits,
         monthlyReceived: calculateMonthlySums(associationDistributions || [], 'date_distributed', 'quantity_distributed'),
         monthlyDistributed: calculateMonthlySums(farmerDistributions || [], 'date_distributed', 'quantity_distributed'),
         monthlyHarvest: calculateMonthlySums(allHarvests || [], 'harvest_date', 'dry_fiber_output_kg'),
         monthlyPlanted: calculateMonthlySums([
-          ...(plantedFarmerSeedlings || []),
+          ...plantedFarmerSeedlings,
           ...(plantedDirectSeedlings || [])
         ], 'planting_date', 'quantity_distributed')
       });
@@ -151,70 +110,59 @@ export class AdminReportsController {
    */
   static async getSalesReport(req: Request, res: Response) {
     try {
-      // Get all approved sales reports with farmer info
-      const { data: salesReports, error: salesError } = await supabase
-        .from('sales_reports')
-        .select(`
-          report_id,
-          sale_date,
-          buyer_company_name,
-          quantity_sold,
-          unit_price,
-          total_amount,
-          farmer_id,
-          abaca_type
-        `)
-        .eq('status', 'approved')
-        .order('sale_date', { ascending: false });
+      const [
+        { data: allReports, error: salesError },
+        { data: deliveries, error: deliveriesError }
+      ] = await Promise.all([
+        supabase
+          .from('sales_reports')
+          .select(`
+            report_id,
+            sale_date,
+            buyer_company_name,
+            quantity_sold,
+            unit_price,
+            total_amount,
+            farmer_id,
+            abaca_type,
+            status
+          `)
+          .in('status', ['approved', 'pending'])
+          .order('sale_date', { ascending: false }),
+        supabase
+          .from('fiber_deliveries')
+          .select(`
+            id,
+            delivery_date,
+            grade,
+            quantity_kg,
+            total_amount,
+            farmer_id,
+            status
+          `)
+          .eq('status', 'Completed')
+      ]);
 
       if (salesError) throw salesError;
-
-      // Get pending sales reports
-      const { data: pendingSalesReports, error: pendingError } = await supabase
-        .from('sales_reports')
-        .select(`
-          report_id,
-          sale_date,
-          buyer_company_name,
-          quantity_sold,
-          unit_price,
-          total_amount,
-          farmer_id,
-          abaca_type
-        `)
-        .eq('status', 'pending')
-        .order('sale_date', { ascending: false });
-
-      if (pendingError) throw pendingError;
-
-      // NEW: Also get completed fiber deliveries (which are also sales)
-      const { data: deliveries, error: deliveriesError } = await supabase
-        .from('fiber_deliveries')
-        .select(`
-          id,
-          delivery_date,
-          grade,
-          quantity_kg,
-          total_amount,
-          farmer_id,
-          status
-        `)
-        .eq('status', 'Completed');
-
       if (deliveriesError) console.error('Error fetching deliveries for sales report:', deliveriesError);
 
-      // Get farmer names for everyone
+      const salesReports = (allReports || []).filter(s => s.status === 'approved');
+      const pendingSalesReports = (allReports || []).filter(s => s.status === 'pending');
+
+      // Get farmer names for approved reports and completed deliveries
       const farmerIds = [...new Set([
-        ...(salesReports || []).map(s => s.farmer_id),
+        ...salesReports.map(s => s.farmer_id),
         ...(deliveries || []).map(d => d.farmer_id)
       ])].filter(Boolean);
 
-      const { data: farmers } = await supabase
-        .from('farmers')
-        .select('farmer_id, full_name')
-        .in('farmer_id', farmerIds);
+      const { data: farmers } = farmerIds.length > 0
+        ? await supabase
+            .from('farmers')
+            .select('farmer_id, full_name')
+            .in('farmer_id', farmerIds)
+        : { data: [] };
 
-      const farmerMap = new Map(farmers?.map(f => [f.farmer_id, f.full_name]) || []);
+      const farmerMap = new Map((farmers || []).map(f => [f.farmer_id, f.full_name]));
 
       // Calculate approved totals (Reports + Completed Deliveries)
       const totalKgSoldFromReports = salesReports?.reduce(
@@ -295,22 +243,23 @@ export class AdminReportsController {
    */
   static async getSalesPerformanceReport(req: Request, res: Response) {
     try {
-      // Fetch all approved sales reports with fiber class info
-      const { data: salesReports, error: salesError } = await supabase
-        .from('sales_reports')
-        .select('report_id, sale_date, abaca_type, quantity_sold, total_amount, status')
-        .eq('status', 'approved')
-        .order('sale_date', { ascending: false });
+      const [
+        { data: salesReports, error: salesError },
+        { data: deliveries, error: deliveriesError }
+      ] = await Promise.all([
+        supabase
+          .from('sales_reports')
+          .select('report_id, sale_date, abaca_type, quantity_sold, total_amount, status')
+          .eq('status', 'approved')
+          .order('sale_date', { ascending: false }),
+        supabase
+          .from('fiber_deliveries')
+          .select('id, delivery_date, grade, quantity_kg, total_amount, status')
+          .eq('status', 'Completed')
+          .order('delivery_date', { ascending: false })
+      ]);
 
       if (salesError) throw salesError;
-
-      // NEW: Also fetch completed fiber deliveries (which are also sales)
-      const { data: deliveries, error: deliveriesError } = await supabase
-        .from('fiber_deliveries')
-        .select('id, delivery_date, grade, quantity_kg, total_amount, status')
-        .eq('status', 'Completed')
-        .order('delivery_date', { ascending: false });
-
       if (deliveriesError) throw deliveriesError;
 
       // Combine both sources of sales data
@@ -425,100 +374,56 @@ export class AdminReportsController {
    */
   static async getUsersReport(req: Request, res: Response) {
     try {
-      console.log('📊 AdminReportsController: Fetching User Statistics...');
-      // 1. Count Farmers
-      const { count: farmersCount, error: farmersError } = await supabase
-        .from('farmers')
-        .select('*', { count: 'exact', head: true });
+      const [
+        { data: allFarmers, error: farmersError },
+        { data: allBuyers, error: buyersError },
+        { data: allCusafa, error: cusafaError },
+        { data: allMao, error: maoError }
+      ] = await Promise.all([
+        supabase.from('farmers').select('full_name, email, created_at').order('created_at', { ascending: false }),
+        supabase.from('buyers').select('owner_name, email, created_at').order('created_at', { ascending: false }),
+        supabase.from('association_officers').select('full_name, email, created_at').order('created_at', { ascending: false }),
+        supabase.from('organization').select('full_name, email, created_at').order('created_at', { ascending: false })
+      ]);
+
       if (farmersError) console.error('❌ Supabase error (farmers):', farmersError);
-
-      // 2. Count Buyers
-      const { count: buyersCount, error: buyersError } = await supabase
-        .from('buyers')
-        .select('*', { count: 'exact', head: true });
       if (buyersError) console.error('❌ Supabase error (buyers):', buyersError);
-
-      // 3. Count CUSAFA Officers (Association Officers)
-      const { count: cusafaCount, error: cusafaError } = await supabase
-        .from('association_officers')
-        .select('*', { count: 'exact', head: true });
       if (cusafaError) console.error('❌ Supabase error (cusafa):', cusafaError);
-
-      // 4. Count MAO Officers
-      const { count: maoCount, error: maoError } = await supabase
-        .from('organization')
-        .select('*', { count: 'exact', head: true });
       if (maoError) console.error('❌ Supabase error (mao):', maoError);
 
-      // 5. Get all users with created_at for monthly trends
-      const { data: allFarmers } = await supabase
-        .from('farmers')
-        .select('created_at');
+      const farmersList = allFarmers || [];
+      const buyersList = allBuyers || [];
+      const cusafaList = allCusafa || [];
+      const maoList = allMao || [];
 
-      const { data: allBuyers } = await supabase
-        .from('buyers')
-        .select('created_at');
-
-      const { data: allCusafa } = await supabase
-        .from('association_officers')
-        .select('created_at');
-
-      const { data: allMao } = await supabase
-        .from('organization')
-        .select('created_at');
-
-      // 6. Calculate monthly registration trends
       const monthlyTrends = calculateMonthlyTrends(
-        allFarmers || [],
-        allBuyers || [],
-        allCusafa || [],
-        allMao || []
+        farmersList,
+        buyersList,
+        cusafaList,
+        maoList
       );
 
-      // 7. Get recent users (last 10 from all tables)
-      const { data: recentFarmers } = await supabase
-        .from('farmers')
-        .select('full_name, email, created_at')
-        .order('created_at', { ascending: false })
-        .limit(4);
-
-      const { data: recentBuyers } = await supabase
-        .from('buyers')
-        .select('owner_name, email, created_at')
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      const { data: recentOfficers } = await supabase
-        .from('association_officers')
-        .select('full_name, email, created_at')
-        .order('created_at', { ascending: false })
-        .limit(2);
-
-      const { data: recentAdmins } = await supabase
-        .from('organization')
-        .select('full_name, email, created_at')
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      // Combine and format recent users
       const recentUsers = [
-        ...(recentFarmers || []).map((u: any) => ({ full_name: u.full_name, email: u.email, created_at: u.created_at, role: 'farmer' })),
-        ...(recentBuyers || []).map((u: any) => ({ full_name: u.owner_name, email: u.email, created_at: u.created_at, role: 'buyer' })),
-        ...(recentOfficers || []).map((u: any) => ({ full_name: u.full_name, email: u.email, created_at: u.created_at, role: 'officer' })),
-        ...(recentAdmins || []).map((u: any) => ({ full_name: u.full_name, email: u.email, created_at: u.created_at, role: 'admin' }))
+        ...farmersList.slice(0, 4).map((u: any) => ({ full_name: u.full_name, email: u.email, created_at: u.created_at, role: 'farmer' })),
+        ...buyersList.slice(0, 3).map((u: any) => ({ full_name: u.owner_name, email: u.email, created_at: u.created_at, role: 'buyer' })),
+        ...cusafaList.slice(0, 2).map((u: any) => ({ full_name: u.full_name, email: u.email, created_at: u.created_at, role: 'officer' })),
+        ...maoList.slice(0, 1).map((u: any) => ({ full_name: u.full_name, email: u.email, created_at: u.created_at, role: 'admin' }))
       ]
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 10);
 
-      // Calculate total users
-      const totalUsers = (farmersCount || 0) + (buyersCount || 0) + (cusafaCount || 0) + (maoCount || 0);
+      const farmersCount = farmersList.length;
+      const buyersCount = buyersList.length;
+      const cusafaCount = cusafaList.length;
+      const maoCount = maoList.length;
+      const totalUsers = farmersCount + buyersCount + cusafaCount + maoCount;
 
       res.status(200).json({
         totalUsers,
-        totalFarmers: farmersCount || 0,
-        totalBuyers: buyersCount || 0,
-        totalCusafa: cusafaCount || 0,
-        totalMao: maoCount || 0,
+        totalFarmers: farmersCount,
+        totalBuyers: buyersCount,
+        totalCusafa: cusafaCount,
+        totalMao: maoCount,
         monthlyTrends,
         recentUsers
       });
@@ -530,7 +435,7 @@ export class AdminReportsController {
 }
 
 /**
- * Helper function to calculate monthly registration trends for the last 24 months
+ * Helper function to calculate monthly registration trends for the last 24 months in O(N)
  */
 function calculateMonthlyTrends(
   farmers: any[],
@@ -539,46 +444,48 @@ function calculateMonthlyTrends(
   mao: any[]
 ) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const bucketMap = new Map<string, { farmers: number; buyers: number; cusafa: number; mao: number }>();
+
+  const bump = (rows: any[], key: 'farmers' | 'buyers' | 'cusafa' | 'mao') => {
+    for (const row of rows) {
+      if (!row?.created_at) continue;
+      const d = new Date(row.created_at);
+      if (isNaN(d.getTime())) continue;
+      const ym = `${d.getFullYear()}-${d.getMonth()}`;
+      let entry = bucketMap.get(ym);
+      if (!entry) {
+        entry = { farmers: 0, buyers: 0, cusafa: 0, mao: 0 };
+        bucketMap.set(ym, entry);
+      }
+      entry[key] += 1;
+    }
+  };
+
+  bump(farmers, 'farmers');
+  bump(buyers, 'buyers');
+  bump(cusafa, 'cusafa');
+  bump(mao, 'mao');
+
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
-
-  // Create array for last 24 months (2 years)
   const monthlyData = [];
+
   for (let i = 23; i >= 0; i--) {
     const targetDate = new Date(currentYear, currentMonth - i, 1);
     const targetYear = targetDate.getFullYear();
     const targetMonth = targetDate.getMonth();
-    const monthName = months[targetMonth];
-
-    // Count registrations for this specific month
-    const farmersCount = farmers.filter(f => {
-      const date = new Date(f.created_at);
-      return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
-    }).length;
-
-    const buyersCount = buyers.filter(b => {
-      const date = new Date(b.created_at);
-      return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
-    }).length;
-
-    const cusafaCount = cusafa.filter(c => {
-      const date = new Date(c.created_at);
-      return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
-    }).length;
-
-    const maoCount = mao.filter(m => {
-      const date = new Date(m.created_at);
-      return date.getFullYear() === targetYear && date.getMonth() === targetMonth;
-    }).length;
+    const counts = bucketMap.get(`${targetYear}-${targetMonth}`) || {
+      farmers: 0,
+      buyers: 0,
+      cusafa: 0,
+      mao: 0,
+    };
 
     monthlyData.push({
-      month: monthName,
+      month: months[targetMonth],
       year: targetYear,
-      farmers: farmersCount,
-      buyers: buyersCount,
-      cusafa: cusafaCount,
-      mao: maoCount
+      ...counts
     });
   }
 

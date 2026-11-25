@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config/api';
 import { Package, FileText, Send } from 'lucide-react';
 import { getUserData } from '../../utils/authToken';
 import { EditorialCard } from '../Shared/EditorialUI';
@@ -166,7 +167,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
       console.log('📦 Report payload:', reportPayload);
       console.log('📦 Abaca type being sent:', abacaType);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/sales/submit-report`, {
+      const response = await fetch(`${API_BASE_URL}/api/sales/submit-report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

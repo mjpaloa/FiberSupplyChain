@@ -4,8 +4,7 @@
  */
 
 import { checkAndRefreshToken, getAuthToken, clearAuthData } from './authToken';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://fibersupplychain.onrender.com';
+import { getApiUrl } from '../config/api';
 
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
@@ -53,7 +52,7 @@ export const apiFetch = async (endpoint: string, options: FetchOptions = {}): Pr
   }
 
   // Build full URL
-  const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
+  const url = getApiUrl(endpoint);
 
   try {
     const response = await fetch(url, {

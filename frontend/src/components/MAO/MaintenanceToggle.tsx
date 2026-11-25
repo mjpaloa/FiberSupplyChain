@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { Wrench, AlertTriangle, CheckCircle, Clock, Power, Shield, Users } from 'lucide-react';
 import { EditorialCard, StatusPill, EditorialCallout } from '../Shared/EditorialUI';
@@ -15,7 +16,7 @@ const MaintenanceToggle: React.FC = () => {
 
   const fetchMaintenanceStatus = async () => {
     try {
-      const response = await fetch('https://fibersupplychain.onrender.com/api/maintenance/status');
+      const response = await fetch(`${API_BASE_URL}/api/maintenance/status`);
       const data = await response.json();
       setIsMaintenanceMode(data.maintenanceMode);
       setLoading(false);
@@ -34,7 +35,7 @@ const MaintenanceToggle: React.FC = () => {
     setToggling(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('https://fibersupplychain.onrender.com/api/maintenance/toggle', {
+      const response = await fetch(`${API_BASE_URL}/api/maintenance/toggle`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import { useState, useEffect } from 'react';
 
 interface Harvest {
@@ -40,7 +41,7 @@ export default function FarmerHarvestsPage() {
       const token = localStorage.getItem('token');
       const statusParam = filter !== 'all' ? `?status=${encodeURIComponent(filter)}` : '';
       
-      const response = await fetch(`http://localhost:5000/api/harvests/farmer/harvests${statusParam}`, {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/farmer/harvests${statusParam}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -60,7 +61,7 @@ export default function FarmerHarvestsPage() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/harvests/farmer/harvests/statistics', {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/farmer/harvests/statistics`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

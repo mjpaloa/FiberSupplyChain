@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { Package, Search, Eye, Edit, Trash2, X, DollarSign, User, Leaf } from 'lucide-react';
 
@@ -42,7 +43,7 @@ const MyPurchases: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `https://fibersupplychain.onrender.com/api/buyer-purchases?quality=${qualityFilter}`,
+        `${API_BASE_URL}/api/buyer-purchases?quality=${qualityFilter}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();
@@ -85,7 +86,7 @@ const MyPurchases: React.FC = () => {
       const totalPrice = parseFloat(editFormData.price) * parseFloat(editFormData.quantity);
       
       const response = await fetch(
-        `https://fibersupplychain.onrender.com/api/buyer-purchases/${selectedPurchase.purchase_id}`,
+        `${API_BASE_URL}/api/buyer-purchases/${selectedPurchase.purchase_id}`,
         {
           method: 'PUT',
           headers: {
@@ -121,7 +122,7 @@ const MyPurchases: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `https://fibersupplychain.onrender.com/api/buyer-purchases/${selectedPurchase.purchase_id}`,
+        `${API_BASE_URL}/api/buyer-purchases/${selectedPurchase.purchase_id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }

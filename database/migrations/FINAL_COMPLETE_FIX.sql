@@ -1,7 +1,33 @@
--- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
+-- PostgreSQL / Supabase executable schema for FiberSupplyChain
+-- Normalized for direct execution (valid text[] arrays, serial sequence, extensions, and FK dependency order).
 
-CREATE TABLE public.activity_logs (
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE TABLE IF NOT EXISTS public.organization (
+  officer_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  full_name character varying NOT NULL,
+  email character varying NOT NULL UNIQUE,
+  password_hash character varying NOT NULL,
+  position character varying,
+  contact_number character varying,
+  address text,
+  profile_completed boolean DEFAULT false,
+  is_active boolean DEFAULT true,
+  is_verified boolean DEFAULT true,
+  remarks text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  last_login timestamp with time zone,
+  profile_completed_at timestamp with time zone,
+  profile_picture text,
+  is_super_admin boolean DEFAULT false,
+  verification_status character varying DEFAULT 'pending'::character varying CHECK (verification_status::text = ANY (ARRAY['pending'::character varying, 'verified'::character varying, 'rejected'::character varying]::text[])),
+  office_name character varying,
+  assigned_municipality character varying,
+  assigned_barangay character varying,
+  CONSTRAINT organization_pkey PRIMARY KEY (officer_id)
+);
+CREATE TABLE IF NOT EXISTS public.activity_logs (
   log_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   user_id uuid,
   user_type character varying CHECK (user_type::text = ANY (ARRAY['farmer'::character varying::text, 'buyer'::character varying::text, 'officer'::character varying::text, 'association_officer'::character varying::text])),
@@ -24,7 +50,99 @@ CREATE TABLE public.activity_logs (
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT activity_logs_pkey PRIMARY KEY (log_id)
 );
-CREATE TABLE public.articles (
+CREATE TABLE IF NOT EXISTS public.auth_audit_log (
+  log_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  user_type character varying CHECK (user_type::text = ANY (ARRAY['farmer'::character varying, 'buyer'::character varying, 'officer'::character varying]::text[])),
+  action character varying NOT NULL,
+  ip_address character varying,
+  user_agent text,
+  success boolean DEFAULT true,
+  error_message text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT auth_audit_log_pkey PRIMARY KEY (log_id)
+);
+CREATE TABLE IF NOT EXISTS public.buyer_sales (
+  sale_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  seller_id uuid NOT NULL,
+  fiber_class character varying NOT NULL,
+  quantity_kg numeric NOT NULL CHECK (quantity_kg > 0::numeric),
+  price_per_kg numeric NOT NULL CHECK (price_per_kg > 0::numeric),
+  total_amount numeric NOT NULL CHECK (total_amount > 0::numeric),
+  buyer_name character varying NOT NULL,
+  notes text,
+  sale_date timestamp without time zone NOT NULL DEFAULT now(),
+  created_at timestamp without time zone DEFAULT now(),
+  updated_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT buyer_sales_pkey PRIMARY KEY (sale_id)
+);
+CREATE TABLE IF NOT EXISTS public.inventory_distributions (
+  distribution_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  inventory_id uuid NOT NULL,
+  distribution_date date NOT NULL DEFAULT CURRENT_DATE,
+  distributed_to character varying NOT NULL,
+  recipient_type character varying CHECK (recipient_type::text = ANY (ARRAY['Buyer'::character varying, 'Trader'::character varying, 'Processor'::character varying, 'Government'::character varying, 'Export'::character varying, 'Other'::character varying]::text[])),
+  distributed_weight_kg numeric NOT NULL CHECK (distributed_weight_kg > 0::numeric),
+  price_per_kg numeric,
+  total_amount numeric,
+  distributed_by uuid,
+  distributor_name character varying,
+  transport_method character varying,
+  destination character varying,
+  delivery_receipt_number character varying,
+  invoice_number character varying,
+  remarks text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT inventory_distributions_pkey PRIMARY KEY (distribution_id)
+);
+CREATE TABLE IF NOT EXISTS public.monitoring_issues (
+  issue_id serial NOT NULL,
+  issue_name character varying NOT NULL UNIQUE,
+  issue_category character varying,
+  description text,
+  severity_level character varying CHECK (severity_level::text = ANY (ARRAY['Low'::character varying, 'Medium'::character varying, 'High'::character varying, 'Critical'::character varying]::text[])),
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT monitoring_issues_pkey PRIMARY KEY (issue_id)
+);
+CREATE TABLE IF NOT EXISTS public.monitoring_records (
+  monitoring_id character varying NOT NULL,
+  date_of_visit date NOT NULL CHECK (date_of_visit <= CURRENT_DATE),
+  monitored_by character varying NOT NULL,
+  monitored_by_role character varying,
+  farmer_id uuid,
+  farmer_name character varying NOT NULL,
+  association_name character varying,
+  farm_location text,
+  farm_condition character varying NOT NULL CHECK (farm_condition::text = ANY (ARRAY['Healthy'::character varying, 'Needs Support'::character varying, 'Damaged'::character varying]::text[])),
+  growth_stage character varying NOT NULL CHECK (growth_stage::text = ANY (ARRAY['Land Preparation'::character varying, 'Planting'::character varying, 'Seedling'::character varying, 'Vegetative'::character varying, 'Mature'::character varying, 'Ready for Harvest'::character varying, 'Harvesting'::character varying, 'Post-Harvest'::character varying]::text[])),
+  issues_observed text[],
+  other_issues text,
+  actions_taken text NOT NULL,
+  recommendations text NOT NULL,
+  next_monitoring_date date,
+  weather_condition character varying,
+  estimated_yield numeric,
+  remarks text,
+  photo_urls text[],
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  created_by uuid,
+  updated_by uuid,
+  status character varying NOT NULL DEFAULT 'Ongoing'::character varying CHECK (status::text = ANY (ARRAY['Ongoing'::character varying::text, 'Completed'::character varying::text, 'Done Monitor'::character varying::text])),
+  CONSTRAINT monitoring_records_pkey PRIMARY KEY (monitoring_id)
+);
+CREATE TABLE IF NOT EXISTS public.refresh_tokens (
+  token_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  user_type character varying NOT NULL CHECK (user_type::text = ANY (ARRAY['farmer'::character varying, 'buyer'::character varying, 'officer'::character varying]::text[])),
+  token_hash character varying NOT NULL,
+  expires_at timestamp with time zone NOT NULL,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  revoked boolean DEFAULT false,
+  CONSTRAINT refresh_tokens_pkey PRIMARY KEY (token_id)
+);
+CREATE TABLE IF NOT EXISTS public.articles (
   article_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   title character varying NOT NULL,
   category character varying NOT NULL,
@@ -39,7 +157,7 @@ CREATE TABLE public.articles (
   CONSTRAINT articles_pkey PRIMARY KEY (article_id),
   CONSTRAINT articles_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.organization(officer_id)
 );
-CREATE TABLE public.association_officers (
+CREATE TABLE IF NOT EXISTS public.association_officers (
   officer_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   full_name character varying NOT NULL,
   email character varying NOT NULL UNIQUE,
@@ -67,39 +185,7 @@ CREATE TABLE public.association_officers (
   CONSTRAINT association_officers_pkey PRIMARY KEY (officer_id),
   CONSTRAINT association_officers_verified_by_fkey FOREIGN KEY (verified_by) REFERENCES public.organization(officer_id)
 );
-CREATE TABLE public.association_seedling_distributions (
-  distribution_id uuid NOT NULL DEFAULT gen_random_uuid(),
-  variety character varying NOT NULL,
-  source_supplier character varying,
-  quantity_distributed bigint NOT NULL CHECK (quantity_distributed > 0),
-  date_distributed date NOT NULL DEFAULT CURRENT_DATE,
-  recipient_association_id uuid NOT NULL,
-  recipient_association_name character varying NOT NULL,
-  remarks text,
-  status character varying DEFAULT 'distributed_to_association'::character varying CHECK (status::text = ANY (ARRAY['distributed_to_association'::character varying::text, 'partially_distributed_to_farmers'::character varying::text, 'fully_distributed_to_farmers'::character varying::text, 'partially_planted'::character varying::text, 'fully_planted'::character varying::text, 'cancelled'::character varying::text])),
-  distributed_by uuid NOT NULL,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  seedling_photo text,
-  packaging_photo text,
-  quality_photo text,
-  CONSTRAINT association_seedling_distributions_pkey PRIMARY KEY (distribution_id),
-  CONSTRAINT association_seedling_distributions_distributed_by_fkey FOREIGN KEY (distributed_by) REFERENCES public.organization(officer_id),
-  CONSTRAINT association_seedling_distributions_recipient_association_id_fke FOREIGN KEY (recipient_association_id) REFERENCES public.association_officers(officer_id)
-);
-CREATE TABLE public.auth_audit_log (
-  log_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  user_id uuid,
-  user_type character varying CHECK (user_type::text = ANY (ARRAY['farmer'::character varying, 'buyer'::character varying, 'officer'::character varying]::text[])),
-  action character varying NOT NULL,
-  ip_address character varying,
-  user_agent text,
-  success boolean DEFAULT true,
-  error_message text,
-  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT auth_audit_log_pkey PRIMARY KEY (log_id)
-);
-CREATE TABLE public.blocked_ips (
+CREATE TABLE IF NOT EXISTS public.blocked_ips (
   block_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   ip_address character varying NOT NULL UNIQUE,
   reason text NOT NULL,
@@ -116,7 +202,7 @@ CREATE TABLE public.blocked_ips (
   CONSTRAINT blocked_ips_blocked_by_fkey FOREIGN KEY (blocked_by) REFERENCES public.organization(officer_id),
   CONSTRAINT blocked_ips_unblocked_by_fkey FOREIGN KEY (unblocked_by) REFERENCES public.organization(officer_id)
 );
-CREATE TABLE public.blocked_macs (
+CREATE TABLE IF NOT EXISTS public.blocked_macs (
   block_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   mac_address character varying NOT NULL UNIQUE,
   reason text NOT NULL,
@@ -133,65 +219,7 @@ CREATE TABLE public.blocked_macs (
   CONSTRAINT blocked_macs_blocked_by_fkey FOREIGN KEY (blocked_by) REFERENCES public.organization(officer_id),
   CONSTRAINT blocked_macs_unblocked_by_fkey FOREIGN KEY (unblocked_by) REFERENCES public.organization(officer_id)
 );
-CREATE TABLE public.buyer_listings (
-  listing_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  buyer_id uuid NOT NULL,
-  company_name character varying NOT NULL,
-  contact_person character varying NOT NULL,
-  phone character varying NOT NULL,
-  email character varying NOT NULL,
-  location text NOT NULL,
-  municipality character varying NOT NULL,
-  barangay character varying NOT NULL,
-  class_a_enabled boolean DEFAULT false,
-  class_a_price numeric,
-  class_a_image text,
-  class_b_enabled boolean DEFAULT false,
-  class_b_price numeric,
-  class_b_image text,
-  class_c_enabled boolean DEFAULT false,
-  class_c_price numeric,
-  class_c_image text,
-  payment_terms character varying NOT NULL,
-  requirements text,
-  availability character varying DEFAULT 'Available'::character varying,
-  valid_until date NOT NULL,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT buyer_listings_pkey PRIMARY KEY (listing_id),
-  CONSTRAINT buyer_listings_buyer_id_fkey FOREIGN KEY (buyer_id) REFERENCES public.buyers(buyer_id)
-);
-CREATE TABLE public.buyer_purchases (
-  purchase_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  buyer_id uuid NOT NULL,
-  price numeric NOT NULL,
-  contact_number character varying NOT NULL,
-  farmer_name character varying NOT NULL,
-  fiber_quality character varying NOT NULL CHECK (fiber_quality::text = ANY (ARRAY['Class A'::character varying, 'Class B'::character varying, 'Class C'::character varying]::text[])),
-  quantity numeric NOT NULL,
-  variety character varying NOT NULL,
-  total_price numeric NOT NULL,
-  image_url text,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT buyer_purchases_pkey PRIMARY KEY (purchase_id),
-  CONSTRAINT buyer_purchases_buyer_id_fkey FOREIGN KEY (buyer_id) REFERENCES public.buyers(buyer_id)
-);
-CREATE TABLE public.buyer_sales (
-  sale_id uuid NOT NULL DEFAULT gen_random_uuid(),
-  seller_id uuid NOT NULL,
-  fiber_class character varying NOT NULL,
-  quantity_kg numeric NOT NULL CHECK (quantity_kg > 0::numeric),
-  price_per_kg numeric NOT NULL CHECK (price_per_kg > 0::numeric),
-  total_amount numeric NOT NULL CHECK (total_amount > 0::numeric),
-  buyer_name character varying NOT NULL,
-  notes text,
-  sale_date timestamp without time zone NOT NULL DEFAULT now(),
-  created_at timestamp without time zone DEFAULT now(),
-  updated_at timestamp without time zone DEFAULT now(),
-  CONSTRAINT buyer_sales_pkey PRIMARY KEY (sale_id)
-);
-CREATE TABLE public.buyers (
+CREATE TABLE IF NOT EXISTS public.buyers (
   buyer_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   business_name character varying NOT NULL,
   owner_name character varying NOT NULL,
@@ -202,11 +230,11 @@ CREATE TABLE public.buyers (
   buying_schedule character varying,
   buying_location text,
   warehouse_address text,
-  accepted_quality_grades ARRAY,
+  accepted_quality_grades text[],
   price_range_min numeric,
   price_range_max numeric,
   payment_terms character varying,
-  partnered_associations ARRAY,
+  partnered_associations text[],
   password_hash character varying NOT NULL,
   is_active boolean DEFAULT true,
   is_verified boolean DEFAULT false,
@@ -224,69 +252,7 @@ CREATE TABLE public.buyers (
   CONSTRAINT buyers_pkey PRIMARY KEY (buyer_id),
   CONSTRAINT buyers_verified_by_fkey FOREIGN KEY (verified_by) REFERENCES public.organization(officer_id)
 );
-CREATE TABLE public.cusafa_inventory (
-  inventory_id uuid NOT NULL DEFAULT gen_random_uuid(),
-  harvest_id uuid NOT NULL UNIQUE,
-  farmer_id uuid NOT NULL,
-  variety character varying NOT NULL,
-  quantity_kg numeric NOT NULL,
-  harvest_date date NOT NULL,
-  grade character varying,
-  status character varying DEFAULT 'in_stock'::character varying CHECK (status::text = ANY (ARRAY['in_stock'::character varying, 'sold'::character varying, 'processed'::character varying, 'damaged'::character varying]::text[])),
-  location character varying DEFAULT 'CUSAFA Warehouse'::character varying,
-  shelf_number character varying,
-  added_by uuid,
-  added_at timestamp with time zone DEFAULT now(),
-  notes text,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT cusafa_inventory_pkey PRIMARY KEY (inventory_id),
-  CONSTRAINT cusafa_inventory_harvest_id_fkey FOREIGN KEY (harvest_id) REFERENCES public.harvests(harvest_id),
-  CONSTRAINT cusafa_inventory_farmer_id_fkey FOREIGN KEY (farmer_id) REFERENCES public.farmers(farmer_id),
-  CONSTRAINT cusafa_inventory_added_by_fkey FOREIGN KEY (added_by) REFERENCES public.association_officers(officer_id)
-);
-CREATE TABLE public.farmer_notifications (
-  notification_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  farmer_id uuid NOT NULL,
-  notification_type character varying NOT NULL CHECK (notification_type::text = ANY (ARRAY['seedling_distribution'::character varying, 'monitoring_update'::character varying, 'delivery_update'::character varying]::text[])),
-  title character varying NOT NULL,
-  message text NOT NULL,
-  reference_id uuid,
-  is_read boolean DEFAULT false,
-  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT farmer_notifications_pkey PRIMARY KEY (notification_id),
-  CONSTRAINT farmer_notifications_farmer_fkey FOREIGN KEY (farmer_id) REFERENCES public.farmers(farmer_id)
-);
-CREATE TABLE public.farmer_seedling_distributions (
-  distribution_id uuid NOT NULL DEFAULT gen_random_uuid(),
-  association_distribution_id uuid NOT NULL,
-  variety character varying NOT NULL,
-  quantity_distributed bigint NOT NULL CHECK (quantity_distributed > 0),
-  date_distributed date NOT NULL DEFAULT CURRENT_DATE,
-  recipient_farmer_id uuid NOT NULL,
-  remarks text,
-  status character varying DEFAULT 'distributed_to_farmer'::character varying CHECK (status::text = ANY (ARRAY['distributed_to_farmer'::character varying, 'planted'::character varying, 'damaged'::character varying, 'replanted'::character varying, 'lost'::character varying, 'other'::character varying]::text[])),
-  distributed_by_association uuid NOT NULL,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  seedling_photo text,
-  packaging_photo text,
-  quality_photo text,
-  planting_date date,
-  planting_location text,
-  planting_photo_1 text,
-  planting_photo_2 text,
-  planting_photo_3 text,
-  planting_notes text,
-  planted_by uuid,
-  planted_at timestamp with time zone,
-  CONSTRAINT farmer_seedling_distributions_pkey PRIMARY KEY (distribution_id),
-  CONSTRAINT farmer_seedling_distributions_association_distribution_id_fkey FOREIGN KEY (association_distribution_id) REFERENCES public.association_seedling_distributions(distribution_id),
-  CONSTRAINT farmer_seedling_distributions_recipient_farmer_id_fkey FOREIGN KEY (recipient_farmer_id) REFERENCES public.farmers(farmer_id),
-  CONSTRAINT farmer_seedling_distributions_planted_by_fkey FOREIGN KEY (planted_by) REFERENCES public.farmers(farmer_id),
-  CONSTRAINT farmer_seedling_distributions_distributed_by_association_fkey FOREIGN KEY (distributed_by_association) REFERENCES public.association_officers(officer_id)
-);
-CREATE TABLE public.farmers (
+CREATE TABLE IF NOT EXISTS public.farmers (
   farmer_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   full_name character varying NOT NULL,
   sex character varying CHECK (sex::text = ANY (ARRAY['Male'::character varying, 'Female'::character varying, 'Other'::character varying]::text[])),
@@ -324,45 +290,120 @@ CREATE TABLE public.farmers (
   CONSTRAINT farmers_pkey PRIMARY KEY (farmer_id),
   CONSTRAINT farmers_verified_by_fkey FOREIGN KEY (verified_by) REFERENCES public.organization(officer_id)
 );
-CREATE TABLE public.fiber_deliveries (
-  delivery_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  farmer_id uuid NOT NULL,
-  buyer_id uuid NOT NULL,
-  harvest_id uuid NOT NULL,
-  delivery_date date NOT NULL,
-  delivery_time time without time zone,
-  variety character varying NOT NULL,
-  quantity_kg numeric NOT NULL,
-  grade character varying NOT NULL,
-  municipality character varying,
-  barangay character varying,
-  price_per_kg numeric NOT NULL,
-  total_amount numeric NOT NULL,
-  pickup_location text NOT NULL,
-  delivery_location text NOT NULL,
-  delivery_method character varying,
-  farmer_contact character varying NOT NULL,
-  buyer_contact character varying NOT NULL,
-  status character varying DEFAULT 'In Transit'::character varying CHECK (status::text = ANY (ARRAY['In Transit'::character varying, 'Delivered'::character varying, 'Completed'::character varying, 'Cancelled'::character varying]::text[])),
-  notes text,
-  delivery_proof_image text,
-  receipt_image text,
-  payment_status character varying DEFAULT 'Pending'::character varying CHECK (payment_status::text = ANY (ARRAY['Pending'::character varying, 'Partial'::character varying, 'Paid'::character varying]::text[])),
-  payment_method character varying,
-  payment_date date,
+CREATE TABLE IF NOT EXISTS public.maintenance_logs (
+  log_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  action character varying NOT NULL CHECK (action::text = ANY (ARRAY['enabled'::character varying, 'disabled'::character varying]::text[])),
+  enabled_by uuid,
+  reason text,
+  ip_address character varying,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT maintenance_logs_pkey PRIMARY KEY (log_id),
+  CONSTRAINT maintenance_logs_enabled_by_fkey FOREIGN KEY (enabled_by) REFERENCES public.organization(officer_id)
+);
+CREATE TABLE IF NOT EXISTS public.system_settings (
+  setting_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  setting_key character varying NOT NULL UNIQUE,
+  setting_value text NOT NULL,
+  description text,
+  updated_by uuid,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT system_settings_pkey PRIMARY KEY (setting_id),
+  CONSTRAINT system_settings_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.organization(officer_id)
+);
+CREATE TABLE IF NOT EXISTS public.team_members (
+  member_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  full_name character varying NOT NULL,
+  position character varying NOT NULL,
+  photo_url text,
+  bio text,
+  email character varying,
+  phone character varying,
+  display_order integer DEFAULT 0,
+  is_active boolean DEFAULT true,
+  created_by uuid,
   created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  confirmed_at timestamp without time zone,
-  delivered_at timestamp without time zone,
-  completed_at timestamp without time zone,
-  cancelled_at timestamp without time zone,
-  cancellation_reason text,
-  CONSTRAINT fiber_deliveries_pkey PRIMARY KEY (delivery_id),
-  CONSTRAINT fiber_deliveries_farmer_id_fkey FOREIGN KEY (farmer_id) REFERENCES public.farmers(farmer_id),
-  CONSTRAINT fiber_deliveries_buyer_id_fkey FOREIGN KEY (buyer_id) REFERENCES public.buyers(buyer_id),
-  CONSTRAINT fiber_deliveries_harvest_id_fkey FOREIGN KEY (harvest_id) REFERENCES public.harvests(harvest_id)
+  CONSTRAINT team_members_pkey PRIMARY KEY (member_id),
+  CONSTRAINT team_members_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.organization(officer_id)
 );
-CREATE TABLE public.harvests (
+CREATE TABLE IF NOT EXISTS public.association_seedling_distributions (
+  distribution_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  variety character varying NOT NULL,
+  source_supplier character varying,
+  quantity_distributed bigint NOT NULL CHECK (quantity_distributed > 0),
+  date_distributed date NOT NULL DEFAULT CURRENT_DATE,
+  recipient_association_id uuid NOT NULL,
+  recipient_association_name character varying NOT NULL,
+  remarks text,
+  status character varying DEFAULT 'distributed_to_association'::character varying CHECK (status::text = ANY (ARRAY['distributed_to_association'::character varying::text, 'partially_distributed_to_farmers'::character varying::text, 'fully_distributed_to_farmers'::character varying::text, 'partially_planted'::character varying::text, 'fully_planted'::character varying::text, 'cancelled'::character varying::text])),
+  distributed_by uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  seedling_photo text,
+  packaging_photo text,
+  quality_photo text,
+  CONSTRAINT association_seedling_distributions_pkey PRIMARY KEY (distribution_id),
+  CONSTRAINT association_seedling_distributions_distributed_by_fkey FOREIGN KEY (distributed_by) REFERENCES public.organization(officer_id),
+  CONSTRAINT association_seedling_distributions_recipient_association_id_fke FOREIGN KEY (recipient_association_id) REFERENCES public.association_officers(officer_id)
+);
+CREATE TABLE IF NOT EXISTS public.buyer_listings (
+  listing_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  buyer_id uuid NOT NULL,
+  company_name character varying NOT NULL,
+  contact_person character varying NOT NULL,
+  phone character varying NOT NULL,
+  email character varying NOT NULL,
+  location text NOT NULL,
+  municipality character varying NOT NULL,
+  barangay character varying NOT NULL,
+  class_a_enabled boolean DEFAULT false,
+  class_a_price numeric,
+  class_a_image text,
+  class_b_enabled boolean DEFAULT false,
+  class_b_price numeric,
+  class_b_image text,
+  class_c_enabled boolean DEFAULT false,
+  class_c_price numeric,
+  class_c_image text,
+  payment_terms character varying NOT NULL,
+  requirements text,
+  availability character varying DEFAULT 'Available'::character varying,
+  valid_until date NOT NULL,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT buyer_listings_pkey PRIMARY KEY (listing_id),
+  CONSTRAINT buyer_listings_buyer_id_fkey FOREIGN KEY (buyer_id) REFERENCES public.buyers(buyer_id)
+);
+CREATE TABLE IF NOT EXISTS public.buyer_purchases (
+  purchase_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  buyer_id uuid NOT NULL,
+  price numeric NOT NULL,
+  contact_number character varying NOT NULL,
+  farmer_name character varying NOT NULL,
+  fiber_quality character varying NOT NULL CHECK (fiber_quality::text = ANY (ARRAY['Class A'::character varying, 'Class B'::character varying, 'Class C'::character varying]::text[])),
+  quantity numeric NOT NULL,
+  variety character varying NOT NULL,
+  total_price numeric NOT NULL,
+  image_url text,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT buyer_purchases_pkey PRIMARY KEY (purchase_id),
+  CONSTRAINT buyer_purchases_buyer_id_fkey FOREIGN KEY (buyer_id) REFERENCES public.buyers(buyer_id)
+);
+CREATE TABLE IF NOT EXISTS public.farmer_notifications (
+  notification_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  farmer_id uuid NOT NULL,
+  notification_type character varying NOT NULL CHECK (notification_type::text = ANY (ARRAY['seedling_distribution'::character varying, 'monitoring_update'::character varying, 'delivery_update'::character varying]::text[])),
+  title character varying NOT NULL,
+  message text NOT NULL,
+  reference_id uuid,
+  is_read boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT farmer_notifications_pkey PRIMARY KEY (notification_id),
+  CONSTRAINT farmer_notifications_farmer_fkey FOREIGN KEY (farmer_id) REFERENCES public.farmers(farmer_id)
+);
+CREATE TABLE IF NOT EXISTS public.harvests (
   harvest_id uuid NOT NULL DEFAULT gen_random_uuid(),
   farmer_id uuid NOT NULL,
   county_province character varying,
@@ -402,7 +443,7 @@ CREATE TABLE public.harvests (
   fiber_fineness character varying,
   fiber_cleanliness character varying,
   moisture_status character varying CHECK (moisture_status::text = ANY (ARRAY['Sun-dried'::character varying, 'Semi-dried'::character varying, 'Wet'::character varying, 'Other'::character varying]::text[])),
-  defects_noted ARRAY,
+  defects_noted text[],
   has_mold boolean DEFAULT false,
   has_discoloration boolean DEFAULT false,
   has_pest_damage boolean DEFAULT false,
@@ -425,7 +466,7 @@ CREATE TABLE public.harvests (
   diseases_observed boolean DEFAULT false,
   diseases_description text,
   remarks text,
-  photo_urls ARRAY,
+  photo_urls text[],
   inspected_by character varying,
   inspector_position character varying,
   inspection_date date,
@@ -442,107 +483,7 @@ CREATE TABLE public.harvests (
   CONSTRAINT harvests_pkey PRIMARY KEY (harvest_id),
   CONSTRAINT harvests_farmer_id_fkey FOREIGN KEY (farmer_id) REFERENCES public.farmers(farmer_id)
 );
-CREATE TABLE public.inventory_distributions (
-  distribution_id uuid NOT NULL DEFAULT gen_random_uuid(),
-  inventory_id uuid NOT NULL,
-  distribution_date date NOT NULL DEFAULT CURRENT_DATE,
-  distributed_to character varying NOT NULL,
-  recipient_type character varying CHECK (recipient_type::text = ANY (ARRAY['Buyer'::character varying, 'Trader'::character varying, 'Processor'::character varying, 'Government'::character varying, 'Export'::character varying, 'Other'::character varying]::text[])),
-  distributed_weight_kg numeric NOT NULL CHECK (distributed_weight_kg > 0::numeric),
-  price_per_kg numeric,
-  total_amount numeric,
-  distributed_by uuid,
-  distributor_name character varying,
-  transport_method character varying,
-  destination character varying,
-  delivery_receipt_number character varying,
-  invoice_number character varying,
-  remarks text,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT inventory_distributions_pkey PRIMARY KEY (distribution_id)
-);
-CREATE TABLE public.maintenance_logs (
-  log_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  action character varying NOT NULL CHECK (action::text = ANY (ARRAY['enabled'::character varying, 'disabled'::character varying]::text[])),
-  enabled_by uuid,
-  reason text,
-  ip_address character varying,
-  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT maintenance_logs_pkey PRIMARY KEY (log_id),
-  CONSTRAINT maintenance_logs_enabled_by_fkey FOREIGN KEY (enabled_by) REFERENCES public.organization(officer_id)
-);
-CREATE TABLE public.monitoring_issues (
-  issue_id integer NOT NULL DEFAULT nextval('monitoring_issues_issue_id_seq'::regclass),
-  issue_name character varying NOT NULL UNIQUE,
-  issue_category character varying,
-  description text,
-  severity_level character varying CHECK (severity_level::text = ANY (ARRAY['Low'::character varying, 'Medium'::character varying, 'High'::character varying, 'Critical'::character varying]::text[])),
-  is_active boolean DEFAULT true,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT monitoring_issues_pkey PRIMARY KEY (issue_id)
-);
-CREATE TABLE public.monitoring_records (
-  monitoring_id character varying NOT NULL,
-  date_of_visit date NOT NULL CHECK (date_of_visit <= CURRENT_DATE),
-  monitored_by character varying NOT NULL,
-  monitored_by_role character varying,
-  farmer_id uuid,
-  farmer_name character varying NOT NULL,
-  association_name character varying,
-  farm_location text,
-  farm_condition character varying NOT NULL CHECK (farm_condition::text = ANY (ARRAY['Healthy'::character varying, 'Needs Support'::character varying, 'Damaged'::character varying]::text[])),
-  growth_stage character varying NOT NULL CHECK (growth_stage::text = ANY (ARRAY['Land Preparation'::character varying, 'Planting'::character varying, 'Seedling'::character varying, 'Vegetative'::character varying, 'Mature'::character varying, 'Ready for Harvest'::character varying, 'Harvesting'::character varying, 'Post-Harvest'::character varying]::text[])),
-  issues_observed ARRAY,
-  other_issues text,
-  actions_taken text NOT NULL,
-  recommendations text NOT NULL,
-  next_monitoring_date date,
-  weather_condition character varying,
-  estimated_yield numeric,
-  remarks text,
-  photo_urls ARRAY,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  created_by uuid,
-  updated_by uuid,
-  status character varying NOT NULL DEFAULT 'Ongoing'::character varying CHECK (status::text = ANY (ARRAY['Ongoing'::character varying::text, 'Completed'::character varying::text, 'Done Monitor'::character varying::text])),
-  CONSTRAINT monitoring_records_pkey PRIMARY KEY (monitoring_id)
-);
-CREATE TABLE public.organization (
-  officer_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  full_name character varying NOT NULL,
-  email character varying NOT NULL UNIQUE,
-  password_hash character varying NOT NULL,
-  position character varying,
-  contact_number character varying,
-  address text,
-  profile_completed boolean DEFAULT false,
-  is_active boolean DEFAULT true,
-  is_verified boolean DEFAULT true,
-  remarks text,
-  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  last_login timestamp with time zone,
-  profile_completed_at timestamp with time zone,
-  profile_picture text,
-  is_super_admin boolean DEFAULT false,
-  verification_status character varying DEFAULT 'pending'::character varying CHECK (verification_status::text = ANY (ARRAY['pending'::character varying, 'verified'::character varying, 'rejected'::character varying]::text[])),
-  office_name character varying,
-  assigned_municipality character varying,
-  assigned_barangay character varying,
-  CONSTRAINT organization_pkey PRIMARY KEY (officer_id)
-);
-CREATE TABLE public.refresh_tokens (
-  token_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  user_id uuid NOT NULL,
-  user_type character varying NOT NULL CHECK (user_type::text = ANY (ARRAY['farmer'::character varying, 'buyer'::character varying, 'officer'::character varying]::text[])),
-  token_hash character varying NOT NULL,
-  expires_at timestamp with time zone NOT NULL,
-  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  revoked boolean DEFAULT false,
-  CONSTRAINT refresh_tokens_pkey PRIMARY KEY (token_id)
-);
-CREATE TABLE public.sales_reports (
+CREATE TABLE IF NOT EXISTS public.sales_reports (
   report_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   farmer_id uuid NOT NULL,
   report_month character varying NOT NULL,
@@ -570,30 +511,91 @@ CREATE TABLE public.sales_reports (
   CONSTRAINT fk_sales_reports_farmer FOREIGN KEY (farmer_id) REFERENCES public.farmers(farmer_id),
   CONSTRAINT fk_sales_reports_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES public.organization(officer_id)
 );
-CREATE TABLE public.system_settings (
-  setting_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  setting_key character varying NOT NULL UNIQUE,
-  setting_value text NOT NULL,
-  description text,
-  updated_by uuid,
-  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT system_settings_pkey PRIMARY KEY (setting_id),
-  CONSTRAINT system_settings_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.organization(officer_id)
+CREATE TABLE IF NOT EXISTS public.farmer_seedling_distributions (
+  distribution_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  association_distribution_id uuid NOT NULL,
+  variety character varying NOT NULL,
+  quantity_distributed bigint NOT NULL CHECK (quantity_distributed > 0),
+  date_distributed date NOT NULL DEFAULT CURRENT_DATE,
+  recipient_farmer_id uuid NOT NULL,
+  remarks text,
+  status character varying DEFAULT 'distributed_to_farmer'::character varying CHECK (status::text = ANY (ARRAY['distributed_to_farmer'::character varying, 'planted'::character varying, 'damaged'::character varying, 'replanted'::character varying, 'lost'::character varying, 'other'::character varying]::text[])),
+  distributed_by_association uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  seedling_photo text,
+  packaging_photo text,
+  quality_photo text,
+  planting_date date,
+  planting_location text,
+  planting_photo_1 text,
+  planting_photo_2 text,
+  planting_photo_3 text,
+  planting_notes text,
+  planted_by uuid,
+  planted_at timestamp with time zone,
+  CONSTRAINT farmer_seedling_distributions_pkey PRIMARY KEY (distribution_id),
+  CONSTRAINT farmer_seedling_distributions_association_distribution_id_fkey FOREIGN KEY (association_distribution_id) REFERENCES public.association_seedling_distributions(distribution_id),
+  CONSTRAINT farmer_seedling_distributions_recipient_farmer_id_fkey FOREIGN KEY (recipient_farmer_id) REFERENCES public.farmers(farmer_id),
+  CONSTRAINT farmer_seedling_distributions_planted_by_fkey FOREIGN KEY (planted_by) REFERENCES public.farmers(farmer_id),
+  CONSTRAINT farmer_seedling_distributions_distributed_by_association_fkey FOREIGN KEY (distributed_by_association) REFERENCES public.association_officers(officer_id)
 );
-CREATE TABLE public.team_members (
-  member_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  full_name character varying NOT NULL,
-  position character varying NOT NULL,
-  photo_url text,
-  bio text,
-  email character varying,
-  phone character varying,
-  display_order integer DEFAULT 0,
-  is_active boolean DEFAULT true,
-  created_by uuid,
+CREATE TABLE IF NOT EXISTS public.cusafa_inventory (
+  inventory_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  harvest_id uuid NOT NULL UNIQUE,
+  farmer_id uuid NOT NULL,
+  variety character varying NOT NULL,
+  quantity_kg numeric NOT NULL,
+  harvest_date date NOT NULL,
+  grade character varying,
+  status character varying DEFAULT 'in_stock'::character varying CHECK (status::text = ANY (ARRAY['in_stock'::character varying, 'sold'::character varying, 'processed'::character varying, 'damaged'::character varying]::text[])),
+  location character varying DEFAULT 'CUSAFA Warehouse'::character varying,
+  shelf_number character varying,
+  added_by uuid,
+  added_at timestamp with time zone DEFAULT now(),
+  notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT cusafa_inventory_pkey PRIMARY KEY (inventory_id),
+  CONSTRAINT cusafa_inventory_harvest_id_fkey FOREIGN KEY (harvest_id) REFERENCES public.harvests(harvest_id),
+  CONSTRAINT cusafa_inventory_farmer_id_fkey FOREIGN KEY (farmer_id) REFERENCES public.farmers(farmer_id),
+  CONSTRAINT cusafa_inventory_added_by_fkey FOREIGN KEY (added_by) REFERENCES public.association_officers(officer_id)
+);
+CREATE TABLE IF NOT EXISTS public.fiber_deliveries (
+  delivery_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  farmer_id uuid NOT NULL,
+  buyer_id uuid NOT NULL,
+  harvest_id uuid NOT NULL,
+  delivery_date date NOT NULL,
+  delivery_time time without time zone,
+  variety character varying NOT NULL,
+  quantity_kg numeric NOT NULL,
+  grade character varying NOT NULL,
+  municipality character varying,
+  barangay character varying,
+  price_per_kg numeric NOT NULL,
+  total_amount numeric NOT NULL,
+  pickup_location text NOT NULL,
+  delivery_location text NOT NULL,
+  delivery_method character varying,
+  farmer_contact character varying NOT NULL,
+  buyer_contact character varying NOT NULL,
+  status character varying DEFAULT 'In Transit'::character varying CHECK (status::text = ANY (ARRAY['In Transit'::character varying, 'Delivered'::character varying, 'Completed'::character varying, 'Cancelled'::character varying]::text[])),
+  notes text,
+  delivery_proof_image text,
+  receipt_image text,
+  payment_status character varying DEFAULT 'Pending'::character varying CHECK (payment_status::text = ANY (ARRAY['Pending'::character varying, 'Partial'::character varying, 'Paid'::character varying]::text[])),
+  payment_method character varying,
+  payment_date date,
   created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT team_members_pkey PRIMARY KEY (member_id),
-  CONSTRAINT team_members_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.organization(officer_id)
+  confirmed_at timestamp without time zone,
+  delivered_at timestamp without time zone,
+  completed_at timestamp without time zone,
+  cancelled_at timestamp without time zone,
+  cancellation_reason text,
+  CONSTRAINT fiber_deliveries_pkey PRIMARY KEY (delivery_id),
+  CONSTRAINT fiber_deliveries_farmer_id_fkey FOREIGN KEY (farmer_id) REFERENCES public.farmers(farmer_id),
+  CONSTRAINT fiber_deliveries_buyer_id_fkey FOREIGN KEY (buyer_id) REFERENCES public.buyers(buyer_id),
+  CONSTRAINT fiber_deliveries_harvest_id_fkey FOREIGN KEY (harvest_id) REFERENCES public.harvests(harvest_id)
 );
