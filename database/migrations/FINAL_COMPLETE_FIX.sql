@@ -599,3 +599,7 @@ CREATE TABLE IF NOT EXISTS public.fiber_deliveries (
   CONSTRAINT fiber_deliveries_buyer_id_fkey FOREIGN KEY (buyer_id) REFERENCES public.buyers(buyer_id),
   CONSTRAINT fiber_deliveries_harvest_id_fkey FOREIGN KEY (harvest_id) REFERENCES public.harvests(harvest_id)
 );
+
+-- Refresh Supabase PostgREST API schema cache immediately so REST imports find all 26 tables
+NOTIFY pgrst, 'reload schema';
+
